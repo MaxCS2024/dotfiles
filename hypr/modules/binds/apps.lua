@@ -1,0 +1,56 @@
+-- What opens things: the three launch binds, and the keys that drive
+-- Quickshell's surfaces.
+--
+-- `global` is Hyprland's dispatcher for its own global-shortcuts-v1
+-- protocol extension, so those binds press a shortcut the shell
+-- registered rather than spawning a `qs ipc call` per keypress. The
+-- string after the colon is an `appid:name` pair and must match the
+-- shell's registration exactly (quickshell/main/services/Panels.qml);
+-- a name nothing registered dispatches into nowhere, silently.
+--
+-- SUPER+Q and SUPER+COMMA are free: the dashboard and the settings
+-- window that held them are gone, each replaced by a surface below.
+
+local vars = require("modules.vars")
+local mainMod = vars.mainMod
+
+-- Apps. What each one runs is settable from Conf > Setup > Defaults and
+-- resolved by modules/vars.lua, which falls back to the first of its
+-- candidates this machine has installed.
+hl.bind(mainMod .. " + RETURN", hl.dsp.exec_cmd(vars.terminal))
+hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(vars.fileManager))
+hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd(vars.browser))
+
+-- hyprshutdown leaves the session the way the power menu does; `uwsm
+-- stop` is the fallback for a machine that has not installed it.
+hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || uwsm stop"))
+
+-- Conf, the nested menu over everything this config can do
+-- (quickshell/main/menu/ConfMenu.qml). omarchy puts its own menu on
+-- SUPER+ALT+SPACE; that combo already toggles the bar here, and SPACE
+-- alone was free.
+hl.bind(mainMod .. " + SPACE", hl.dsp.global("quickshell:menu-toggle"))
+hl.bind(mainMod .. " + P", hl.dsp.global("quickshell:launcher-toggle"))
+hl.bind(mainMod .. " + ESCAPE", hl.dsp.global("quickshell:powermenu-toggle"))
+
+-- The two right-edge rails are siblings in every sense -- same corner,
+-- same geometry, same motion -- so notifications take the network rail's
+-- letter with SHIFT on it rather than a free letter of its own. N is
+-- where a rail lives here. Both are still a left click on the bar's own
+-- module, and a right click there is still DND.
+hl.bind(mainMod .. " + N", hl.dsp.global("quickshell:network-toggle"))
+hl.bind(mainMod .. " + SHIFT + N", hl.dsp.global("quickshell:notifications-toggle"))
+
+-- cliphist's history with a search field over it. C is the letter every
+-- other desktop spends on copy, which is the one thing this window is
+-- for.
+hl.bind(mainMod .. " + C", hl.dsp.global("quickshell:clipboard-toggle"))
+
+-- Shifted, because plain SUPER+T is the float toggle in
+-- modules/binds/window.lua and T is still the letter this is about.
+hl.bind(mainMod .. " + SHIFT + T", hl.dsp.global("quickshell:themes-toggle"))
+
+-- The bar itself: hide it, or focus it for arrow-key navigation
+-- (Left/Right to move, Enter to activate, Escape to release).
+hl.bind(mainMod .. " + ALT + SPACE", hl.dsp.global("quickshell:bar-toggle"))
+hl.bind(mainMod .. " + B", hl.dsp.global("quickshell:bar-focus"))
