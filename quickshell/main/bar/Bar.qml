@@ -90,12 +90,21 @@ Variants {
         // Distance covers the floating gap too, so a floating bar
         // clears its own margin.
         readonly property int slideDistance: bar.barHeight + (bar.cfg.floating ? 8 : 0)
-        property real slideOffset: bar.shown ? 0 : bar.slideDistance
+        // What animates is how far through the slide the bar is (0 in,
+        // 1 gone), not the pixel offset. Animating the offset itself
+        // also animated every change to slideDistance, so a hidden bar
+        // whose height or floating setting changed "slid" from the old
+        // distance to the new one — and `occupying` below, reading
+        // offset < distance, took that for the bar being mid-slide and
+        // handed it its strip and input back until it finished. As a
+        // fraction, a new distance only rescales the offset.
+        property real slideProgress: bar.shown ? 0 : 1
+        readonly property real slideOffset: bar.slideProgress * bar.slideDistance
         // Asymmetric on purpose, the same way the OSDs' entrance/exit
         // pair is (osd/OsdContent.qml): the bar decelerates into place
         // on the way in, and leaves without the lingering tail that a
         // decel curve gives an exit.
-        Behavior on slideOffset {
+        Behavior on slideProgress {
             NumberAnimation {
                 duration: bar.shown ? Theme.animPanel : Theme.animNormal
                 easing.type: bar.shown ? Theme.easingDecel : Theme.easingStandard
@@ -109,7 +118,7 @@ Variants {
         // bar finishes leaving rather than jumping out from under it,
         // and the space is reserved again before it slides back down
         // into it.
-        readonly property bool occupying: bar.shown || bar.slideOffset < bar.slideDistance
+        readonly property bool occupying: bar.shown || bar.slideProgress < 1
 
         visible: bar.cfg.enabled
         // Auto is the untouched default: Quickshell derives the
