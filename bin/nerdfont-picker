@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# fzf picker over every Nerd Font icon: fuzzy-search by name, preview the
+# glyph and its codepoint, copy the pick to the clipboard on <enter>.
+set -euo pipefail
+
+# lib/nerdfont-glyphs.tsv is a one-time trim of nerd-fonts' own upstream
+# glyphnames.json (glyph<TAB>name<TAB>hex, ~11k icons, sorted by name) —
+# committed here rather than fetched at runtime so this works offline and
+# doesn't depend on GitHub being reachable every time it's run.
+_dir=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+readonly DATA="$_dir/lib/nerdfont-glyphs.tsv"
+
+usage() {
+	cat <<-EOF
+		usage: nerdfont-picker [--code]
+
+		Fuzzy-search Nerd Font icons by name and copy the pick to the
+		clipboard.
+
+		  --code    copy "\uXXXX" instead of the raw glyph — for pasting
+		            into QML/JS source (e.g. text: "") rather than
+		            a terminal or chat box
+		  --help    show this message
+	EOF
+}
+
+copy_code=0
+case "${1:-}" in
+	--code) copy_code=1 ;;
+	--help | -h)
+		usage
+		exit 0
+		;;
+	"") ;;
+	*)
+		usage >&2
+		exit 1
+		;;
+esac
+
+[[ -r $DATA ]] || {
+	printf 'nerdfont-picker: missing data file %s\n' "$DATA" >&2
+	exit 1
+}
+
+selection=$(
+	fzf \
+		--delimiter=$'\t' \
+		--with-nth=1,2 \
+		--preview='printf "\n\n   %s\n\n   name  {2}\n   code  U+{3}\n" "{1}"' \
+		--preview-window=up:30%:wrap \
+		--prompt='icon> ' \
+		<"$DATA"
+) || exit 1
+[[ -n $selection ]] || exit 1
+
+glyph=$(cut -f1 <<<"$selection")
+name=$(cut -f2 <<<"$selection")
+code=$(cut -f3 <<<"$selection")
+
+if ((copy_code)); then
+	value="\u$code"
+else
+	value="$glyph"
+fi
+
+if command -v wl-copy >/dev/null 2>&1; then
+	# Best-effort: no Wayland session to copy into (e.g. run over SSH)
+	# shouldn't take the whole script down with it — the value is still
+	# printed to stdout either way.
+	printf '%s' "$value" | wl-copy || true
+fi
+
+printf '%s\n' "$value"
+command -v notify-send >/dev/null 2>&1 && notify-send -a nerdfont-picker "Copied $name" "$value"
+
+exit 0
