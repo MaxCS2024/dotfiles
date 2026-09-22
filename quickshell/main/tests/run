@@ -13,6 +13,8 @@
 # Side effects while it runs, per suite:
 #   bar    a transparent test bar briefly reserves a strip on each screen;
 #          tiled windows shift and shift back.
+#   media  a fake MPRIS player (media/fake-mpris-player) joins the session
+#          bus, so the real shell's pill shows "Test Track" for a moment.
 #
 # The suite reports "TEST PASS|FAIL <name>" lines and ends with
 # "TEST DONE <failures>". qs ignores Qt.quit(), so this waits for that line
@@ -38,7 +40,7 @@ qs_pid=
 
 cleanup() {
     # qs runs as its own process group leader (setsid below), so this also
-    # takes down anything a suite started.
+    # takes down anything a suite started, like the fake MPRIS player.
     [[ -n "$qs_pid" ]] && kill -- -"$qs_pid" 2>/dev/null || true
     rm -rf "$sandbox"
 }

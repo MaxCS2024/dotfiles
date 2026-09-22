@@ -22,7 +22,14 @@ import QtQuick
 Singleton {
     id: root
 
-    readonly property var players: Mpris.players.values
+    // Every player on the bus except the ones with nothing to show:
+    // Stopped with no title. Chromium browsers leave one of those behind
+    // when a tab's media ends, and it used to hold the pill up as
+    // "Unknown" with transport controls for nothing. A stopped player
+    // that still has a title stays, since it can be played again.
+    // tests/media/shell.qml checks each state against a real player.
+    readonly property var players: Mpris.players.values.filter(p =>
+        p.playbackState !== MprisPlaybackState.Stopped || p.trackTitle !== "")
 
     // -1 = auto-pick (prefer whichever player is playing, else the first
     // one); >= 0 = pinned by the card's player-switch arrows, see

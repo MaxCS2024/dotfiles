@@ -1,0 +1,159 @@
+#!/usr/bin/env python3
+"""A scripted MPRIS player on the session bus, for tests/media/shell.qml.
+
+Registers org.mpris.MediaPlayer2.bartest (identity "BarTest") and behaves
+the way the players the media filter is about do:
+
+  Play   Playing, with a title (a track has loaded)
+  Pause  Paused, keeping the title
+  Stop   Stopped, keeping the title
+  Next   clears the title, standing in for what Chromium does when a
+         tab's media session ends: a Stopped player left on the bus
+         with no metadata
+
+It starts Stopped with no title. Runs until killed.
+"""
+import warnings
+
+from gi.repository import Gio, GLib
+
+# register_object with plain callbacks is deprecated in favour of closures,
+# and says so on stderr, which the runner shows as a warning.
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+NAME = "org.mpris.MediaPlayer2.bartest"
+PATH = "/org/mpris/MediaPlayer2"
+ROOT = "org.mpris.MediaPlayer2"
+PLAYER = "org.mpris.MediaPlayer2.Player"
+
+XML = f"""
+<node>
+  <interface name="{ROOT}">
+    <method name="Raise"/>
+    <method name="Quit"/>
+    <property name="Identity" type="s" access="read"/>
+    <property name="CanQuit" type="b" access="read"/>
+    <property name="CanRaise" type="b" access="read"/>
+    <property name="HasTrackList" type="b" access="read"/>
+    <property name="DesktopEntry" type="s" access="read"/>
+    <property name="SupportedUriSchemes" type="as" access="read"/>
+    <property name="SupportedMimeTypes" type="as" access="read"/>
+  </interface>
+  <interface name="{PLAYER}">
+    <method name="Play"/>
+    <method name="Pause"/>
+    <method name="PlayPause"/>
+    <method name="Stop"/>
+    <method name="Next"/>
+    <method name="Previous"/>
+    <method name="Seek"><arg name="Offset" type="x" direction="in"/></method>
+    <method name="SetPosition">
+      <arg name="TrackId" type="o" direction="in"/>
+      <arg name="Position" type="x" direction="in"/>
+    </method>
+    <method name="OpenUri"><arg name="Uri" type="s" direction="in"/></method>
+    <signal name="Seeked"><arg name="Position" type="x"/></signal>
+    <property name="PlaybackStatus" type="s" access="read"/>
+    <property name="Metadata" type="a{{sv}}" access="read"/>
+    <property name="Position" type="x" access="read"/>
+    <property name="Rate" type="d" access="readwrite"/>
+    <property name="MinimumRate" type="d" access="read"/>
+    <property name="MaximumRate" type="d" access="read"/>
+    <property name="Volume" type="d" access="readwrite"/>
+    <property name="CanControl" type="b" access="read"/>
+    <property name="CanPlay" type="b" access="read"/>
+    <property name="CanPause" type="b" access="read"/>
+    <property name="CanSeek" type="b" access="read"/>
+    <property name="CanGoNext" type="b" access="read"/>
+    <property name="CanGoPrevious" type="b" access="read"/>
+  </interface>
+</node>
+"""
+
+state = {"status": "Stopped", "title": ""}
+conn = None
+
+
+def metadata():
+    md = {"mpris:trackid": GLib.Variant("o", "/org/mpris/MediaPlayer2/track/0")}
+    if state["title"]:
+        md["xesam:title"] = GLib.Variant("s", state["title"])
+        md["mpris:length"] = GLib.Variant("x", 180_000_000)
+    return md
+
+
+def player_props():
+    b = GLib.Variant.new_boolean
+    return {
+        "PlaybackStatus": GLib.Variant("s", state["status"]),
+        "Metadata": GLib.Variant("a{sv}", metadata()),
+        "Position": GLib.Variant("x", 0),
+        "Rate": GLib.Variant("d", 1.0),
+        "MinimumRate": GLib.Variant("d", 1.0),
+        "MaximumRate": GLib.Variant("d", 1.0),
+        "Volume": GLib.Variant("d", 1.0),
+        "CanControl": b(True),
+        "CanPlay": b(True),
+        "CanPause": b(True),
+        "CanSeek": b(False),
+        "CanGoNext": b(True),
+        "CanGoPrevious": b(False),
+    }
+
+
+def root_props():
+    return {
+        "Identity": GLib.Variant("s", "BarTest"),
+        "CanQuit": GLib.Variant.new_boolean(False),
+        "CanRaise": GLib.Variant.new_boolean(False),
+        "HasTrackList": GLib.Variant.new_boolean(False),
+        "DesktopEntry": GLib.Variant("s", ""),
+        "SupportedUriSchemes": GLib.Variant("as", []),
+        "SupportedMimeTypes": GLib.Variant("as", []),
+    }
+
+
+def changed():
+    props = player_props()
+    conn.emit_signal(
+        None, PATH, "org.freedesktop.DBus.Properties", "PropertiesChanged",
+        GLib.Variant("(sa{sv}as)", (PLAYER, {
+            "PlaybackStatus": props["PlaybackStatus"],
+            "Metadata": props["Metadata"],
+        }, [])),
+    )
+
+
+def on_call(_conn, _sender, _path, iface, method, _params, invocation):
+    if iface == PLAYER:
+        if method in ("Play", "PlayPause") and state["status"] != "Playing":
+            state.update(status="Playing", title=state["title"] or "Test Track")
+        elif method in ("Pause", "PlayPause"):
+            state["status"] = "Paused"
+        elif method == "Stop":
+            state["status"] = "Stopped"
+        elif method == "Next":
+            state["title"] = ""
+        changed()
+    invocation.return_value(None)
+
+
+def on_get(_conn, _sender, _path, iface, prop):
+    return (player_props() if iface == PLAYER else root_props()).get(prop)
+
+
+def on_acquired(c, _name):
+    global conn
+    conn = c
+    node = Gio.DBusNodeInfo.new_for_xml(XML)
+    for info in node.interfaces:
+        c.register_object(PATH, info, on_call, on_get, None)
+
+
+def on_name(_c, _name):
+    print("fake player ready", flush=True)
+
+
+Gio.bus_own_name(Gio.BusType.SESSION, NAME, Gio.BusNameOwnerFlags.NONE,
+                 on_acquired, on_name, lambda *_: exit("could not own " + NAME))
+GLib.MainLoop().run()
