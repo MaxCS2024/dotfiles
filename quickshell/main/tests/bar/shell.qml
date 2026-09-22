@@ -4,14 +4,14 @@ import QtQuick
 import "bar"
 import "services"
 
-// Tests for bar/Bar.qml. Run through tests/run-bar-test, which copies the
+// Tests for bar/Bar.qml. Run with `tests/run bar`, which copies the
 // real Bar.qml and BarModuleLoader.qml in beside the stubs here — this
 // file can't run on its own.
 //
 // Each step is a function run in order; one that returns a number waits
 // that many ms before the next, which is how the slide tests let the
 // Behavior on slideProgress finish. Results go to the log as
-// "BARTEST PASS|FAIL <name>", then one "BARTEST DONE <failures>" line —
+// "TEST PASS|FAIL <name>", then one "TEST DONE <failures>" line —
 // qs ignores Qt.quit(), so the runner watches for that line and kills it.
 ShellRoot {
     id: root
@@ -25,7 +25,7 @@ ShellRoot {
 
     function check(name, ok, detail) {
         if (!ok) root.failures++
-        console.log(`BARTEST ${ok ? "PASS" : "FAIL"} ${name}${ok || detail === undefined ? "" : ` (${detail})`}`)
+        console.log(`TEST ${ok ? "PASS" : "FAIL"} ${name}${ok || detail === undefined ? "" : ` (${detail})`}`)
     }
     function same(a, b) { return JSON.stringify(a) === JSON.stringify(b) }
     function useLayout(left, center, right) {
@@ -246,7 +246,7 @@ ShellRoot {
         interval: 0
         onTriggered: {
             if (root.step >= root.steps.length) {
-                console.log(`BARTEST DONE ${root.failures}`)
+                console.log(`TEST DONE ${root.failures}`)
                 return
             }
             let wait

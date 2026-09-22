@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# Runs one test suite: tests/run <suite>, e.g. tests/run bar.
+#
+# A suite is a directory here holding a shell.qml, the stubs it needs, and
+# a `uses` file listing the real files under test, as paths relative to
+# main. The code under test imports its neighbours by relative path
+# ("../services"), so the only way to hand it stubs is to put it in a tree
+# where those paths are the stubs: this copies the suite and the files it
+# `uses` into a temp dir and runs that with `qs -p`. That needs a live
+# session (Wayland, and Hyprland for anything importing Quickshell.Hyprland)
+# rather than qmltestrunner.
+#
+# Side effects while it runs, per suite:
+#   bar    a transparent test bar briefly reserves a strip on each screen;
+#          tiled windows shift and shift back.
+#
+# The suite reports "TEST PASS|FAIL <name>" lines and ends with
+# "TEST DONE <failures>". qs ignores Qt.quit(), so this waits for that line
+# and then kills qs along with anything the suite started.
+#
+# Exits 0 when every check passes, 1 on any failure, 2 if the run never
+# finished (a QML error before the tests started, or a hang).
+
+set -euo pipefail
+
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+main="$(dirname "$here")"
+suite="${1:-}"
+
+if [[ -z "$suite" || ! -f "$here/$suite/shell.qml" ]]; then
+    echo "usage: tests/run <suite>, one of:" $(cd "$here" && ls -d */ | tr -d /) >&2
+    exit 2
+fi
+
+sandbox="$(mktemp -d)"
+log="$sandbox/qs.log"
+qs_pid=
+
+cleanup() {
+    # qs runs as its own process group leader (setsid below), so this also
+    # takes down anything a suite started.
+    [[ -n "$qs_pid" ]] && kill -- -"$qs_pid" 2>/dev/null || true
+    rm -rf "$sandbox"
+}
+trap cleanup EXIT
+
+cp -r "$here/$suite/." "$sandbox/"
+while read -r path; do
+    [[ -z "$path" ]] && continue
+    mkdir -p "$sandbox/$(dirname "$path")"
+    cp "$main/$path" "$sandbox/$path"
+done <"$here/$suite/uses"
+
+setsid qs -p "$sandbox" --no-color >"$log" 2>&1 &
+qs_pid=$!
+
+for _ in $(seq 1 150); do
+    grep -q 'TEST DONE' "$log" && break
+    kill -0 "$qs_pid" 2>/dev/null || break
+    sleep 0.1
+done
+
+grep -o 'TEST .*' "$log" | sed 's/^TEST //' | grep -v '^DONE' || true
+
+if ! grep -q 'TEST DONE' "$log"; then
+    echo "run did not finish; qs log:" >&2
+    cat "$log" >&2
+    exit 2
+fi
+
+# Any QML warning from the code under test is worth seeing even when
+# checks pass.
+grep -E 'WARN|ERROR' "$log" | grep -v 'no receivers connected' >&2 || true
+
+failures="$(grep -o 'TEST DONE [0-9]*' "$log" | awk '{print $3}')"
+echo "$failures failed"
+[[ "$failures" == 0 ]]
