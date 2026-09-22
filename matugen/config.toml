@@ -1,0 +1,54 @@
+[config]
+# Some wallpapers have several equally-dominant colors; without a
+# preference matugen prompts interactively, which hangs when invoked
+# non-interactively from the wallpaper switcher below.
+prefer = "saturation"
+
+# matugen derives a Material You palette from the active wallpaper and
+# writes it to ~/.cache/matugen/colors.json, in the same shape pywal's
+# colors.json used to have (special.background/foreground + colors.colorN).
+# quickshell/config/Theme.qml and hypr/modules/colors.lua both watch that
+# file — see the comments there for how it's consumed.
+#
+# red/green/orange are defined here (rather than left to whatever hue
+# Material's tonal roles land on) so status colors stay recognizably
+# red/green/orange across wallpapers; matugen still harmonizes them to
+# the source palette instead of using these literal hexes verbatim.
+[config.custom_colors]
+red = "#f87171"
+green = "#4ade80"
+orange = "#fb923c"
+
+[templates.quickshell]
+input_path = "./templates/colors.json"
+output_path = "~/.cache/matugen/colors.json"
+
+# foot includes this file (see foot/foot.ini) so its ANSI palette follows
+# the wallpaper too — fastfetch then inherits it, since it just prints the
+# terminal's own colors for its blocks/logo rather than theming itself.
+[templates.foot]
+input_path = "./templates/foot-colors.ini"
+output_path = "~/.cache/matugen/foot-colors.ini"
+
+# gtk-3.0/gtk.css and gtk-4.0/gtk.css each @import the palette beside them,
+# so GTK apps' accent/window colors follow the wallpaper too.
+#
+# Rendered twice, into the GTK directories rather than once into
+# ~/.cache/matugen, because neither end of that import can name a home
+# directory portably: GTK's CSS @import expands neither ~ nor $HOME, and
+# matugen's templates cannot reach the environment (`{{env.HOME}}` and
+# `{{home}}` both fail to resolve — checked against 4.2.0). Writing the
+# file next to its importer makes the import relative, so no absolute path
+# has to exist. output_path is the one place ~ does get expanded, which is
+# what makes this work at all.
+#
+# A deployed gtk-3.0/ may be a symlink back into this repo, so these two
+# outputs are gitignored — matugen rewrites them on every wallpaper change
+# and they are generated state, not config.
+[templates.gtk3-colors]
+input_path = "./templates/gtk-colors.css"
+output_path = "~/.config/gtk-3.0/gtk-colors.css"
+
+[templates.gtk4-colors]
+input_path = "./templates/gtk-colors.css"
+output_path = "~/.config/gtk-4.0/gtk-colors.css"
