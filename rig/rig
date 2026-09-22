@@ -1,0 +1,309 @@
+#!/usr/bin/env bash
+#
+# rig — shell primitives. Runs as a command, or source it as a library.
+#
+#   rig log info "hello"
+#   source "$(command -v rig)"; rig::log::info "hello"
+#
+# Knows nothing about the desktop or the dotfiles repo. See README.md.
+
+# Already sourced into this shell — nothing to do.
+if [[ -n ${RIG_VERSION:-} ]] && declare -F rig::load >/dev/null 2>&1; then
+    return 0 2>/dev/null || exit 0
+fi
+
+if [[ -z ${BASH_VERSINFO[0]:-} ]] ||
+    ((BASH_VERSINFO[0] < 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] < 2))); then
+    echo "rig: needs bash 4.2 or newer (associative arrays, declare -g)" >&2
+    exit 1
+fi
+
+RIG_VERSION="0.1.0"
+
+# Exit codes, used by every module. 2 and 127 are the ones callers branch on.
+RIG_EX_OK=0
+RIG_EX_FAIL=1
+RIG_EX_USAGE=2
+RIG_EX_NODEP=127
+
+# Sourced or executed? Decides whether we may touch the caller's shell options.
+if [[ ${BASH_SOURCE[0]} != "${0}" ]]; then
+    RIG_SOURCED=1
+else
+    RIG_SOURCED=0
+fi
+
+# Module metadata, populated as modules are sourced. `list` and `help` read these.
+declare -gA RIG_MODULE_SUMMARY=()
+declare -gA RIG_MODULE_ACTIONS=()
+declare -gA RIG_MODULE_STATUS=()
+declare -gA RIG_MODULE_TIER=()
+declare -gA RIG_LOADED=()
+
+# Short names for the handful of calls that read badly fully qualified.
+# Hard-capped at four: past that it stops being an alias table and becomes a
+# second, undocumented API.
+declare -gA RIG_ALIAS=(
+    [require]="check require"
+    [has]="check has"
+    [die]="log die"
+    [run]="proc run"
+)
+
+# ---------------------------------------------------------------- library dir
+
+# Handles both layouts without being told which it is:
+#   repo:      <repo>/rig            + <repo>/lib/
+#   installed: ~/.local/bin/rig      + ~/.local/lib/rig/
+# `readlink -f` means a bin/rig symlinked back into the repo resolves to the
+# repo's own lib, so editing a module takes effect with no reinstall.
+rig::__find_lib() {
+    local self dir parent
+    self=$(readlink -f -- "${BASH_SOURCE[0]}" 2>/dev/null) || self=${BASH_SOURCE[0]}
+    dir=${self%/*}
+    parent=${dir%/*}
+
+    if [[ -f $dir/lib/log.sh ]]; then
+        printf '%s\n' "$dir/lib"
+    elif [[ -f $parent/lib/rig/log.sh ]]; then
+        printf '%s\n' "$parent/lib/rig"
+    else
+        return 1
+    fi
+}
+
+if [[ -z ${RIG_LIB_DIR:-} ]]; then
+    if ! RIG_LIB_DIR=$(rig::__find_lib); then
+        echo "rig: cannot locate the module directory; set RIG_LIB_DIR" >&2
+        exit 1
+    fi
+fi
+
+# ------------------------------------------------------------------- loading
+
+# Source modules once each. Modules call this at their own top to declare
+# dependencies, so the graph is visible in the files rather than a table here.
+rig::load() {
+    local mod file
+    for mod in "$@"; do
+        [[ -n ${RIG_LOADED[$mod]:-} ]] && continue
+        file="$RIG_LIB_DIR/$mod.sh"
+        if [[ ! -f $file ]]; then
+            echo "rig: no such module: $mod" >&2
+            return "$RIG_EX_USAGE"
+        fi
+        # Mark before sourcing so a dependency cycle terminates instead of
+        # recursing until the stack gives out.
+        RIG_LOADED[$mod]=1
+        # shellcheck disable=SC1090
+        source "$file"
+    done
+}
+
+rig::loaded() { [[ -n ${RIG_LOADED[${1:-}]:-} ]]; }
+
+# Every module, in tier order, whether or not it is loaded. Sourcing a module
+# only registers metadata and functions, so this is safe — just not free, which
+# is why nothing on the hot path calls it.
+rig::__load_all() {
+    local file mod
+    for file in "$RIG_LIB_DIR"/*.sh; do
+        [[ -f $file ]] || continue
+        mod=${file##*/}
+        mod=${mod%.sh}
+        rig::load "$mod" 2>/dev/null || true
+    done
+}
+
+# ---------------------------------------------------------------- reflection
+
+rig::__version() {
+    printf 'rig %s\n' "$RIG_VERSION"
+    printf 'modules  %s\n' "$RIG_LIB_DIR"
+    printf 'bash     %s\n' "${BASH_VERSION}"
+}
+
+# Where a module actually lives — the difference between spotting a stale
+# symlink in ten seconds and in twenty minutes.
+rig::__which() {
+    local mod=${1:-}
+    if [[ -z $mod ]]; then
+        readlink -f -- "${BASH_SOURCE[0]}"
+        return 0
+    fi
+    if [[ -f $RIG_LIB_DIR/$mod.sh ]]; then
+        readlink -f -- "$RIG_LIB_DIR/$mod.sh"
+    else
+        echo "rig: no such module: $mod" >&2
+        return "$RIG_EX_USAGE"
+    fi
+}
+
+rig::__list() {
+    local tier mod
+    rig::__load_all
+    for tier in core general planned; do
+        local -a in_tier=()
+        for mod in "${!RIG_MODULE_SUMMARY[@]}"; do
+            [[ ${RIG_MODULE_TIER[$mod]:-general} == "$tier" ]] && in_tier+=("$mod")
+        done
+        ((${#in_tier[@]})) || continue
+        printf '\n%s\n' "$tier"
+        while read -r mod; do
+            printf '  %-11s %s%s\n' "$mod" "${RIG_MODULE_SUMMARY[$mod]}" \
+                "$([[ ${RIG_MODULE_STATUS[$mod]:-} == planned ]] && echo '  (planned)')"
+        done < <(printf '%s\n' "${in_tier[@]}" | sort)
+    done
+    printf '\n'
+}
+
+rig::__help() {
+    local mod=${1:-}
+
+    if [[ -n $mod ]]; then
+        rig::load "$mod" 2>/dev/null || {
+            echo "rig: no such module: $mod" >&2
+            return "$RIG_EX_USAGE"
+        }
+        printf '%s — %s\n' "$mod" "${RIG_MODULE_SUMMARY[$mod]:-no description}"
+        if [[ ${RIG_MODULE_STATUS[$mod]:-} == planned ]]; then
+            printf '\nPlanned, not implemented yet.\n'
+        fi
+        printf '\nactions: %s\n' "${RIG_MODULE_ACTIONS[$mod]:-none}"
+        if declare -F "rig::${mod}::__usage" >/dev/null; then
+            printf '\n'
+            "rig::${mod}::__usage"
+        fi
+        return 0
+    fi
+
+    cat <<EOF
+rig $RIG_VERSION — shell primitives
+
+usage
+  rig <module> <action> [args...]
+  source "\$(command -v rig)"   # then call rig::<module>::<action>
+
+builtins
+  help [module]     this, or one module's actions
+  list              every module and its status
+  which [module]    resolved path of rig, or of a module
+  version           version and module directory
+  completion bash   emit the bash completion script
+
+shortcuts
+  rig require jq curl     rig has fzf     rig die "msg"     rig run -- cmd
+
+Sourcing loads the core modules; call rig::load <mod> for the rest.
+EOF
+    rig::__list
+}
+
+# Generated from module metadata rather than maintained by hand, so it cannot
+# drift. install.sh writes the output into the completions directory.
+rig::__completion() {
+    local mod
+    rig::__load_all
+    printf '# generated by: rig completion bash\n'
+    printf '_rig() {\n'
+    printf '    local cur prev modules builtins\n'
+    printf '    cur=${COMP_WORDS[COMP_CWORD]}\n'
+    printf '    prev=${COMP_WORDS[COMP_CWORD-1]}\n'
+    printf '    modules="%s"\n' "$(printf '%s\n' "${!RIG_MODULE_SUMMARY[@]}" | sort | tr '\n' ' ')"
+    printf '    builtins="help list which version completion %s"\n' "${!RIG_ALIAS[*]}"
+    printf '    if [[ $COMP_CWORD -eq 1 ]]; then\n'
+    printf '        COMPREPLY=($(compgen -W "$modules $builtins" -- "$cur")); return\n'
+    printf '    fi\n'
+    printf '    case $prev in\n'
+    for mod in "${!RIG_MODULE_ACTIONS[@]}"; do
+        printf '        %s) COMPREPLY=($(compgen -W "%s" -- "$cur"));;\n' \
+            "$mod" "${RIG_MODULE_ACTIONS[$mod]}"
+    done
+    printf '        help|which) COMPREPLY=($(compgen -W "$modules" -- "$cur"));;\n'
+    printf '        completion) COMPREPLY=($(compgen -W "bash" -- "$cur"));;\n'
+    printf '    esac\n'
+    printf '}\n'
+    printf 'complete -F _rig rig\n'
+}
+
+# ------------------------------------------------------------------ dispatch
+
+rig::main() {
+    local mod action fn
+
+    (($# == 0)) && {
+        rig::__help
+        return 0
+    }
+
+    case $1 in
+        help | -h | --help)
+            shift
+            rig::__help "$@"
+            return
+            ;;
+        version | -V | --version)
+            rig::__version
+            return
+            ;;
+        list)
+            rig::__list
+            return
+            ;;
+        which)
+            shift
+            rig::__which "$@"
+            return
+            ;;
+        completion)
+            shift
+            [[ ${1:-bash} == bash ]] || {
+                echo "rig: only bash completion is supported" >&2
+                return "$RIG_EX_USAGE"
+            }
+            rig::__completion
+            return
+            ;;
+    esac
+
+    # Shortcut, e.g. `rig require jq` -> `rig check require jq`
+    if [[ -n ${RIG_ALIAS[$1]:-} ]]; then
+        read -r mod action <<<"${RIG_ALIAS[$1]}"
+        shift
+    else
+        mod=$1
+        shift
+        action=${1:-}
+        [[ -n $action ]] && shift
+    fi
+
+    rig::load "$mod" || return $?
+
+    if [[ -z $action ]]; then
+        rig::__help "$mod"
+        return "$RIG_EX_USAGE"
+    fi
+
+    fn="rig::${mod}::${action}"
+    if ! declare -F "$fn" >/dev/null; then
+        if [[ ${RIG_MODULE_STATUS[$mod]:-} == planned ]]; then
+            echo "rig: $mod is planned but not implemented yet" >&2
+            return "$RIG_EX_USAGE"
+        fi
+        echo "rig: $mod has no action '$action' (try: ${RIG_MODULE_ACTIONS[$mod]:-none})" >&2
+        return "$RIG_EX_USAGE"
+    fi
+
+    "$fn" "$@"
+}
+
+# --------------------------------------------------------------------- start
+
+if ((RIG_SOURCED)); then
+    # Never set shell options here — they would leak into the caller's shell.
+    # The core tier is cheap and covers most sourcing; rig::load gets the rest.
+    rig::load log check path trap tmp lock notify
+else
+    set -euo pipefail
+    rig::main "$@"
+fi

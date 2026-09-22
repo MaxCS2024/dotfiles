@@ -1,0 +1,83 @@
+{
+	"version": 1,
+	"settings": {
+		"dnd": {
+			"type": "bool",
+			"default": false,
+			"label": "Do not disturb",
+			"pane": "notifications",
+			"applies": "watch"
+		},
+		"stayAwake": {
+			"type": "bool",
+			"default": false,
+			"label": "Stay awake",
+			"pane": "notifications",
+			"applies": "watch"
+		},
+		"rotateWallpaperHourly": {
+			"type": "bool",
+			"default": true,
+			"label": "Rotate wallpaper hourly",
+			"pane": "wallpaper",
+			"applies": "watch"
+		},
+		"ground": {
+			"type": "string",
+			"default": "paper",
+			"label": "Ground",
+			"pane": "appearance",
+			"applies": "watch",
+			"enum": ["paper", "ink", "foxed"]
+		},
+		"accent": {
+			"type": "string",
+			"default": "#b68235",
+			"label": "Accent",
+			"pane": "appearance",
+			"applies": "watch",
+			"description": "Hex colour"
+		},
+		"typePairing": {
+			"type": "string",
+			"default": "jetbrains-mono",
+			"label": "Type pairing",
+			"pane": "appearance",
+			"applies": "watch",
+			"enum": ["jetbrains-mono", "eb-garamond", "iosevka"]
+		},
+		"barOpacity": {
+			"type": "number",
+			"default": 0.65,
+			"label": "Bar opacity",
+			"pane": "appearance",
+			"applies": "watch",
+			"min": 0.0,
+			"max": 1.0
+		},
+		"cornerRadius": {
+			"type": "int",
+			"default": 2,
+			"label": "Corner radius",
+			"pane": "appearance",
+			"applies": "watch",
+			"min": 0
+		},
+		"hairlineDividers": {
+			"type": "bool",
+			"default": true,
+			"label": "Hairline dividers",
+			"pane": "appearance",
+			"applies": "none",
+			"description": "Persisted and exported, but not wired to any render path yet."
+		},
+		"dropShadows": {
+			"type": "bool",
+			"default": true,
+			"label": "Drop shadows",
+			"pane": "appearance",
+			"applies": "none",
+			"description": "Persisted and exported, but not wired to any render path yet."
+		}
+	}
+}

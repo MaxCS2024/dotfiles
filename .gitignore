@@ -1,0 +1,17 @@
+# Secrets and per-machine state, never the config itself.
+.env
+.histfile
+
+# zsh regenerates this completion cache on first start; tracking it meant
+# every shell launch showed up as a diff.
+.zcompdump
+.zcompdump.zwc
+
+# Claude Code's worktree bookkeeping, local to this checkout.
+.claude/
+
+# matugen renders these beside each gtk.css on every wallpaper change. A
+# deployed gtk-3.0/ can be a symlink back into this repo, so keep the
+# generated palette out of it.
+gtk-3.0/gtk-colors.css
+gtk-4.0/gtk-colors.css

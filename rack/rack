@@ -1,0 +1,277 @@
+#!/usr/bin/env bash
+#
+# rack — the configuration tool. What you run at a terminal, deliberately.
+#
+#   rack deploy
+#   rack theme dark
+#   rack diff
+#
+# Everything reads from one manifest, so adding an application means adding a
+# line rather than remembering a command.
+
+if [[ -n ${RACK_VERSION:-} ]] && declare -F rack::load >/dev/null 2>&1; then
+    return 0 2>/dev/null || exit 0
+fi
+
+RACK_VERSION="0.1.0"
+
+# ------------------------------------------------------------------ find rig
+#
+# Planning correction: I had this as rack -> relay -> rig, with rack sourcing
+# both. It does not source relay. rack invokes relay as a command, from the
+# reload column of the manifest, which is a much weaker coupling — and it
+# means deploy and diff work on a machine with no relay installed at all.
+
+rack::__find_rig() {
+    local here candidate
+    here=$(readlink -f -- "${BASH_SOURCE[0]}")
+    here=${here%/*}
+    for candidate in \
+        "${RIG_EXE:-}" \
+        "$(command -v rig 2>/dev/null || true)" \
+        "$here/../rig/rig" \
+        "$HOME/.local/bin/rig"; do
+        [[ -n $candidate && -f $candidate ]] && {
+            readlink -f -- "$candidate"
+            return 0
+        }
+    done
+    return 1
+}
+
+if ! RIG_EXE=$(rack::__find_rig); then
+    echo "rack: cannot find rig — install it first, or set RIG_EXE" >&2
+    exit 127
+fi
+
+# shellcheck disable=SC1090
+source "$RIG_EXE"
+rig::load proc link config
+
+# ---------------------------------------------------------------- own tables
+
+declare -gA RACK_MODULE_SUMMARY=()
+declare -gA RACK_MODULE_ACTIONS=()
+declare -gA RACK_MODULE_STATUS=()
+declare -gA RACK_MODULE_TIER=()
+declare -gA RACK_LOADED=()
+
+rack::__find_lib() {
+    local self dir parent
+    self=$(readlink -f -- "${BASH_SOURCE[0]}" 2>/dev/null) || self=${BASH_SOURCE[0]}
+    dir=${self%/*}
+    parent=${dir%/*}
+    if [[ -f $dir/lib/manifest.sh ]]; then
+        printf '%s\n' "$dir/lib"
+    elif [[ -f $parent/lib/rack/manifest.sh ]]; then
+        printf '%s\n' "$parent/lib/rack"
+    else
+        return 1
+    fi
+}
+
+if [[ -z ${RACK_LIB_DIR:-} ]]; then
+    if ! RACK_LIB_DIR=$(rack::__find_lib); then
+        echo "rack: cannot locate the module directory; set RACK_LIB_DIR" >&2
+        exit 1
+    fi
+fi
+
+# Where rack itself lives — the repo, when running from a checkout.
+RACK_ROOT=$(readlink -f -- "${RACK_LIB_DIR%/*}")
+
+rack::load() {
+    local mod file
+    for mod in "$@"; do
+        [[ -n ${RACK_LOADED[$mod]:-} ]] && continue
+        file="$RACK_LIB_DIR/$mod.sh"
+        if [[ ! -f $file ]]; then
+            echo "rack: no such module: $mod" >&2
+            return "$RIG_EX_USAGE"
+        fi
+        RACK_LOADED[$mod]=1
+        # shellcheck disable=SC1090
+        source "$file"
+    done
+}
+
+rack::__load_all() {
+    local file mod
+    for file in "$RACK_LIB_DIR"/*.sh; do
+        [[ -f $file ]] || continue
+        mod=${file##*/}
+        rack::load "${mod%.sh}" 2>/dev/null || true
+    done
+}
+
+# ---------------------------------------------------------------- reflection
+
+rack::__version() {
+    rack::load manifest
+    printf 'rack %s\n' "$RACK_VERSION"
+    printf 'modules   %s\n' "$RACK_LIB_DIR"
+    printf 'manifest  %s\n' "$(rack::manifest::path)"
+    printf 'dotfiles  %s\n' "$(rack::manifest::dotfiles)"
+    printf 'rig       %s (%s)\n' "$RIG_VERSION" "$RIG_EXE"
+}
+
+rack::__list() {
+    local tier mod
+    rack::__load_all
+    for tier in core general planned; do
+        local -a in_tier=()
+        for mod in "${!RACK_MODULE_SUMMARY[@]}"; do
+            [[ ${RACK_MODULE_TIER[$mod]:-general} == "$tier" ]] && in_tier+=("$mod")
+        done
+        ((${#in_tier[@]})) || continue
+        printf '\n%s\n' "$tier"
+        while read -r mod; do
+            printf '  %-10s %s%s\n' "$mod" "${RACK_MODULE_SUMMARY[$mod]}" \
+                "$([[ ${RACK_MODULE_STATUS[$mod]:-} == planned ]] && echo '  (planned)')"
+        done < <(printf '%s\n' "${in_tier[@]}" | sort)
+    done
+    printf '\n'
+}
+
+rack::__help() {
+    local mod=${1:-}
+
+    if [[ -n $mod ]]; then
+        rack::load "$mod" 2>/dev/null || {
+            echo "rack: no such module: $mod" >&2
+            return "$RIG_EX_USAGE"
+        }
+        printf '%s — %s\n' "$mod" "${RACK_MODULE_SUMMARY[$mod]:-no description}"
+        [[ ${RACK_MODULE_STATUS[$mod]:-} == planned ]] &&
+            printf '\nPlanned, not implemented yet.\n'
+        printf '\nactions: %s\n' "${RACK_MODULE_ACTIONS[$mod]:-none}"
+        declare -F "rack::${mod}::__usage" >/dev/null && {
+            printf '\n'
+            "rack::${mod}::__usage"
+        }
+        return 0
+    fi
+
+    cat <<EOF
+rack $RACK_VERSION — configuration: deploy, theme, check
+
+usage
+  rack <module> <action> [args...]
+  rack deploy | rack diff | rack theme dark     (shortcuts for the common ones)
+
+builtins
+  help [module]     this, or one module's actions
+  list              every module and its status
+  version           versions, and which manifest is in use
+  completion bash   emit the bash completion script
+
+env
+  RACK_MANIFEST   path to manifest.conf
+  RACK_DOTFILES   what the manifest's sources are relative to
+  RIG_DRY_RUN=1   print what would happen, change nothing
+EOF
+    rack::__list
+}
+
+rack::__completion() {
+    local mod
+    rack::__load_all
+    printf '# generated by: rack completion bash\n'
+    printf '_rack() {\n'
+    printf '    local cur prev modules names\n'
+    printf '    cur=${COMP_WORDS[COMP_CWORD]}\n'
+    printf '    prev=${COMP_WORDS[COMP_CWORD-1]}\n'
+    printf '    modules="%s"\n' "$(printf '%s\n' "${!RACK_MODULE_SUMMARY[@]}" | sort | tr '\n' ' ')"
+    printf '    names=$(rack manifest names 2>/dev/null)\n'
+    printf '    if [[ $COMP_CWORD -eq 1 ]]; then\n'
+    printf '        COMPREPLY=($(compgen -W "$modules help list version completion" -- "$cur")); return\n'
+    printf '    fi\n'
+    printf '    case $prev in\n'
+    for mod in "${!RACK_MODULE_ACTIONS[@]}"; do
+        printf '        %s) COMPREPLY=($(compgen -W "%s" -- "$cur"));;\n' \
+            "$mod" "${RACK_MODULE_ACTIONS[$mod]}"
+    done
+    printf '        deploy|diff|validate|edit|reload) COMPREPLY=($(compgen -W "$names" -- "$cur"));;\n'
+    printf '        theme) COMPREPLY=($(compgen -W "$(rack theme list 2>/dev/null) list current" -- "$cur"));;\n'
+    printf '        help) COMPREPLY=($(compgen -W "$modules" -- "$cur"));;\n'
+    printf '    esac\n'
+    printf '}\n'
+    printf 'complete -F _rack rack\n'
+}
+
+# ------------------------------------------------------------------ dispatch
+#
+# Unlike rig and relay, most of rack's modules have one obvious verb, so
+# `rack deploy` means `rack deploy run` and `rack theme dark` means
+# `rack theme set dark`. The mapping is per-module, declared by each module as
+# rack::<mod>::__default, rather than a table here.
+
+rack::main() {
+    local mod action fn
+
+    (($# == 0)) && {
+        rack::__help
+        return 0
+    }
+
+    case $1 in
+        help | -h | --help)
+            shift
+            rack::__help "$@"
+            return
+            ;;
+        version | -V | --version)
+            rack::__version
+            return
+            ;;
+        list)
+            rack::__list
+            return
+            ;;
+        completion)
+            shift
+            [[ ${1:-bash} == bash ]] || {
+                echo "rack: only bash completion is supported" >&2
+                return "$RIG_EX_USAGE"
+            }
+            rack::__completion
+            return
+            ;;
+    esac
+
+    mod=$1
+    shift
+    rack::load "$mod" || return $?
+
+    action=${1:-}
+    fn="rack::${mod}::${action}"
+
+    # An unrecognised first word is an argument to the module's default verb,
+    # not a typo: `rack theme dark` and `rack deploy hypr` both land here.
+    if [[ -z $action ]] || ! declare -F "$fn" >/dev/null; then
+        if declare -F "rack::${mod}::__default" >/dev/null; then
+            "rack::${mod}::__default" "$@"
+            return
+        fi
+        if [[ -z $action ]]; then
+            rack::__help "$mod"
+            return "$RIG_EX_USAGE"
+        fi
+        if [[ ${RACK_MODULE_STATUS[$mod]:-} == planned ]]; then
+            echo "rack: $mod is planned but not implemented yet" >&2
+            return "$RIG_EX_USAGE"
+        fi
+        echo "rack: $mod has no action '$action' (try: ${RACK_MODULE_ACTIONS[$mod]:-none})" >&2
+        return "$RIG_EX_USAGE"
+    fi
+
+    shift
+    "$fn" "$@"
+}
+
+if [[ ${BASH_SOURCE[0]} != "${0}" ]]; then
+    rack::load manifest
+else
+    set -euo pipefail
+    rack::main "$@"
+fi

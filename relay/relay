@@ -1,0 +1,270 @@
+#!/usr/bin/env bash
+#
+# relay — the desktop layer. What the keybinds call.
+#
+#   relay volume up
+#   relay screenshot region
+#   relay bar emit --text "42" --class warning
+#
+# Sits on rig and knows about Hyprland, PipeWire and the bar. It is the only
+# one of the three that would need rewriting for a different compositor.
+
+if [[ -n ${RELAY_VERSION:-} ]] && declare -F relay::load >/dev/null 2>&1; then
+    return 0 2>/dev/null || exit 0
+fi
+
+RELAY_VERSION="0.1.0"
+
+# ------------------------------------------------------------------ find rig
+#
+# relay is a consumer of rig, never the other way round. If rig is missing
+# there is nothing sensible to do — every module here logs, locks or notifies.
+
+relay::__find_rig() {
+    local here candidate
+    here=$(readlink -f -- "${BASH_SOURCE[0]}")
+    here=${here%/*}
+    for candidate in \
+        "${RIG_EXE:-}" \
+        "$(command -v rig 2>/dev/null || true)" \
+        "$here/../rig/rig" \
+        "$HOME/.local/bin/rig"; do
+        [[ -n $candidate && -f $candidate ]] && {
+            readlink -f -- "$candidate"
+            return 0
+        }
+    done
+    return 1
+}
+
+if ! RIG_EXE=$(relay::__find_rig); then
+    echo "relay: cannot find rig — install it first, or set RIG_EXE" >&2
+    exit 127
+fi
+
+# shellcheck disable=SC1090
+source "$RIG_EXE"
+rig::load proc
+
+# ----------------------------------------------------------------- own loader
+#
+# Deliberately not rig's loader with a second search path: sharing it would
+# put relay's module metadata into rig's tables and make `rig list` report
+# modules rig does not own. Twenty-five lines of duplication is the cheaper
+# of the two prices.
+
+declare -gA RELAY_MODULE_SUMMARY=()
+declare -gA RELAY_MODULE_ACTIONS=()
+declare -gA RELAY_MODULE_STATUS=()
+declare -gA RELAY_MODULE_TIER=()
+declare -gA RELAY_LOADED=()
+
+declare -gA RELAY_ALIAS=(
+    [vol]="volume"
+    [bright]="brightness"
+    [shot]="screenshot"
+    [net]="network"
+    [bt]="bluetooth"
+)
+
+relay::__find_lib() {
+    local self dir parent
+    self=$(readlink -f -- "${BASH_SOURCE[0]}" 2>/dev/null) || self=${BASH_SOURCE[0]}
+    dir=${self%/*}
+    parent=${dir%/*}
+    if [[ -f $dir/lib/bar.sh ]]; then
+        printf '%s\n' "$dir/lib"
+    elif [[ -f $parent/lib/relay/bar.sh ]]; then
+        printf '%s\n' "$parent/lib/relay"
+    else
+        return 1
+    fi
+}
+
+if [[ -z ${RELAY_LIB_DIR:-} ]]; then
+    if ! RELAY_LIB_DIR=$(relay::__find_lib); then
+        echo "relay: cannot locate the module directory; set RELAY_LIB_DIR" >&2
+        exit 1
+    fi
+fi
+
+relay::load() {
+    local mod file
+    for mod in "$@"; do
+        [[ -n ${RELAY_LOADED[$mod]:-} ]] && continue
+        file="$RELAY_LIB_DIR/$mod.sh"
+        if [[ ! -f $file ]]; then
+            echo "relay: no such module: $mod" >&2
+            return "$RIG_EX_USAGE"
+        fi
+        RELAY_LOADED[$mod]=1
+        # shellcheck disable=SC1090
+        source "$file"
+    done
+}
+
+relay::__load_all() {
+    local file mod
+    for file in "$RELAY_LIB_DIR"/*.sh; do
+        [[ -f $file ]] || continue
+        mod=${file##*/}
+        relay::load "${mod%.sh}" 2>/dev/null || true
+    done
+}
+
+# ---------------------------------------------------------------- reflection
+
+relay::__version() {
+    printf 'relay %s\n' "$RELAY_VERSION"
+    printf 'modules  %s\n' "$RELAY_LIB_DIR"
+    printf 'rig      %s (%s)\n' "$RIG_VERSION" "$RIG_EXE"
+}
+
+relay::__list() {
+    local tier mod
+    relay::__load_all
+    for tier in core general planned; do
+        local -a in_tier=()
+        for mod in "${!RELAY_MODULE_SUMMARY[@]}"; do
+            [[ ${RELAY_MODULE_TIER[$mod]:-general} == "$tier" ]] && in_tier+=("$mod")
+        done
+        ((${#in_tier[@]})) || continue
+        printf '\n%s\n' "$tier"
+        while read -r mod; do
+            printf '  %-11s %s%s\n' "$mod" "${RELAY_MODULE_SUMMARY[$mod]}" \
+                "$([[ ${RELAY_MODULE_STATUS[$mod]:-} == planned ]] && echo '  (planned)')"
+        done < <(printf '%s\n' "${in_tier[@]}" | sort)
+    done
+    printf '\n'
+}
+
+relay::__help() {
+    local mod=${1:-}
+
+    if [[ -n $mod ]]; then
+        relay::load "$mod" 2>/dev/null || {
+            echo "relay: no such module: $mod" >&2
+            return "$RIG_EX_USAGE"
+        }
+        printf '%s — %s\n' "$mod" "${RELAY_MODULE_SUMMARY[$mod]:-no description}"
+        [[ ${RELAY_MODULE_STATUS[$mod]:-} == planned ]] &&
+            printf '\nPlanned, not implemented yet.\n'
+        printf '\nactions: %s\n' "${RELAY_MODULE_ACTIONS[$mod]:-none}"
+        declare -F "relay::${mod}::__usage" >/dev/null && {
+            printf '\n'
+            "relay::${mod}::__usage"
+        }
+        return 0
+    fi
+
+    cat <<EOF
+relay $RELAY_VERSION — desktop actions
+
+usage
+  relay <module> <action> [args...]
+
+builtins
+  help [module]     this, or one module's actions
+  list              every module and its status
+  version           versions of relay and the rig underneath
+  completion bash   emit the bash completion script
+
+shortcuts
+  vol = volume    bright = brightness    shot = screenshot
+
+env
+  RIG_DRY_RUN=1   print what would happen, change nothing
+EOF
+    relay::__list
+}
+
+relay::__completion() {
+    local mod
+    relay::__load_all
+    printf '# generated by: relay completion bash\n'
+    printf '_relay() {\n'
+    printf '    local cur prev modules\n'
+    printf '    cur=${COMP_WORDS[COMP_CWORD]}\n'
+    printf '    prev=${COMP_WORDS[COMP_CWORD-1]}\n'
+    printf '    modules="%s"\n' "$(printf '%s\n' "${!RELAY_MODULE_SUMMARY[@]}" | sort | tr '\n' ' ')"
+    printf '    if [[ $COMP_CWORD -eq 1 ]]; then\n'
+    printf '        COMPREPLY=($(compgen -W "$modules help list version completion %s" -- "$cur")); return\n' \
+        "${!RELAY_ALIAS[*]}"
+    printf '    fi\n'
+    printf '    case $prev in\n'
+    for mod in "${!RELAY_MODULE_ACTIONS[@]}"; do
+        printf '        %s) COMPREPLY=($(compgen -W "%s" -- "$cur"));;\n' \
+            "$mod" "${RELAY_MODULE_ACTIONS[$mod]}"
+    done
+    printf '        help) COMPREPLY=($(compgen -W "$modules" -- "$cur"));;\n'
+    printf '    esac\n'
+    printf '}\n'
+    printf 'complete -F _relay relay\n'
+}
+
+# ------------------------------------------------------------------ dispatch
+
+relay::main() {
+    local mod action fn
+
+    (($# == 0)) && {
+        relay::__help
+        return 0
+    }
+
+    case $1 in
+        help | -h | --help)
+            shift
+            relay::__help "$@"
+            return
+            ;;
+        version | -V | --version)
+            relay::__version
+            return
+            ;;
+        list)
+            relay::__list
+            return
+            ;;
+        completion)
+            shift
+            [[ ${1:-bash} == bash ]] || {
+                echo "relay: only bash completion is supported" >&2
+                return "$RIG_EX_USAGE"
+            }
+            relay::__completion
+            return
+            ;;
+    esac
+
+    mod=${RELAY_ALIAS[$1]:-$1}
+    shift
+    action=${1:-}
+    [[ -n $action ]] && shift
+
+    relay::load "$mod" || return $?
+
+    if [[ -z $action ]]; then
+        relay::__help "$mod"
+        return "$RIG_EX_USAGE"
+    fi
+
+    fn="relay::${mod}::${action}"
+    if ! declare -F "$fn" >/dev/null; then
+        if [[ ${RELAY_MODULE_STATUS[$mod]:-} == planned ]]; then
+            echo "relay: $mod is planned but not implemented yet" >&2
+            return "$RIG_EX_USAGE"
+        fi
+        echo "relay: $mod has no action '$action' (try: ${RELAY_MODULE_ACTIONS[$mod]:-none})" >&2
+        return "$RIG_EX_USAGE"
+    fi
+
+    "$fn" "$@"
+}
+
+if [[ ${BASH_SOURCE[0]} != "${0}" ]]; then
+    relay::load bar osd hypr
+else
+    set -euo pipefail
+    relay::main "$@"
+fi

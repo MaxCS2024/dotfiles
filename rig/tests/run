@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# Tiny test harness. bats is nicer, but it is one more thing to install and a
+# config repo's tests should run on a fresh machine with nothing set up.
+#
+#   tests/run            every test file
+#   tests/run lock       just tests/lock.test.sh
+
+set -uo pipefail
+
+RIG_TEST_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+export RIG_ROOT=${RIG_TEST_DIR%/*}
+export RIG_LIB_DIR="$RIG_ROOT/lib"
+
+# Never touch the real runtime directory: these tests take locks and make
+# temp files, and a failing test should not leave anything behind.
+XDG_RUNTIME_DIR=$(mktemp -d)
+export XDG_RUNTIME_DIR
+export RIG_COLOR=never
+export RIG_LOG_JOURNAL=never
+trap 'rm -rf -- "$XDG_RUNTIME_DIR"' EXIT
+
+PASS=0 FAIL=0
+
+ok() {
+    local msg=$1
+    shift
+    if "$@" >/dev/null 2>&1; then
+        printf '  ok    %s\n' "$msg"
+        ((PASS++))
+    else
+        printf '  FAIL  %s\n' "$msg"
+        ((FAIL++))
+    fi
+}
+
+not_ok() {
+    local msg=$1
+    shift
+    if "$@" >/dev/null 2>&1; then
+        printf '  FAIL  %s\n' "$msg"
+        ((FAIL++))
+    else
+        printf '  ok    %s\n' "$msg"
+        ((PASS++))
+    fi
+}
+
+eq() {
+    local msg=$1 want=$2 got=$3
+    if [[ $want == "$got" ]]; then
+        printf '  ok    %s\n' "$msg"
+        ((PASS++))
+    else
+        printf '  FAIL  %s\n' "$msg"
+        printf '        want: %q\n' "$want"
+        printf '        got:  %q\n' "$got"
+        ((FAIL++))
+    fi
+}
+
+for file in "$RIG_TEST_DIR"/${1:-*}.test.sh; do
+    [[ -f $file ]] || continue
+    printf '\n%s\n' "${file##*/}"
+    # shellcheck disable=SC1090
+    source "$file"
+done
+
+printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
+((FAIL == 0))
