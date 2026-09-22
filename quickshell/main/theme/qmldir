@@ -1,0 +1,6 @@
+singleton Appearance 1.0 Appearance.qml
+singleton Palettes 1.0 Palettes.qml
+singleton SlabStyle 1.0 SlabStyle.qml
+singleton ConfStyle 1.0 ConfStyle.qml
+ThemesPanel 1.0 ThemesPanel.qml
+PaletteColorRow 1.0 PaletteColorRow.qml

@@ -1,0 +1,4 @@
+singleton Wallpapers 1.0 Wallpapers.qml
+GalleryButton 1.0 GalleryButton.qml
+WallpaperPopup 1.0 WallpaperPopup.qml
+WallpaperSwitcher 1.0 WallpaperSwitcher.qml

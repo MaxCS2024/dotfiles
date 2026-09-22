@@ -1,0 +1,24 @@
+singleton Panels 1.0 Panels.qml
+singleton Battery 1.0 Battery.qml
+singleton Network 1.0 Network.qml
+singleton Volume 1.0 Volume.qml
+singleton Mic 1.0 Mic.qml
+singleton Brightness 1.0 Brightness.qml
+singleton Notifications 1.0 Notifications.qml
+singleton Bt 1.0 Bt.qml
+singleton PrivilegedExec 1.0 PrivilegedExec.qml
+singleton SystemMonitor 1.0 SystemMonitor.qml
+singleton Settings 1.0 Settings.qml
+singleton Keyboard 1.0 Keyboard.qml
+singleton Idle 1.0 Idle.qml
+singleton CapsLock 1.0 CapsLock.qml
+singleton AirplaneMode 1.0 AirplaneMode.qml
+singleton NightLight 1.0 NightLight.qml
+singleton SystemInfo 1.0 SystemInfo.qml
+singleton Packages 1.0 Packages.qml
+singleton Terminal 1.0 Terminal.qml
+singleton MprisWatchdog 1.0 MprisWatchdog.qml
+singleton Media 1.0 Media.qml
+
+# Not a singleton: each store is one file, and a caller may own several.
+JsonStore 1.0 JsonStore.qml
