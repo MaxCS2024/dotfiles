@@ -10,7 +10,7 @@ import "../services"
 BarButton {
     id: root
 
-    visible: Brightness.available
+    readonly property bool hasContent: Brightness.available
 
     icon: ""
     label: Math.round(Brightness.percent) + "%"

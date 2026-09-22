@@ -201,8 +201,45 @@ ShellRoot {
             root.check("moving with no targets is a no-op", b.kbIndex === 0, b.kbIndex)
             b.kbActivate()
             root.check("activating with no targets doesn't throw", true)
+        },
+
+        // ── self-hiding modules ────────────────────────────
+        // The loader used to mirror its module's `visible`, which Qt
+        // reports with the parent's folded in, so a module that hid itself
+        // hid its loader, and from then on read false because its loader
+        // was hidden. The media pill vanished with the last player and
+        // didn't come back for the next one until a reload, or never
+        // appeared at all if the shell started with nothing playing.
+        () => {
+            Modules.selfHidingHasContent = false
+            root.useLayout(["selfhiding", "button"], [], [])
+            const slot = root.findLoader("selfhiding")
+            root.check("self-hiding module is loaded", slot !== null)
+            root.check("module with nothing to show takes no slot", slot !== null && !slot.visible)
+        },
+        () => {
+            const slot = root.findLoader("selfhiding")
+            Modules.selfHidingHasContent = true
+            root.check("module that starts empty appears once it has content", slot.visible && slot.item.visible)
+            Modules.selfHidingHasContent = false
+            root.check("module gives its slot back when its content goes", !slot.visible)
+            Modules.selfHidingHasContent = true
+            root.check("module comes back for content after being hidden", slot.visible && slot.item.visible)
         }
     ]
+
+    // The loader for a module by registry name, found by walking the bar.
+    function findLoader(name) {
+        const walk = item => {
+            if (item.name === name && "keyboardNavigable" in item) return item
+            for (const child of item.children) {
+                const found = walk(child)
+                if (found) return found
+            }
+            return null
+        }
+        return walk(root.bar.contentItem)
+    }
 
     Timer {
         id: runner

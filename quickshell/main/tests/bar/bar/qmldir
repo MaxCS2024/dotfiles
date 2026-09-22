@@ -3,3 +3,4 @@ Bar 1.0 Bar.qml
 BarModuleLoader 1.0 BarModuleLoader.qml
 FakeButton 1.0 FakeButton.qml
 FakeWidget 1.0 FakeWidget.qml
+FakeSelfHiding 1.0 FakeSelfHiding.qml

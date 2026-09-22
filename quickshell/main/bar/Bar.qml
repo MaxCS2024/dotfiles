@@ -276,13 +276,11 @@ Variants {
         Item {
             id: barContent
             anchors.fill: parent
-            // opacity, NOT visible: Qt Quick forces every descendant's
-            // `visible` to false when an ancestor is hidden, and
-            // BarModuleLoader binds its own `visible` to `item.visible`
-            // (see that file) — so hiding anything above the Loaders
-            // latches that binding false and the modules never come
-            // back, leaving a bar that is drawn but empty. Opacity
-            // doesn't touch `visible`, so the module tree is untouched.
+            // Opacity, chosen when BarModuleLoader mirrored its module's
+            // `visible` and hiding anything above the Loaders latched
+            // them off for good. The Loaders read `hasContent` now (see
+            // that file), so `visible` would no longer do that; opacity
+            // stays because it works and leaves the module tree alone.
             //
             // Held at 1 for the whole slide (`occupying`, not `shown`)
             // — there's nothing to see once the bar has cleared the

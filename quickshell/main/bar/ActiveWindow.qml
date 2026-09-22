@@ -24,13 +24,10 @@ Item {
     readonly property var desktopEntry: (root.toplevel && root.toplevel.appId !== "")
         ? DesktopEntries.byId(root.toplevel.appId) : null
 
-    // Layout children with visible:false are excluded from the parent
-    // RowLayout's size calculation (same trick MediaPlayer.qml uses), so
-    // this collapses cleanly when nothing is focused or focus is on
-    // another monitor, rather than leaving an empty gap.
-    // Hiding an ancestor via `visible` would latch this false for good
-    // — see the invariant on BarModuleLoader.qml's own `visible`.
-    visible: root.toplevel !== null && root.onFocusedMonitor
+    // Collapses when nothing is focused or focus is on another monitor,
+    // rather than leaving an empty gap: BarModuleLoader hides the slot
+    // off this, and why it is this and not `visible` is in that file.
+    readonly property bool hasContent: root.toplevel !== null && root.onFocusedMonitor
 
     implicitWidth: pill.implicitWidth
     implicitHeight: pill.implicitHeight

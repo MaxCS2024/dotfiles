@@ -25,26 +25,27 @@ Loader {
 
     Layout.alignment: Qt.AlignVCenter
 
-    // Some modules set their own `visible: false` when there's nothing to
-    // show (MediaPlayer, for one). That hides the item's contents but the
-    // Loader itself — the actual RowLayout child — stays visible with the
-    // item's implicitWidth, so the layout still reserves the slot and
-    // spacing on both sides of it. Mirroring item.visible onto the Loader
-    // lets RowLayout exclude the slot entirely instead of leaving a blank
-    // gap.
+    // A module with nothing to show (MediaPlayer with no player,
+    // ActiveWindow with nothing focused, BrightnessButton with no
+    // backlight) says so with `hasContent`, and the Loader — the actual
+    // RowLayout child — hides itself, so RowLayout drops the slot and
+    // the spacing either side of it instead of leaving a blank gap.
     //
-    // INVARIANT for anything that wants to hide part of the bar: never
-    // drive `visible` on an ancestor of these Loaders. Qt Quick forces
-    // every descendant's `visible` to false when an ancestor is hidden,
-    // so this binding reads false, which keeps item.visible false, which
-    // keeps the binding false — it latches, and the modules stay gone
-    // until a config reload, leaving a bar that paints its background
-    // and nothing else. The self-hiding modules (MediaPlayer.qml,
-    // ActiveWindow.qml) are independently exposed to the same cascade,
-    // so fixing this one binding would not be enough. Hide with opacity
-    // instead — bar/Bar.qml's SUPER+ALT+SPACE toggle is the worked
-    // example.
-    visible: !item || item.visible
+    // It reads `hasContent` rather than the module's `visible` because
+    // Qt reports `visible` with every ancestor's folded in. That is how
+    // this used to work — modules set `visible: false` and the Loader
+    // mirrored item.visible — and a module that hid itself hid the
+    // Loader, and then read false because the Loader was hidden, for
+    // good: the media pill went with the last player and did not come
+    // back for the next one, or never appeared at all if the shell
+    // started with nothing playing, until a config reload.
+    // services/MprisWatchdog.qml's reloads hid it now and then, so some
+    // of what was put down to Mpris starting stale may have been this.
+    // tests/bar/shell.qml has the regression test.
+    //
+    // So a module must not set its own `visible`, and nothing needs to
+    // avoid hiding an ancestor of these Loaders on their account.
+    visible: !item || !("hasContent" in item) || item.hasContent
 
     sourceComponent: Modules.registry[root.name]
 

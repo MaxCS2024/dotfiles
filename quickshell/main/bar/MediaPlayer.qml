@@ -41,13 +41,10 @@ Item {
     // Takes up bar space whenever a player exists at all — paused
     // players stay visible (dimmed, see pill.opacity below) rather than
     // vanishing outright, so pausing to check something else doesn't
-    // lose one-click access to resume. Layout children with
-    // visible:false are excluded from the parent RowLayout's size
-    // calculation, so closing the last player still collapses cleanly
-    // rather than leaving an empty gap.
-    // Hiding an ancestor via `visible` would latch this false for good
-    // — see the invariant on BarModuleLoader.qml's own `visible`.
-    visible: root.player !== null
+    // lose one-click access to resume. Closing the last player gives the
+    // slot back: BarModuleLoader hides itself off this, and why it is
+    // this and not `visible` is in that file.
+    readonly property bool hasContent: root.player !== null
 
     implicitWidth: pill.implicitWidth
     implicitHeight: pill.implicitHeight
