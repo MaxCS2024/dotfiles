@@ -1,0 +1,5 @@
+singleton Modules 1.0 Modules.qml
+Bar 1.0 Bar.qml
+BarModuleLoader 1.0 BarModuleLoader.qml
+FakeButton 1.0 FakeButton.qml
+FakeWidget 1.0 FakeWidget.qml

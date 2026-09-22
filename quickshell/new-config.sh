@@ -58,7 +58,7 @@ if [[ -e "$dst" ]]; then
 fi
 
 shared_dirs=(common config services)
-layout_entries=(shell.qml bar battery calendar clipboard installer keybinds launcher lockscreen menu network notifications osd packages powermenu theme volume wallpaper)
+layout_entries=(shell.qml bar battery calendar clipboard installer keybinds launcher lockscreen menu network notifications osd packages powermenu tests theme volume wallpaper)
 
 mkdir -p "$dst"
 
