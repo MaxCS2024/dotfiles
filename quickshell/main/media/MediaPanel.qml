@@ -18,8 +18,6 @@
 // What the card has that the dropdown did not:
 //   · the whole thing is keyable — space plays, arrows seek and walk
 //     players, and Escape closes
-//   · the player's own volume, which was reachable only by scrolling the
-//     pill and had no way to show you what it was
 //   · an elapsed time that advances (services/Media.qml's `position`
 //     explains why the dropdown's did not)
 //   · art at 96px rather than 64, which is the point of having a card
@@ -78,11 +76,6 @@ ShellSurface {
         if (!panel.player || !panel.player.canSeek || panel.player.length <= 0) return
         panel.player.position = Math.max(0, Math.min(panel.player.length,
             Media.position + seconds))
-    }
-
-    function stepVolume(delta) {
-        if (!panel.player || !panel.player.volumeSupported) return
-        panel.player.volume = Math.max(0, Math.min(1, panel.player.volume + delta))
     }
 
     // A full-width strip under the bar, not the screen: the card hangs
@@ -166,15 +159,6 @@ ShellSurface {
                 break
             case Qt.Key_Right:
                 panel.nudgeSeek(5)
-                break
-            // Up/Down are the player's volume rather than a second seek
-            // axis — the pill's wheel is the same gesture, and this is
-            // the one control on the card with no other key.
-            case Qt.Key_Up:
-                panel.stepVolume(0.05)
-                break
-            case Qt.Key_Down:
-                panel.stepVolume(-0.05)
                 break
             // Track, not player: the two arrows that walk players sit in
             // their own row and are rare enough to be worth the reach.
@@ -473,10 +457,10 @@ ShellSurface {
             }
 
             // ── Transport ────────────────────────────────
-            // A filled accent circle for play/pause, prev/next as
-            // hover-lift circles either side, shuffle and loop folded into
-            // the same row — the dropdown's own row, which got that shape
-            // by user request and keeps it here.
+            // Three orbs: a filled accent one for play/pause, and quieter
+            // filled ones for prev/next either side. Shuffle and loop used
+            // to share this row and were dropped by user request
+            // (2026-09-23); the player's own controls still have them.
             RowLayout {
                 visible: panel.player !== null
                 Layout.fillWidth: true
@@ -486,12 +470,14 @@ ShellSurface {
                 Item { Layout.fillWidth: true }
 
                 Rectangle {
-                    implicitWidth: 32
-                    implicitHeight: 32
+                    implicitWidth: 34
+                    implicitHeight: 34
                     radius: width / 2
-                    color: transportPrevTap.containsMouse ? Appearance.hoverStrong : "transparent"
+                    color: transportPrevTap.containsMouse ? Appearance.selected : Appearance.hover
+                    scale: transportPrevTap.pressed ? 0.94 : 1
 
                     Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
+                    Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easingDecel } }
 
                     Text {
                         anchors.centerIn: parent
@@ -542,12 +528,14 @@ ShellSurface {
                 }
 
                 Rectangle {
-                    implicitWidth: 32
-                    implicitHeight: 32
+                    implicitWidth: 34
+                    implicitHeight: 34
                     radius: width / 2
-                    color: transportNextTap.containsMouse ? Appearance.hoverStrong : "transparent"
+                    color: transportNextTap.containsMouse ? Appearance.selected : Appearance.hover
+                    scale: transportNextTap.pressed ? 0.94 : 1
 
                     Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
+                    Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easingDecel } }
 
                     Text {
                         anchors.centerIn: parent
@@ -568,111 +556,7 @@ ShellSurface {
                     }
                 }
 
-                Rectangle {
-                    implicitWidth: 30
-                    implicitHeight: 30
-                    radius: width / 2
-                    color: shuffleTap.containsMouse ? Appearance.hoverStrong : "transparent"
-
-                    Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: ""
-                        color: (panel.player && panel.player.shuffleSupported && panel.player.shuffle)
-                            ? Appearance.accent : Appearance.fgDim
-                        font.pixelSize: Theme.fontLarge
-                        font.family: Theme.font
-                    }
-
-                    MouseArea {
-                        id: shuffleTap
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        enabled: panel.player && panel.player.shuffleSupported
-                        onClicked: panel.player.shuffle = !panel.player.shuffle
-                    }
-                }
-
-                Rectangle {
-                    implicitWidth: 30
-                    implicitHeight: 30
-                    radius: width / 2
-                    color: loopTap.containsMouse ? Appearance.hoverStrong : "transparent"
-
-                    Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: {
-                            if (!panel.player || panel.player.loopState === MprisLoopState.Track)
-                                return ""
-                            return ""
-                        }
-                        color: (panel.player && panel.player.loopSupported
-                                && panel.player.loopState !== MprisLoopState.None)
-                            ? Appearance.accent : Appearance.fgDim
-                        font.pixelSize: Theme.fontLarge
-                        font.family: Theme.font
-                    }
-
-                    MouseArea {
-                        id: loopTap
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        enabled: panel.player && panel.player.loopSupported
-                        onClicked: {
-                            const states = [MprisLoopState.None, MprisLoopState.Track, MprisLoopState.Playlist]
-                            const i = states.indexOf(panel.player.loopState)
-                            panel.player.loopState = states[(i + 1) % states.length]
-                        }
-                    }
-                }
-
                 Item { Layout.fillWidth: true }
-            }
-
-            // ── This player's volume ─────────────────────
-            // Not the system volume — that is the sink, and the volume
-            // rail owns it. This is the player's own level, which the pill
-            // in the bar has always been able to change by scrolling and
-            // has never been able to show. Only drawn for a player that
-            // supports it; MPRIS makes the property optional and plenty of
-            // players leave it out.
-            RowLayout {
-                visible: panel.player && panel.player.volumeSupported
-                Layout.fillWidth: true
-                Layout.topMargin: 2
-                spacing: 10
-
-                Text {
-                    text: ""
-                    color: Appearance.fgMuted
-                    font.pixelSize: 15
-                    font.family: Theme.font
-                    Layout.preferredWidth: 18
-                    horizontalAlignment: Text.AlignHCenter
-                }
-
-                Slider {
-                    Layout.fillWidth: true
-                    interactive: true
-                    showKnob: true
-                    trackHeight: 4
-                    value: panel.player ? panel.player.volume : 0
-                    trackColor: Appearance.trackBg
-                    fillColor: Appearance.green
-                    onMoved: (v) => { if (panel.player) panel.player.volume = v }
-                }
-
-                Text {
-                    text: Math.round((panel.player ? panel.player.volume : 0) * 100) + "%"
-                    color: Appearance.fgMuted
-                    font.pixelSize: Theme.fontSmall
-                    font.family: Theme.font
-                }
             }
         }
     }
