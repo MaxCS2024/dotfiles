@@ -23,23 +23,27 @@ BarButton {
     onDropdownVisibleChanged: if (dropdownVisible) Notifications.markAllSeen()
 
     Item {
-        Layout.preferredWidth: 16
+        Layout.preferredWidth: Math.max(16, badge.width)
         Layout.preferredHeight: 16
         visible: Notifications.unreadCount > 0
 
         Rectangle {
+            id: badge
             anchors.right: parent.right
             anchors.top: parent.top
-            width: 15
+            // Round for a single digit, stretching into a short pill when
+            // "9+" needs more room than the circle has.
+            width: Math.max(height, countText.implicitWidth + 6)
             height: 15
-            radius: 7.5
+            radius: height / 2
             color: Appearance.red
 
             Text {
+                id: countText
                 anchors.centerIn: parent
                 text: Notifications.unreadCount > 9 ? "9+" : Notifications.unreadCount
                 color: Appearance.bar
-                font.pixelSize: 9
+                font.pixelSize: Theme.fontTiny
                 font.family: Theme.font
                 font.bold: true
             }
