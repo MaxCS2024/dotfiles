@@ -36,11 +36,11 @@ cd ~/.dotfiles
 rack setup            # what is missing, grouped by how much it matters
 rack deploy           # link every manifest entry into ~/.config and ~
 
-# If deploy reports "exists and is not ours", something got there first —
-# an app can write a default config the first time it runs. Run it again
-# with --force, which moves those aside to
-# ~/.local/state/rack/backups/<time>/ and links the repo's in their place;
-# nothing is deleted:
+# Logging into Hyprland or opening ghostty before this is fine: the default
+# configs they write on first launch are recognised and moved aside to
+# ~/.local/state/rack/backups/<time>/ on their own. If deploy still reports
+# "exists and is not ours", that is a config somebody wrote. Run it again
+# with --force to move that aside too; nothing is deleted:
 #
 #   rack deploy --force
 
