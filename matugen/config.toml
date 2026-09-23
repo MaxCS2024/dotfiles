@@ -30,6 +30,21 @@ output_path = "~/.cache/matugen/colors.json"
 input_path = "./templates/foot-colors.ini"
 output_path = "~/.cache/matugen/foot-colors.ini"
 
+# The same palette for kitty and ghostty, included from kitty/kitty.conf
+# and ghostty/config.ghostty. Unlike foot, both re-read their config on a
+# signal, so the hooks carry a wallpaper change into terminals already
+# open. `|| true` because pkill exits 1 when none is running, and matugen
+# reports a failed hook as an error.
+[templates.kitty]
+input_path = "./templates/kitty-colors.conf"
+output_path = "~/.cache/matugen/kitty-colors.conf"
+post_hook = "pkill -USR1 -x kitty || true"
+
+[templates.ghostty]
+input_path = "./templates/ghostty-colors"
+output_path = "~/.cache/matugen/ghostty-colors"
+post_hook = "pkill -USR2 -x ghostty || true"
+
 # gtk-3.0/gtk.css and gtk-4.0/gtk.css each @import the palette beside them,
 # so GTK apps' accent/window colors follow the wallpaper too.
 #

@@ -13,6 +13,7 @@ relay/            the runtime CLI — what binds and panels call to do things
 matugen/          templates that turn a wallpaper into a colour scheme
 gtk-3.0/ gtk-4.0/ GTK theming, and the icon theme Qt reads through gtk3
 foot/             terminal, and Theme.terminal's default
+kitty/ ghostty/   terminals, colours only — the same palette foot gets
 bin/ btop/ nvim/ starship/ zsh/ zshenv/
 ```
 
