@@ -1,6 +1,5 @@
 pragma Singleton
 import Quickshell
-import Quickshell.Io
 import QtQuick
 import "../config"
 
@@ -24,6 +23,7 @@ import "../config"
 //   Terminal.run("make", { floating: false })         // tile it normally
 //   Terminal.run(cmd, { appId: "my-thing" })          // its own rule
 //   Terminal.run(cmd, { title: "Update" })            // window title
+//   Terminal.run(Terminal.quote(argv))                 // an argv, not a line
 //
 // `hold` is what keeps the shell alive on a `read` after the command
 // exits — a terminal that vanishes the instant pacman finishes takes the
@@ -31,11 +31,6 @@ import "../config"
 // yourself.
 Singleton {
     id: root
-
-    // One Process, reused. The spawn returns as soon as the launcher has
-    // handed the terminal to the session (uwsm-app runs it as its own
-    // unit), so a second call never kills the first window.
-    readonly property Process proc: Process {}
 
     readonly property string holdTail:
         '; printf "\\n\\033[2m— finished (exit %s) · press Enter to close —\\033[0m\\n" "$?"'
@@ -83,11 +78,21 @@ Singleton {
         const floating = o.floating !== false
         const appId = floating ? (o.appId || Theme.floatAppId) : ""
 
-        root.proc.command = ["sh", "-c", root.launchScript, "sh",
+        // Detached, not a Process of ours: uwsm-app doesn't hand the
+        // terminal off and return, it stays until the window closes
+        // (`uwsm-app -- sleep 3` takes 3s). A reused Process would kill
+        // the last window on every new call — the btop you opened from the
+        // launcher, the moment you ran an update.
+        Quickshell.execDetached(["sh", "-c", root.launchScript, "sh",
             appId, o.title || "", cmd + (hold ? root.holdTail : ""),
-            Theme.appLauncherPrefix + " -- " + Theme.terminal]
-        root.proc.running = false
-        root.proc.running = true
+            Theme.appLauncherPrefix + " -- " + Theme.terminal])
+    }
+
+    // An argv as one sh command line, each word single-quoted, for a
+    // caller holding a list rather than a line — a desktop entry's
+    // `command`, say — so a space or quote in it stays inside its word.
+    function quote(argv) {
+        return argv.map(a => "'" + String(a).split("'").join("'\\''") + "'").join(" ")
     }
 
     // ~/.local/bin is exported from .zshrc, which only interactive shells

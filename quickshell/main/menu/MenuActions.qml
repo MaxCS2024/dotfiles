@@ -1,3 +1,4 @@
+import Quickshell
 import Quickshell.Io
 import QtQuick
 import "../config"
@@ -464,11 +465,11 @@ QtObject {
     // tab is a worse window than an app window, and a wiki that doesn't
     // open is worse than both.
     //
-    // One Process, reused, like Terminal's: uwsm-app hands the browser to
-    // the session and returns, so opening the second wiki never kills the
-    // first window.
-    readonly property Process webAppProc: Process {}
-
+    // Detached, as services/Terminal.qml's spawns are, and for the same
+    // reason: uwsm-app doesn't hand the browser off and return, it stays
+    // until the browser exits. A reused Process would kill the first
+    // wiki's window when the second opened — and the whole browser with
+    // it, if this was what started it.
     function openWebApp(url) {
         const script = [
             actions.varsCur,
@@ -486,9 +487,7 @@ QtObject {
             'exec "$@" "--app=$url"'
         ].join("\n")
 
-        actions.webAppProc.command = ["sh", "-c", script]
-        actions.webAppProc.running = false
-        actions.webAppProc.running = true
+        Quickshell.execDetached(["sh", "-c", script])
     }
 
     // Whatever a row couldn't do, said out loud — see `probeNames` above.

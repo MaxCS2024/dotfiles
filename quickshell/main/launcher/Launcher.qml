@@ -51,9 +51,26 @@ ShellSurface {
     function launchSelected() {
         const item = launcher.results[launcher.selectedIndex]
         if (item && item.entryRef) {
-            item.entryRef.execute()
+            launcher.launch(item.entryRef)
             launcher.close()
         }
+    }
+
+    // Quickshell's execute() ignores Terminal=true: btop, nvim or yazi
+    // started that way gets no terminal and exits on the spot, with
+    // nothing on screen. Those go through Terminal.run instead, into the
+    // terminal Setup › Defaults picked, tiled and with no "press Enter" —
+    // an app you opened, not a task to watch. The command has its field
+    // codes (%F) stripped already, which is what an app launched with no
+    // files wants.
+    function launch(entry) {
+        if (!entry.runInTerminal) {
+            entry.execute()
+            return
+        }
+        const cd = entry.workingDirectory
+            ? "cd " + Terminal.quote([entry.workingDirectory]) + " && " : ""
+        Terminal.run(cd + Terminal.quote(entry.command), { floating: false, hold: false })
     }
 
     function score(haystack, needle) {
