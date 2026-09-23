@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import "../config"
 import "../services"
 import "../common"
+import "../theme"
 
 // Full-screen ink lock screen. Built as a **visual-only preview**, per
 // explicit user decision (2026-09-03, asked because it was flagged at
@@ -57,7 +58,7 @@ ShellSurface {
     Rectangle {
         id: ground
         anchors.fill: parent
-        color: Theme.inkGround
+        color: Appearance.bar
         opacity: lock.shown ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: Theme.animPanel; easing.type: Theme.easingStandard } }
 
@@ -81,7 +82,7 @@ ShellSurface {
             Text {
                 Layout.alignment: Qt.AlignHCenter
                 text: lock.dateLabel
-                color: Theme.fgHeaderInk
+                color: Appearance.fgMuted
                 font.family: Theme.fontHeading
                 font.pixelSize: Theme.fontSmall
                 font.capitalization: Font.SmallCaps
@@ -93,7 +94,7 @@ ShellSurface {
                 Layout.topMargin: 16
                 Layout.bottomMargin: 6
                 text: Qt.formatDateTime(sysClock.date, "HH:mm")
-                color: Theme.fgInkStrong
+                color: Appearance.fgStrong
                 font.family: Theme.font
                 font.pixelSize: Theme.fontLockTime
                 font.letterSpacing: Theme.tracking(Theme.fontLockTime, -0.02)
@@ -104,7 +105,7 @@ ShellSurface {
                 Layout.alignment: Qt.AlignHCenter
                 width: 150
                 height: 1
-                color: Theme.lockRule
+                color: Appearance.separator
             }
 
             Text {
@@ -112,7 +113,7 @@ ShellSurface {
                 Layout.topMargin: 14
                 text: "Preview only — not a real session lock"
                 font.italic: true
-                color: Theme.lockStatus
+                color: Appearance.fgSoft
                 font.family: Theme.font
                 font.pixelSize: Theme.fontProse
             }
@@ -124,7 +125,7 @@ ShellSurface {
 
                 Text {
                     text: Quickshell.env("USER") || "user"
-                    color: Theme.lockUsername
+                    color: Appearance.fgMuted
                     font.family: Theme.fontHeading
                     font.pixelSize: Theme.fontSmall
                     font.capitalization: Font.SmallCaps
@@ -144,7 +145,7 @@ ShellSurface {
                         anchors.right: parent.right
                         anchors.bottom: parent.bottom
                         height: 1
-                        color: Theme.lockPasswordBorder
+                        color: Appearance.border
                     }
 
                     FocusRing {
@@ -159,7 +160,7 @@ ShellSurface {
                         anchors.bottomMargin: 7
                         echoMode: TextInput.Password
                         passwordCharacter: "•"
-                        color: Theme.fgInkStrong
+                        color: Appearance.fgStrong
                         font.family: Theme.font
                         font.pixelSize: Theme.fontMedium
                         font.letterSpacing: Theme.tracking(Theme.fontMedium, 0.3)
@@ -184,7 +185,7 @@ ShellSurface {
 
                 Text {
                     text: "→"
-                    color: Theme.fgHeaderInk
+                    color: Appearance.fgMuted
                     font.family: Theme.font
                     font.pixelSize: Theme.fontMedium
                 }
@@ -197,7 +198,7 @@ ShellSurface {
                 font.family: Theme.fontMono
                 font.pixelSize: Theme.fontMicro
                 font.letterSpacing: Theme.tracking(Theme.fontMicro, 0.14)
-                color: Theme.lockFooter
+                color: Appearance.fgFaint
             }
         }
     }

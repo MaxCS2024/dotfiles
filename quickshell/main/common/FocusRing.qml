@@ -1,5 +1,6 @@
 import QtQuick
 import "../config"
+import "../theme"
 
 // The one focus affordance every interactive element uses: a 2px #b68235
 // ring at 2px offset, never the platform default. A single shared
@@ -23,13 +24,13 @@ Item {
     // ring past the target's edges.
     property real targetRadius: 0
     // Overridable only for a target that is *itself* drawn in a color
-    // other than Theme.accent — powermenu's danger tile (red), and any
+    // other than Appearance.accent — powermenu's danger tile (red), and any
     // surface following theme/Appearance.qml's custom palette, whose
     // accent is a different hue from Theme's fixed brand one. Two accents
     // meeting on one control reads as a rendering fault, not as focus.
     // Everything else leaves this alone: the default *is* the rule, and
     // the point of this component is that it can't drift per site.
-    property color ringColor: Theme.focusRing
+    property color ringColor: Appearance.accent
 
     anchors.fill: parent
     anchors.margins: -Theme.focusRingOffset

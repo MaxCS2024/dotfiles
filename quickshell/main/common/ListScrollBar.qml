@@ -1,5 +1,6 @@
 import QtQuick
 import "../config"
+import "../theme"
 
 // The scrollbar every scrolling list in this shell draws beside itself: a
 // track that only appears once there is something to scroll, and a thumb
@@ -23,8 +24,8 @@ Rectangle {
     // file is symlinked into the old config, which has no theme/), so a
     // caller that follows a pinned palette passes its own two tones in
     // and everyone else keeps Theme's.
-    property color trackColor: Theme.scrollTrack
-    property color thumbColor: Theme.scrollThumb
+    property color trackColor: Appearance.scrollTrack
+    property color thumbColor: Appearance.scrollThumb
 
     implicitWidth: root.barWidth
     radius: root.barRadius

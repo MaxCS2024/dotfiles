@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../config"
+import "../theme"
 
 // Reusable password entry modal. Any component can instantiate this as
 // an overlay (anchors.fill: parent on whatever it should cover) and
@@ -91,8 +92,8 @@ Item {
         width: 320
         implicitHeight: content.implicitHeight + 28
         radius: Theme.radius
-        color: Theme.surface
-        border.color: Theme.border
+        color: Appearance.surface
+        border.color: Appearance.border
         border.width: 1
 
         MouseArea { anchors.fill: parent; onClicked: {} }
@@ -105,7 +106,7 @@ Item {
 
             Text {
                 text: root.title
-                color: Theme.fgStrong
+                color: Appearance.fgStrong
                 font.bold: true
                 font.pixelSize: Theme.fontMedium
                 font.family: Theme.font
@@ -116,7 +117,7 @@ Item {
             Text {
                 visible: root.subtitle !== ""
                 text: root.subtitle
-                color: Theme.fgMuted
+                color: Appearance.fgMuted
                 font.pixelSize: Theme.fontSmall
                 font.family: Theme.font
                 Layout.fillWidth: true
@@ -128,15 +129,15 @@ Item {
                 Layout.topMargin: 4
                 implicitHeight: 30
                 radius: Theme.radius
-                color: Theme.surfaceAlt
-                border.color: root.errorText !== "" ? Theme.red : Theme.border
+                color: Appearance.surfaceAlt
+                border.color: root.errorText !== "" ? Appearance.red : Appearance.border
                 border.width: 1
 
                 TextInput {
                     id: passwordField
                     anchors.fill: parent
                     anchors.margins: 7
-                    color: Theme.fg
+                    color: Appearance.fg
                     font.pixelSize: Theme.fontNormal
                     font.family: Theme.font
                     echoMode: TextInput.Password
@@ -158,7 +159,7 @@ Item {
             Text {
                 visible: root.errorText !== ""
                 text: root.errorText
-                color: Theme.red
+                color: Appearance.red
                 font.pixelSize: Theme.fontTiny
                 font.family: Theme.font
                 Layout.fillWidth: true
@@ -178,7 +179,7 @@ Item {
                     radius: Theme.radius
                     // Borderless like Confirm, but a neutral fill so the
                     // accent one still reads as the primary action.
-                    color: cancelHover.hovered ? Theme.hoverStrong : Theme.hover
+                    color: cancelHover.hovered ? Appearance.hoverStrong : Appearance.hover
 
                     Behavior on color {
                         ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
@@ -188,7 +189,7 @@ Item {
                         id: cancelLabel
                         anchors.centerIn: parent
                         text: "Cancel"
-                        color: Theme.fgStrong
+                        color: Appearance.fgStrong
                         font.pixelSize: Theme.fontSmall
                         font.family: Theme.font
                     }
@@ -208,7 +209,7 @@ Item {
                     // SlabStyle.tintSelected's half-accent, borderless, spelled
                     // out on Theme because this file doesn't import theme/;
                     // a little more accent under the pointer.
-                    color: Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, okHover.hovered ? 0.6 : 0.45)
+                    color: Qt.rgba(Appearance.accent.r, Appearance.accent.g, Appearance.accent.b, okHover.hovered ? 0.6 : 0.45)
 
                     Behavior on color {
                         ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
@@ -218,7 +219,7 @@ Item {
                         id: okLabel
                         anchors.centerIn: parent
                         text: "Confirm"
-                        color: Theme.fgStrong
+                        color: Appearance.fgStrong
                         font.pixelSize: Theme.fontSmall
                         font.family: Theme.font
                     }

@@ -22,6 +22,11 @@
 #
 # Exits 0 when every check passes, 1 on any failure, 2 if the run never
 # finished (a QML error before the tests started, or a hang).
+#
+# A suite of tst_*.qml files instead (palette) tests plain logic with no
+# Quickshell imports: it runs under Qt 6's qmltestrunner on the offscreen
+# platform, so it needs no session at all. That's /usr/lib/qt6/bin's
+# copy — the qmltestrunner on PATH is Qt 5's and can't load Qt 6 QML.
 
 set -euo pipefail
 
@@ -29,9 +34,13 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 main="$(dirname "$here")"
 suite="${1:-}"
 
-if [[ -z "$suite" || ! -f "$here/$suite/shell.qml" ]]; then
+if [[ -z "$suite" || ! -d "$here/$suite" ]]; then
     echo "usage: tests/run <suite>, one of:" $(cd "$here" && ls -d */ | tr -d /) >&2
     exit 2
+fi
+
+if compgen -G "$here/$suite/tst_*.qml" >/dev/null; then
+    exec /usr/lib/qt6/bin/qmltestrunner -platform offscreen -input "$here/$suite"
 fi
 
 sandbox="$(mktemp -d)"

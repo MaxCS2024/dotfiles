@@ -313,7 +313,7 @@ QtObject {
     // process. The state file is what hypr/modules/vars.lua reads, and a
     // bind captures its value at config load, so the reload at the end is
     // what makes the change reach SUPER+RETURN — the same reload
-    // Theme.qml already fires on every wallpaper change. It costs zen
+    // theme/WallpaperSource.qml already fires on every wallpaper change. It costs zen
     // mode its saved chrome (hypr/modules/binds/zen.lua drops the
     // snapshot on config.reloaded), which is the one visible side effect
     // of picking a terminal.

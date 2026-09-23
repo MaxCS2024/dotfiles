@@ -1,5 +1,6 @@
 import QtQuick
 import "../config"
+import "../theme"
 
 Rectangle {
     id: toast
@@ -20,8 +21,8 @@ Rectangle {
     width: 260
     implicitHeight: col.implicitHeight + 20
     radius: Theme.radius
-    color: Theme.surface
-    border.color: isError ? Theme.red : Theme.green
+    color: Appearance.surface
+    border.color: isError ? Appearance.red : Appearance.green
     border.width: 1
 
     layer.enabled: true
@@ -53,13 +54,13 @@ Rectangle {
             spacing: 6
             Text {
                 text: toast.isError ? "\uf057" : "\uf058"
-                color: toast.isError ? Theme.red : Theme.green
+                color: toast.isError ? Appearance.red : Appearance.green
                 font.pixelSize: Theme.fontMedium
                 font.family: Theme.font
             }
             Text {
                 text: toast.title
-                color: Theme.fg
+                color: Appearance.fg
                 font.bold: true
                 font.pixelSize: Theme.fontNormal
                 font.family: Theme.font
@@ -68,7 +69,7 @@ Rectangle {
 
         Text {
             text: toast.message
-            color: Theme.fgMuted
+            color: Appearance.fgMuted
             font.pixelSize: Theme.fontSmall
             font.family: Theme.font
             wrapMode: Text.WordWrap

@@ -1,5 +1,6 @@
 import QtQuick
 import "../config"
+import "../theme"
 
 // The 1px-track/gold-fill slider shape repeated across the
 // popouts (quick settings' Vol/Lum with a knob, now-playing's progress and
@@ -14,8 +15,8 @@ Item {
     property real value: 0        // 0..1
     property bool showKnob: false
     property real trackHeight: 1
-    property color trackColor: Theme.trackBg
-    property color fillColor: Theme.accent
+    property color trackColor: Appearance.trackBg
+    property color fillColor: Appearance.accent
     property bool interactive: false
     property real stepSize: 0.05
 
@@ -61,7 +62,7 @@ Item {
         width: root._knobSize
         height: root._knobSize
         radius: root._knobSize / 2
-        color: Theme.plateBg
+        color: Appearance.surface
         border.width: 1
         border.color: root.fillColor
         anchors.verticalCenter: track.verticalCenter

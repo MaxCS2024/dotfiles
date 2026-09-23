@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Services.UPower
 import QtQuick
 import "../config"
+import "../theme"
 
 Singleton {
     id: root
@@ -25,10 +26,10 @@ Singleton {
                                         : discharging ? "Discharging"
                                         : "Unknown"
 
-    readonly property color fillColor: (charging || full) ? Theme.green
-                                     : percentage <= 10 ? Theme.red
-                                     : percentage <= 25 ? Theme.orange
-                                     : Theme.icon
+    readonly property color fillColor: (charging || full) ? Appearance.green
+                                     : percentage <= 10 ? Appearance.red
+                                     : percentage <= 25 ? Appearance.orange
+                                     : Appearance.icon
 
     readonly property string icon: {
         if (charging || full) return "󰂄"
@@ -139,13 +140,13 @@ Singleton {
     // device — a charging pack is green wherever it is drawn, and a pack
     // low enough to matter is red whether or not the average is.
     function deviceColor(d) {
-        if (!d) return Theme.icon
+        if (!d) return Appearance.icon
         if (d.state === UPowerDeviceState.Charging || d.state === UPowerDeviceState.FullyCharged)
-            return Theme.green
+            return Appearance.green
         const pct = d.percentage * 100
-        if (pct <= 10) return Theme.red
-        if (pct <= 25) return Theme.orange
-        return Theme.icon
+        if (pct <= 10) return Appearance.red
+        if (pct <= 25) return Appearance.orange
+        return Appearance.icon
     }
 
     // Energy against the capacity this pack has left after wear, in the

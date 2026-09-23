@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Shapes
 import "../config"
+import "../theme"
 
 // The border Hyprland paints around a focused window, for the surfaces in
 // this shell that want to read as part of the same desktop rather than as
@@ -19,7 +20,7 @@ import "../config"
 // so the recipe can't drift per site. Declare it as the target's *first*
 // child so everything else paints over it.
 //
-// Theme.hyprBorderStart/End are the same two swatches Hyprland is given,
+// Appearance.compositorStart/End are the same two swatches Hyprland is given,
 // read from the same ~/.cache/matugen/colors.json, so a new wallpaper
 // re-themes the window borders and every frame drawn here together.
 Shape {
@@ -53,8 +54,8 @@ Shape {
             y1: 0
             x2: (root.width + root.height) / 2
             y2: (root.width + root.height) / 2
-            GradientStop { position: 0.0; color: Theme.hyprBorderStart }
-            GradientStop { position: 1.0; color: Theme.hyprBorderEnd }
+            GradientStop { position: 0.0; color: Appearance.compositorStart }
+            GradientStop { position: 1.0; color: Appearance.compositorEnd }
         }
 
         PathRectangle {

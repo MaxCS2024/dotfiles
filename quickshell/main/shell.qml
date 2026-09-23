@@ -26,6 +26,9 @@ ShellRoot {
 
     Bar {}
 
+    // Writes the active palette out as foot's terminal colours.
+    FootTheme {}
+
     // Not dead code — deleting this turns the Night light switch on the
     // network rail back into a no-op. NightLight is a Singleton, so it is
     // built the first time something names it. Every other service is

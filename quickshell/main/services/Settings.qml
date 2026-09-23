@@ -23,48 +23,10 @@ Singleton {
     property bool rotateWallpaperHourly: true
 
     // ── Appearance ─────────────────────────────────────────
-    // `ground`/`accent`/`typePairing` don't autosave like the rest of
-    // this file: settingswindow/AppearancePane.qml applies them live the
-    // instant they change (every surface reads `Theme.*`, which reads
-    // these directly) but only writes them to disk on an explicit
-    // "Apply" — `saveTheme()`/`revertTheme()` below, and
-    // `SettingsWindow.qml`'s `hasUnsavedChanges` compares the live value
-    // against the `_saved*` snapshot to know whether Apply/Revert should
-    // be enabled. `barOpacity`/`cornerRadius`/`hairlineDividers`/
-    // `dropShadows` are plain autosaving settings like `dnd` above —
-    // no confirm step, same as every other live-applied toggle in this
-    // shell.
-    property string ground: "paper"
-    property string accent: "#b68235"
-    property string typePairing: "jetbrains-mono"
+    // Colours are theme/Appearance.qml's, persisted in its own file.
+    // These two are the drawing settings that aren't colours.
     property real barOpacity: 0.65
     property int cornerRadius: 2
-    // `hairlineDividers`/`dropShadows` aren't wired to any render path
-    // yet — no divider or shadow in this shell checks either one, same
-    // "shown but not load-bearing" status as WallpaperPane's "Tint bar
-    // from wallpaper" switch. Kept as real, persisted, exported settings
-    // rather than dropped, so Apply/Export aren't lying about what's
-    // stored; wiring them up is a separate pass through every Divider/
-    // shadow call site.
-    property bool hairlineDividers: true
-    property bool dropShadows: true
-
-    property string _savedGround: root.ground
-    property string _savedAccent: root.accent
-    property string _savedTypePairing: root.typePairing
-
-    function saveTheme() {
-        root._savedGround = root.ground
-        root._savedAccent = root.accent
-        root._savedTypePairing = root.typePairing
-        root._save()
-    }
-
-    function revertTheme() {
-        root.ground = root._savedGround
-        root.accent = root._savedAccent
-        root.typePairing = root._savedTypePairing
-    }
 
     // Originally the hand-written rows Bar.qml used before this went
     // data-driven; module names are Modules.registry keys
@@ -139,16 +101,8 @@ Singleton {
             rotateWallpaperHourly: root.rotateWallpaperHourly,
             barLayout: root.barLayout,
             barConfig: root.barConfig,
-            // The saved (Apply'd) snapshot, not the live in-flight value —
-            // an unapplied ground/accent/typePairing change must not
-            // survive a restart, same as it wouldn't survive Revert.
-            ground: root._savedGround,
-            accent: root._savedAccent,
-            typePairing: root._savedTypePairing,
             barOpacity: root.barOpacity,
-            cornerRadius: root.cornerRadius,
-            hairlineDividers: root.hairlineDividers,
-            dropShadows: root.dropShadows
+            cornerRadius: root.cornerRadius
         }
     }
 
@@ -167,22 +121,8 @@ Singleton {
         if (typeof data.nightLight === "boolean") root.nightLight = data.nightLight
         if (typeof data.rotateWallpaperHourly === "boolean") root.rotateWallpaperHourly = data.rotateWallpaperHourly
 
-        if (typeof data.ground === "string" && data.ground.length > 0) {
-            root.ground = data.ground
-            root._savedGround = data.ground
-        }
-        if (typeof data.accent === "string" && data.accent.length > 0) {
-            root.accent = data.accent
-            root._savedAccent = data.accent
-        }
-        if (typeof data.typePairing === "string" && data.typePairing.length > 0) {
-            root.typePairing = data.typePairing
-            root._savedTypePairing = data.typePairing
-        }
         if (typeof data.barOpacity === "number") root.barOpacity = data.barOpacity
         if (typeof data.cornerRadius === "number") root.cornerRadius = data.cornerRadius
-        if (typeof data.hairlineDividers === "boolean") root.hairlineDividers = data.hairlineDividers
-        if (typeof data.dropShadows === "boolean") root.dropShadows = data.dropShadows
 
         if (data.barLayout && typeof data.barLayout === "object") {
             const l = data.barLayout
@@ -286,8 +226,4 @@ Singleton {
     onBarConfigChanged: root._save()
     onBarOpacityChanged: root._save()
     onCornerRadiusChanged: root._save()
-    onHairlineDividersChanged: root._save()
-    onDropShadowsChanged: root._save()
-    // ground/accent/typePairing deliberately excluded — see saveTheme()/
-    // revertTheme() above.
 }

@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import "../config"
 import "../services"
 import "../common"
+import "../theme"
 
 PanelWindow {
     id: osd
@@ -193,8 +194,8 @@ PanelWindow {
         // top-right corner as that one and as the notification cards,
         // which have always been opaque, so it was the last surface up
         // there still see-through.
-        color: Theme.surface
-        border.color: Theme.border
+        color: Appearance.surface
+        border.color: Appearance.border
         border.width: 1
         opacity: osd.shown ? 1 : 0
 
@@ -222,7 +223,7 @@ PanelWindow {
                 Layout.preferredWidth: 72
                 Layout.preferredHeight: 72
                 radius: Theme.radius
-                color: Theme.surfaceAlt
+                color: Appearance.surfaceAlt
                 clip: true
 
                 Image {
@@ -236,7 +237,7 @@ PanelWindow {
             Text {
                 visible: osd.captureFailed
                 text: "\uf071"
-                color: Theme.red
+                color: Appearance.red
                 font.pixelSize: 22
                 font.family: Theme.font
                 Layout.alignment: Qt.AlignVCenter
@@ -253,7 +254,7 @@ PanelWindow {
 
                     Text {
                         text: osd.captureFailed ? "Screenshot Failed" : "Screenshot Captured"
-                        color: Theme.fgStrong
+                        color: Appearance.fgStrong
                         font.bold: true
                         font.pixelSize: Theme.fontNormal
                         font.family: Theme.font
@@ -264,7 +265,7 @@ PanelWindow {
 
                     Text {
                         text: "\uf00d"
-                        color: Theme.fgDim
+                        color: Appearance.fgDim
                         font.pixelSize: Theme.fontSmall
                         font.family: Theme.font
                         MouseArea {
@@ -278,7 +279,7 @@ PanelWindow {
 
                 Text {
                     text: osd.captureFailed ? osd.failureMessage : "Saved and copied to clipboard"
-                    color: Theme.fgMuted
+                    color: Appearance.fgMuted
                     font.pixelSize: Theme.fontSmall
                     font.family: Theme.font
                     wrapMode: Text.WordWrap

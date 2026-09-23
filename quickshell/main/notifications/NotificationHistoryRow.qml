@@ -87,7 +87,7 @@ Rectangle {
 
                 Text {
                     text: root.entry.summary || root.entry.appName
-                    color: Theme.fg
+                    color: Appearance.fg
                     font.bold: true
                     font.pixelSize: Theme.fontNormal
                     font.family: Theme.font
@@ -98,7 +98,7 @@ Rectangle {
 
                 Text {
                     text: root._timeAgo(root.entry.time)
-                    color: Theme.fgDim
+                    color: Appearance.fgDim
                     font.pixelSize: Theme.fontTiny
                     font.family: Theme.font
                 }
@@ -114,7 +114,7 @@ Rectangle {
                 // taller than the metric above reserves.
                 text: (root.entry.body || "").replace(/\s+/g, " ").trim()
                 textFormat: Text.PlainText
-                color: Theme.fgFaint
+                color: Appearance.fgFaint
                 font.pixelSize: Theme.fontSmall
                 font.family: Theme.font
                 elide: Text.ElideRight
@@ -126,7 +126,7 @@ Rectangle {
 
             Text {
                 text: root.entry.appName
-                color: Theme.fgDim
+                color: Appearance.fgDim
                 font.pixelSize: Theme.fontTiny
                 font.family: Theme.font
             }
@@ -134,7 +134,7 @@ Rectangle {
 
         Text {
             text: "\uf00d"
-            color: Theme.fgDim
+            color: Appearance.fgDim
             font.pixelSize: Theme.fontSmall
             font.family: Theme.font
             visible: rowHover.hovered

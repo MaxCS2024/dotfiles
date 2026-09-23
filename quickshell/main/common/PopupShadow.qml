@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Effects
 import "../config"
+import "../theme"
 
 // The drop shadow every floating surface in this shell casts, as one
 // component instead of the eighteen identical copies of the same six
@@ -29,7 +30,7 @@ import "../config"
 // second set of tokens exists.
 MultiEffect {
     shadowEnabled: true
-    shadowColor: Theme.shadowColor
+    shadowColor: Appearance.shadow
     shadowBlur: Theme.shadowBlurPopup
     shadowVerticalOffset: Theme.shadowVerticalOffsetPopup
     shadowHorizontalOffset: 0

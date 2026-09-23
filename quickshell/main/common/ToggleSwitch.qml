@@ -1,5 +1,6 @@
 import QtQuick
 import "../config"
+import "../theme"
 
 // The slide toggle for a boolean that is a *mode* rather than an action —
 // something that stays on until you come back and turn it off, where a
@@ -29,10 +30,10 @@ Item {
 
     property bool checked: false
 
-    property color trackOffColor: Theme.trackBg
-    property color trackOnColor: Theme.accent
-    property color borderColor: Theme.border
-    property color knobColor: Theme.fgStrong
+    property color trackOffColor: Appearance.trackBg
+    property color trackOnColor: Appearance.accent
+    property color borderColor: Appearance.border
+    property color knobColor: Appearance.fgStrong
 
     // Emitted on click. Deliberately not a two-way binding on `checked`:
     // the caller here drives a service (AirplaneMode.toggle()) and reads the

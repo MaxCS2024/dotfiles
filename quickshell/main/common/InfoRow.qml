@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../config"
+import "../theme"
 
 RowLayout {
     id: row
@@ -13,8 +14,8 @@ RowLayout {
     // fgMuted here made the shared rows visibly dimmer than the hand-built
     // one sitting directly under them. Default unchanged, so every
     // existing call site looks exactly as it did.
-    property color labelColor: Theme.fgMuted
-    property color valueColor: Theme.fg
+    property color labelColor: Appearance.fgMuted
+    property color valueColor: Appearance.fg
     property int valueMaxWidth: 0   // 0 = unconstrained
 
     Layout.fillWidth: true

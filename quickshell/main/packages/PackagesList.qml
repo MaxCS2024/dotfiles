@@ -219,7 +219,7 @@ Item {
         }
 
         // A translucent white line rather than common/Divider.qml's
-        // Theme.separator, which is barely lifted off the base background
+        // Appearance.separator, which is barely lifted off the base background
         // and reads as invisible against this surface — the reason
         // quicksettings/SettingsDivider.qml existed at all before that
         // directory was deleted. One call site is not worth a file.

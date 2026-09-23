@@ -14,6 +14,7 @@ import QtQuick.Layouts
 import "../common"
 import "../config"
 import "../services"
+import "../theme"
 
 Item {
     id: root
@@ -34,9 +35,9 @@ Item {
     readonly property bool _critical: root.row.urgency === "critical"
 
     readonly property color _accent: {
-        if (root._critical) return Theme.red
-        if (root.row.urgency === "low") return Theme.fgDim
-        return Theme.icon
+        if (root._critical) return Appearance.red
+        if (root.row.urgency === "low") return Appearance.fgDim
+        return Appearance.icon
     }
 
     // Accent at an arbitrary alpha. Every tinted surface below is derived
@@ -80,7 +81,7 @@ Item {
         // change height the moment a hover paused it.
         implicitHeight: content.implicitHeight + 24
         radius: Theme.radius
-        color: root.hovered ? Theme.hover : Theme.surface
+        color: root.hovered ? Appearance.hover : Appearance.surface
         // 2px to match Hyprland's `border_size` (hypr/modules/decorations.lua):
         // a toast is framed like a window rather than reading as a
         // lighter-weight thing floating over them. The countdown at the foot
@@ -102,8 +103,8 @@ Item {
         // Non-critical cards paint their edge with the Hyprland gradient
         // below instead, which covers this 2px band entirely — the colour
         // here is what shows if that frame is ever hidden.
-        border.color: root._critical ? Qt.tint(Theme.surface, root._tint(0.55))
-            : (root.hovered ? Theme.separator : Theme.border)
+        border.color: root._critical ? Qt.tint(Appearance.surface, root._tint(0.55))
+            : (root.hovered ? Appearance.separator : Appearance.border)
         clip: true
 
         Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
@@ -225,7 +226,7 @@ Item {
                     Text {
                         visible: root._title !== ""
                         text: root._title
-                        color: Theme.fgStrong
+                        color: Appearance.fgStrong
                         font.bold: true
                         // fontMedium -> fontLarge, and the body under it
                         // fontSmall -> fontMedium (user request
@@ -255,7 +256,7 @@ Item {
                         Layout.preferredHeight: 18
                         Layout.alignment: Qt.AlignVCenter
                         radius: 9
-                        color: closeHover.hovered ? Theme.hoverStrong : Qt.rgba(Theme.hoverStrong.r, Theme.hoverStrong.g, Theme.hoverStrong.b, 0)
+                        color: closeHover.hovered ? Appearance.hoverStrong : Qt.rgba(Appearance.hoverStrong.r, Appearance.hoverStrong.g, Appearance.hoverStrong.b, 0)
                         // Present but recessive until the pointer is on the
                         // card: always hit-testable (a toast has to be
                         // dismissable on the first try), never competing
@@ -268,7 +269,7 @@ Item {
                         Text {
                             anchors.centerIn: parent
                             text: "\uf00d"
-                            color: closeHover.hovered ? Theme.fgStrong : Theme.fgDim
+                            color: closeHover.hovered ? Appearance.fgStrong : Appearance.fgDim
                             font.pixelSize: Theme.fontTiny
                             font.family: Theme.font
 
@@ -288,7 +289,7 @@ Item {
                     visible: (root.row.body || "") !== ""
                     text: root.row.body || ""
                     textFormat: Text.PlainText
-                    color: Theme.fgSoft
+                    color: Appearance.fgSoft
                     font.pixelSize: Theme.fontMedium
                     font.family: Theme.font
                     lineHeight: 1.25
@@ -314,9 +315,9 @@ Item {
                             implicitWidth: actionLabel.implicitWidth + 20
                             implicitHeight: 26
                             radius: Theme.radius
-                            color: actionHover.hovered ? root._tint(0.18) : Theme.surfaceAlt
+                            color: actionHover.hovered ? root._tint(0.18) : Appearance.surfaceAlt
                             border.width: 1
-                            border.color: actionHover.hovered ? root._tint(0.45) : Theme.border
+                            border.color: actionHover.hovered ? root._tint(0.45) : Appearance.border
 
                             Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
                             Behavior on border.color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
@@ -325,7 +326,7 @@ Item {
                                 id: actionLabel
                                 anchors.centerIn: parent
                                 text: actionBtn.modelData.text
-                                color: actionHover.hovered ? Theme.fgStrong : Theme.fg
+                                color: actionHover.hovered ? Appearance.fgStrong : Appearance.fg
                                 font.pixelSize: Theme.fontSmall
                                 font.family: Theme.font
 
@@ -349,7 +350,7 @@ Item {
                 Text {
                     visible: root._source !== ""
                     text: root._source
-                    color: Theme.fgDim
+                    color: Appearance.fgDim
                     font.pixelSize: Theme.fontTiny
                     font.family: Theme.font
                     Layout.fillWidth: true

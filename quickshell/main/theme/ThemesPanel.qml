@@ -24,8 +24,8 @@
 //
 // Two kinds of row, which is the whole of the model Appearance.qml has:
 //
-//   · Wallpaper — useCustom false, every colour token falling through to
-//     config/Theme.qml's live matugen palette.
+//   · Wallpaper — useCustom false, the palette following the wallpaper
+//     (matugen), or the Default preset until matugen has run.
 //   · one row per Palettes.list entry — useCustom true, pinned to that
 //     palette's eight colours.
 //
@@ -368,13 +368,13 @@ ShellSurface {
                             // tab's chips carry: enough to tell the
                             // palettes apart by eye, and enough to spot
                             // the light one before picking it. The
-                            // Wallpaper row shows Theme's own two, which
+                            // Wallpaper row shows the wallpaper palette's two, which
                             // are the colours it would switch back to.
                             Rectangle {
                                 implicitWidth: 10
                                 implicitHeight: 10
                                 radius: 2
-                                color: row.modelData.wallpaper ? Theme.bar : row.modelData.bg
+                                color: row.modelData.wallpaper ? Appearance.wallpaperBase.bg : row.modelData.bg
                                 border.color: Appearance.border
                                 border.width: 1
                             }
@@ -382,7 +382,7 @@ ShellSurface {
                                 implicitWidth: 10
                                 implicitHeight: 10
                                 radius: 2
-                                color: row.modelData.wallpaper ? Theme.accent : row.modelData.accent
+                                color: row.modelData.wallpaper ? Appearance.wallpaperBase.accent : row.modelData.accent
                             }
 
                             Text {

@@ -4,9 +4,10 @@ Read this before creating or changing anything visual under `quickshell/`.
 These rules are binding. If a design you're about to write breaks one, change
 the design, not the rule. If you think a rule is wrong, ask the user first.
 
-Colour tokens live in `main/theme/Appearance.qml` (use these for colour, since
-they follow the user's custom theme). Sizes, fonts, radii and motion live in
-`main/config/Theme.qml`.
+Colour tokens live only in `main/theme/Appearance.qml`; `main/config/Theme.qml`
+holds sizes, fonts, radii and motion and has no colours at all. The ladder is
+derived in `main/theme/palette.js` (tested by `main/tests/run palette`). The
+vocabulary (palette, base palette, ladder, token, …) is in `CONTEXT.md`.
 
 ## 1. Borders
 
@@ -30,7 +31,9 @@ This is the most-repeated mistake in this repo, so it comes first.
 ## 2. Colour
 
 - Colours come from `Appearance.*` only. No hex literals, no `Qt.lighter`/
-  `Qt.darker` of your own when a token exists.
+  `Qt.darker` of your own when a token exists. A colour the palette lacks is
+  added as a token in `palette.js` (with a test), not derived at the call
+  site.
 - **Don't hand-mix accent into a surface** (e.g. 40% accent + 60% surface).
   It turns muddy on warm accents. To show a secondary state, move one step up
   the elevation ladder instead.

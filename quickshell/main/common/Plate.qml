@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
 import "../config"
+import "../theme"
 
 // The shared popout-plate recipe every popout surface builds on:
 // one card (ground, border, radius, elevation, optional header) so each
@@ -13,9 +14,8 @@ import "../config"
 Rectangle {
     id: root
 
-    // Ink ground (`#191715`@96%) is the power-menu variant;
-    // every other popout stays on the paper ground (`Theme.plateBg`,
-    // `#f7f6f5` — lighter than the bar's own `Theme.surface`).
+    // The power-menu variant sits on the bar's own ground; every other
+    // popout is a surface card.
     property bool ink: false
     // Docked (anchored under the bar module that opened it) vs floating
     // (centred overlays like the launcher) — the design specifies
@@ -36,15 +36,15 @@ Rectangle {
     implicitWidth: body.implicitWidth + Theme.platePaddingH * 2
     implicitHeight: column.implicitHeight + Theme.platePaddingV * 2
 
-    color: root.ink ? Theme.plateBgInk : Theme.plateBg
+    color: root.ink ? Appearance.bar : Appearance.surface
     radius: Theme.radiusLarge
     border.width: 1
-    border.color: root.ink ? Theme.plateBorderInk : Theme.border
+    border.color: Appearance.border
 
     layer.enabled: true
     layer.effect: MultiEffect {
         shadowEnabled: true
-        shadowColor: root.floating ? Theme.shadowColor : Theme.shadowColorDocked
+        shadowColor: Appearance.shadow
         shadowBlur: root.floating ? Theme.shadowBlurPopup : Theme.shadowBlurDocked
         shadowVerticalOffset: root.floating ? Theme.shadowVerticalOffsetPopup : Theme.shadowVerticalOffsetDocked
         shadowHorizontalOffset: 0
@@ -69,7 +69,7 @@ Rectangle {
             Text {
                 text: root.header
                 Layout.fillWidth: true
-                color: root.ink ? Theme.fgHeaderInk : Theme.fgHeader
+                color: Appearance.fgMuted
                 font.family: Theme.fontHeading
                 font.pixelSize: Theme.fontTiny
                 font.capitalization: Font.SmallCaps
@@ -79,7 +79,7 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 implicitHeight: 1
-                color: root.ink ? Theme.dividerInk : Theme.separator
+                color: Appearance.separator
             }
         }
 

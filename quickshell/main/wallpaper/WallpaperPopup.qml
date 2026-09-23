@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import "../config"
 import "../common"
 import "../services"
+import "../theme"
 
 PanelWindow {
     id: osd
@@ -78,8 +79,8 @@ PanelWindow {
         // blur (hypr/modules/windowrules.lua), so alpha here isn't frosted
         // glass, it's the desktop showing through the footer text. Matches
         // the notification cards this stacks with in the same corner.
-        color: Theme.surface
-        border.color: Theme.border
+        color: Appearance.surface
+        border.color: Appearance.border
         border.width: 1
         opacity: osd.shown ? 1 : 0
         clip: true
@@ -105,7 +106,7 @@ PanelWindow {
             Rectangle {
                 anchors.fill: parent
                 visible: !osd.applyFailed
-                color: Theme.surfaceAlt
+                color: Appearance.surfaceAlt
 
                 Image {
                     anchors.fill: parent
@@ -119,7 +120,7 @@ PanelWindow {
                 visible: osd.applyFailed
                 anchors.centerIn: parent
                 text: ""
-                color: Theme.red
+                color: Appearance.red
                 font.pixelSize: 26
                 font.family: Theme.font
             }
@@ -139,7 +140,7 @@ PanelWindow {
 
                 Text {
                     text: osd.applyFailed ? "Wallpaper Failed" : "Wallpaper Changed"
-                    color: Theme.fgStrong
+                    color: Appearance.fgStrong
                     font.bold: true
                     font.pixelSize: Theme.fontNormal
                     font.family: Theme.font
@@ -150,7 +151,7 @@ PanelWindow {
 
                 Text {
                     text: ""
-                    color: Theme.fgDim
+                    color: Appearance.fgDim
                     font.pixelSize: Theme.fontSmall
                     font.family: Theme.font
                     MouseArea {
@@ -164,7 +165,7 @@ PanelWindow {
 
             Text {
                 text: osd.message
-                color: Theme.fgMuted
+                color: Appearance.fgMuted
                 font.pixelSize: Theme.fontSmall
                 font.family: Theme.font
                 wrapMode: Text.WordWrap

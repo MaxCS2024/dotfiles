@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../config"
+import "../theme"
 
 // The quick-settings 2-column tile: label +
 // italic state line, gold border/tint when `on`. One component since all
@@ -21,10 +22,10 @@ Rectangle {
 
     radius: Theme.radiusLarge
     border.width: 1
-    border.color: root.on ? Theme.accent : Theme.border
-    color: tap.pressed ? Theme.press
-         : root.on ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.09)
-                   : (hover.hovered ? Theme.hover : Qt.rgba(Theme.hover.r, Theme.hover.g, Theme.hover.b, 0))
+    border.color: root.on ? Appearance.accent : Appearance.border
+    color: tap.pressed ? Appearance.hoverStrong
+         : root.on ? Qt.rgba(Appearance.accent.r, Appearance.accent.g, Appearance.accent.b, 0.09)
+                   : (hover.hovered ? Appearance.hover : Qt.rgba(Appearance.hover.r, Appearance.hover.g, Appearance.hover.b, 0))
 
     activeFocusOnTab: true
     Keys.onPressed: (event) => {
@@ -51,7 +52,7 @@ Rectangle {
             text: root.label
             // `fg`, not `fgStrong` — matches the pre-6.6 tab files' own
             // convention for plain row text.
-            color: root.on ? Theme.accentText : Theme.fg
+            color: root.on ? Appearance.accent : Appearance.fg
             font.pixelSize: Theme.fontMedium
             font.family: Theme.fontHeading
             Layout.fillWidth: true
@@ -60,7 +61,7 @@ Rectangle {
 
         Text {
             text: root.state
-            color: Theme.fgMuted
+            color: Appearance.fgMuted
             font.pixelSize: Theme.fontSmall
             font.italic: true
             font.family: Theme.font

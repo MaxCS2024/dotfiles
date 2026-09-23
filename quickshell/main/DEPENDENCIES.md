@@ -136,9 +136,9 @@ running. Grouped by what breaks if it's missing.
 
 ## Optional — config degrades gracefully without these
 
-- **matugen** — `config/Theme.qml` reads `~/.cache/matugen/colors.json`
-  if present and falls back to the built-in hardcoded palette if it's
-  missing, malformed, or `matugenEnabled` is set to `false`. matugen
+- **matugen** — `theme/WallpaperSource.qml` reads `~/.cache/matugen/colors.json`
+  for wallpaper mode, and the shell uses the Default preset
+  (`theme/palette.js`) while it's missing or malformed. matugen
   isn't invoked by the shell itself — `wallpaper/WallpaperSwitcher.qml`
   runs `matugen image` when a new wallpaper is applied, and this just
   watches the resulting file. See

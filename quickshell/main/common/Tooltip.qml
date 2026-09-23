@@ -2,6 +2,7 @@ import Quickshell
 import QtQuick
 import "../config"
 import "popupAnchor.js" as PopupAnchor
+import "../theme"
 
 // Themed replacement for QtQuick.Controls.ToolTip, which renders with
 // the platform style and ignores Theme entirely (see SystemTray.qml's
@@ -56,8 +57,8 @@ PopupWindow {
     Rectangle {
         anchors.fill: parent
         radius: Theme.radius
-        color: Theme.surface
-        border.color: Theme.border
+        color: Appearance.surface
+        border.color: Appearance.border
         border.width: 1
 
         layer.enabled: true
@@ -66,7 +67,7 @@ PopupWindow {
             id: label
             anchors.centerIn: parent
             text: root.text
-            color: Theme.fg
+            color: Appearance.fg
             font.pixelSize: Theme.fontSmall
             font.family: Theme.font
             horizontalAlignment: Text.AlignHCenter

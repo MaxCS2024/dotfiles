@@ -1,5 +1,6 @@
 pragma Singleton
 import Quickshell
+import "palette.js" as Palette
 
 // The named palettes offered by SettingsAppearanceTab's preset menu.
 //
@@ -23,6 +24,11 @@ import Quickshell
 // the variant when both are worth having.
 Singleton {
     readonly property var list: [
+        // The neutral dark palette wallpaper mode also uses until matugen
+        // has produced colours (palette.js's DEFAULT, so the two can't
+        // drift). Unlike the others it leaves surface and border to be
+        // derived, and has no terminal hues of its own.
+        Object.assign({ surface: "", border: "" }, Palette.DEFAULT),
         {
             name: "Tokyo Night",
             bg: "#1a1b26", surface: "#24283b", fg: "#c0caf5",
