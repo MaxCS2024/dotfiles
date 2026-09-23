@@ -580,15 +580,11 @@ ShellSurface {
                                     ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
                                 }
 
-                                // The three states are three grounds:
-                                // today is the accent cell, a selection
-                                // elsewhere is the half-accent ground,
-                                // hover is the usual tint. The one cell
-                                // that is both today and the selection has
-                                // no fourth ground left, so it takes a
-                                // ring instead.
-                                border.width: day.today && day.selected ? 1 : 0
-                                border.color: Appearance.fgStrong
+                                // No ring for "today and selected": a
+                                // selection on today needs no mark of its
+                                // own, since no other cell carries the
+                                // selected ground and the footer names the
+                                // day (quickshell/STYLE.md §1, "Borders").
 
                                 Text {
                                     anchors.centerIn: parent

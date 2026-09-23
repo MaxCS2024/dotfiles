@@ -150,3 +150,6 @@ Add to this list whenever the user rejects a visual pattern.
 - 2026-09-23: widening the current workspace pill with an animation made the
   slide choppy (whole row re-laid out every frame) and slow (ease-in-out).
   See §7.
+- 2026-09-23: a `fgStrong` ring on the calendar's today cell when it was
+  also the selection (i.e. every time the calendar opened). A state that
+  "has no fill left" doesn't get a border; drop the extra mark (see §1).
