@@ -257,7 +257,7 @@ ShellSurface {
                 // The Edit pill's key. Without it the editor is the one
                 // part of this card the keyboard cannot reach, which is
                 // the same thing that made the bar's clock a dead stop
-                // for SUPER+B until it grew a tapped() — see
+                // for SUPER+SHIFT+B until it grew a tapped() — see
                 // bar/Clock.qml. Gated exactly as the pill is: on the
                 // Wallpaper row there is no palette to edit.
                 if (Appearance.useCustom) panel.editing = true

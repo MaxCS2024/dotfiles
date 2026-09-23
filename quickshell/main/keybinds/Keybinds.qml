@@ -51,7 +51,7 @@ Singleton {
     readonly property var groups: [
         { label: "Apps", icon: "\u{F14DE}", binds: [
             { action: "Terminal", keys: ["Super", "Return"] },
-            { action: "Browser", keys: ["Super", "Shift", "B"] },
+            { action: "Browser", keys: ["Super", "B"] },
             { action: "File manager", keys: ["Super", "E"] },
             { action: "App launcher", keys: ["Super", "P"] }
         ]},
@@ -74,7 +74,7 @@ Singleton {
             { action: "Notification rail", keys: ["Super", "Shift", "N"] },
             { action: "Power menu", keys: ["Super", "Escape"] },
             { action: "Show or hide the bar", keys: ["Super", "Alt", "Space"] },
-            { action: "Focus the bar", keys: ["Super", "B"] },
+            { action: "Focus the bar", keys: ["Super", "Shift", "B"] },
             { action: "Log out", keys: ["Super", "M"] }
         ]},
 

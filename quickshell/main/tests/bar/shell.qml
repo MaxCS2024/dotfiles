@@ -152,7 +152,7 @@ ShellRoot {
         () => {
             const b = root.bar
             Panels.focusBarRequested()
-            root.check("SUPER+B on the focused monitor engages kb nav", b.onFocusedMonitor ? b.kbActive : true,
+            root.check("SUPER+SHIFT+B on the focused monitor engages kb nav", b.onFocusedMonitor ? b.kbActive : true,
                        "is this screen the focused monitor?")
             root.check("kb nav starts on the first target", b.kbIndex === 0, b.kbIndex)
             root.check("only the current target shows focus",

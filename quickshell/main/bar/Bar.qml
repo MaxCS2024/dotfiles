@@ -169,7 +169,7 @@ Variants {
 
         readonly property var monitor: Hyprland.monitorFor(bar.modelData)
 
-        // Keyboard navigation. SUPER+B (hypr/modules/binds/apps.lua,
+        // Keyboard navigation. SUPER+SHIFT+B (hypr/modules/binds/apps.lua,
         // via services/Panels.qml's "bar-focus" GlobalShortcut) fires
         // Panels.focusBarRequested on every monitor's Bar at once; each
         // instance only actually engages if it's the one on the

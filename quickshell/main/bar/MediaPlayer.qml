@@ -29,7 +29,7 @@ Item {
     // and Enter there fires the focused module's `tapped()`. Both are
     // what bar/Clock.qml declares, for the reason it found when its own
     // dropdown became a card: a module the keyboard cannot reach is the
-    // one bar surface SUPER+B skips, and a module that opens something
+    // one bar surface SUPER+SHIFT+B skips, and a module that opens something
     // is worth reaching.
     property bool keyboardFocused: false
 

@@ -456,7 +456,7 @@ QtObject {
     //
     // The browser is whichever one Setup › Defaults chose, asked of
     // vars.lua exactly the way a keybind asks (`varsCur`), so these open
-    // in whatever SUPER+SHIFT+B opens — and a Brave that arrived as a
+    // in whatever SUPER+B opens — and a Brave that arrived as a
     // flatpak gets the flag handed past its `flatpak run`, where it
     // belongs.
     //

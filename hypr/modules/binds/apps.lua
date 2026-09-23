@@ -19,7 +19,7 @@ local mainMod = vars.mainMod
 -- candidates this machine has installed.
 hl.bind(mainMod .. " + RETURN", hl.dsp.exec_cmd(vars.terminal))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(vars.fileManager))
-hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd(vars.browser))
+hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(vars.browser))
 
 -- hyprshutdown leaves the session the way the power menu does; `uwsm
 -- stop` is the fallback for a machine that has not installed it.
@@ -51,6 +51,7 @@ hl.bind(mainMod .. " + C", hl.dsp.global("quickshell:clipboard-toggle"))
 hl.bind(mainMod .. " + SHIFT + T", hl.dsp.global("quickshell:themes-toggle"))
 
 -- The bar itself: hide it, or focus it for arrow-key navigation
--- (Left/Right to move, Enter to activate, Escape to release).
+-- (Left/Right to move, Enter to activate, Escape to release). Focus is
+-- shifted to leave plain SUPER+B to the browser.
 hl.bind(mainMod .. " + ALT + SPACE", hl.dsp.global("quickshell:bar-toggle"))
-hl.bind(mainMod .. " + B", hl.dsp.global("quickshell:bar-focus"))
+hl.bind(mainMod .. " + SHIFT + B", hl.dsp.global("quickshell:bar-focus"))

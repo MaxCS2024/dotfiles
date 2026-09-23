@@ -21,7 +21,7 @@ Item {
     // `keyboardNavigable`), and Enter there fires the focused module's
     // `tapped()`. Neither existed here while a click on the clock did
     // nothing; now that it opens the calendar, a module the keyboard
-    // cannot reach is the one bar surface SUPER+B skips (found
+    // cannot reach is the one bar surface SUPER+SHIFT+B skips (found
     // 2026-09-21). Both are what BarButton declares, for the same reason.
     property bool keyboardFocused: false
 
