@@ -41,18 +41,51 @@ Singleton {
         '; printf "\\n\\033[2m— finished (exit %s) · press Enter to close —\\033[0m\\n" "$?"'
         + '; read -r _'
 
+    // Which terminal, asked at spawn time of hypr/modules/vars.lua, the
+    // file SUPER+RETURN is bound from. It resolves the state file that
+    // Setup › Defaults writes against its own fallbacks, so the window
+    // this opens is the one that key opens. Run rather than parsed, as
+    // MenuActions' varsCur is and for the same reason. Theme.terminal is
+    // only the answer when that can't be had (no lua, no checkout).
+    //
+    // The line that comes back is a whole command
+    // ("uwsm-app -- flatpak run com.mitchellh.ghostty"), deliberately
+    // word-split into argv, launcher and all.
+    //
+    // The flags differ per terminal, and getting them wrong is not
+    // cosmetic:
+    //   * kitty rejects -e ("Unknown flag"), so it gets the program as
+    //     plain trailing arguments — which foot and alacritty take too,
+    //     but ghostty doesn't, so -e stays the default.
+    //   * ghostty and alacritty take the app-id as --class; foot and
+    //     kitty as --app-id. ghostty also drops an id that isn't a valid
+    //     GTK application id, which is why Theme.floatAppId is dotted.
+    // Everything outside the table goes through positional parameters,
+    // so the command needs no second round of quoting.
+    readonly property string launchScript: [
+        't=$(lua -e \'io.write(dofile(os.getenv("HOME").."/.dotfiles/hypr/modules/vars.lua").terminal or "")\' 2>/dev/null)',
+        '[ -n "$t" ] || t="$4"',
+        'id=$1 title=$2 cmd=$3',
+        'case "$t" in',
+        '  *ghostty*|*alacritty*) idf=--class= ;;',
+        '  *) idf=--app-id= ;;',
+        'esac',
+        'set -- $t',
+        '[ -n "$id" ] && set -- "$@" "$idf$id"',
+        '[ -n "$title" ] && set -- "$@" "--title=$title"',
+        'case "$t" in *kitty*) ;; *) set -- "$@" -e ;; esac',
+        'exec "$@" sh -c "$cmd"'
+    ].join("\n")
+
     function run(cmd, opts) {
         const o = opts || ({})
         const hold = o.hold !== false
         const floating = o.floating !== false
-        const appId = o.appId || Theme.floatAppId
+        const appId = floating ? (o.appId || Theme.floatAppId) : ""
 
-        let argv = [Theme.appLauncherPrefix, "--", Theme.terminal]
-        if (floating) argv.push(Theme.terminalAppIdArg + appId)
-        if (o.title) argv.push("--title=" + o.title)
-        argv = argv.concat(["-e", "sh", "-c", cmd + (hold ? root.holdTail : "")])
-
-        root.proc.command = argv
+        root.proc.command = ["sh", "-c", root.launchScript, "sh",
+            appId, o.title || "", cmd + (hold ? root.holdTail : ""),
+            Theme.appLauncherPrefix + " -- " + Theme.terminal]
         root.proc.running = false
         root.proc.running = true
     }

@@ -146,16 +146,12 @@ Singleton {
     readonly property real shadowVerticalOffsetDocked: shadowVerticalOffsetBar
 
     // ── External commands ────────────────────────────────
+    // Only the fallback: services/Terminal.qml opens whichever terminal
+    // Setup › Defaults picked (hypr/modules/vars.lua), and uses this when
+    // that can't be resolved.
     readonly property string terminal: "foot"
     readonly property string appLauncherPrefix: "uwsm-app"
     readonly property string logoutCmd: "uwsm stop"
-
-    // How to tell `terminal` what app-id to take. Wayland's app_id is what
-    // Hyprland matches as `class`, so this is the handle a window rule can
-    // grab — see floatAppId below. The flag is terminal-specific (foot and
-    // wezterm take --app-id, kitty and alacritty --class), which is why it
-    // lives beside the terminal it belongs to rather than in the caller.
-    readonly property string terminalAppIdArg: "--app-id="
 
     // The app-id a transient, task-shaped window asks for when it wants to
     // be floated and centred instead of tiled into the layout: a package
@@ -165,6 +161,8 @@ Singleton {
     // the whole mechanism, and this is the only name it knows.
     //
     // Nothing about it is terminal-specific: any window that can be told
-    // its own app-id can opt in the same way.
-    readonly property string floatAppId: "quickshell-float"
+    // its own app-id can opt in the same way. Wayland's app_id is what
+    // Hyprland matches as `class`. Dotted because ghostty ignores an id
+    // that isn't a valid GTK application id, and falls back to its own.
+    readonly property string floatAppId: "quickshell.float"
 }

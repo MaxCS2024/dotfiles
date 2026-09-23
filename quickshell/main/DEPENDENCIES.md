@@ -101,8 +101,9 @@ running. Grouped by what breaks if it's missing.
 
 ## Required by default config values — swap via `config/Theme.qml` if you use something else
 
-- **foot** — `Theme.terminal`. Used for the AUR install terminal
-  (`installAur` in `packages/PackagesList.qml`).
+- **foot** — `Theme.terminal`, the fallback for `services/Terminal.qml`
+  when the terminal picked in Setup › Defaults can't be resolved. foot,
+  kitty, ghostty and alacritty are all handled there.
 
 - **uwsm** — `Theme.appLauncherPrefix`, used to launch apps from
   `Launcher.qml` and to wrap the terminal launch above.

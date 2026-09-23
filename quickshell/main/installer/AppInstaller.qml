@@ -403,19 +403,15 @@ ShellSurface {
 
     // The AUR build is interactive by nature — yay shows the PKGBUILD
     // and asks — so it gets a terminal rather than the password path.
-    // That terminal is detached, and the Process here exits as soon as
-    // it has been launched rather than when the build finishes, so the
+    // That terminal is detached, and the launch returns as soon as it
+    // has been handed off rather than when the build finishes, so the
     // only honest way to notice the install landing is to watch for the
     // package appearing.
-    Process { id: aurInstall }
 
     function installAur(pkg) {
         installer.setInstalling("AUR", pkg, true)
         installer.say("Review " + pkg + " in the terminal")
-        aurInstall.command = [Theme.appLauncherPrefix, "--", Theme.terminal,
-                              "-e", "yay", "-S", pkg]
-        aurInstall.running = false
-        aurInstall.running = true
+        Terminal.run("yay -S '" + pkg + "'", { floating: false, hold: false })
         aurPoll.pkg = pkg
         aurPoll.ticks = 0
         aurPoll.running = true

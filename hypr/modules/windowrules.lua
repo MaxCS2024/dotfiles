@@ -85,9 +85,9 @@ hl.window_rule({
 -- Keyed on app-id rather than on the terminal's class, so it isn't a
 -- rule about foot: whatever is spawned asks for this id (quickshell's
 -- side is Theme.floatAppId + services/Terminal.qml, which passes it with
--- Theme.terminalAppIdArg), and anything else that can name its own
--- app-id gets the same treatment for free. Swapping the terminal in
--- Theme.qml changes nothing here.
+-- whichever flag the chosen terminal takes), and anything else that can
+-- name its own app-id gets the same treatment for free. Swapping the
+-- terminal in Setup › Defaults changes nothing here.
 --
 -- Sized off the monitor rather than in pixels so it lands the same on
 -- any screen. Note the arithmetic form: a plain `size = "60% 65%"` is
@@ -100,7 +100,7 @@ hl.window_rule({
 -- `center` respects the reserved area, so it clears the bar on its own.
 hl.window_rule({
 	name = "float-task-window",
-	match = { class = "^quickshell-float$" },
+	match = { class = "^quickshell\\.float$" },
 
 	float = true,
 	center = true,
