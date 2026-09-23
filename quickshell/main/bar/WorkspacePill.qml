@@ -26,11 +26,20 @@ Item {
     // BarModuleLoader) purely so the urgent pulse below can stop while
     // the bar is hidden.
     property var barWindow
+    // false for numbered workspaces: Workspaces.qml draws the current one
+    // with a sliding indicator on top, so the pill itself looks the same
+    // whether active or not. The scratchpad pill still shows its own.
+    property bool showsActive: true
 
     signal clicked()
 
-    width: 22
-    height: 22
+    // Fixed size in every state. An earlier version widened the current
+    // workspace, but animating a width re-lays out the whole row every
+    // frame and the numbers wobbled on pixel rounding.
+    implicitWidth: 22
+    implicitHeight: 22
+    width: implicitWidth
+    height: implicitHeight
     Layout.alignment: Qt.AlignVCenter
 
     readonly property bool hovered: hoverHandler.hovered
@@ -55,14 +64,8 @@ Item {
 
     readonly property color _markColor: root.urgent
         ? Qt.rgba(Appearance.red.r, Appearance.red.g, Appearance.red.b, 0.5 + 0.5 * root._urgentPulse)
-        : (root.active ? Appearance.bar
-           : (root.occupied ? Appearance.fgStrong : Appearance.fgDim))
-
-    readonly property color _accentTint: Qt.rgba(
-        Appearance.surface.r * 0.6 + Appearance.accent.r * 0.4,
-        Appearance.surface.g * 0.6 + Appearance.accent.g * 0.4,
-        Appearance.surface.b * 0.6 + Appearance.accent.b * 0.4,
-        1)
+        : (root.active && root.showsActive ? Appearance.bar
+           : (root.occupied ? Appearance.accent : Appearance.fgMuted))
 
     // A resting background, not just HoverPill's on-hover one — bare
     // glyphs on the bare bar read as too flat/minimal for a cluster of
@@ -70,20 +73,19 @@ Item {
     // the bar). Sits underneath HoverPill, so hovering still layers its
     // own highlight on top.
     Rectangle {
-        anchors.centerIn: parent
-        width: 22
-        height: 22
+        anchors.fill: parent
         radius: height / 2
-        // Accent-coloured: solid for the current workspace, a tint of
-        // it for occupied ones, plain surface for empty ones.
-        color: root.active ? Appearance.accent
-             : (root.occupied ? root._accentTint : Appearance.surface)
+        // Solid accent for the current workspace, one elevation step for
+        // occupied ones, nothing for empty ones. No outline: state is
+        // carried by fill alone (quickshell/STYLE.md, "Borders").
+        color: root.active && root.showsActive ? Appearance.accent
+             : (root.occupied ? Appearance.surfaceAlt : "transparent")
         Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
     }
 
     HoverPill {
         id: pill
-        implicitWidth: 22
+        implicitWidth: root.width
         implicitHeight: 22
         active: root.hovered
         anchors.centerIn: parent

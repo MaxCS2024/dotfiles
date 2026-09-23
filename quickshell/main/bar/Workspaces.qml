@@ -14,7 +14,8 @@ Item {
     implicitHeight: row.implicitHeight + 2 * root.trackPad
     Layout.alignment: Qt.AlignVCenter
 
-    readonly property int trackPad: 3
+    readonly property int trackPad: 4
+    readonly property int pillSize: 22
 
     property var screen
     property int minWorkspaces: 5
@@ -46,6 +47,17 @@ Item {
     // nothing real here to verify it against.
     property var specialWorkspaceNames: ["magic"]
 
+    function wsFor(id) {
+        return Hyprland.workspaces.values.find(w => w.id === id)
+    }
+    function isActive(id) {
+        return Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id === id : false
+    }
+    function isOccupied(id) {
+        const ws = root.wsFor(id)
+        return ws !== undefined && ws.toplevels.values.length > 0
+    }
+
     function dispatchWorkspace(id) {
         Hyprland.dispatch('hl.dsp.focus({ workspace = "' + id + '" })')
     }
@@ -67,8 +79,9 @@ Item {
         onWheel: (event) => root.switchBy(event.angleDelta.y > 0 ? -1 : 1)
     }
 
-    // Set a shade below the bar rather than above it, so every chip —
-    // even an empty one on Appearance.surface — lifts off the track.
+    // Set a shade below the bar rather than above it, so the raised
+    // occupied/current chips lift off the track while empty workspaces
+    // sit flat on it.
     Rectangle {
         anchors.fill: parent
         radius: height / 2
@@ -78,7 +91,7 @@ Item {
     RowLayout {
         id: row
         anchors.centerIn: parent
-        spacing: 4
+        spacing: 6
 
         Repeater {
             model: root.wsIds
@@ -87,13 +100,13 @@ Item {
                 id: wsItem
                 required property int modelData
 
-                readonly property var ws: Hyprland.workspaces.values.find(w => w.id === wsItem.modelData)
+                readonly property var ws: root.wsFor(wsItem.modelData)
 
-                active: Hyprland.focusedWorkspace
-                    ? Hyprland.focusedWorkspace.id === wsItem.modelData : false
-                occupied: wsItem.ws !== undefined && wsItem.ws.toplevels.values.length > 0
+                active: root.isActive(wsItem.modelData)
+                occupied: root.isOccupied(wsItem.modelData)
                 label: wsItem.modelData
-                labelBold: wsItem.active
+                // The sliding indicator above draws the current state.
+                showsActive: false
                 urgent: wsItem.ws ? wsItem.ws.urgent : false
                 barWindow: root.barWindow
 
@@ -127,6 +140,58 @@ Item {
                 barWindow: root.barWindow
 
                 onClicked: root.toggleSpecial(specialItem.modelData)
+            }
+        }
+    }
+    // One accent pill for the current workspace that slides between
+    // numbers. It sits above the chips and carries its own copy of the
+    // numbers in the on-accent colour, clipped to itself, so whichever
+    // number it covers — mid-slide included — reads dark on accent and
+    // every other number keeps its normal colour. Only x animates, so
+    // there's no layout work per frame. Chips are all pillSize, so
+    // index * (pillSize + spacing) is exact. Decelerating easing: it
+    // leaves at once and settles softly.
+    Rectangle {
+        id: indicator
+        readonly property int index: Hyprland.focusedWorkspace
+            ? root.wsIds.indexOf(Hyprland.focusedWorkspace.id) : -1
+
+        x: row.x + Math.max(0, indicator.index) * (root.pillSize + row.spacing)
+        y: row.y + (row.height - height) / 2
+        width: root.pillSize
+        height: root.pillSize
+        radius: height / 2
+        color: Appearance.accent
+        clip: true
+        // opacity, not visible — the special workspace takes focus while
+        // shown, and the pill should fade out rather than vanish.
+        opacity: indicator.index === -1 ? 0 : 1
+
+        Behavior on x { NumberAnimation { duration: Theme.workspaceSlideDuration; easing.type: Theme.easingDecel } }
+        Behavior on opacity { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
+
+        Row {
+            x: row.x - indicator.x
+            spacing: row.spacing
+
+            Repeater {
+                model: root.wsIds
+
+                delegate: Item {
+                    id: cell
+                    required property int modelData
+                    width: root.pillSize
+                    height: root.pillSize
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: cell.modelData
+                        font.pixelSize: Theme.fontMedium
+                        font.family: Theme.font
+                        font.bold: true
+                        color: Appearance.bar
+                    }
+                }
             }
         }
     }

@@ -355,7 +355,7 @@ Singleton {
     // live-editable durations.
     readonly property int popoutOpenDuration: animPanel
     readonly property int popoutCloseDuration: 160
-    readonly property int workspaceSlideDuration: animNormal
+    readonly property int workspaceSlideDuration: 140
     readonly property int osdHoldDuration: 1800
     readonly property int lockShakeDistance: 8
     readonly property int lockShakeDuration: 300
