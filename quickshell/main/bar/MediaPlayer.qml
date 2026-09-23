@@ -184,10 +184,11 @@ Item {
             // to its content. It gets a width-capped viewport that clips,
             // and the title scrolls inside it when it doesn't fit.
             //
-            // The cap is the same 220 the elide used to apply, and it's
-            // still a cap rather than a fixed width: a short title sizes
-            // the pill to itself exactly as before, a long one stops
-            // growing it and scrolls instead.
+            // The cap was the 220 the elide used to apply, down to 160 on
+            // user request 2026-09-23 for a shorter pill. It's still a
+            // cap rather than a fixed width: a short title sizes the pill
+            // to itself exactly as before, a long one stops growing it
+            // and scrolls instead.
             Item {
                 id: titleViewport
 
@@ -196,7 +197,7 @@ Item {
                 // the text's *natural* width. Binding its width to this
                 // viewport would both close a loop through
                 // Layout.preferredWidth and leave nothing to scroll.
-                Layout.preferredWidth: Math.min(title.implicitWidth, 220)
+                Layout.preferredWidth: Math.min(title.implicitWidth, 160)
                 Layout.preferredHeight: title.implicitHeight
                 clip: true
 
