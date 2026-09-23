@@ -92,6 +92,7 @@ Item {
                 color: Appearance.fg
                 font.pixelSize: Theme.fontBig
                 font.family: Theme.font
+                font.weight: Font.DemiBold
             }
 
             Text {
@@ -101,6 +102,7 @@ Item {
                 color: Appearance.fg
                 font.pixelSize: Theme.fontBig
                 font.family: Theme.font
+                font.weight: Font.DemiBold
             }
         }
     }
