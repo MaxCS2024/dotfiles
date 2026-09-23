@@ -55,8 +55,14 @@ Item {
 
     readonly property color _markColor: root.urgent
         ? Qt.rgba(Appearance.red.r, Appearance.red.g, Appearance.red.b, 0.5 + 0.5 * root._urgentPulse)
-        : (root.active ? Appearance.fgStrong
-           : (root.occupied ? Appearance.fgSoft : Appearance.fgDim))
+        : (root.active ? Appearance.bar
+           : (root.occupied ? Appearance.fgStrong : Appearance.fgDim))
+
+    readonly property color _accentTint: Qt.rgba(
+        Appearance.surface.r * 0.6 + Appearance.accent.r * 0.4,
+        Appearance.surface.g * 0.6 + Appearance.accent.g * 0.4,
+        Appearance.surface.b * 0.6 + Appearance.accent.b * 0.4,
+        1)
 
     // A resting background, not just HoverPill's on-hover one — bare
     // glyphs on the bare bar read as too flat/minimal for a cluster of
@@ -68,8 +74,10 @@ Item {
         width: 22
         height: 22
         radius: height / 2
-        color: root.active ? Appearance.selected
-             : (root.occupied ? Appearance.wsOccupied : Appearance.surface)
+        // Accent-coloured: solid for the current workspace, a tint of
+        // it for occupied ones, plain surface for empty ones.
+        color: root.active ? Appearance.accent
+             : (root.occupied ? root._accentTint : Appearance.surface)
         Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
     }
 
@@ -102,20 +110,6 @@ Item {
             radius: 3
             color: root._markColor
             Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
-        }
-
-        // Minimal "you are here" cue instead of a filled background —
-        // a thin underline reads as current without needing its own
-        // shape language.
-        Rectangle {
-            visible: root.active
-            anchors.top: parent.verticalCenter
-            anchors.topMargin: 8
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: 10
-            height: 2
-            radius: 1
-            color: root._markColor
         }
     }
 

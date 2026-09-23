@@ -3,10 +3,18 @@ import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 import "../config"
+import "../theme"
 
-RowLayout {
+// The workspace chips sit together on one pill-shaped track, so the
+// cluster reads as a single bar module rather than loose circles.
+Item {
     id: root
-    spacing: 4
+
+    implicitWidth: row.implicitWidth + 2 * root.trackPad
+    implicitHeight: row.implicitHeight + 2 * root.trackPad
+    Layout.alignment: Qt.AlignVCenter
+
+    readonly property int trackPad: 3
 
     property var screen
     property int minWorkspaces: 5
@@ -59,53 +67,67 @@ RowLayout {
         onWheel: (event) => root.switchBy(event.angleDelta.y > 0 ? -1 : 1)
     }
 
-    Repeater {
-        model: root.wsIds
-
-        delegate: WorkspacePill {
-            id: wsItem
-            required property int modelData
-
-            readonly property var ws: Hyprland.workspaces.values.find(w => w.id === wsItem.modelData)
-
-            active: Hyprland.focusedWorkspace
-                ? Hyprland.focusedWorkspace.id === wsItem.modelData : false
-            occupied: wsItem.ws !== undefined && wsItem.ws.toplevels.values.length > 0
-            label: wsItem.modelData
-            labelBold: wsItem.active
-            urgent: wsItem.ws ? wsItem.ws.urgent : false
-            barWindow: root.barWindow
-
-            onClicked: root.dispatchWorkspace(wsItem.modelData)
-        }
+    // Set a shade below the bar rather than above it, so every chip —
+    // even an empty one on Appearance.surface — lifts off the track.
+    Rectangle {
+        anchors.fill: parent
+        radius: height / 2
+        color: Qt.darker(Appearance.bar, 1.35)
     }
 
-    Repeater {
-        model: root.specialWorkspaceNames
+    RowLayout {
+        id: row
+        anchors.centerIn: parent
+        spacing: 4
 
-        delegate: WorkspacePill {
-            id: specialItem
-            required property string modelData
+        Repeater {
+            model: root.wsIds
 
-            readonly property var ws: Hyprland.workspaces.values.find(w => w.name === "special:" + specialItem.modelData)
-            readonly property bool specialOccupied: specialItem.ws
-                ? specialItem.ws.toplevels.values.length > 0 : false
-            readonly property bool specialShown: !!(root.monitor && root.monitor.activeWorkspace
-                && specialItem.ws && root.monitor.activeWorkspace.id === specialItem.ws.id)
+            delegate: WorkspacePill {
+                id: wsItem
+                required property int modelData
 
-            // Hiding an ancestor via `visible` would latch this false for
-            // good — see the invariant on BarModuleLoader.qml.
-            visible: specialItem.specialOccupied
-            Layout.leftMargin: 2
+                readonly property var ws: Hyprland.workspaces.values.find(w => w.id === wsItem.modelData)
 
-            active: specialItem.specialShown
-            occupied: specialItem.specialOccupied
-            label: ""
-            labelSize: Theme.fontSmall
-            urgent: specialItem.ws ? specialItem.ws.urgent : false
-            barWindow: root.barWindow
+                active: Hyprland.focusedWorkspace
+                    ? Hyprland.focusedWorkspace.id === wsItem.modelData : false
+                occupied: wsItem.ws !== undefined && wsItem.ws.toplevels.values.length > 0
+                label: wsItem.modelData
+                labelBold: wsItem.active
+                urgent: wsItem.ws ? wsItem.ws.urgent : false
+                barWindow: root.barWindow
 
-            onClicked: root.toggleSpecial(specialItem.modelData)
+                onClicked: root.dispatchWorkspace(wsItem.modelData)
+            }
+        }
+
+        Repeater {
+            model: root.specialWorkspaceNames
+
+            delegate: WorkspacePill {
+                id: specialItem
+                required property string modelData
+
+                readonly property var ws: Hyprland.workspaces.values.find(w => w.name === "special:" + specialItem.modelData)
+                readonly property bool specialOccupied: specialItem.ws
+                    ? specialItem.ws.toplevels.values.length > 0 : false
+                readonly property bool specialShown: !!(root.monitor && root.monitor.activeWorkspace
+                    && specialItem.ws && root.monitor.activeWorkspace.id === specialItem.ws.id)
+
+                // Hiding an ancestor via `visible` would latch this false for
+                // good — see the invariant on BarModuleLoader.qml.
+                visible: specialItem.specialOccupied
+                Layout.leftMargin: 2
+
+                active: specialItem.specialShown
+                occupied: specialItem.specialOccupied
+                label: ""
+                labelSize: Theme.fontSmall
+                urgent: specialItem.ws ? specialItem.ws.urgent : false
+                barWindow: root.barWindow
+
+                onClicked: root.toggleSpecial(specialItem.modelData)
+            }
         }
     }
 }
