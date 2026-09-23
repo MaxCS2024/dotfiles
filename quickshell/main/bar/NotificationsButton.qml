@@ -38,7 +38,7 @@ BarButton {
             Text {
                 anchors.centerIn: parent
                 text: Notifications.unreadCount > 9 ? "9+" : Notifications.unreadCount
-                color: "#ffffff"
+                color: Appearance.bar
                 font.pixelSize: 9
                 font.family: Theme.font
                 font.bold: true
