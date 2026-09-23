@@ -209,7 +209,9 @@ export PATH="$HOME/.opencode/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
 
 # repo scripts that are not installed anywhere else (bin/nerdfont-picker).
-# rig, relay and rack install themselves into ~/.local/bin, above.
-export PATH="$HOME/.dotfiles/bin:$PATH"
+# rig, relay and rack install themselves into ~/.local/bin, above. Found
+# through ZDOTDIR, which is a link into the repo: :A resolves it and :h
+# steps up from zsh/, so this holds wherever the repo was cloned.
+export PATH="${ZDOTDIR:A:h}/bin:$PATH"
 
 export PATH="$PATH:$HOME/.spicetify"

@@ -37,7 +37,8 @@ Singleton {
         + '; read -r _'
 
     // Which terminal, asked at spawn time of hypr/modules/vars.lua, the
-    // file SUPER+RETURN is bound from. It resolves the state file that
+    // file SUPER+RETURN is bound from — through its deployed path under
+    // ~/.config/hypr, so it doesn't matter where the repo was cloned. It resolves the state file that
     // Setup › Defaults writes against its own fallbacks, so the window
     // this opens is the one that key opens. Run rather than parsed, as
     // MenuActions' varsCur is and for the same reason. Theme.terminal is
@@ -58,7 +59,7 @@ Singleton {
     // Everything outside the table goes through positional parameters,
     // so the command needs no second round of quoting.
     readonly property string launchScript: [
-        't=$(lua -e \'io.write(dofile(os.getenv("HOME").."/.dotfiles/hypr/modules/vars.lua").terminal or "")\' 2>/dev/null)',
+        't=$(lua -e \'io.write(dofile(os.getenv("HOME").."/.config/hypr/modules/vars.lua").terminal or "")\' 2>/dev/null)',
         '[ -n "$t" ] || t="$4"',
         'id=$1 title=$2 cmd=$3',
         'case "$t" in',
