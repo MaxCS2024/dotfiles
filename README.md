@@ -34,7 +34,15 @@ cd ~/.dotfiles
 ./relay/install.sh
 
 rack setup            # what is missing, grouped by how much it matters
-rack deploy           # link every manifest entry into ~/.config
+rack deploy           # link every manifest entry into ~/.config and ~
+
+# If deploy reports "exists and is not ours", something got there first —
+# an app can write a default config the first time it runs. Run it again
+# with --force, which moves those aside to
+# ~/.local/state/rack/backups/<time>/ and links the repo's in their place;
+# nothing is deleted:
+#
+#   rack deploy --force
 
 # btop rewrites its own config whenever you change a setting in its UI, and
 # that file is deployed as a link back into this repo. This keeps your local

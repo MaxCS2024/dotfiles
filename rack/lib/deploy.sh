@@ -11,6 +11,19 @@ RACK_MODULE_ACTIONS[deploy]="run status remove adopt"
 RACK_MODULE_STATUS[deploy]="ready"
 RACK_MODULE_TIER[deploy]="core"
 
+# Where --force puts what it replaces, keeping its path under $HOME:
+# ~/.config/hypr lands at <backups>/<stamp>/.config/hypr. Moved, never
+# deleted — the thing in the way on a fresh machine is usually a config the
+# app wrote on first launch, but it can as easily be one you meant to keep.
+rack::deploy::__backup() {
+    local target=$1 stamp=$2 rel dest
+    rel=${target#"$HOME"/}
+    [[ $rel == "$target" ]] && rel=${target#/}
+    dest="$HOME/.local/state/rack/backups/$stamp/$rel"
+    mkdir -p -- "${dest%/*}" && mv -- "$target" "$dest" || return 1
+    printf '%s\n' "$dest"
+}
+
 # run [--force] [--adopt] [name...]
 rack::deploy::run() {
     local force=0 adopt=0
@@ -30,7 +43,9 @@ rack::deploy::run() {
         shift
     done
 
-    local name source target reload state changed=0 failed=0
+    local name source target reload state moved changed=0 failed=0
+    local stamp
+    stamp=$(date +%Y%m%d-%H%M%S)
 
     while IFS=$'\t' read -r name source target reload; do
         state=$(rig::link::check "$source" "$target") || true
@@ -64,10 +79,27 @@ rack::deploy::run() {
                     continue
                 fi
                 if ((!force)); then
-                    rig::log::error "$name: ${target/#$HOME/\~} exists and is not ours (--adopt or --force)"
+                    # --adopt can only take it when the repo has no copy
+                    # of its own, which for a manifest entry is almost
+                    # never — so name the one that will actually work.
+                    if [[ -e $source ]]; then
+                        rig::log::error "$name: ${target/#$HOME/\~} exists and is not ours (--force moves it aside)"
+                    else
+                        rig::log::error "$name: ${target/#$HOME/\~} exists and is not ours (--adopt moves it into the repo)"
+                    fi
                     failed=$((failed + 1))
                     continue
                 fi
+                if [[ ${RIG_DRY_RUN:-0} != 0 ]]; then
+                    printf '  %-12s would move aside and link\n' "$name"
+                    continue
+                fi
+                moved=$(rack::deploy::__backup "$target" "$stamp") || {
+                    rig::log::error "$name: could not move ${target/#$HOME/\~} aside"
+                    failed=$((failed + 1))
+                    continue
+                }
+                printf '  %-12s moved aside to %s\n' "$name" "${moved/#$HOME/\~}"
                 ;;
         esac
 
@@ -76,9 +108,7 @@ rack::deploy::run() {
             continue
         fi
 
-        local -a args=("$source" "$target")
-        ((force)) && args+=(--force)
-        if rig::link::make "${args[@]}"; then
+        if rig::link::make "$source" "$target"; then
             printf '  %-12s linked (%s)\n' "$name" "$state"
             changed=$((changed + 1))
         else
@@ -141,7 +171,8 @@ rack::deploy::__usage() {
   rack deploy                    everything in the manifest
   rack deploy hypr nvim          just these
   rack deploy --adopt            move what is already there into the repo first
-  rack deploy --force            replace real files (they are gone)
+  rack deploy --force            replace real files, moving them to
+                                 ~/.local/state/rack/backups/<time>/
   rack deploy status             what it would do
   rack deploy remove nvim        unlink, but only links pointing into the repo
 
