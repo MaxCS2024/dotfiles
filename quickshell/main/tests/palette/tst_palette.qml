@@ -73,6 +73,15 @@ TestCase {
         verify(lum(t.fgDim) > lum(t.fgFaint))
     }
 
+    function test_sunken_sits_below_the_bar() {
+        const dark = Palette.derive(tokyoNight)
+        verify(lum(dark.sunken) < lum(dark.bar))
+        const light = Palette.derive(latte)
+        verify(lum(light.sunken) > lum(light.bar))
+        const def = Palette.derive(Palette.DEFAULT)
+        verify(!Qt.colorEqual(def.sunken, def.bar))
+    }
+
     function test_default_ladder_does_not_collapse() {
         const t = Palette.derive(Palette.DEFAULT)
         verify(!Qt.colorEqual(t.surface, t.bar))

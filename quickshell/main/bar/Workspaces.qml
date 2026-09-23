@@ -82,13 +82,13 @@ Item {
         onWheel: (event) => root.switchBy(event.angleDelta.y > 0 ? -1 : 1)
     }
 
-    // Set a shade below the bar rather than above it, so the raised
+    // Sunk below the bar rather than raised above it, so the raised
     // occupied/current chips lift off the track while empty workspaces
     // sit flat on it.
     Rectangle {
         anchors.fill: parent
         radius: height / 2
-        color: Qt.darker(Appearance.bar, 1.35)
+        color: Appearance.sunken
     }
 
     RowLayout {

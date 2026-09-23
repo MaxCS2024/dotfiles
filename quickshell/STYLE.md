@@ -38,7 +38,8 @@ This is the most-repeated mistake in this repo, so it comes first.
   It turns muddy on warm accents. To show a secondary state, move one step up
   the elevation ladder instead.
 - Elevation ladder, lowest to highest:
-  `bar` → `surface` → `surfaceAlt` → `hover` → `hoverStrong` → `selected`.
+  `sunken` → `bar` → `surface` → `surfaceAlt` → `hover` → `hoverStrong` →
+  `selected`. `sunken` is for a track set into the bar (the workspace strip).
   Move by steps; don't invent in-between shades.
 - **Accent marks one thing per group**: the current or selected item. If
   several items in a cluster are accent-coloured, none of them stands out.

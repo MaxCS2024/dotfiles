@@ -28,7 +28,7 @@ var COMPOSITOR_FALLBACK = { start: "#33ccff", end: "#00ff99" }
 // Every token derive() returns, in one list, so tests can check that
 // each source produces all of them.
 var TOKENS = [
-    "bar", "surface", "surfaceAlt", "hover", "hoverStrong", "selected",
+    "sunken", "bar", "surface", "surfaceAlt", "hover", "hoverStrong", "selected",
     "trackBg", "scrollTrack", "scrollThumb",
     "border", "separator",
     "fgStrong", "fg", "fgSoft", "fgMuted", "fgFaint", "fgDim",
@@ -140,6 +140,10 @@ function derive(base) {
     var red = _col(_set(base.red) ? base.red : DEFAULT.red)
 
     return {
+        // One step *below* the bar: a recessed track set into it (the
+        // workspace strip). Moves the opposite way from the surface
+        // ladder, so it reads as sunken on light palettes too.
+        sunken: recede(bg, 1.35),
         bar: bg,
         surface: surface,
         surfaceAlt: lift(1.25),

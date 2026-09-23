@@ -171,6 +171,7 @@ Singleton {
     readonly property var _t: Palette.derive(root.base)
 
     // ── Surfaces ─────────────────────────────────────────
+    readonly property color sunken: root._t.sunken
     readonly property color bar: root._t.bar
     readonly property color surface: root._t.surface
     readonly property color surfaceAlt: root._t.surfaceAlt
