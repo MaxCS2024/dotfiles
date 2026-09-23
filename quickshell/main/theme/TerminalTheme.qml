@@ -141,9 +141,20 @@ Scope {
     // FileView writes atomically through a temp file alongside the
     // target, which fails outright if ~/.cache/quickshell doesn't exist
     // yet — hence the mkdir before the first write.
+    //
+    // matugen's two include targets get an empty placeholder here too,
+    // when missing. Until the first wallpaper change nothing writes them,
+    // and foot (which has no optional include) and kitty both log an
+    // error for every terminal opened meanwhile. Empty reads exactly as
+    // missing would, and matugen overwrites it. `set -C` makes the
+    // create fail rather than truncate if matugen got there first.
+    // ghostty's includes are `?`-optional and need nothing.
     Process {
         running: true
-        command: ["mkdir", "-p", root._dir]
+        command: ["sh", "-c",
+            'mkdir -p "$1" "$2" && set -C && for f in foot-colors.ini kitty-colors.conf; do'
+            + ' [ -e "$2/$f" ] || : > "$2/$f" 2>/dev/null; done; true',
+            "sh", root._dir, Quickshell.env("HOME") + "/.cache/matugen"]
         onExited: {
             root._dirReady = true
             footFile.path = root._dir + "/foot-theme.ini"
