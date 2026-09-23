@@ -436,12 +436,14 @@ ShellSurface {
     //
     // The rows are generated from this one list rather than written out
     // beside it, so another launcher is a line here and nothing else —
-    // the same shape every other section has.
+    // the same shape every other section has. `aur: true` marks the ones
+    // that aren't in the official repos (checked with `pacman -Si`): only
+    // those go through yay, so the rest install on a machine without it.
     readonly property var gamingApps: [
         { label: "Steam",   icon: "",    pkg: "steam" },
         { label: "Lutris",  icon: "",    pkg: "lutris" },
-        { label: "Heroic",  icon: "",    pkg: "heroic-games-launcher-bin" },
-        { label: "Bottles", icon: "\u{F0854}", pkg: "bottles" },
+        { label: "Heroic",  icon: "",    pkg: "heroic-games-launcher-bin", aur: true },
+        { label: "Bottles", icon: "\u{F0854}", pkg: "bottles", aur: true },
         { label: "Prism Launcher", icon: "\u{F0373}", pkg: "prismlauncher" }
     ]
 
@@ -503,7 +505,7 @@ ShellSurface {
         .concat(panel.browserApps, panel.communicationApps, panel.generalApps)
 
     // What a row runs, per source, so that a section is a list of apps
-    // and nothing else. Both halves open a terminal for the reason the
+    // and nothing else. Every part opens in a terminal for the reason the
     // header gives: steam and lutris are repo packages that want a sudo
     // password, heroic and bottles are AUR ones that want a PKGBUILD read
     // and a y/n each, and none of that belongs behind a spinner in a
@@ -517,10 +519,12 @@ ShellSurface {
     // system install would fail its authentication rather than prompt for
     // it; sudo in a terminal is what the Update > Pacman row does anyway.
     function installCommand(apps) {
-        const pkgs = apps.filter(app => app.pkg).map(app => app.pkg)
+        const repo = apps.filter(app => app.pkg && !app.aur).map(app => app.pkg)
+        const aur = apps.filter(app => app.pkg && app.aur).map(app => app.pkg)
         const refs = apps.filter(app => app.flatpak).map(app => app.flatpak)
         const parts = []
-        if (pkgs.length > 0) parts.push("yay -S --needed " + pkgs.join(" "))
+        if (repo.length > 0) parts.push("sudo pacman -S --needed " + repo.join(" "))
+        if (aur.length > 0) parts.push("yay -S --needed " + aur.join(" "))
         if (refs.length > 0) parts.push("sudo flatpak install -y --system flathub " + refs.join(" "))
         return parts.join(" && ")
     }
@@ -539,7 +543,7 @@ ShellSurface {
             // is all this column would fit, and which manager it comes
             // from is the more useful thing to say in the space.
             hint: app.pkg || "flatpak",
-            requires: app.pkg ? "yay" : "flatpak",
+            requires: app.aur ? "yay" : app.pkg ? "sudo" : "flatpak",
             installs: [app.pkg || app.flatpak],
             run: () => Terminal.run(panel.installCommand([app]),
                                     { title: "Install " + app.label })

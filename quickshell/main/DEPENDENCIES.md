@@ -109,10 +109,6 @@ running. Grouped by what breaks if it's missing.
   `Launcher.qml` and to wrap the terminal launch above.
   `Theme.logoutCmd` also defaults to `uwsm stop`.
 
-- **yay** — the AUR helper `installAur`/AUR search assume specifically;
-  swap the literal `"yay"` string in `packages/PackagesList.qml` if you
-  use `paru` or another helper.
-
 - **awww** — `wallpaper/WallpaperSwitcher.qml`'s `applyWallpaper()`
   (`awww img ... && matugen image ...`). Pre-existing gap — never
   listed even though the wallpaper switcher
@@ -136,6 +132,13 @@ running. Grouped by what breaks if it's missing.
   `busctl --user status org.freedesktop.Notifications`
 
 ## Optional — config degrades gracefully without these
+
+- **yay** — the AUR. Without it the installer (`installer/AppInstaller.qml`)
+  shows pacman and Flathub results only, the Conf menu's Update › Yay row
+  and the Setup rows for AUR packages (Heroic, Bottles) are dimmed, and
+  `rack update` skips its AUR stage. Flatpak is the install source that is
+  required. A different helper (`paru`) means swapping the literal `"yay"`
+  in those two QML files.
 
 - **matugen** — `theme/WallpaperSource.qml` reads `~/.cache/matugen/colors.json`
   for wallpaper mode, and the shell uses the Default preset

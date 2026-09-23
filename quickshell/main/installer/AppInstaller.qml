@@ -315,6 +315,10 @@ ShellSurface {
             }
         }
         onExited: (exitCode, exitStatus) => installer.searchingAur = false
+        // Without yay the Process never starts, and a Process that never
+        // started emits neither of the two above — the AUR column would
+        // say "searching" forever. Stopping running covers that case too.
+        onRunningChanged: if (!running) installer.searchingAur = false
     }
 
     Process {

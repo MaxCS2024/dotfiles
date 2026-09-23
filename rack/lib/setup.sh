@@ -45,7 +45,6 @@ declare -ga RACK_SETUP_REQUIRED=(
 declare -ga RACK_SETUP_DEFAULT_CONFIG=(
     "foot:foot"
     "uwsm:uwsm"
-    "yay:yay"
     "awww:awww"
 )
 
@@ -53,7 +52,11 @@ declare -ga RACK_SETUP_DEFAULT_CONFIG=(
 # ones autostart.lua launches and hypridle.conf/hyprlock.conf configure, so a
 # gap here is a feature that quietly never runs rather than a shell that fails
 # to start — which is exactly the kind of thing this check exists to surface.
+# yay is here, not a default-config value: flatpak (required) is the install
+# source that has to work, and without yay the AUR is simply absent — its
+# installer results, Update › Yay and rack update's AUR stage all skip it.
 declare -ga RACK_SETUP_OPTIONAL=(
+    "yay:yay"
     "hypridle:hypridle"
     "hyprlock:hyprlock"
     "hyprsunset:hyprsunset"
