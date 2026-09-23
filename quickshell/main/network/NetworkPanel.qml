@@ -497,8 +497,14 @@ ShellSurface {
                 // a radio mode, not a Wi-Fi tab action, and it is the one
                 // control that has to stay reachable from the Bluetooth
                 // tab — turning the radios off is how you get there.
+                //
+                // Checked means the radios are *on* — the inverse of
+                // AirplaneMode.enabled. Unlabelled, a switch in the
+                // network panel's header reads as "network", and with
+                // `checked: AirplaneMode.enabled` it sat off while the
+                // network was up, which read as broken.
                 ToggleSwitch {
-                    checked: AirplaneMode.enabled
+                    checked: !AirplaneMode.enabled
                     trackOffColor: Appearance.trackBg
                     trackOnColor: Appearance.accent
                     borderColor: Appearance.border
