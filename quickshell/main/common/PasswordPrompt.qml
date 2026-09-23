@@ -101,8 +101,8 @@ Item {
         ColumnLayout {
             id: content
             anchors.fill: parent
-            anchors.margins: 14
-            spacing: 8
+            anchors.margins: Theme.space4
+            spacing: Theme.space2
 
             Text {
                 text: root.title
@@ -126,8 +126,8 @@ Item {
 
             Rectangle {
                 Layout.fillWidth: true
-                Layout.topMargin: 4
-                implicitHeight: 30
+                Layout.topMargin: Theme.space1
+                implicitHeight: 32
                 radius: Theme.radius
                 color: Appearance.surfaceAlt
                 border.color: root.errorText !== "" ? Appearance.red : Appearance.border
@@ -136,7 +136,7 @@ Item {
                 TextInput {
                     id: passwordField
                     anchors.fill: parent
-                    anchors.margins: 7
+                    anchors.margins: Theme.space2
                     color: Appearance.fg
                     font.pixelSize: Theme.fontNormal
                     font.family: Theme.font
@@ -168,14 +168,14 @@ Item {
 
             RowLayout {
                 Layout.fillWidth: true
-                Layout.topMargin: 6
-                spacing: 8
+                Layout.topMargin: Theme.space2
+                spacing: Theme.space2
 
                 Item { Layout.fillWidth: true }
 
                 Rectangle {
                     implicitWidth: cancelLabel.implicitWidth + 18
-                    implicitHeight: 26
+                    implicitHeight: 28
                     radius: Theme.radius
                     // Borderless like Confirm, but a neutral fill so the
                     // accent one still reads as the primary action.
@@ -204,7 +204,7 @@ Item {
 
                 Rectangle {
                     implicitWidth: okLabel.implicitWidth + 18
-                    implicitHeight: 26
+                    implicitHeight: 28
                     radius: Theme.radius
                     // SlabStyle.tintSelected's half-accent, borderless, spelled
                     // out on Theme because this file doesn't import theme/;

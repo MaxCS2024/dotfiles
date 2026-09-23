@@ -46,7 +46,7 @@ BarButton {
     }
     InfoRow { label: "Temp"; value: SystemMonitor.cpuTemp === "-" ? "-" : SystemMonitor.cpuTemp + "°C" }
 
-    Divider { Layout.topMargin: 4 }
+    Divider { Layout.topMargin: Theme.space1 }
 
     Text {
         text: "GPU (Intel)"

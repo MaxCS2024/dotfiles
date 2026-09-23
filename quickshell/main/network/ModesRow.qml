@@ -40,7 +40,7 @@ ColumnLayout {
     id: root
     Layout.fillWidth: true
     Layout.topMargin: 2
-    spacing: 6
+    spacing: Theme.space2
 
     // Capitals and tracking as the Wi-Fi tab's own section
     // headers — see "Known networks" above for why both.
@@ -70,7 +70,7 @@ ColumnLayout {
         signal switched()
 
         Layout.fillWidth: true
-        spacing: 6
+        spacing: Theme.space2
 
         Text {
             text: modeRow.label

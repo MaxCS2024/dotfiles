@@ -36,8 +36,8 @@ Item {
     // Fixed size in every state. An earlier version widened the current
     // workspace, but animating a width re-lays out the whole row every
     // frame and the numbers wobbled on pixel rounding.
-    implicitWidth: 22
-    implicitHeight: 22
+    implicitWidth: Theme.barItemHeight
+    implicitHeight: Theme.barItemHeight
     width: implicitWidth
     height: implicitHeight
     Layout.alignment: Qt.AlignVCenter
@@ -86,7 +86,7 @@ Item {
     HoverPill {
         id: pill
         implicitWidth: root.width
-        implicitHeight: 22
+        implicitHeight: Theme.barItemHeight
         active: root.hovered
         anchors.centerIn: parent
 
@@ -107,9 +107,9 @@ Item {
         Rectangle {
             visible: root.label === ""
             anchors.centerIn: parent
-            width: 6
-            height: 6
-            radius: 3
+            width: Theme.space2
+            height: Theme.space2
+            radius: height / 2
             color: root._markColor
             Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
         }

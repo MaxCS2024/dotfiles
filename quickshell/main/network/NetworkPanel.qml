@@ -298,13 +298,13 @@ ShellSurface {
             id: body
 
             anchors.fill: parent
-            anchors.margins: 14
-            spacing: 12
+            anchors.margins: Theme.space4
+            spacing: Theme.space3
 
             // ── Header ───────────────────────────────────
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 10
+                spacing: Theme.space2
 
                 // Network.icon, the same glyph bar/NetworkButton wears in
                 // the bar — so the button you pressed and the card it
@@ -399,7 +399,7 @@ ShellSurface {
                 // one that isn't there.
                 Rectangle {
                     visible: panel.tab === 0 && Network.type === "wifi" && Network.connected
-                    implicitWidth: 26
+                    implicitWidth: 28
                     implicitHeight: 24
                     radius: Theme.radius
                     color: shareHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)
@@ -437,7 +437,7 @@ ShellSurface {
                 // the Wi-Fi tab is about.
                 Rectangle {
                     visible: panel.tab === 0
-                    implicitWidth: 26
+                    implicitWidth: 28
                     implicitHeight: 24
                     radius: Theme.radius
                     color: speedHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)
@@ -521,13 +521,13 @@ ShellSurface {
                 id: tabTrack
                 Layout.fillWidth: true
                 Layout.topMargin: 2
-                implicitHeight: 26 + 2 * tabTrack.pad
+                implicitHeight: 24 + 2 * tabTrack.pad
                 radius: Theme.radius
                 color: Appearance.trackBg
                 border.width: 1
                 border.color: Appearance.border
 
-                readonly property int pad: 3
+                readonly property int pad: Theme.space1
 
                 // Behind the Repeater, so it paints under the labels.
                 //
@@ -571,7 +571,7 @@ ShellSurface {
                             readonly property bool current: panel.tab === tabBtn.index
 
                             Layout.fillWidth: true
-                            implicitHeight: 26
+                            implicitHeight: 24
                             radius: Theme.radius
                             color: !tabBtn.current && tabHover.hovered
                                 ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)
@@ -736,7 +736,7 @@ ShellSurface {
                 id: sheetCol
                 anchors.centerIn: parent
                 width: parent.width
-                spacing: 10
+                spacing: Theme.space2
 
                 Text {
                     text: "Share Wi-Fi"
@@ -762,7 +762,7 @@ ShellSurface {
                     NetworkQrCard {
                         id: qr
                         anchors.fill: parent
-                        anchors.margins: 6
+                        anchors.margins: Theme.space2
                         payload: shareSheet.payload
                     }
                 }

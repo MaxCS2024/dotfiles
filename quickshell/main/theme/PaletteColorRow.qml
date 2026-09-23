@@ -36,7 +36,7 @@ RowLayout {
     signal edited(string hex)
     signal cleared
 
-    spacing: 8
+    spacing: Theme.space2
 
     // The field's text is assigned rather than bound: typing into a
     // TextInput overwrites `text` and would break a binding for good,
@@ -50,12 +50,12 @@ RowLayout {
         color: Appearance.fg
         font.pixelSize: Theme.fontSmall
         font.family: Theme.font
-        Layout.preferredWidth: 78
+        Layout.preferredWidth: 80
     }
 
     Rectangle {
-        implicitWidth: 22
-        implicitHeight: 22
+        implicitWidth: 24
+        implicitHeight: 24
         radius: Theme.radius
         color: row.resolved
         border.color: Appearance.border
@@ -64,7 +64,7 @@ RowLayout {
 
     Rectangle {
         Layout.preferredWidth: 96
-        implicitHeight: 22
+        implicitHeight: 24
         radius: Theme.radius
         color: Appearance.surfaceAlt
         border.color: hexField.activeFocus ? Appearance.accent : Appearance.border
@@ -73,7 +73,7 @@ RowLayout {
         TextInput {
             id: hexField
             anchors.fill: parent
-            anchors.margins: 5
+            anchors.margins: Theme.space1
             // Faint while the value is only derived — the field still
             // shows a real hex, but it isn't one you've chosen.
             color: row.overridden ? Appearance.fg : Appearance.fgFaint
@@ -94,8 +94,8 @@ RowLayout {
     // Held at full width even when there's nothing to show, so every
     // row's fields line up — a hidden item would drop out of the layout.
     Item {
-        Layout.preferredWidth: 38
-        implicitHeight: 22
+        Layout.preferredWidth: 40
+        implicitHeight: 24
         opacity: row.derivable ? 1 : 0
         enabled: row.derivable && row.overridden
 

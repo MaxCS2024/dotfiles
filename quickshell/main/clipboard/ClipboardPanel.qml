@@ -327,8 +327,8 @@ ShellSurface {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 16
-            spacing: 12
+            anchors.margins: Theme.space4
+            spacing: Theme.space3
 
             // ── Search, and the one control that empties the store ──
             // The field takes the width, which is what was asked for and
@@ -346,19 +346,19 @@ ShellSurface {
             // thing it does not do.
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 10
+                spacing: Theme.space2
 
                 Rectangle {
                     Layout.fillWidth: true
-                    implicitHeight: 38
+                    implicitHeight: 40
                     radius: Theme.radius
                     color: Appearance.surfaceAlt
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 12
-                        anchors.rightMargin: 12
-                        spacing: 8
+                        anchors.leftMargin: Theme.space3
+                        anchors.rightMargin: Theme.space3
+                        spacing: Theme.space2
 
                         // U+F0349 is nf-md-magnify, the glyph the keybinds
                         // window's filter wears.
@@ -440,7 +440,7 @@ ShellSurface {
                 Rectangle {
                     visible: panel.entries.length > 0
                     implicitWidth: wipeLabel.implicitWidth + 20
-                    implicitHeight: 38
+                    implicitHeight: 40
                     radius: Theme.radius
                     color: wipeHover.hovered ? Appearance.dangerBg : Appearance.surfaceAlt
                     border.width: 1
@@ -476,7 +476,7 @@ ShellSurface {
             RowLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                spacing: 12
+                spacing: Theme.space3
 
                 // Left: the rows. Half the window — the list and the pane
                 // each get the same width (user request 2026-09-21), which
@@ -536,7 +536,7 @@ ShellSurface {
                         readonly property bool current: row.index === panel.selectedIndex
 
                         width: ListView.view.width
-                        height: 34
+                        height: 32
                         radius: Theme.radius
                         color: row.current ? SlabStyle.tintSelected
                              : rowHover.hovered ? Appearance.hover
@@ -550,8 +550,8 @@ ShellSurface {
 
                         Text {
                             anchors.fill: parent
-                            anchors.leftMargin: 10
-                            anchors.rightMargin: 8
+                            anchors.leftMargin: Theme.space3
+                            anchors.rightMargin: Theme.space2
                             verticalAlignment: Text.AlignVCenter
                             text: row.modelData.preview
                             color: row.current ? Appearance.fgStrong : Appearance.fg
@@ -589,13 +589,13 @@ ShellSurface {
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 12
-                        spacing: 8
+                        anchors.margins: Theme.space3
+                        spacing: Theme.space2
 
                         // What this entry is, before what it says.
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: 8
+                            spacing: Theme.space2
 
                             Text {
                                 text: {

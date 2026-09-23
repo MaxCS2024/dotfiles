@@ -131,12 +131,12 @@ PanelWindow {
             anchors.top: banner.bottom
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.margins: 10
+            anchors.margins: Theme.space2
             spacing: 2
 
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 6
+                spacing: Theme.space2
 
                 Text {
                     text: osd.applyFailed ? "Wallpaper Failed" : "Wallpaper Changed"

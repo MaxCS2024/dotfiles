@@ -60,10 +60,6 @@ ShellSurface {
     // it, which is already more than the blur reaches.
     readonly property int shadowPad: 24
 
-    // The card's own padding, named because `cardHeight` has to add it
-    // back to a body that is measured without it.
-    readonly property int cardPadding: 14
-
     // What the whole card is worth: its content, plus the padding either
     // side of it, and never more than the column the bar leaves.
     //
@@ -75,7 +71,7 @@ ShellSurface {
     // that flows the other way is the cap, and that is a constant.
     readonly property int cardHeight: Math.min(
         panel.height - panel.inset * 2,
-        body.implicitHeight + panel.cardPadding * 2)
+        body.implicitHeight + Theme.cardPadding * 2)
 
     // Far enough that the card *and* its shadow are past the screen edge.
     readonly property int slideDistance: panel.cardWidth + panel.inset + 24
@@ -337,13 +333,13 @@ ShellSurface {
             id: body
 
             anchors.fill: parent
-            anchors.margins: panel.cardPadding
-            spacing: 12
+            anchors.margins: Theme.cardPadding
+            spacing: Theme.space3
 
             // ── Header ───────────────────────────────────
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 10
+                spacing: Theme.space2
 
                 // Volume.icon, the glyph bar/VolumeButton wears in the bar
                 // — so the button you pressed and the card it opened are
@@ -416,7 +412,7 @@ ShellSurface {
             // that changes colour.
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 10
+                spacing: Theme.space2
 
                 Text {
                     text: Volume.icon
@@ -477,7 +473,7 @@ ShellSurface {
             RowLayout {
                 visible: Mic.deviceName !== "No device"
                 Layout.fillWidth: true
-                spacing: 10
+                spacing: Theme.space2
 
                 Text {
                     text: Mic.icon
@@ -566,7 +562,7 @@ ShellSurface {
                 Layout.fillHeight: false
                 Layout.preferredHeight: Math.min(panel.audioSinks.length, 4) * 30
                 Layout.maximumHeight: Layout.preferredHeight
-                spacing: 4
+                spacing: Theme.space1
 
                 ListView {
                     id: sinkList
@@ -584,16 +580,16 @@ ShellSurface {
                         readonly property bool isActive: sinkRow.modelData === Volume.sink
 
                         width: ListView.view.width
-                        height: 30
+                        height: 32
                         radius: Theme.radius
                         color: sinkRow.isActive ? SlabStyle.tintSelected
                              : (sinkHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover))
 
                         RowLayout {
                             anchors.fill: parent
-                            anchors.leftMargin: 6
-                            anchors.rightMargin: 6
-                            spacing: 8
+                            anchors.leftMargin: Theme.space2
+                            anchors.rightMargin: Theme.space2
+                            spacing: Theme.space2
 
                             // The tick keeps its column whether or not it
                             // is drawn, so the device names below it all
@@ -603,7 +599,7 @@ ShellSurface {
                                 color: Appearance.green
                                 font.pixelSize: Theme.fontSmall
                                 font.family: Theme.font
-                                Layout.preferredWidth: 14
+                                Layout.preferredWidth: 16
                             }
 
                             Text {
@@ -687,7 +683,7 @@ ShellSurface {
                 Layout.preferredHeight: Math.min(panel.streamGroups.length, 4) * 60
                     + Math.max(0, Math.min(panel.streamGroups.length, 4) - 1) * 4
                 Layout.maximumHeight: Layout.preferredHeight
-                spacing: 4
+                spacing: Theme.space1
 
                 ListView {
                     id: streamList
@@ -695,7 +691,7 @@ ShellSurface {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     clip: true
-                    spacing: 4
+                    spacing: Theme.space1
                     model: panel.streamGroups
                     boundsBehavior: Flickable.StopAtBounds
 
@@ -751,9 +747,9 @@ ShellSurface {
 
                         RowLayout {
                             anchors.fill: parent
-                            anchors.leftMargin: 8
-                            anchors.rightMargin: 8
-                            spacing: 10
+                            anchors.leftMargin: Theme.space2
+                            anchors.rightMargin: Theme.space2
+                            spacing: Theme.space2
 
                             Item {
                                 Layout.preferredWidth: 24
@@ -790,16 +786,44 @@ ShellSurface {
                             ColumnLayout {
                                 Layout.fillWidth: true
                                 Layout.minimumWidth: 0
-                                spacing: 4
+                                spacing: Theme.space1
 
+                                // Name · what it's playing · level, on one
+                                // line. The name keeps its width and the
+                                // subtitle takes (and elides into) whatever
+                                // is left, so a long tab title can't push
+                                // the app name out.
                                 RowLayout {
+                                    id: streamHeader
+                                    readonly property string subtitle:
+                                        panel.groupSubtitle(streamRow.modelData)
                                     Layout.fillWidth: true
-                                    spacing: 6
+                                    spacing: Theme.space2
 
                                     Text {
                                         text: streamRow.modelData.name
                                         color: Appearance.fg
                                         font.pixelSize: Theme.fontNormal
+                                        font.family: Theme.font
+                                        Layout.fillWidth: streamHeader.subtitle === ""
+                                        Layout.minimumWidth: 0
+                                        Layout.maximumWidth: implicitWidth
+                                        elide: Text.ElideRight
+                                    }
+
+                                    Text {
+                                        visible: streamHeader.subtitle !== ""
+                                        text: "·"
+                                        color: Appearance.fgMuted
+                                        font.pixelSize: Theme.fontSmall
+                                        font.family: Theme.font
+                                    }
+
+                                    Text {
+                                        visible: streamHeader.subtitle !== ""
+                                        text: streamHeader.subtitle
+                                        color: Appearance.fgMuted
+                                        font.pixelSize: Theme.fontSmall
                                         font.family: Theme.font
                                         Layout.fillWidth: true
                                         Layout.minimumWidth: 0
@@ -813,17 +837,6 @@ ShellSurface {
                                         font.pixelSize: Theme.fontSmall
                                         font.family: Theme.font
                                     }
-                                }
-
-                                Text {
-                                    visible: panel.groupSubtitle(streamRow.modelData) !== ""
-                                    text: panel.groupSubtitle(streamRow.modelData)
-                                    color: Appearance.fgFaint
-                                    font.pixelSize: Theme.fontTiny
-                                    font.family: Theme.font
-                                    Layout.fillWidth: true
-                                    Layout.minimumWidth: 0
-                                    elide: Text.ElideRight
                                 }
 
                                 Slider {
@@ -850,7 +863,7 @@ ShellSurface {
                                 color: streamRow.muted ? Appearance.red : Appearance.fgMuted
                                 font.pixelSize: 15
                                 font.family: Theme.font
-                                Layout.preferredWidth: 18
+                                Layout.preferredWidth: 20
                                 horizontalAlignment: Text.AlignHCenter
 
                                 MouseArea {

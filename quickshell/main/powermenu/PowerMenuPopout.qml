@@ -206,7 +206,7 @@ ShellSurface {
                 id: content
                 anchors.fill: parent
                 anchors.margins: slab.pad
-                spacing: 16
+                spacing: Theme.space4
 
                 // ── Actions ──────────────────────────────────────
                 // The only thing left on the slab, per user request
@@ -240,7 +240,7 @@ ShellSurface {
                             readonly property color tone: tile.modelData.danger ? Appearance.red : Appearance.accent
 
                             width: 152
-                            height: 150
+                            height: 152
                             radius: SlabStyle.cardRadius
 
                             // Mixed channel by channel rather than with
@@ -344,7 +344,7 @@ ShellSurface {
 
                             ColumnLayout {
                                 anchors.centerIn: parent
-                                spacing: 11
+                                spacing: Theme.space3
 
                                 Text {
                                     Layout.alignment: Qt.AlignHCenter

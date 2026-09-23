@@ -65,8 +65,8 @@ ShellRoot {
         // ── height ─────────────────────────────────────────
         () => {
             root.useConfig({})
-            root.check("height 0 means the 35px default", root.bar.barHeight === 35, root.bar.barHeight)
-            root.check("window takes the bar height", root.bar.implicitHeight === 35, root.bar.implicitHeight)
+            root.check("height 0 means the 36px default", root.bar.barHeight === 36, root.bar.barHeight)
+            root.check("window takes the bar height", root.bar.implicitHeight === 36, root.bar.implicitHeight)
             root.useConfig({ height: 42 })
             root.check("per-monitor height overrides the default", root.bar.barHeight === 42, root.bar.barHeight)
         },
@@ -79,12 +79,12 @@ ShellRoot {
             root.check("floating bottom bar is inset on every side but the top",
                        b.WlrLayershell.margins.bottom === 8 && b.WlrLayershell.margins.top === 0
                        && b.WlrLayershell.margins.left === 8 && b.WlrLayershell.margins.right === 8)
-            root.check("floating bar slides its margin clear too", b.slideDistance === 35 + 8, b.slideDistance)
+            root.check("floating bar slides its margin clear too", b.slideDistance === 36 + 8, b.slideDistance)
             root.useConfig({})
             root.check("docked top bar has no margins",
                        b.anchors.top && !b.anchors.bottom && b.WlrLayershell.margins.top === 0
                        && b.WlrLayershell.margins.left === 0)
-            root.check("docked bar slides exactly its height", b.slideDistance === 35, b.slideDistance)
+            root.check("docked bar slides exactly its height", b.slideDistance === 36, b.slideDistance)
         },
 
         // ── showing: space is reserved before the slide in ──

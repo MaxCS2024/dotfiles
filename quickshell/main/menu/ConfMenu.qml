@@ -822,7 +822,7 @@ ShellSurface {
                 id: content
                 anchors.fill: parent
                 anchors.margins: slab.pad
-                spacing: 14
+                spacing: Theme.space4
 
                 // ── Filter ───────────────────────────────
                 // The first thing on the slab, per user request
@@ -837,7 +837,7 @@ ShellSurface {
                 // own placeholder, which names the branch being filtered.
                 Item {
                     Layout.fillWidth: true
-                    implicitHeight: 26
+                    implicitHeight: 28
                     visible: panel.infoKind === ""
 
                     TextInput {
@@ -950,7 +950,7 @@ ShellSurface {
 
                     RowLayout {
                         anchors.fill: parent
-                        spacing: 6
+                        spacing: Theme.space2
                         visible: panel.infoKind === "" && panel.rows.length > 0
 
                         ListView {
@@ -988,9 +988,9 @@ ShellSurface {
 
                                 RowLayout {
                                     anchors.fill: parent
-                                    anchors.leftMargin: 12
-                                    anchors.rightMargin: 10
-                                    spacing: 10
+                                    anchors.leftMargin: Theme.space3
+                                    anchors.rightMargin: Theme.space3
+                                    spacing: Theme.space2
 
                                     Text {
                                         Layout.preferredWidth: 20

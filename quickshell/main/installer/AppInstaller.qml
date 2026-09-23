@@ -537,13 +537,13 @@ ShellSurface {
         layer.effect: PopupShadow {}
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 16
-            spacing: 12
+            anchors.margins: Theme.space4
+            spacing: Theme.space3
 
             // ── Title ─────────────────────────────────────
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 8
+                spacing: Theme.space2
 
                 Text {
                     text: "Install apps"
@@ -576,7 +576,7 @@ ShellSurface {
             // ── Search field ──────────────────────────────
             Rectangle {
                 Layout.fillWidth: true
-                implicitHeight: 38
+                implicitHeight: 40
                 radius: Theme.radius
                 color: Appearance.surfaceAlt
                 border.width: 1
@@ -584,9 +584,9 @@ ShellSurface {
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 12
-                    anchors.rightMargin: 12
-                    spacing: 8
+                    anchors.leftMargin: Theme.space3
+                    anchors.rightMargin: Theme.space3
+                    spacing: Theme.space2
 
                     Text {
                         text: ""
@@ -663,7 +663,7 @@ ShellSurface {
             // has answered yet" for as long as the slowest one takes.
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 6
+                spacing: Theme.space2
 
                 Repeater {
                     // A plain list of names, not a list of objects
@@ -682,7 +682,7 @@ ShellSurface {
                             ? installer.results.length : installer.countFor(chip.modelData)
 
                         implicitWidth: chipRow.implicitWidth + 20
-                        implicitHeight: 26
+                        implicitHeight: 28
                         radius: Theme.radius
                         color: chip.active ? SlabStyle.tintSelected
                              : chipHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover)
@@ -692,7 +692,7 @@ ShellSurface {
                         RowLayout {
                             id: chipRow
                             anchors.centerIn: parent
-                            spacing: 6
+                            spacing: Theme.space2
 
                             Rectangle {
                                 implicitWidth: 8
@@ -741,7 +741,7 @@ ShellSurface {
             RowLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                spacing: 6
+                spacing: Theme.space2
 
                 Item {
                     Layout.fillWidth: true
@@ -768,17 +768,17 @@ ShellSurface {
 
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.leftMargin: 10
-                                anchors.rightMargin: 10
-                                spacing: 10
+                                anchors.leftMargin: Theme.space3
+                                anchors.rightMargin: Theme.space3
+                                spacing: Theme.space2
 
                                 // Fixed width so the names line up down the
                                 // list: three sources means three badge
                                 // widths, and ragged left edges on a list
                                 // you read by scanning is a tax for nothing.
                                 Rectangle {
-                                    implicitWidth: 58
-                                    implicitHeight: 18
+                                    implicitWidth: 56
+                                    implicitHeight: 20
                                     radius: Theme.radius
                                     color: row.modelData.source === "Pacman" ? Appearance.badgePacman
                                          : row.modelData.source === "AUR" ? Appearance.badgeAur
@@ -800,7 +800,7 @@ ShellSurface {
 
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        spacing: 6
+                                        spacing: Theme.space2
 
                                         Text {
                                             text: row.modelData.name
@@ -836,7 +836,7 @@ ShellSurface {
 
                                 Rectangle {
                                     implicitWidth: actionLabel.implicitWidth + 18
-                                    implicitHeight: 26
+                                    implicitHeight: 28
                                     radius: Theme.radius
                                     color: row.modelData.installed ? Appearance.installedBg
                                          : actionHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)

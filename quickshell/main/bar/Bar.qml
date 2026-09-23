@@ -54,14 +54,16 @@ Variants {
         readonly property bool onBottom: bar.cfg.position === "bottom"
         // The bar's height lives here, and only here. config/Theme.qml
         // carried a rival `barHeight: 27` for the config it used to share
-        // with quickshell/old, which made 35 look like a deviation from a
-        // token rather than the number itself; that config went away
-        // 2026-09-20 and the property, which nothing read by then, went
-        // with it 2026-09-22. services/Settings.qml stores `height: 0`
-        // for "unset" rather than a second copy of the default, so there
-        // is nothing left to drift. bar.cfg.height (a per-monitor
-        // override, from Settings.qml) still wins if the user sets one.
-        readonly property int barHeight: bar.cfg.height > 0 ? bar.cfg.height : 35
+        // with quickshell/old, which made the default look like a
+        // deviation from a token rather than the number itself; that
+        // config went away 2026-09-20 and the property, which nothing
+        // read by then, went with it 2026-09-22. services/Settings.qml
+        // stores `height: 0` for "unset" rather than a second copy of the
+        // default, so there is nothing left to drift. bar.cfg.height (a
+        // per-monitor override, from Settings.qml) still wins if the user
+        // sets one. 36, not the old 35: Theme.barItemHeight (24) plus 6
+        // each side, on the 4px grid (STYLE.md §5).
+        readonly property int barHeight: bar.cfg.height > 0 ? bar.cfg.height : 36
 
         // bar.cfg.enabled is the persisted per-monitor setting;
         // Panels.barVisible is the SUPER+ALT+SPACE runtime toggle (see
@@ -315,20 +317,18 @@ Variants {
                     left: parent.left
                     // Was 8 — same value rightRow uses, so both ends of
                     // the bar are inset alike. Every BarButton carries
-                    // 11px of its own pad inside the hover pill, so the
-                    // first glyph still lands ~15px in, not hard against
-                    // the edge.
-                    leftMargin: 4
-                    verticalCenter: parent.verticalCenter
-                    verticalCenterOffset: -1
-                }
-                // Was 12 — with the settings button's 11px pad on top,
+                    // Theme.barItemPadX (12px) of its own pad inside the
+                    // hover pill, so the first glyph still lands 16px in,
+                    // not hard against the edge.
+                    leftMargin: Theme.space1
+                    verticalCenter: parent.verticalCenter                }
+                // Was 12 — with the settings button's side pad on top,
                 // that left a 23px void between a bare glyph and the
                 // filled workspace chips, so the icon read as stranded
-                // instead of part of the same left cluster. 6 lands the
-                // gap a touch wider than the edge inset, which is what
-                // the heavier chips want beside them.
-                spacing: 6
+                // instead of part of the same left cluster. One grid
+                // step above the edge inset, which is what the heavier
+                // chips want beside them.
+                spacing: Theme.space2
 
                 Repeater {
                     id: leftRepeater
@@ -344,11 +344,8 @@ Variants {
             }
 
             RowLayout {
-                anchors {
-                    centerIn: parent
-                    verticalCenterOffset: -1
-                }
-                spacing: 6
+                anchors.centerIn: parent
+                spacing: Theme.space2
 
                 Repeater {
                     id: centerRepeater
@@ -367,11 +364,9 @@ Variants {
                 id: rightRow
                 anchors {
                     right: parent.right
-                    rightMargin: 4
-                    verticalCenter: parent.verticalCenter
-                    verticalCenterOffset: -1
-                }
-                spacing: 3
+                    rightMargin: Theme.space1
+                    verticalCenter: parent.verticalCenter                }
+                spacing: Theme.space1
 
                 Repeater {
                     id: rightRepeater

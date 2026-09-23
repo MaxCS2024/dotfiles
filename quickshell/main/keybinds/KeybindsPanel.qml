@@ -148,8 +148,8 @@ ShellSurface {
         ColumnLayout {
             id: content
             anchors.fill: parent
-            anchors.margins: 16
-            spacing: 12
+            anchors.margins: Theme.space4
+            spacing: Theme.space3
 
             // ── Filter ────────────────────────────────────
             // No border (user request 2026-09-19) — the fill alone is
@@ -160,15 +160,15 @@ ShellSurface {
             // state anyone ever saw.
             Rectangle {
                 Layout.fillWidth: true
-                implicitHeight: 38
+                implicitHeight: 40
                 radius: Theme.radius
                 color: Appearance.surfaceAlt
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 12
-                    anchors.rightMargin: 12
-                    spacing: 8
+                    anchors.leftMargin: Theme.space3
+                    anchors.rightMargin: Theme.space3
+                    spacing: Theme.space2
 
                     Text {
                         text: "\u{F0349}"
@@ -244,7 +244,7 @@ ShellSurface {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.preferredHeight: list.contentHeight
-                spacing: 6
+                spacing: Theme.space2
                 visible: panel.binds.length > 0
 
                 ListView {
@@ -264,7 +264,7 @@ ShellSurface {
 
                         RowLayout {
                             anchors.fill: parent
-                            spacing: 10
+                            spacing: Theme.space2
 
                             // Super + Shift + J → Move window down. No
                             // brackets: they were how the shape was
@@ -326,8 +326,8 @@ ShellSurface {
 
             Text {
                 Layout.fillWidth: true
-                Layout.topMargin: 24
-                Layout.bottomMargin: 24
+                Layout.topMargin: Theme.space6
+                Layout.bottomMargin: Theme.space6
                 visible: panel.binds.length === 0
                 horizontalAlignment: Text.AlignHCenter
                 text: "No key matches “" + panel.query.trim() + "”"

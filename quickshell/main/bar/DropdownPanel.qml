@@ -14,7 +14,7 @@ PopupWindow {
     default property alias content: contentArea.data
 
     property int minWidth: 280
-    property int edgeMargin: 5
+    property int edgeMargin: Theme.space1
     property int barGap: 2
 
     property bool anchorHovered: false
@@ -67,8 +67,8 @@ PopupWindow {
         ColumnLayout {
             id: contentArea
             anchors.fill: parent
-            anchors.margins: 12
-            spacing: 6
+            anchors.margins: Theme.space3
+            spacing: Theme.space2
         }
     }
 }

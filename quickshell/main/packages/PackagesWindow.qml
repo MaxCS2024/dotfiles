@@ -89,12 +89,12 @@ ShellSurface {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 16
-            spacing: 12
+            anchors.margins: Theme.space4
+            spacing: Theme.space3
 
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 6
+                spacing: Theme.space2
 
                 SectionTitle { text: "Packages" }
 
@@ -128,7 +128,7 @@ ShellSurface {
         id: toast
         anchors.top: parent.top
         anchors.right: parent.right
-        anchors.margins: 16
+        anchors.margins: Theme.space4
         z: 50
     }
 }

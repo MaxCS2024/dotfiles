@@ -169,12 +169,12 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 10
+        spacing: Theme.space2
 
         // ── Source filter: Pacman / AUR / Flatpak ─────────
         RowLayout {
             Layout.fillWidth: true
-            spacing: 6
+            spacing: Theme.space2
 
             Repeater {
                 model: [
@@ -260,13 +260,13 @@ Item {
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 8
-                    anchors.rightMargin: 8
-                    spacing: 8
+                    anchors.leftMargin: Theme.space2
+                    anchors.rightMargin: Theme.space2
+                    spacing: Theme.space2
 
                     Rectangle {
                         implicitWidth: instSourceLabel.implicitWidth + 10
-                        implicitHeight: 18
+                        implicitHeight: 20
                         radius: Theme.radius
                         color: instRow.modelData.source === "Pacman" ? Appearance.badgePacman
                              : instRow.modelData.source === "AUR" ? Appearance.badgeAur

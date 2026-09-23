@@ -18,7 +18,7 @@ Item {
     property int iconSize: Theme.iconSize
     property var barWindow
 
-    readonly property int spacing: 4
+    readonly property int spacing: Theme.space1
 
     // Hidden while nothing is registered, like MediaPlayer with no
     // player, so an empty tray leaves no gap in the row (see

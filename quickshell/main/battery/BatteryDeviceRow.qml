@@ -38,9 +38,9 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
-        anchors.leftMargin: 8
-        anchors.rightMargin: 8
-        spacing: 10
+        anchors.leftMargin: Theme.space2
+        anchors.rightMargin: Theme.space2
+        spacing: Theme.space2
 
         Text {
             text: Battery.deviceIcon(root.device)
@@ -57,11 +57,11 @@ Rectangle {
         ColumnLayout {
             Layout.fillWidth: true
             Layout.minimumWidth: 0
-            spacing: 4
+            spacing: Theme.space1
 
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 6
+                spacing: Theme.space2
 
                 Text {
                     text: Battery.deviceLabel(root.device)

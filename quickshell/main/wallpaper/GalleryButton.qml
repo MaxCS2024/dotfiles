@@ -37,7 +37,7 @@ Rectangle {
     RowLayout {
         id: row
         anchors.centerIn: parent
-        spacing: 7
+        spacing: Theme.space2
 
         Text {
             text: root.glyph

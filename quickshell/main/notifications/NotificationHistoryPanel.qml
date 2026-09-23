@@ -180,13 +180,13 @@ ShellSurface {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 14
-            spacing: 12
+            anchors.margins: Theme.space4
+            spacing: Theme.space3
 
             // ── Header ───────────────────────────────────
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 10
+                spacing: Theme.space2
 
                 // U+F0F3 is nf-fa-bell, the glyph bar/
                 // NotificationsButton wears in the bar — so the button you
@@ -266,7 +266,7 @@ ShellSurface {
                 // all hundred.
                 Rectangle {
                     visible: Notifications.history.length > 0
-                    implicitWidth: 26
+                    implicitWidth: 28
                     implicitHeight: 24
                     radius: Theme.radius
                     color: clearHover.hovered ? Appearance.dangerBg : Appearance.clear(Appearance.dangerBg)
@@ -327,7 +327,7 @@ ShellSurface {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 visible: Notifications.history.length > 0
-                spacing: 4
+                spacing: Theme.space1
 
                 ListView {
                     id: historyList
@@ -335,7 +335,7 @@ ShellSurface {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     clip: true
-                    spacing: 6
+                    spacing: Theme.space2
                     model: Notifications.history
                     boundsBehavior: Flickable.StopAtBounds
 
@@ -369,7 +369,7 @@ ShellSurface {
 
                 ColumnLayout {
                     anchors.centerIn: parent
-                    spacing: 8
+                    spacing: Theme.space2
 
                     Text {
                         text: "\uf0f3"

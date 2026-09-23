@@ -320,7 +320,7 @@ ShellSurface {
 
             RowLayout {
                 anchors.fill: parent
-                spacing: 6
+                spacing: Theme.space2
                 visible: launcher.results.length > 0
 
                 ListView {
@@ -358,9 +358,9 @@ ShellSurface {
 
                         RowLayout {
                             anchors.fill: parent
-                            anchors.leftMargin: 8
-                            anchors.rightMargin: 8
-                            spacing: 8
+                            anchors.leftMargin: Theme.space2
+                            anchors.rightMargin: Theme.space2
+                            spacing: Theme.space2
 
                             Item {
                                 Layout.preferredWidth: 32

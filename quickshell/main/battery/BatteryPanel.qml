@@ -50,17 +50,13 @@ ShellSurface {
     // the same reason, as the toast stack's.
     readonly property int shadowPad: 24
 
-    // The card's own padding, named because `cardHeight` has to add it
-    // back to a body that is measured without it.
-    readonly property int cardPadding: 14
-
     // Content, plus the padding either side of it, capped at the column
     // the bar leaves. See volume/VolumePanel.qml for why this doesn't
     // loop: a ColumnLayout's implicitHeight comes from its children, not
     // from its own height, and nothing in `body` fills height.
     readonly property int cardHeight: Math.min(
         panel.height - panel.inset * 2,
-        body.implicitHeight + panel.cardPadding * 2)
+        body.implicitHeight + Theme.cardPadding * 2)
 
     // Far enough that the card *and* its shadow are past the screen edge.
     readonly property int slideDistance: panel.cardWidth + panel.inset + 24
@@ -177,13 +173,13 @@ ShellSurface {
             id: body
 
             anchors.fill: parent
-            anchors.margins: panel.cardPadding
-            spacing: 12
+            anchors.margins: Theme.cardPadding
+            spacing: Theme.space3
 
             // ── Header ───────────────────────────────────
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 10
+                spacing: Theme.space2
 
                 // Battery.icon, the glyph bar/BatteryButton wears in the
                 // bar, in the colour it wears there — so the button you
@@ -323,7 +319,7 @@ ShellSurface {
             ColumnLayout {
                 visible: Battery.packs.length > 1
                 Layout.fillWidth: true
-                spacing: 4
+                spacing: Theme.space1
 
                 Repeater {
                     model: Battery.packs
@@ -359,7 +355,7 @@ ShellSurface {
             ColumnLayout {
                 visible: Battery.peripherals.length > 0
                 Layout.fillWidth: true
-                spacing: 4
+                spacing: Theme.space1
 
                 Repeater {
                     model: Battery.peripherals

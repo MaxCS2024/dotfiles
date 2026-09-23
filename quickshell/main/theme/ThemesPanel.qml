@@ -53,7 +53,6 @@ ShellSurface {
     surfaceName: "themes"
     focusTarget: card
 
-    readonly property int cardPadding: 14
     // Room below and beside the card for its own shadow, which a
     // layer-shell surface clips like anything else.
     readonly property int shadowPad: 24
@@ -77,7 +76,7 @@ ShellSurface {
     // the calendar and the rails, and the same reason it doesn't loop: a
     // ColumnLayout's implicitHeight comes from its children, and nothing
     // in `body` fills height.
-    readonly property int cardHeight: body.implicitHeight + panel.cardPadding * 2
+    readonly property int cardHeight: body.implicitHeight + Theme.cardPadding * 2
 
 
     // Up and behind the bar, not sideways: this card belongs to a module
@@ -298,13 +297,13 @@ ShellSurface {
             id: body
 
             anchors.fill: parent
-            anchors.margins: panel.cardPadding
-            spacing: 8
+            anchors.margins: Theme.cardPadding
+            spacing: Theme.space2
 
             // ── Header ───────────────────────────────────
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 6
+                spacing: Theme.space2
 
                 SectionTitle { text: panel.editing ? "Palette" : "Themes" }
 
@@ -360,9 +359,9 @@ ShellSurface {
 
                         RowLayout {
                             anchors.fill: parent
-                            anchors.leftMargin: 8
-                            anchors.rightMargin: 8
-                            spacing: 8
+                            anchors.leftMargin: Theme.space2
+                            anchors.rightMargin: Theme.space2
+                            spacing: Theme.space2
 
                             // Ground and accent, the pair the settings
                             // tab's chips carry: enough to tell the
@@ -371,16 +370,16 @@ ShellSurface {
                             // Wallpaper row shows the wallpaper palette's two, which
                             // are the colours it would switch back to.
                             Rectangle {
-                                implicitWidth: 10
-                                implicitHeight: 10
+                                implicitWidth: 12
+                                implicitHeight: 12
                                 radius: 2
                                 color: row.modelData.wallpaper ? Appearance.wallpaperBase.bg : row.modelData.bg
                                 border.color: Appearance.border
                                 border.width: 1
                             }
                             Rectangle {
-                                implicitWidth: 10
-                                implicitHeight: 10
+                                implicitWidth: 12
+                                implicitHeight: 12
                                 radius: 2
                                 color: row.modelData.wallpaper ? Appearance.wallpaperBase.accent : row.modelData.accent
                             }
@@ -432,7 +431,7 @@ ShellSurface {
                 visible: panel.editing
                 Layout.fillWidth: true
                 Layout.topMargin: 2
-                spacing: 10
+                spacing: Theme.space2
 
                 Text {
                     text: "Base"

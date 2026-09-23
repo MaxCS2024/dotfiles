@@ -30,7 +30,7 @@ OsdWindow {
 
         RowLayout {
             anchors.centerIn: parent
-            spacing: 12
+            spacing: Theme.space3
 
             Text {
                 // md-fullscreen / md-fullscreen_exit — the chrome going

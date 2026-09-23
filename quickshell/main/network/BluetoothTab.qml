@@ -17,12 +17,12 @@ ColumnLayout {
     id: root
     Layout.fillWidth: true
     Layout.fillHeight: true
-    spacing: 10
+    spacing: Theme.space2
 
     RowLayout {
         Layout.fillWidth: true
         Layout.topMargin: 2
-        spacing: 6
+        spacing: Theme.space2
 
         Text {
             text: "Adapter"
@@ -36,7 +36,7 @@ ColumnLayout {
 
         Rectangle {
             implicitWidth: btPowerLabel.implicitWidth + 16
-            implicitHeight: 22
+            implicitHeight: 24
             radius: Theme.radius
             color: Bt.powered ? SlabStyle.tintSelected
                  : (btPowerHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong))
@@ -89,7 +89,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
         visible: Bt.available && Bt.powered && Bt.devices.length > 0
-        spacing: 4
+        spacing: Theme.space1
 
         ListView {
             id: btList
@@ -115,9 +115,9 @@ ColumnLayout {
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 8
-                    anchors.rightMargin: 8
-                    spacing: 8
+                    anchors.leftMargin: Theme.space2
+                    anchors.rightMargin: Theme.space2
+                    spacing: Theme.space2
 
                     // nf-md-bluetooth{,_connect,_off}, written
                     // the same \u{...} way bar/BluetoothButton

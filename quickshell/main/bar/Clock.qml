@@ -69,8 +69,8 @@ Item {
         id: pill
         // Was "+ 16" — see bar/BarButton.qml's note on the same bump,
         // made when HoverPill went fully round.
-        implicitWidth: row.implicitWidth + 22
-        implicitHeight: row.implicitHeight + 6
+        implicitWidth: row.implicitWidth + 2 * Theme.barItemPadX
+        implicitHeight: Theme.barItemHeight
         // Lit while the calendar is up, which is what `dropdown.visible`
         // did for this pill before the card replaced the dropdown.
         active: hover.hovered || Panels.calendarShown || root.keyboardFocused
@@ -79,7 +79,7 @@ Item {
         Row {
             id: row
             anchors.centerIn: parent
-            spacing: 6
+            spacing: Theme.space2
 
             Text {
                 id: weekdayText

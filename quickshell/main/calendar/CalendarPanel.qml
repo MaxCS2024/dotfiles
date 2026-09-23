@@ -59,8 +59,7 @@ ShellSurface {
     readonly property int gridWidth:
         panel.weekGutter + panel.dayCell * 7 + panel.daySpacing * 7
 
-    readonly property int cardWidth: panel.gridWidth + panel.cardPadding * 2
-    readonly property int cardPadding: 14
+    readonly property int cardWidth: panel.gridWidth + Theme.cardPadding * 2
     // Room below and beside the card for its own shadow, which a
     // layer-shell surface clips like anything else.
     readonly property int shadowPad: 24
@@ -69,7 +68,7 @@ ShellSurface {
     // volume/VolumePanel.qml and battery/BatteryPanel.qml, and the same
     // reason it doesn't loop: a ColumnLayout's implicitHeight comes from
     // its children, and nothing in `body` fills height.
-    readonly property int cardHeight: body.implicitHeight + panel.cardPadding * 2
+    readonly property int cardHeight: body.implicitHeight + Theme.cardPadding * 2
 
 
     // Up and behind the bar, not sideways: this card belongs to a module
@@ -365,13 +364,13 @@ ShellSurface {
             id: body
 
             anchors.fill: parent
-            anchors.margins: panel.cardPadding
-            spacing: 10
+            anchors.margins: Theme.cardPadding
+            spacing: Theme.space2
 
             // ── Header ───────────────────────────────────
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 6
+                spacing: Theme.space2
 
                 // The month, and a button into the year view. The chevron
                 // beside it says it is one — a title that silently does
@@ -379,7 +378,7 @@ ShellSurface {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
-                    implicitHeight: 26
+                    implicitHeight: 28
                     radius: Theme.radius
                     color: titleHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover)
 
@@ -389,9 +388,9 @@ ShellSurface {
 
                     RowLayout {
                         anchors.left: parent.left
-                        anchors.leftMargin: 4
+                        anchors.leftMargin: Theme.space1
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: 6
+                        spacing: Theme.space2
 
                         SectionTitle {
                             text: panel.yearView ? panel.viewYear
@@ -630,7 +629,7 @@ ShellSurface {
                 visible: panel.yearView
                 Layout.fillWidth: true
                 columns: 3
-                rowSpacing: 4
+                rowSpacing: Theme.space1
                 // 3 cells and 2 gaps across the same gridWidth the month
                 // uses, chosen so the division is exact: 3*90 + 2*3 = 276.
                 columnSpacing: 3
@@ -690,15 +689,15 @@ ShellSurface {
                 visible: !panel.yearView
                 Layout.fillWidth: true
                 Layout.topMargin: 2
-                implicitHeight: 30
+                implicitHeight: 32
                 radius: Theme.radius
                 color: Appearance.surfaceAlt
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 8
-                    anchors.rightMargin: 8
-                    spacing: 6
+                    anchors.leftMargin: Theme.space2
+                    anchors.rightMargin: Theme.space2
+                    spacing: Theme.space2
 
                     Text {
                         text: panel.dayNames[panel.selectedDate.getDay()] + " "

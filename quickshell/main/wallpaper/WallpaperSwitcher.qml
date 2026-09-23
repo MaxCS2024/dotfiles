@@ -198,12 +198,12 @@ ShellSurface {
 
         ColumnLayout {
             anchors.fill: parent
-            spacing: 14
+            spacing: Theme.space4
 
             // ── Header ───────────────────────────────────
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 14
+                spacing: Theme.space4
 
                 // U+F0248 is nf-md-image_multiple_outline, the glyph this
                 // window already wore and the one bar/WallpaperButton
@@ -258,7 +258,7 @@ ShellSurface {
 
                     Text {
                         anchors.left: parent.left
-                        anchors.leftMargin: 10
+                        anchors.leftMargin: Theme.space3
                         anchors.verticalCenter: parent.verticalCenter
                         text: "Filter…"
                         visible: filterInput.text === ""
@@ -271,8 +271,8 @@ ShellSurface {
                         id: filterInput
 
                         anchors.fill: parent
-                        anchors.leftMargin: 10
-                        anchors.rightMargin: 10
+                        anchors.leftMargin: Theme.space3
+                        anchors.rightMargin: Theme.space3
                         verticalAlignment: TextInput.AlignVCenter
                         color: "#ffffff"
                         font.pixelSize: Theme.fontSmall
@@ -344,8 +344,8 @@ ShellSurface {
                 // sit under a caption that names the state they put the
                 // machine in, and this one has no caption to lean on.
                 RowLayout {
-                    spacing: 8
-                    Layout.leftMargin: 6
+                    spacing: Theme.space2
+                    Layout.leftMargin: Theme.space2
 
                     Text {
                         text: "Rotate hourly"
@@ -618,7 +618,7 @@ ShellSurface {
                             Rectangle {
                                 anchors.left: parent.left
                                 anchors.top: parent.top
-                                anchors.margins: 12
+                                anchors.margins: Theme.space3
                                 visible: card.current
                                 implicitWidth: currentLabel.implicitWidth + 18
                                 implicitHeight: 24
@@ -685,8 +685,8 @@ ShellSurface {
             // ── Caption ──────────────────────────────────
             ColumnLayout {
                 Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 4
-                spacing: 3
+                Layout.topMargin: Theme.space1
+                spacing: Theme.space1
                 visible: panel.shownFiles.length > 0
 
                 Text {
@@ -714,7 +714,7 @@ ShellSurface {
 
                 ColumnLayout {
                     anchors.centerIn: parent
-                    spacing: 10
+                    spacing: Theme.space2
 
                     Text {
                         // U+F0248 again, the folder this window is about.

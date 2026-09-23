@@ -70,11 +70,11 @@ Rectangle {
     RowLayout {
         id: content
         anchors.fill: parent
-        anchors.leftMargin: 10
-        anchors.rightMargin: 8
-        anchors.topMargin: 6
-        anchors.bottomMargin: 6
-        spacing: 8
+        anchors.leftMargin: Theme.space3
+        anchors.rightMargin: Theme.space2
+        anchors.topMargin: Theme.space2
+        anchors.bottomMargin: Theme.space2
+        spacing: Theme.space2
 
         ColumnLayout {
             Layout.fillWidth: true
@@ -83,7 +83,7 @@ Rectangle {
 
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 6
+                spacing: Theme.space2
 
                 Text {
                     text: root.entry.summary || root.entry.appName

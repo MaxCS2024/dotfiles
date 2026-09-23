@@ -40,8 +40,8 @@ BarButton {
         }
 
         Rectangle {
-            implicitWidth: powerLabel.implicitWidth + 16
-            implicitHeight: 22
+            implicitWidth: powerLabel.implicitWidth + 2 * Theme.space2
+            implicitHeight: Theme.space6
             radius: Theme.radius
             color: Bt.powered ? SlabStyle.tintSelected : (powerHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong))
             border.color: Appearance.border
@@ -100,15 +100,15 @@ BarButton {
             required property var modelData
 
             Layout.fillWidth: true
-            implicitHeight: 34
+            implicitHeight: 32
             radius: Theme.radius
             color: rowHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover)
 
             RowLayout {
                 anchors.fill: parent
-                anchors.leftMargin: 6
-                anchors.rightMargin: 6
-                spacing: 8
+                anchors.leftMargin: Theme.space2
+                anchors.rightMargin: Theme.space2
+                spacing: Theme.space2
 
                 Text {
                     text: ""

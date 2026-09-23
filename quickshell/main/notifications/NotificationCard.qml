@@ -148,9 +148,9 @@ Item {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            anchors.margins: 12
-            anchors.rightMargin: 10
-            spacing: 11
+            anchors.margins: Theme.space3
+            anchors.rightMargin: Theme.space3
+            spacing: Theme.space3
 
             // Icon well, centred against the whole message rather than
             // pinned to its first line: the glyph is now the card's mark,
@@ -212,7 +212,7 @@ Item {
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                spacing: 3
+                spacing: Theme.space1
 
                 // Headline row. The close button rides along with it: the
                 // headline is the one line every card is guaranteed to
@@ -221,7 +221,7 @@ Item {
                 // row, or a source line below.
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 6
+                    spacing: Theme.space2
 
                     Text {
                         visible: root._title !== ""
@@ -252,10 +252,10 @@ Item {
 
                     Rectangle {
                         id: closeBtn
-                        Layout.preferredWidth: 18
-                        Layout.preferredHeight: 18
+                        Layout.preferredWidth: 20
+                        Layout.preferredHeight: 20
                         Layout.alignment: Qt.AlignVCenter
-                        radius: 9
+                        radius: height / 2
                         color: closeHover.hovered ? Appearance.hoverStrong : Qt.rgba(Appearance.hoverStrong.r, Appearance.hoverStrong.g, Appearance.hoverStrong.b, 0)
                         // Present but recessive until the pointer is on the
                         // card: always hit-testable (a toast has to be
@@ -302,8 +302,8 @@ Item {
 
                 RowLayout {
                     visible: root._actions.length > 0
-                    Layout.topMargin: 8
-                    spacing: 6
+                    Layout.topMargin: Theme.space2
+                    spacing: Theme.space2
 
                     Repeater {
                         model: root._actions
@@ -313,7 +313,7 @@ Item {
                             required property var modelData
 
                             implicitWidth: actionLabel.implicitWidth + 20
-                            implicitHeight: 26
+                            implicitHeight: 28
                             radius: Theme.radius
                             color: actionHover.hovered ? root._tint(0.18) : Appearance.surfaceAlt
                             border.width: 1
@@ -355,7 +355,7 @@ Item {
                     font.family: Theme.font
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
-                    Layout.topMargin: 5
+                    Layout.topMargin: Theme.space1
                     elide: Text.ElideRight
                 }
             }

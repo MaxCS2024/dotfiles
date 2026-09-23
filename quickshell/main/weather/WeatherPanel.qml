@@ -31,11 +31,9 @@ ShellSurface {
     // battery/BatteryPanel.qml.
     readonly property int shadowPad: 24
 
-    readonly property int cardPadding: 14
-
     readonly property int cardHeight: Math.min(
         panel.height - panel.inset * 2,
-        body.implicitHeight + panel.cardPadding * 2)
+        body.implicitHeight + Theme.cardPadding * 2)
 
     readonly property int slideDistance: panel.cardWidth + panel.inset + 24
 
@@ -137,15 +135,15 @@ ShellSurface {
             id: body
 
             anchors.fill: parent
-            anchors.margins: panel.cardPadding
-            spacing: 12
+            anchors.margins: Theme.cardPadding
+            spacing: Theme.space3
 
             // ── Now ──────────────────────────────────────
             // The rails' header: the module's own glyph at fontHuge, a
             // title, one caption under it.
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 10
+                spacing: Theme.space2
 
                 Text {
                     text: Weather.now ? Weather.now.icon : ""
@@ -180,7 +178,7 @@ ShellSurface {
             RowLayout {
                 visible: Weather.later !== null
                 Layout.fillWidth: true
-                spacing: 8
+                spacing: Theme.space2
 
                 Text {
                     text: Weather.later ? Weather.later.icon : ""

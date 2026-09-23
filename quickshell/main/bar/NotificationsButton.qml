@@ -33,8 +33,8 @@ BarButton {
             anchors.top: parent.top
             // Round for a single digit, stretching into a short pill when
             // "9+" needs more room than the circle has.
-            width: Math.max(height, countText.implicitWidth + 6)
-            height: 15
+            width: Math.max(height, countText.implicitWidth + Theme.space2)
+            height: Theme.space4
             radius: height / 2
             color: Appearance.red
 

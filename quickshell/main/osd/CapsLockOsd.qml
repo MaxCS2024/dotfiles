@@ -34,7 +34,7 @@ OsdWindow {
 
         RowLayout {
             anchors.centerIn: parent
-            spacing: 12
+            spacing: Theme.space3
 
             Text {
                 text: "\uf023"   // fa-lock, same glyph as PowerTab's "Lock"

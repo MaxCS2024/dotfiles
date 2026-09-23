@@ -78,8 +78,8 @@ Item {
         id: pill
         // Was "+ 16" — see bar/BarButton.qml's note on the same bump,
         // made when HoverPill went fully round.
-        implicitWidth: content.implicitWidth + 22
-        implicitHeight: content.implicitHeight + 6
+        implicitWidth: content.implicitWidth + 2 * Theme.barItemPadX
+        implicitHeight: Theme.barItemHeight
         // Lit while the card is up, which is what `dropdown.visible`
         // did for this pill before the card replaced the dropdown.
         active: hover.hovered || Panels.mediaShown || root.keyboardFocused
@@ -93,7 +93,7 @@ Item {
         RowLayout {
             id: content
             anchors.centerIn: parent
-            spacing: 6
+            spacing: Theme.space2
 
             Item {
                 id: artBox

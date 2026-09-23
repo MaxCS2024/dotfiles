@@ -24,7 +24,7 @@ ColumnLayout {
     signal dnsRequested()
     Layout.fillWidth: true
     Layout.fillHeight: true
-    spacing: 12
+    spacing: Theme.space3
 
     // The live Down/Up tiles stood here until 2026-09-17,
     // when they went at the user's request along with the
@@ -82,8 +82,8 @@ ColumnLayout {
     GridLayout {
         Layout.fillWidth: true
         columns: 4
-        columnSpacing: 12
-        rowSpacing: 4
+        columnSpacing: Theme.space3
+        rowSpacing: Theme.space1
 
         // Label, then value right-aligned against the middle
         // or the right edge — the same shape as the DNS and
@@ -185,7 +185,7 @@ ColumnLayout {
 
     RowLayout {
         Layout.fillWidth: true
-        spacing: 6
+        spacing: Theme.space2
 
         Text {
             text: "DNS"
@@ -298,7 +298,7 @@ ColumnLayout {
         Layout.preferredHeight: Math.min(Network.knownCount, 5) * 30
         Layout.maximumHeight: Layout.preferredHeight
         visible: Network.knownCount > 0
-        spacing: 4
+        spacing: Theme.space1
 
         ListView {
             id: knownList
@@ -324,7 +324,7 @@ ColumnLayout {
                 readonly property bool lit: knownHover.hovered && knownRow.joinable
 
                 width: knownList.width
-                height: 30
+                height: 32
                 radius: Theme.radius
                 // hoverStrong rather than hover (user request
                 // 2026-09-18). `hover` is a single elevation
@@ -342,9 +342,9 @@ ColumnLayout {
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 8
-                    anchors.rightMargin: 8
-                    spacing: 8
+                    anchors.leftMargin: Theme.space2
+                    anchors.rightMargin: Theme.space2
+                    spacing: Theme.space2
 
                     // The fill is only half of it: a row
                     // lighting up is mostly its text going
@@ -444,7 +444,7 @@ ColumnLayout {
     RowLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
-        spacing: 4
+        spacing: Theme.space1
 
         // The ListView is wrapped rather than placed in the
         // RowLayout directly so the empty-state line below has
@@ -493,9 +493,9 @@ ColumnLayout {
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 8
-                        anchors.rightMargin: 8
-                        spacing: 8
+                        anchors.leftMargin: Theme.space2
+                        anchors.rightMargin: Theme.space2
+                        spacing: Theme.space2
 
                         Text {
                             text: "\uf1eb"

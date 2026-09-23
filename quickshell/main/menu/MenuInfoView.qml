@@ -72,8 +72,8 @@ Item {
         Text {
             visible: view.loading
             Layout.fillWidth: true
-            Layout.topMargin: 8
-            Layout.bottomMargin: 8
+            Layout.topMargin: Theme.space2
+            Layout.bottomMargin: Theme.space2
             text: "Reading…"
             color: Appearance.fgMuted
             font.family: Theme.font
@@ -88,7 +88,7 @@ Item {
                 required property var modelData
 
                 Layout.fillWidth: true
-                spacing: 12
+                spacing: Theme.space3
 
                 Text {
                     text: infoRow.modelData.label
@@ -133,8 +133,8 @@ Item {
         Text {
             visible: !view.loading && view.rows.length === 0
             Layout.fillWidth: true
-            Layout.topMargin: 8
-            Layout.bottomMargin: 8
+            Layout.topMargin: Theme.space2
+            Layout.bottomMargin: Theme.space2
             text: "Nothing to show"
             color: Appearance.fgMuted
             font.family: Theme.font

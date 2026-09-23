@@ -10,4 +10,6 @@ Singleton {
     readonly property int easingDecel: Easing.OutCubic
     readonly property int easingStandard: Easing.InOutQuad
     readonly property int radiusLarge: 4
+    readonly property int space1: 4
+    readonly property int space2: 8
 }

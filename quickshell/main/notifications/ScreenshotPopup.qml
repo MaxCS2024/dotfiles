@@ -13,7 +13,7 @@ PanelWindow {
 
     anchors { top: true; right: true }
     implicitWidth: 300
-    implicitHeight: 110
+    implicitHeight: 112
     color: "transparent"
     visible: false
 
@@ -215,8 +215,8 @@ PanelWindow {
         RowLayout {
             id: content
             anchors.fill: parent
-            anchors.margins: 10
-            spacing: 10
+            anchors.margins: Theme.space2
+            spacing: Theme.space2
 
             Rectangle {
                 visible: !osd.captureFailed
@@ -250,7 +250,7 @@ PanelWindow {
 
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 6
+                    spacing: Theme.space2
 
                     Text {
                         text: osd.captureFailed ? "Screenshot Failed" : "Screenshot Captured"

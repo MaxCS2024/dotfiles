@@ -21,7 +21,7 @@ ColumnLayout {
     property bool customShown: false
     Layout.fillWidth: true
     Layout.fillHeight: true
-    spacing: 10
+    spacing: Theme.space2
 
     InfoRow {
         label: "Current"
@@ -39,7 +39,7 @@ ColumnLayout {
     // choices.
     ColumnLayout {
         Layout.fillWidth: true
-        spacing: 6
+        spacing: Theme.space2
 
         Repeater {
             model: [
@@ -56,7 +56,7 @@ ColumnLayout {
                 readonly property bool selected: Network.dnsProvider === dnsBtn.modelData.key
 
                 Layout.fillWidth: true
-                implicitHeight: 30
+                implicitHeight: 32
                 radius: Theme.radius
                 color: dnsBtn.selected ? SlabStyle.tintSelected
                      : (dnsHover2.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong))
@@ -71,8 +71,8 @@ ColumnLayout {
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    anchors.leftMargin: 10
-                    anchors.rightMargin: 10
+                    anchors.leftMargin: Theme.space3
+                    anchors.rightMargin: Theme.space3
                     text: dnsBtn.modelData.label
                     color: dnsBtn.selected ? Appearance.fgStrong : Appearance.fgSoft
                     font.pixelSize: Theme.fontSmall
@@ -102,11 +102,11 @@ ColumnLayout {
     RowLayout {
         Layout.fillWidth: true
         visible: root.customShown
-        spacing: 6
+        spacing: Theme.space2
 
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: 26
+            implicitHeight: 28
             radius: Theme.radius
             color: Appearance.surfaceAlt
             border.width: 1
@@ -115,7 +115,9 @@ ColumnLayout {
             TextInput {
                 id: dnsField
                 anchors.fill: parent
-                anchors.margins: 6
+                anchors.margins: Theme.space1
+                anchors.leftMargin: Theme.space2
+                anchors.rightMargin: Theme.space2
                 color: Appearance.fg
                 font.pixelSize: Theme.fontSmall
                 font.family: Theme.font
@@ -135,7 +137,7 @@ ColumnLayout {
 
         Rectangle {
             implicitWidth: dnsApplyLabel.implicitWidth + 14
-            implicitHeight: 26
+            implicitHeight: 28
             radius: Theme.radius
             color: dnsApplyHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)
             border.width: 1

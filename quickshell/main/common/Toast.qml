@@ -47,11 +47,11 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        anchors.margins: 10
-        spacing: 3
+        anchors.margins: Theme.space2
+        spacing: Theme.space1
 
         Row {
-            spacing: 6
+            spacing: Theme.space2
             Text {
                 text: toast.isError ? "\uf057" : "\uf058"
                 color: toast.isError ? Appearance.red : Appearance.green

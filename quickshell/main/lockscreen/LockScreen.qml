@@ -91,8 +91,8 @@ ShellSurface {
 
             Text {
                 Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 16
-                Layout.bottomMargin: 6
+                Layout.topMargin: Theme.space4
+                Layout.bottomMargin: Theme.space2
                 text: Qt.formatDateTime(sysClock.date, "HH:mm")
                 color: Appearance.fgStrong
                 font.family: Theme.font
@@ -110,7 +110,7 @@ ShellSurface {
 
             Text {
                 Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 14
+                Layout.topMargin: Theme.space4
                 text: "Preview only — not a real session lock"
                 font.italic: true
                 color: Appearance.fgSoft
@@ -120,8 +120,8 @@ ShellSurface {
 
             RowLayout {
                 Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 38
-                spacing: 12
+                Layout.topMargin: Theme.space10
+                spacing: Theme.space3
 
                 Text {
                     text: Quickshell.env("USER") || "user"
@@ -157,7 +157,7 @@ ShellSurface {
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.bottom: parent.bottom
-                        anchors.bottomMargin: 7
+                        anchors.bottomMargin: Theme.space2
                         echoMode: TextInput.Password
                         passwordCharacter: "•"
                         color: Appearance.fgStrong
@@ -193,7 +193,7 @@ ShellSurface {
 
             Text {
                 Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 30
+                Layout.topMargin: Theme.space8
                 text: "ESC TO CLOSE PREVIEW"
                 font.family: Theme.fontMono
                 font.pixelSize: Theme.fontMicro

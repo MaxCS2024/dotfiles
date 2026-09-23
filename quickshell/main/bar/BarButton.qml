@@ -47,20 +47,18 @@ Item {
         // and that rounding eats into a fixed 16px pad more than it did
         // at the old smaller radius, leaving the icon/label looking
         // cramped against the curve.
-        implicitWidth: row.implicitWidth + 22
-        // Was "+ 6" — the icon text's own line-height (font.pixelSize
-        // 16 renders taller than 16px due to font metrics) left the
-        // pill sitting at or just past the bar's 27px height, with no
-        // real margin either direction. Trimmed to guarantee headroom
-        // instead of continuing to chase which edge clips via offset.
-        implicitHeight: row.implicitHeight + 2
+        implicitWidth: row.implicitWidth + 2 * Theme.barItemPadX
+        // A fixed height, not the row's plus a margin: the icon's line
+        // height (font metrics render a 16px glyph taller than 16px)
+        // put every pill at a slightly different off-grid height.
+        implicitHeight: Theme.barItemHeight
         active: hover.hovered || dropdown.visible || root.keyboardFocused
         anchors.centerIn: parent
 
         RowLayout {
             id: row
             anchors.centerIn: parent
-            spacing: 4
+            spacing: Theme.space1
 
             Text {
                 text: root.icon

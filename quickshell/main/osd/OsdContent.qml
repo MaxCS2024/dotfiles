@@ -26,8 +26,8 @@ Item {
 
         RowLayout {
             anchors.fill: parent
-            anchors.margins: 14
-            spacing: 12
+            anchors.margins: Theme.space4
+            spacing: Theme.space3
 
             Text {
                 text: content.icon

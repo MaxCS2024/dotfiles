@@ -73,7 +73,7 @@ PanelWindow {
     }
 
     anchors { bottom: true; left: true; right: true }
-    implicitHeight: 110
+    implicitHeight: 112
     color: "transparent"
     visible: false
 

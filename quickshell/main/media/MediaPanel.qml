@@ -48,8 +48,6 @@ ShellSurface {
     // narrower than the 400 rails — nothing here is a list.
     readonly property int cardWidth: 380
 
-    readonly property int cardPadding: 14
-
     // Room below and beside the card for its own shadow, which a
     // layer-shell surface clips like anything else.
     readonly property int shadowPad: 24
@@ -58,7 +56,7 @@ ShellSurface {
     // calendar/CalendarPanel.qml and volume/VolumePanel.qml, and the same
     // reason it doesn't loop: a ColumnLayout's implicitHeight comes from
     // its children, and nothing in `body` fills height.
-    readonly property int cardHeight: body.implicitHeight + panel.cardPadding * 2
+    readonly property int cardHeight: body.implicitHeight + Theme.cardPadding * 2
 
     // Up and behind the bar, not sideways: this card belongs to a module
     // in the bar, and the bar is where it should come from and go back
@@ -209,8 +207,8 @@ ShellSurface {
             id: body
 
             anchors.fill: parent
-            anchors.margins: panel.cardPadding
-            spacing: 10
+            anchors.margins: Theme.cardPadding
+            spacing: Theme.space2
 
             // ── Nothing playing ──────────────────────────
             // The bar module hides itself when no player exists, so the
@@ -232,7 +230,7 @@ ShellSurface {
             RowLayout {
                 visible: panel.player !== null
                 Layout.fillWidth: true
-                spacing: 12
+                spacing: Theme.space3
 
                 // 96, where the dropdown's was 64. The art is the one
                 // thing on this card that is worth the room a card has
@@ -342,7 +340,7 @@ ShellSurface {
             RowLayout {
                 Layout.fillWidth: true
                 visible: Media.players.length > 1
-                spacing: 8
+                spacing: Theme.space2
 
                 Text {
                     text: ""
@@ -397,7 +395,7 @@ ShellSurface {
             // way; also confirmed live).
             Item {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 14
+                Layout.preferredHeight: 16
                 visible: panel.player && panel.player.length > 0
 
                 Rectangle {
@@ -465,13 +463,13 @@ ShellSurface {
                 visible: panel.player !== null
                 Layout.fillWidth: true
                 Layout.topMargin: 2
-                spacing: 14
+                spacing: Theme.space4
 
                 Item { Layout.fillWidth: true }
 
                 Rectangle {
-                    implicitWidth: 34
-                    implicitHeight: 34
+                    implicitWidth: 32
+                    implicitHeight: 32
                     radius: width / 2
                     color: transportPrevTap.containsMouse ? SlabStyle.tintSelected : Appearance.hover
                     scale: transportPrevTap.pressed ? 0.94 : 1
@@ -499,8 +497,8 @@ ShellSurface {
                 }
 
                 Rectangle {
-                    implicitWidth: 42
-                    implicitHeight: 42
+                    implicitWidth: 40
+                    implicitHeight: 40
                     radius: width / 2
                     color: transportPlayTap.containsMouse
                         ? Qt.lighter(Appearance.accent, 1.12) : Appearance.accent
@@ -528,8 +526,8 @@ ShellSurface {
                 }
 
                 Rectangle {
-                    implicitWidth: 34
-                    implicitHeight: 34
+                    implicitWidth: 32
+                    implicitHeight: 32
                     radius: width / 2
                     color: transportNextTap.containsMouse ? SlabStyle.tintSelected : Appearance.hover
                     scale: transportNextTap.pressed ? 0.94 : 1

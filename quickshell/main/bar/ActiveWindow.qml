@@ -36,15 +36,15 @@ Item {
         id: pill
         // Was "+ 16" — see BarButton.qml's note on the same bump, made
         // when HoverPill went fully round.
-        implicitWidth: content.implicitWidth + 22
-        implicitHeight: content.implicitHeight + 6
+        implicitWidth: content.implicitWidth + 2 * Theme.barItemPadX
+        implicitHeight: Theme.barItemHeight
         active: hover.hovered
         anchors.centerIn: parent
 
         RowLayout {
             id: content
             anchors.centerIn: parent
-            spacing: 6
+            spacing: Theme.space2
 
             Image {
                 id: appIcon

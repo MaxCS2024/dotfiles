@@ -16,8 +16,8 @@ PopupWindow {
     property var barWindow
     property string text: ""
 
-    property int edgeMargin: 5
-    property int gap: 6
+    property int edgeMargin: Theme.space1
+    property int gap: Theme.space2
     property int maxWidth: 260
     property int openDelay: 300
     property int closeDelay: 150

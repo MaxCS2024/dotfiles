@@ -14,11 +14,11 @@ Item {
     implicitHeight: row.implicitHeight + 2 * root.trackPad
     Layout.alignment: Qt.AlignVCenter
 
-    readonly property int trackPad: 4
+    readonly property int trackPad: Theme.space1
     // More room at the ends than above/below, so the end chips don't
     // crowd the track's rounded caps.
-    readonly property int trackPadX: 8
-    readonly property int pillSize: 22
+    readonly property int trackPadX: Theme.space2
+    readonly property int pillSize: Theme.barItemHeight
 
     property var screen
     property int minWorkspaces: 5
@@ -94,7 +94,7 @@ Item {
     RowLayout {
         id: row
         anchors.centerIn: parent
-        spacing: 6
+        spacing: Theme.space2
 
         Repeater {
             model: root.wsIds

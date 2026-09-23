@@ -65,16 +65,31 @@ glance, and colour alone isn't enough:
 | urgent             | unchanged       | `red` (pulsing)   | normal           |
 | hover              | HoverPill layer | unchanged         | unchanged        |
 
-Leave enough space between neighbours to tell them apart (≥ 6px on the bar).
+Leave enough space between neighbours to tell them apart (`Theme.space2`,
+8px, on the bar).
 
 ## 5. Shape and size
 
-- Bar items: 22px tall, fully round (`radius: height / 2`), glyphs at
-  `Theme.iconSize`.
+- Bar items: `Theme.barItemHeight` (24px) tall, a fixed height rather than
+  the content's plus a margin, padded `Theme.barItemPadX` (12px) each side,
+  fully round (`radius: height / 2`), glyphs at `Theme.iconSize`. The bar
+  is 36px (24 + 6 each side) and its rows are centred exactly; don't nudge
+  them with an offset.
 - Buttons, cards and panels inside dropdowns: `Theme.radius`
   (`radiusMedium`/`radiusLarge` where already in use). No other literal radii.
 - New bar items build on `BarButton.qml` and `HoverPill.qml` instead of
   drawing their own background.
+- **Everything sits on a 4px grid.** Spacing, margins and padding use the
+  scale in `Theme.qml` (`space1` = 4, `space2` = 8, `space3` = 12,
+  `space4` = 16, `space5` = 20, `space6` = 24, `space8` = 32,
+  `space10` = 40), never a literal. Card padding inside a bar dropdown is
+  `Theme.cardPadding`. Heights and widths of controls, rows and icon
+  buttons are multiples of 4 (24, 28, 32, 40, …). If a value falls between
+  two steps, take the nearer step; don't add in-between tokens.
+- Allowed off-grid values: 1–2px hairlines (borders, dividers, focus
+  rings), a radius of `height / 2`, and negative margins that only enlarge
+  an invisible hit area. A repeating grid may use a hairline gap if the
+  cell plus the gap is a multiple of 4 (the calendar's 34 + 2).
 
 ## 6. Type
 

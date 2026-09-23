@@ -56,11 +56,34 @@ Singleton {
     // around it.
     readonly property int hyprBorderWidth: 2
 
+    // ── Spacing scale ────────────────────────────────────
+    // Every gap, margin and padding sits on a 4px grid: spaceN is N × 4.
+    // Reach for these instead of a literal. 1–2px hairlines (borders,
+    // focus rings) are the only exception.
+    readonly property int space1: 4
+    readonly property int space2: 8
+    readonly property int space3: 12
+    readonly property int space4: 16
+    readonly property int space5: 20
+    readonly property int space6: 24
+    readonly property int space8: 32
+    readonly property int space10: 40
+
+    // Inner padding of the card inside a bar dropdown (the Battery,
+    // Calendar, Media, Themes, Volume and Weather panels).
+    readonly property int cardPadding: space4
+
+    // ── Bar items ────────────────────────────────────────
+    // Every item on the bar is a barItemHeight-tall pill (HoverPill,
+    // workspace chips), padded barItemPadX each side of its content.
+    // The bar itself is barHeight in bar/Bar.qml.
+    readonly property int barItemHeight: space6
+    readonly property int barItemPadX: space3
+
     // ── Plate layout (common/Plate.qml) ───────────────────
-    readonly property int platePaddingH: 18
-    readonly property int platePaddingV: 16
-    readonly property int plateHeaderGap: 10
-    readonly property int space2: 10
+    readonly property int platePaddingH: space4
+    readonly property int platePaddingV: space4
+    readonly property int plateHeaderGap: space2
 
     // ── Focus ring (common/FocusRing.qml) ─────────────────
     readonly property int focusRingWidth: 2
