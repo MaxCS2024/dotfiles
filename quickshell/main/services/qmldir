@@ -19,6 +19,7 @@ singleton Packages 1.0 Packages.qml
 singleton Terminal 1.0 Terminal.qml
 singleton MprisWatchdog 1.0 MprisWatchdog.qml
 singleton Media 1.0 Media.qml
+singleton Weather 1.0 Weather.qml
 
 # Not a singleton: each store is one file, and a caller may own several.
 JsonStore 1.0 JsonStore.qml

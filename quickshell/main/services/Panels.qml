@@ -81,9 +81,9 @@ Singleton {
     // layer-shell surfaces that all anchor to the top right corner, and
     // none of them can see the other's geometry.
     //
-    // Four rails set it now — network/NetworkPanel.qml, notifications/
-    // NotificationHistoryPanel.qml, volume/VolumePanel.qml and battery/
-    // BatteryPanel.qml — and they are never up together: each one's
+    // Five rails set it now — network/NetworkPanel.qml, notifications/
+    // NotificationHistoryPanel.qml, volume/VolumePanel.qml, battery/
+    // BatteryPanel.qml and weather/WeatherPanel.qml — and they are never up together: each one's
     // open() closes the others, precisely because this single number
     // could not describe two cards in the same column anyway.
     //
@@ -238,7 +238,7 @@ Singleton {
         // The four rails, the calendar and the media card are unbound by
         // default: the bar's own modules are the primary way in (bar/
         // NetworkButton, NotificationsButton, VolumeButton,
-        // BatteryButton, Clock, MediaPlayer).
+        // BatteryButton, WeatherButton, Clock, MediaPlayer).
         // Registered anyway so `hl.dsp.global("quickshell:<name>")` is
         // available to hypr/modules/binds/ without touching this file
         // again. The volume *keys* stay where they are —
@@ -249,6 +249,7 @@ Singleton {
         { ipc: "volume", fn: "Volume", shortcut: "volume-toggle", desc: "Toggle the volume rail" },
         { ipc: "media", fn: "Media", shortcut: "media-toggle", desc: "Toggle the media player" },
         { ipc: "battery", fn: "Battery", shortcut: "battery-toggle", desc: "Toggle the battery rail" },
+        { ipc: "weather", fn: "Weather", shortcut: "weather-toggle", desc: "Toggle the weather rail" },
         { ipc: "calendar", fn: "Calendar", shortcut: "calendar-toggle", desc: "Toggle the calendar" },
 
         // Unbound like the rails: the bar's clipboard module is the way

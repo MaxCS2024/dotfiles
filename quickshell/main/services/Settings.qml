@@ -98,7 +98,7 @@ Singleton {
         default: {
             left: ["workspaces", "media"],
             center: ["clock"],
-            right: ["tray", "network", "volume", "battery"]
+            right: ["weather", "tray", "network", "volume", "battery"]
         }
     })
 

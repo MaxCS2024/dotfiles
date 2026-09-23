@@ -12,6 +12,7 @@ import "network"
 import "volume"
 import "media"
 import "battery"
+import "weather"
 import "calendar"
 import "clipboard"
 import "installer"
@@ -90,6 +91,7 @@ ShellRoot {
         "volume": volumeLoader,
         "media": mediaLoader,
         "battery": batteryLoader,
+        "weather": weatherLoader,
         "calendar": calendarLoader,
         "clipboard": clipboardLoader,
         "themes": themesLoader,
@@ -222,6 +224,15 @@ ShellRoot {
         id: batteryLoader
         active: false
         BatteryPanel {}
+    }
+    // The right-edge weather rail (weather/WeatherPanel.qml, user request
+    // 2026-09-23) — the forecast the bar's weather module used to show in
+    // a hover dropdown. Lazy and self-opening on the same contract as the
+    // battery rail above, whose frame it borrows.
+    LazyLoader {
+        id: weatherLoader
+        active: false
+        WeatherPanel {}
     }
     // The calendar (calendar/CalendarPanel.qml, user request 2026-09-21)
     // — the card under the bar's clock, in place of the hover dropdown

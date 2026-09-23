@@ -210,6 +210,23 @@ running. Grouped by what breaks if it's missing.
   `notif`, `network` and `bluetooth` modules use it for `--exec` vectors
   and `--json` output.
 
+- **curl** and network access to **api.open-meteo.com** —
+  `services/Weather.qml` fetches the forecast every 15 minutes (a minute
+  after a failure). Without either the bar's weather module never gets a
+  first reading and stays hidden; after one, it keeps showing the last
+  good forecast.
+
+  The location is per-machine and gitignored: `quickshell/main/.env`
+  needs two lines like these (London, as an example):
+
+  ```
+  WEATHER_LATITUDE=51.5074
+  WEATHER_LONGITUDE=-0.1278
+  ```
+
+  with your own coordinates in their place. Without it the module stays
+  hidden, same as with no network.
+
 ## Fonts
 
 - **JetBrainsMono Nerd Font** (`Theme.font`) — must be the actual

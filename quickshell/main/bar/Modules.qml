@@ -27,7 +27,8 @@ QtObject {
         "battery": batteryComponent,
         "tray": trayComponent,
         "sysmon": sysmonComponent,
-        "notifications": notificationsComponent
+        "notifications": notificationsComponent,
+        "weather": weatherComponent
     })
 
     readonly property Component workspacesComponent: Component { Workspaces {} }
@@ -44,4 +45,5 @@ QtObject {
     readonly property Component trayComponent: Component { SystemTray {} }
     readonly property Component sysmonComponent: Component { SystemMonitorButton {} }
     readonly property Component notificationsComponent: Component { NotificationsButton {} }
+    readonly property Component weatherComponent: Component { WeatherButton {} }
 }
