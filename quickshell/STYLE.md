@@ -100,6 +100,10 @@ Leave enough space between neighbours to tell them apart (`Theme.space2`,
 
 - Colour/size changes: `Behavior` with `Theme.animFast` and
   `Theme.easingStandard`. Panels use `Theme.animPanel`.
+- An animated colour that fades to or from nothing uses
+  `Appearance.clear(<the other colour>)`, never `"transparent"`.
+  `"transparent"` is transparent *black*, so the fade passes through a dark
+  grey and the item dips darker than where it started.
 - **Never animate a size inside a layout** (`implicitWidth` in a
   RowLayout, etc.). It re-lays out the row every frame, and pixel rounding
   makes the neighbours jitter. Animate `x`/`y`/`opacity`/`scale` of a single
@@ -153,3 +157,5 @@ Add to this list whenever the user rejects a visual pattern.
 - 2026-09-23: a `fgStrong` ring on the calendar's today cell when it was
   also the selection (i.e. every time the calendar opened). A state that
   "has no fill left" doesn't get a border; drop the extra mark (see §1).
+- 2026-09-23: hovering an occupied workspace chip went fill → darker →
+  hover colour, because HoverPill faded from `"transparent"` (see §7).

@@ -77,9 +77,11 @@ Item {
         radius: height / 2
         // Solid accent for the current workspace, one elevation step for
         // occupied ones, nothing for empty ones. No outline: state is
-        // carried by fill alone (quickshell/STYLE.md, "Borders").
+        // carried by fill alone (quickshell/STYLE.md, "Borders"). Empty is
+        // surfaceAlt at zero alpha, not "transparent" (transparent black),
+        // so a chip filling or emptying fades without dipping dark first.
         color: root.active && root.showsActive ? Appearance.accent
-             : (root.occupied ? Appearance.surfaceAlt : "transparent")
+             : (root.occupied ? Appearance.surfaceAlt : Appearance.clear(Appearance.surfaceAlt))
         Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
     }
 

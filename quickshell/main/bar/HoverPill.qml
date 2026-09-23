@@ -33,7 +33,13 @@ Item {
         anchors.fill: parent
         // Fully round, not Theme.radius — a true pill shape, per its name.
         radius: height / 2
-        color: "transparent"
+        // The hover colour at zero alpha, not "transparent": that is
+        // transparent *black*, so the colour fade passed through a dark
+        // half-alpha grey and an occupied workspace chip visibly dipped
+        // darker than its own fill before the highlight arrived (and
+        // again on the way out). Same RGB at both ends means only the
+        // alpha moves.
+        color: Appearance.clear(Appearance.selected)
 
         // transformOrigin defaults to Item.Center, so scaling from
         // 0 → 1 grows outward from the middle with no extra setup.
