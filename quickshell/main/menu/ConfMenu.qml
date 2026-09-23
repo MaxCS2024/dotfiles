@@ -982,7 +982,7 @@ ShellSurface {
                                 // selecting it here — so there is nothing
                                 // the rule was distinguishing that the wash
                                 // doesn't.
-                                color: menuRow.selected ? Appearance.selected : "transparent"
+                                color: menuRow.selected ? SlabStyle.tintSelected : Appearance.clear(SlabStyle.tintSelected)
 
                                 Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
 
@@ -996,7 +996,7 @@ ShellSurface {
                                         Layout.preferredWidth: 20
                                         text: menuRow.modelData.icon || ""
                                         color: menuRow.dimmed ? Appearance.disabled
-                                             : menuRow.selected ? Appearance.accent : Appearance.fgSoft
+                                             : menuRow.selected ? Appearance.fgStrong : Appearance.fgSoft
                                         font.family: Theme.font
                                         font.pixelSize: ConfStyle.fontIcon
                                         horizontalAlignment: Text.AlignHCenter

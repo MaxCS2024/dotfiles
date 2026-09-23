@@ -58,10 +58,10 @@ ColumnLayout {
                 Layout.fillWidth: true
                 implicitHeight: 30
                 radius: Theme.radius
-                color: dnsBtn.selected ? SlabStyle.tintStrong
-                     : (dnsHover2.hovered ? Appearance.hoverStrong : "transparent")
-                border.width: 1
-                border.color: dnsBtn.selected ? Appearance.accent : Appearance.border
+                color: dnsBtn.selected ? SlabStyle.tintSelected
+                     : (dnsHover2.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong))
+                border.width: dnsBtn.selected ? 0 : 1
+                border.color: Appearance.border
 
                 Behavior on color {
                     ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
@@ -137,7 +137,7 @@ ColumnLayout {
             implicitWidth: dnsApplyLabel.implicitWidth + 14
             implicitHeight: 26
             radius: Theme.radius
-            color: dnsApplyHover.hovered ? Appearance.hoverStrong : "transparent"
+            color: dnsApplyHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)
             border.width: 1
             border.color: Appearance.border
 

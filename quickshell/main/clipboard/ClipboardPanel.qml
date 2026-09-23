@@ -444,7 +444,7 @@ ShellSurface {
                     radius: Theme.radius
                     color: wipeHover.hovered ? Appearance.dangerBg : Appearance.surfaceAlt
                     border.width: 1
-                    border.color: wipeHover.hovered ? Appearance.dangerBorder : "transparent"
+                    border.color: wipeHover.hovered ? Appearance.dangerBorder : Appearance.clear(Appearance.dangerBorder)
 
                     Behavior on color {
                         ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
@@ -538,12 +538,13 @@ ShellSurface {
                         width: ListView.view.width
                         height: 34
                         radius: Theme.radius
-                        color: row.current ? Appearance.selected
+                        color: row.current ? SlabStyle.tintSelected
                              : rowHover.hovered ? Appearance.hover
-                             : "transparent"
+                             : Appearance.clear(Appearance.hover)
 
-                        // The selected row is its ground and the
-                        // brighter ink, and nothing else — the accent bar
+                        // The selected row is its ground (the half-accent
+                        // SlabStyle.tintSelected every selected thing in the
+                        // shell uses) and the brighter ink, and nothing else — the accent bar
                         // that used to run down its leading edge is gone
                         // (user request 2026-09-21).
 

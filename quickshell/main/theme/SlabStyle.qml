@@ -19,7 +19,7 @@ import QtQuick
 // log calls it DashStyle.
 //
 // Two readers: PowerMenuPopout.qml, which takes nearly all of it, and
-// network/NetworkPanel.qml, which takes tintStrong alone.
+// every selected button in the shell, which takes tintSelected.
 //
 // Everything below still derives from Appearance, so a surface dressed
 // from here follows the wallpaper palette (or a pinned custom one)
@@ -91,6 +91,13 @@ Singleton {
         Math.min(1, root.cardAlpha + 0.06))
 
     readonly property color tintStrong: Qt.rgba(Appearance.accent.r, Appearance.accent.g, Appearance.accent.b, 0.22)
+
+    // A *selected* button anywhere in the shell: twice tintStrong, and
+    // drawn without an outline — a full-accent ring round a half-accent
+    // fill reads as a brighter edge on a duller body. The whole button is
+    // this one colour; the neutral border comes back when it is not
+    // selected.
+    readonly property color tintSelected: Qt.rgba(Appearance.accent.r, Appearance.accent.g, Appearance.accent.b, 0.45)
 
     // ── Motion ───────────────────────────────────────────
     // Panes fade and rise in one after another on open. The stagger is

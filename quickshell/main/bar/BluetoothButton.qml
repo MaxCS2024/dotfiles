@@ -43,15 +43,15 @@ BarButton {
             implicitWidth: powerLabel.implicitWidth + 16
             implicitHeight: 22
             radius: Theme.radius
-            color: Bt.powered ? Appearance.selected : (powerHover.hovered ? Appearance.hoverStrong : "transparent")
-            border.color: Bt.powered ? Appearance.green : Appearance.border
-            border.width: 1
+            color: Bt.powered ? SlabStyle.tintSelected : (powerHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong))
+            border.color: Appearance.border
+            border.width: Bt.powered ? 0 : 1
 
             Text {
                 id: powerLabel
                 anchors.centerIn: parent
                 text: Bt.powered ? "On" : "Off"
-                color: Bt.powered ? Appearance.green : Appearance.fgSoft
+                color: Bt.powered ? Appearance.fgStrong : Appearance.fgSoft
                 font.pixelSize: Theme.fontSmall
                 font.family: Theme.font
             }
@@ -102,7 +102,7 @@ BarButton {
             Layout.fillWidth: true
             implicitHeight: 34
             radius: Theme.radius
-            color: rowHover.hovered ? Appearance.hover : "transparent"
+            color: rowHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover)
 
             RowLayout {
                 anchors.fill: parent

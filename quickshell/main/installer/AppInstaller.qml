@@ -684,10 +684,10 @@ ShellSurface {
                         implicitWidth: chipRow.implicitWidth + 20
                         implicitHeight: 26
                         radius: Theme.radius
-                        color: chip.active ? Appearance.selected
-                             : chipHover.hovered ? Appearance.hover : "transparent"
-                        border.width: 1
-                        border.color: chip.active ? Appearance.accent : Appearance.border
+                        color: chip.active ? SlabStyle.tintSelected
+                             : chipHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover)
+                        border.width: chip.active ? 0 : 1
+                        border.color: Appearance.border
 
                         RowLayout {
                             id: chipRow
@@ -763,8 +763,8 @@ ShellSurface {
                             width: ListView.view.width
                             height: 52
                             radius: Theme.radius
-                            color: row.index === installer.selectedIndex ? Appearance.selected
-                                 : rowHover.hovered ? Appearance.hover : "transparent"
+                            color: row.index === installer.selectedIndex ? SlabStyle.tintSelected
+                                 : rowHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover)
 
                             RowLayout {
                                 anchors.fill: parent
@@ -839,7 +839,7 @@ ShellSurface {
                                     implicitHeight: 26
                                     radius: Theme.radius
                                     color: row.modelData.installed ? Appearance.installedBg
-                                         : actionHover.hovered ? Appearance.hoverStrong : "transparent"
+                                         : actionHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)
                                     border.width: 1
                                     border.color: row.modelData.installed
                                         ? Appearance.green : Appearance.border

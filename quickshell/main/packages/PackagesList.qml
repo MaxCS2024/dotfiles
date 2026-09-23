@@ -256,7 +256,7 @@ Item {
                 width: ListView.view.width
                 height: 40
                 radius: Theme.radius
-                color: instRowHover.hovered ? Appearance.hover : "transparent"
+                color: instRowHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover)
 
                 RowLayout {
                     anchors.fill: parent
@@ -312,7 +312,7 @@ Item {
                         implicitWidth: uninstallLabel.implicitWidth + 16
                         implicitHeight: 24
                         radius: Theme.radius
-                        color: uninstallHover.hovered ? Appearance.dangerBg : "transparent"
+                        color: uninstallHover.hovered ? Appearance.dangerBg : Appearance.clear(Appearance.dangerBg)
                         border.color: Appearance.dangerBorder
                         border.width: 1
                         opacity: instRow.modelData.installing ? 0.5 : 1

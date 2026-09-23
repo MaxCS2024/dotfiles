@@ -176,15 +176,19 @@ Item {
                     implicitWidth: cancelLabel.implicitWidth + 18
                     implicitHeight: 26
                     radius: Theme.radius
-                    color: cancelHover.hovered ? Theme.hoverStrong : "transparent"
-                    border.color: Theme.border
-                    border.width: 1
+                    // Borderless like Confirm, but a neutral fill so the
+                    // accent one still reads as the primary action.
+                    color: cancelHover.hovered ? Theme.hoverStrong : Theme.hover
+
+                    Behavior on color {
+                        ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
+                    }
 
                     Text {
                         id: cancelLabel
                         anchors.centerIn: parent
                         text: "Cancel"
-                        color: Theme.fgSoft
+                        color: Theme.fgStrong
                         font.pixelSize: Theme.fontSmall
                         font.family: Theme.font
                     }
@@ -201,15 +205,20 @@ Item {
                     implicitWidth: okLabel.implicitWidth + 18
                     implicitHeight: 26
                     radius: Theme.radius
-                    color: okHover.hovered ? Theme.hoverStrong : Theme.selected
-                    border.color: Theme.green
-                    border.width: 1
+                    // SlabStyle.tintSelected's half-accent, borderless, spelled
+                    // out on Theme because this file doesn't import theme/;
+                    // a little more accent under the pointer.
+                    color: Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, okHover.hovered ? 0.6 : 0.45)
+
+                    Behavior on color {
+                        ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
+                    }
 
                     Text {
                         id: okLabel
                         anchors.centerIn: parent
                         text: "Confirm"
-                        color: Theme.green
+                        color: Theme.fgStrong
                         font.pixelSize: Theme.fontSmall
                         font.family: Theme.font
                     }

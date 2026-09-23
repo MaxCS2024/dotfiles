@@ -586,8 +586,8 @@ ShellSurface {
                         width: ListView.view.width
                         height: 30
                         radius: Theme.radius
-                        color: sinkRow.isActive ? Appearance.selected
-                             : (sinkHover.hovered ? Appearance.hover : "transparent")
+                        color: sinkRow.isActive ? SlabStyle.tintSelected
+                             : (sinkHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover))
 
                         RowLayout {
                             anchors.fill: parent
@@ -747,7 +747,7 @@ ShellSurface {
                         width: ListView.view.width
                         height: 60
                         radius: Theme.radius
-                        color: streamHover.hovered ? Appearance.hover : "transparent"
+                        color: streamHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover)
 
                         RowLayout {
                             anchors.fill: parent

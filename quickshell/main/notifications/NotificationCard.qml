@@ -255,7 +255,7 @@ Item {
                         Layout.preferredHeight: 18
                         Layout.alignment: Qt.AlignVCenter
                         radius: 9
-                        color: closeHover.hovered ? Theme.hoverStrong : "transparent"
+                        color: closeHover.hovered ? Theme.hoverStrong : Qt.rgba(Theme.hoverStrong.r, Theme.hoverStrong.g, Theme.hoverStrong.b, 0)
                         // Present but recessive until the pointer is on the
                         // card: always hit-testable (a toast has to be
                         // dismissable on the first try), never competing

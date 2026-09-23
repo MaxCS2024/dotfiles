@@ -37,7 +37,7 @@ Rectangle {
     implicitWidth: label.implicitWidth + 16
     implicitHeight: 24
     radius: Theme.radius
-    color: hover.hovered ? Appearance.hoverStrong : "transparent"
+    color: hover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)
     border.color: Appearance.border
     border.width: 1
 

@@ -327,6 +327,12 @@ Singleton {
 
     readonly property bool active: root.useCustom
 
+    // `c` at zero alpha — the resting colour for a hover fill that
+    // animates. "transparent" is transparent *black*, so a ColorAnimation
+    // out of it passes through a dark half-alpha tint before it reaches
+    // the hover colour; fading from `c` itself changes only the alpha.
+    function clear(c) { return Qt.rgba(c.r, c.g, c.b, 0) }
+
     // ── Surfaces ─────────────────────────────────────────
     readonly property color bar: active ? customBg : Theme.bar
     readonly property color surface: active ? _customSurface : Theme.surface

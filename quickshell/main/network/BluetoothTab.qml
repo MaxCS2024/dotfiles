@@ -38,10 +38,10 @@ ColumnLayout {
             implicitWidth: btPowerLabel.implicitWidth + 16
             implicitHeight: 22
             radius: Theme.radius
-            color: Bt.powered ? SlabStyle.tintStrong
-                 : (btPowerHover.hovered ? Appearance.hoverStrong : "transparent")
-            border.width: 1
-            border.color: Bt.powered ? Appearance.accent : Appearance.border
+            color: Bt.powered ? SlabStyle.tintSelected
+                 : (btPowerHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong))
+            border.width: Bt.powered ? 0 : 1
+            border.color: Appearance.border
 
             Behavior on color {
                 ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
@@ -51,7 +51,7 @@ ColumnLayout {
                 id: btPowerLabel
                 anchors.centerIn: parent
                 text: Bt.powered ? "On" : "Off"
-                color: Bt.powered ? Appearance.accent : Appearance.fgSoft
+                color: Bt.powered ? Appearance.fgStrong : Appearance.fgSoft
                 font.pixelSize: Theme.fontSmall
                 font.family: Theme.font
             }
@@ -107,7 +107,7 @@ ColumnLayout {
                 width: btList.width
                 height: 44
                 radius: Theme.radius
-                color: btRowHover.hovered ? Appearance.hover : "transparent"
+                color: btRowHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover)
 
                 Behavior on color {
                     ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }

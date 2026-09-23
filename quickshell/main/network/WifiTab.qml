@@ -336,7 +336,7 @@ ColumnLayout {
                 // are all on hoverStrong already, so the rows
                 // now answer at the volume the rest of the
                 // surface does.
-                color: knownRow.lit ? Appearance.hoverStrong : "transparent"
+                color: knownRow.lit ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)
 
                 Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
 
@@ -487,7 +487,7 @@ ColumnLayout {
                     width: apList.width
                     height: 36
                     radius: Theme.radius
-                    color: apRow.lit ? Appearance.hoverStrong : "transparent"
+                    color: apRow.lit ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)
 
                     Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
 

@@ -381,7 +381,7 @@ ShellSurface {
                     Layout.minimumWidth: 0
                     implicitHeight: 26
                     radius: Theme.radius
-                    color: titleHover.hovered ? Appearance.hover : "transparent"
+                    color: titleHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover)
 
                     Behavior on color {
                         ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
@@ -443,7 +443,7 @@ ShellSurface {
                         implicitWidth: 24
                         implicitHeight: 24
                         radius: Theme.radius
-                        color: navHover.hovered ? Appearance.hoverStrong : "transparent"
+                        color: navHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)
                         border.width: 1
                         border.color: Appearance.border
 
@@ -570,12 +570,12 @@ ShellSurface {
                                 radius: Theme.radius
                                 // Today is a filled accent cell; a
                                 // selection that isn't today is the
-                                // lighter "picked" ground the lists in
-                                // the rails use for their current row.
+                                // half-accent ground every selected
+                                // button in the shell uses.
                                 color: day.today ? Appearance.accent
-                                     : day.selected ? Appearance.selected
+                                     : day.selected ? SlabStyle.tintSelected
                                      : dayHover.hovered ? Appearance.hover
-                                     : "transparent"
+                                     : Appearance.clear(Appearance.hover)
 
                                 Behavior on color {
                                     ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
@@ -583,7 +583,7 @@ ShellSurface {
 
                                 // The three states are three grounds:
                                 // today is the accent cell, a selection
-                                // elsewhere is the lighter picked ground,
+                                // elsewhere is the half-accent ground,
                                 // hover is the usual tint. The one cell
                                 // that is both today and the selection has
                                 // no fourth ground left, so it takes a
@@ -652,9 +652,9 @@ ShellSurface {
                         Layout.preferredHeight: 34
                         radius: Theme.radius
                         color: monthCell.current ? Appearance.accent
-                             : monthCell.showing ? Appearance.selected
+                             : monthCell.showing ? SlabStyle.tintSelected
                              : monthHover.hovered ? Appearance.hover
-                             : "transparent"
+                             : Appearance.clear(Appearance.hover)
 
                         Behavior on color {
                             ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }

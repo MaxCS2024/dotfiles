@@ -402,7 +402,7 @@ ShellSurface {
                     implicitWidth: 26
                     implicitHeight: 24
                     radius: Theme.radius
-                    color: shareHover.hovered ? Appearance.hoverStrong : "transparent"
+                    color: shareHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)
                     border.width: 1
                     border.color: Appearance.border
 
@@ -440,7 +440,7 @@ ShellSurface {
                     implicitWidth: 26
                     implicitHeight: 24
                     radius: Theme.radius
-                    color: speedHover.hovered ? Appearance.hoverStrong : "transparent"
+                    color: speedHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)
                     border.width: 1
                     border.color: Appearance.border
 
@@ -513,46 +513,87 @@ ShellSurface {
             // rather than watch. Bluetooth and DNS share a tab because
             // neither fills one on its own and both are "set it and
             // forget it" — see the sections themselves.
-            RowLayout {
+            //
+            // A segmented control: one track holds all three, and the
+            // selected tab is marked by a plate that slides behind it
+            // rather than by each button drawing its own box.
+            Rectangle {
+                id: tabTrack
                 Layout.fillWidth: true
                 Layout.topMargin: 2
-                spacing: 6
+                implicitHeight: 26 + 2 * tabTrack.pad
+                radius: Theme.radius
+                color: Appearance.trackBg
+                border.width: 1
+                border.color: Appearance.border
 
-                Repeater {
-                    model: ["Wi-Fi", "Bluetooth", "DNS"]
+                readonly property int pad: 3
 
-                    delegate: Rectangle {
-                        id: tabBtn
-                        required property int index
-                        required property string modelData
+                // Behind the Repeater, so it paints under the labels.
+                //
+                // Placed by arithmetic on the tab index, not by reading
+                // tabRepeater.itemAt(panel.tab): itemAt() isn't a notifying
+                // property, so a binding that ran before the delegates
+                // existed stayed null, and since opening only re-assigns
+                // tab = 0 the rail opened with nothing selected. The tabs
+                // are equal width (fillWidth, no implicit width), so the
+                // slot is all this needs.
+                Rectangle {
+                    id: tabHighlight
+                    readonly property real slot: (tabRow.width - tabRow.spacing * (tabRepeater.count - 1)) / Math.max(1, tabRepeater.count)
+                    x: tabRow.x + panel.tab * (tabHighlight.slot + tabRow.spacing)
+                    y: tabRow.y
+                    width: tabHighlight.slot
+                    height: tabRow.height
+                    radius: Theme.radius
+                    color: SlabStyle.tintSelected
 
-                        readonly property bool current: panel.tab === tabBtn.index
+                    Behavior on x {
+                        NumberAnimation { duration: Theme.animNormal; easing.type: Theme.easingDecel }
+                    }
+                }
 
-                        Layout.fillWidth: true
-                        implicitHeight: 26
-                        radius: Theme.radius
-                        color: tabBtn.current ? SlabStyle.tintStrong
-                             : (tabHover.hovered ? Appearance.hoverStrong : "transparent")
-                        border.width: 1
-                        border.color: tabBtn.current ? Appearance.accent : Appearance.border
+                RowLayout {
+                    id: tabRow
+                    anchors.fill: parent
+                    anchors.margins: tabTrack.pad
+                    spacing: tabTrack.pad
 
-                        Behavior on color {
-                            ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
-                        }
+                    Repeater {
+                        id: tabRepeater
+                        model: ["Wi-Fi", "Bluetooth", "DNS"]
 
-                        Text {
-                            anchors.centerIn: parent
-                            text: tabBtn.modelData
-                            color: tabBtn.current ? Appearance.fgStrong : Appearance.fgSoft
-                            font.pixelSize: Theme.fontSmall
-                            font.family: Theme.font
-                        }
+                        delegate: Rectangle {
+                            id: tabBtn
+                            required property int index
+                            required property string modelData
 
-                        HoverHandler { id: tabHover }
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: panel.tab = tabBtn.index
+                            readonly property bool current: panel.tab === tabBtn.index
+
+                            Layout.fillWidth: true
+                            implicitHeight: 26
+                            radius: Theme.radius
+                            color: !tabBtn.current && tabHover.hovered
+                                ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)
+
+                            Behavior on color {
+                                ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: tabBtn.modelData
+                                color: tabBtn.current ? Appearance.fgStrong : Appearance.fgSoft
+                                font.pixelSize: Theme.fontSmall
+                                font.family: Theme.font
+                            }
+
+                            HoverHandler { id: tabHover }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: panel.tab = tabBtn.index
+                            }
                         }
                     }
                 }
@@ -755,7 +796,7 @@ ShellSurface {
                     Layout.fillWidth: true
                     implicitHeight: 28
                     radius: Theme.radius
-                    color: closeHover.hovered ? Appearance.hoverStrong : "transparent"
+                    color: closeHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)
                     border.width: 1
                     border.color: Appearance.border
 

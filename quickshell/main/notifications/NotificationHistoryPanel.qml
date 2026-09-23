@@ -269,7 +269,7 @@ ShellSurface {
                     implicitWidth: 26
                     implicitHeight: 24
                     radius: Theme.radius
-                    color: clearHover.hovered ? Appearance.dangerBg : "transparent"
+                    color: clearHover.hovered ? Appearance.dangerBg : Appearance.clear(Appearance.dangerBg)
                     border.width: 1
                     // Neutral at rest, danger only under the pointer. The
                     // quick settings tab outlines its Clear button red the

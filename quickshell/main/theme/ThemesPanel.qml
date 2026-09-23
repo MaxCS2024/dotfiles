@@ -344,15 +344,15 @@ ShellSurface {
                         Layout.bottomMargin: row.index === 0 ? 6 : 0
                         implicitHeight: panel.rowHeight
                         radius: Theme.radius
-                        color: row.current ? Appearance.selected
-                             : (row.active ? Appearance.hover : "transparent")
-                        border.width: 1
-                        // The accent outline on the current row is what
-                        // the settings tab's chips use to say the same
-                        // thing, so the two surfaces agree on what
-                        // "showing now" looks like.
-                        border.color: row.current ? Appearance.accent
-                                    : (row.active ? Appearance.border : "transparent")
+                        color: row.current ? SlabStyle.tintSelected
+                             : (row.active ? Appearance.hover : Appearance.clear(Appearance.hover))
+                        // The current row is the accent-filled, borderless
+                        // "selected" look every selected button in the shell
+                        // shares (SlabStyle.tintSelected), so this and the
+                        // installer's chips agree on what "showing now"
+                        // looks like.
+                        border.width: row.current ? 0 : 1
+                        border.color: row.active ? Appearance.border : Appearance.clear(Appearance.border)
 
                         Behavior on color {
                             ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
