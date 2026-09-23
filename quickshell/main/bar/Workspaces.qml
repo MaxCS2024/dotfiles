@@ -10,11 +10,14 @@ import "../theme"
 Item {
     id: root
 
-    implicitWidth: row.implicitWidth + 2 * root.trackPad
+    implicitWidth: row.implicitWidth + 2 * root.trackPadX
     implicitHeight: row.implicitHeight + 2 * root.trackPad
     Layout.alignment: Qt.AlignVCenter
 
     readonly property int trackPad: 4
+    // More room at the ends than above/below, so the end chips don't
+    // crowd the track's rounded caps.
+    readonly property int trackPadX: 8
     readonly property int pillSize: 22
 
     property var screen
