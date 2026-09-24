@@ -85,3 +85,10 @@ The app the XDG database opens a role's files or links with. Setting a
 default rewrites the handler to match; when the two differ, the default
 is the answer.
 _Avoid_: XDG default, mime default
+
+## Packages
+
+**Source**:
+Where a package comes from: the official repositories (pacman), the AUR,
+or Flathub. One package name belongs to one source.
+_Avoid_: backend, manager, repo
