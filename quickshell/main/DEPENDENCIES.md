@@ -281,6 +281,12 @@ running. Grouped by what breaks if it's missing.
   asking. `rack features on earbuds` installs them; `rack features off
   earbuds` takes the pill and the rail section away and stops the watcher.
 
+- **zsh** — the login shell the repo's `zsh/` config is written for.
+  Nothing in quickshell runs it, and `foot/foot.ini` names no shell, so
+  foot starts whatever the login shell is. Without zsh that is bash with
+  none of this config: no ZDOTDIR, no `~/.local/bin` from `.zshrc`, no
+  prompt. Make it the login shell with `chsh -s /usr/bin/zsh`.
+
 ## Fonts
 
 - **JetBrainsMono Nerd Font** (`Theme.font`) — must be the actual
