@@ -2,9 +2,7 @@
 #
 # The manifest's third column is a shell command per application, and this is
 # what runs it. Deploying a file and reloading the program that reads it are
-# separate steps on purpose: `rack deploy` links, `rack reload` re-reads, and
-# `rack theme set` does both because a colour nobody reloaded is a colour
-# nobody sees.
+# separate steps on purpose: `rack deploy` links, `rack reload` re-reads.
 #
 # The command is a shell string rather than an argv vector, which is the
 # manifest's design ("reload commands live in data rather than code"): the
@@ -13,9 +11,6 @@
 # input from anywhere else, so `sh -c` is the right amount of machinery. A
 # failing reload is reported and does not stop the others — a dead waybar must
 # not keep hyprland from re-reading.
-#
-# Written for this repo: the shipped rack calls rack::reload::run from
-# theme.sh but has no reload module, so `rack theme` failed to load at all.
 
 rig::load log proc
 rack::load manifest

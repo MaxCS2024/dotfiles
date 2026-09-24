@@ -3,8 +3,8 @@
 # rack — the configuration tool. What you run at a terminal, deliberately.
 #
 #   rack deploy
-#   rack theme dark
 #   rack diff
+#   rack validate
 #
 # Everything reads from one manifest, so adding an application means adding a
 # line rather than remembering a command.
@@ -153,11 +153,11 @@ rack::__help() {
     fi
 
     cat <<EOF
-rack $RACK_VERSION — configuration: deploy, theme, check
+rack $RACK_VERSION — configuration: deploy, check, set up
 
 usage
   rack <module> <action> [args...]
-  rack deploy | rack diff | rack theme dark     (shortcuts for the common ones)
+  rack deploy | rack diff | rack reload hypr    (shortcuts for the common ones)
 
 builtins
   help [module]     this, or one module's actions
@@ -192,7 +192,6 @@ rack::__completion() {
             "$mod" "${RACK_MODULE_ACTIONS[$mod]}"
     done
     printf '        deploy|diff|validate|edit|reload) COMPREPLY=($(compgen -W "$names" -- "$cur"));;\n'
-    printf '        theme) COMPREPLY=($(compgen -W "$(rack theme list 2>/dev/null) list current" -- "$cur"));;\n'
     printf '        help) COMPREPLY=($(compgen -W "$modules" -- "$cur"));;\n'
     printf '    esac\n'
     printf '}\n'
@@ -202,8 +201,8 @@ rack::__completion() {
 # ------------------------------------------------------------------ dispatch
 #
 # Unlike rig and relay, most of rack's modules have one obvious verb, so
-# `rack deploy` means `rack deploy run` and `rack theme dark` means
-# `rack theme set dark`. The mapping is per-module, declared by each module as
+# `rack deploy` means `rack deploy run` and `rack reload hypr` means
+# `rack reload run hypr`. The mapping is per-module, declared by each module as
 # rack::<mod>::__default, rather than a table here.
 
 rack::main() {
@@ -247,7 +246,7 @@ rack::main() {
     fn="rack::${mod}::${action}"
 
     # An unrecognised first word is an argument to the module's default verb,
-    # not a typo: `rack theme dark` and `rack deploy hypr` both land here.
+    # not a typo: `rack reload hypr` and `rack deploy hypr` both land here.
     if [[ -z $action ]] || ! declare -F "$fn" >/dev/null; then
         if declare -F "rack::${mod}::__default" >/dev/null; then
             "rack::${mod}::__default" "$@"

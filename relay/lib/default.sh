@@ -13,7 +13,8 @@
 # candidates, resolves to a default, and has a handler that setting the
 # default rewrites to match.
 
-rig::load log check proc tmp trap notify
+rig::load log check proc tmp trap
+relay::load notif
 
 RELAY_MODULE_SUMMARY[default]="the default terminal, editor, browser and file manager"
 RELAY_MODULE_ACTIONS[default]="get list set unset exec"
@@ -304,9 +305,8 @@ relay::default::unset() {
 relay::default::__exec_failed() {
     local role=$1 status=$2
     rig::check::tty 2 && return "$status"
-    rig::notify::available &&
-        rig::notify::send -u critical "Couldn't open the $role" \
-            "${RELAY_DEFAULT_LAST_ERROR:-relay default exec $role failed}"
+    relay::notif::send -u critical "Couldn't open the $role" \
+        "${RELAY_DEFAULT_LAST_ERROR:-relay default exec $role failed}"
     return "$status"
 }
 
