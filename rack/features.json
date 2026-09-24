@@ -152,19 +152,19 @@
 		},
 		"hermes": {
 			"label": "Hermes",
-			"summary": "Nous Research's self-improving agent (hermes), from the AUR rather than its own installer, which appends to your shell rc files and links its own node and npm into ~/.local/bin. Installed or not: there is nothing to switch off. Removing it uninstalls the package, but not ~/.hermes, which holds your settings, keys, skills and memory.",
+			"summary": "Nous Research's self-improving agent (hermes), from its own installer, which ends in its setup wizard, and updating itself (hermes update). Installed or not: there is nothing to switch off. Removing it deletes the program, and the Node.js it brought if the system's was too old, but not ~/.hermes itself, which holds your settings, keys, skills and memory.",
 			"recommended": false,
 			"switch": false,
-			"size": "about 400 MB with Python 3.11",
+			"size": "several hundred MB: its own Python, packages and a browser for its web tools",
 			"provides": ["hermes"],
 			"packages": {
 				"repo": [],
-				"aur": ["hermes-agent"]
+				"aur": []
 			},
-			"setup": [],
+			"setup": [["bash", "-c", "set -o pipefail; curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"]],
 			"units": [],
-			"teardown": [],
-			"data": []
+			"teardown": [["sh", "-c", "for b in node npm npx; do case $(readlink \"$HOME/.local/bin/$b\") in \"$HOME/.hermes/node/\"*) rm -f \"$HOME/.local/bin/$b\" ;; esac; done"]],
+			"data": ["~/.local/bin/hermes", "~/.hermes/hermes-agent", "~/.hermes/bin", "~/.hermes/node"]
 		}
 	}
 }
