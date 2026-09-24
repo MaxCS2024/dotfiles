@@ -104,19 +104,19 @@
 		},
 		"codex": {
 			"label": "Codex",
-			"summary": "OpenAI's coding agent in the terminal (codex), from extra, updated with the rest of the system. Installed or not: there is nothing to switch off. Removing it uninstalls the package, but not ~/.codex, which holds your login and settings.",
+			"summary": "OpenAI's coding agent in the terminal (codex), from its own installer (the one in its GitHub README), which keeps its releases under ~/.codex/packages. Installed or not: there is nothing to switch off. Removing it deletes the program and those releases, but not the rest of ~/.codex, which holds your login and settings.",
 			"recommended": false,
 			"switch": false,
 			"size": "about 320 MB",
 			"provides": ["codex"],
 			"packages": {
-				"repo": ["openai-codex"],
+				"repo": [],
 				"aur": []
 			},
-			"setup": [],
+			"setup": [["bash", "-c", "set -o pipefail; curl -fsSL https://chatgpt.com/codex/install.sh | sh"]],
 			"units": [],
 			"teardown": [],
-			"data": []
+			"data": ["~/.local/bin/codex", "~/.local/bin/codex-code-mode-host", "~/.codex/packages"]
 		},
 		"gemini": {
 			"label": "Gemini CLI",
