@@ -12,7 +12,8 @@ _Avoid_: theme (that also covers sizes, fonts and motion), colour scheme
 
 **Base palette**:
 The few colours a palette is built from: background, foreground and
-accent, plus optional surface, border and status colours.
+accent, plus optional surface, border and status colours, and the
+magenta and cyan a terminal needs.
 _Avoid_: seed colours, custom colours
 
 **Palette source**:
@@ -50,6 +51,11 @@ _Avoid_: shades, scale
 One named colour in the palette that a surface draws with, such as
 `surface`, `fgMuted` or `accent`.
 _Avoid_: variable, swatch
+
+**App colours**:
+The palette written out as the files other apps read their colours
+from — the terminals and GTK — so they match the shell in either mode.
+_Avoid_: terminal theme, matugen colours
 
 **Compositor colours**:
 The pair of colours Hyprland draws window borders with. They always
