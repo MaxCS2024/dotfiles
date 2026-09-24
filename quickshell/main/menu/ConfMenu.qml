@@ -207,10 +207,11 @@ ShellSurface {
                     { label: "Communications", icon: "", hint: "chat",
                       children: panel.communicationApps.map(app => panel.installRow(app)) },
                     { label: "Gaming", icon: "", hint: "launchers",
-                      children: panel.gamingApps.map(app => panel.installRow(app)) },
-                    { label: "General", icon: "", hint: "everyday",
-                      children: panel.generalApps.map(app => panel.installRow(app)) }
-                ]},
+                      children: panel.gamingApps.map(app => panel.installRow(app)) }
+                // The apps that fit no category sit here as rows of their
+                // own, after the three that do (user request 2026-09-24:
+                // they were a fourth category, General).
+                ].concat(panel.generalApps.map(app => panel.installRow(app))) },
                 // "Update all" is rack's own three-stage update (repo,
                 // then AUR, then flatpak, each gated on the one before
                 // it); the three rows under it are the single stages, for
@@ -438,9 +439,10 @@ ShellSurface {
         { label: "Discord", icon: "\u{F066F}", flatpak: "com.discordapp.Discord" }
     ]
 
-    // Apps › Browse › General. What doesn't group with anything else: LocalSend
-    // for pushing a file at a phone on the same network, Bitwarden for
-    // passwords, Obsidian for notes, Spotify for music. Flatpaks per the
+    // Apps › Browse, as rows beside the categories. What doesn't group
+    // with anything else: LocalSend for pushing a file at a phone on the
+    // same network, Bitwarden for passwords, Obsidian for notes, Spotify
+    // for music. Flatpaks per the
     // user's choice, and for two of the four that is the only packaged
     // client anyway -- localsend is in no repo here, and extra carries
     // spotify-launcher, which fetches the vendor's build at runtime,
