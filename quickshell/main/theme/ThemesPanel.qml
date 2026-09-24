@@ -12,7 +12,7 @@
 // Then the settings panel was deleted outright (2026-09-21) — every one
 // of its tabs had been replaced by a rail, a card or a window, and this
 // card was the last replacement it was waiting for — so the editing half
-// came here too, as a second level behind the Edit pill. One surface
+// came here too, as a second level behind the + pill. One surface
 // switches a palette and edits one, and nothing else in the shell does
 // either.
 //
@@ -59,7 +59,7 @@ ShellSurface {
     // Wide enough for "Catppuccin Mocha" beside its two swatches without
     // eliding, which is the longest name Palettes.list carries.
     // Which level is showing: the nine-row menu, or the palette editor
-    // behind the Edit pill. One card, two contents — rather than a second
+    // behind the + pill. One card, two contents — rather than a second
     // window — because editing a palette is looking at it, and a surface
     // that moved or resized between choosing and adjusting would break
     // that in the one place it matters.
@@ -254,7 +254,7 @@ ShellSurface {
                 panel.apply(panel.entries[panel.cursor])
                 break
             case Qt.Key_E:
-                // The Edit pill's key. Without it the editor is the one
+                // The + pill's key. Without it the editor is the one
                 // part of this card the keyboard cannot reach, which is
                 // the same thing that made the bar's clock a dead stop
                 // for SUPER+SHIFT+B until it grew a tapped() — see
@@ -312,7 +312,7 @@ ShellSurface {
                 // matugen's, and the eight fields would be writing a
                 // palette that isn't the one on screen.
                 PillButton {
-                    text: panel.editing ? "Done" : "Edit"
+                    text: panel.editing ? "Done" : "+"
                     enabled: panel.editing || Appearance.useCustom
                     onClicked: panel.editing = !panel.editing
                 }
