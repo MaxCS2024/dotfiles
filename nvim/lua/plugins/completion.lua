@@ -8,9 +8,11 @@ return {
       ["<S-Tab>"] = { "select_prev", "snippet_backward", "fallback" },
     },
     completion = {
-      menu = { max_height = 8 },
+      -- Borders, because the menus have no background of their own
+      -- (plugins/colorscheme.lua).
+      menu = { max_height = 8, border = "rounded" },
       documentation = {
-        window = { max_height = 8, max_width = 50 },
+        window = { max_height = 8, max_width = 50, border = "rounded" },
       },
     },
   },
