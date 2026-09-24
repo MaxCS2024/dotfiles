@@ -1,5 +1,5 @@
-// One battery in the battery rail's lists — a pack in the bay, a
-// peripheral that reports a charge, or one part of a pair of earbuds.
+// One battery in the battery rail's lists — a pack in the bay, or a
+// peripheral that reports a charge.
 //
 // The shape is quicksettings/MixerTab.qml's stream row, which the volume
 // rail draws too: a glyph, a name with its state beside it, a faint line
@@ -21,26 +21,11 @@ Rectangle {
     id: root
 
     // A UPowerDevice, from services/Battery.qml's `packs` or
-    // `peripherals`. Everything below is read off it by default; an
-    // earbud (services/Earbuds.qml), which is a level and nothing else,
-    // leaves it null and sets them itself.
+    // `peripherals`.
     property var device: null
 
-    property real pct: root.device ? root.device.percentage * 100 : 0
-    property color tone: Battery.deviceColor(root.device)
-    property string glyph: Battery.deviceIcon(root.device)
-    property string label: Battery.deviceLabel(root.device)
-    property string stateText: Battery.deviceState(root.device)
-    property string valueText: Math.round(root.pct) + "%"
-    // Energy and wear, joined only where both exist — a peripheral reports
-    // neither and gets no line at all rather than a row of dashes.
-    property string detail: {
-        const energy = Battery.deviceEnergy(root.device)
-        const health = Battery.deviceHealth(root.device)
-        return energy !== "" && health !== "" ? energy + " · " + health
-            : energy !== "" ? energy
-            : health
-    }
+    readonly property real pct: root.device ? root.device.percentage * 100 : 0
+    readonly property color tone: Battery.deviceColor(root.device)
 
     // The row is as tall as what is in it, like the card it sits on.
     implicitHeight: rowBody.implicitHeight + 16
@@ -58,7 +43,7 @@ Rectangle {
         spacing: Theme.space2
 
         Text {
-            text: root.glyph
+            text: Battery.deviceIcon(root.device)
             color: root.tone
             font.pixelSize: 18
             font.family: Theme.font
@@ -79,7 +64,7 @@ Rectangle {
                 spacing: Theme.space2
 
                 Text {
-                    text: root.label
+                    text: Battery.deviceLabel(root.device)
                     color: Appearance.fg
                     font.pixelSize: Theme.fontNormal
                     font.family: Theme.font
@@ -93,14 +78,14 @@ Rectangle {
                 // packs one at a time, so the row that is not moving
                 // says "Waiting" rather than leaving you to wonder.
                 Text {
-                    text: root.stateText
+                    text: Battery.deviceState(root.device)
                     color: Appearance.fgMuted
                     font.pixelSize: Theme.fontSmall
                     font.family: Theme.font
                 }
 
                 Text {
-                    text: root.valueText
+                    text: Math.round(root.pct) + "%"
                     color: root.tone
                     font.pixelSize: Theme.fontSmall
                     font.family: Theme.font
@@ -111,9 +96,17 @@ Rectangle {
                 }
             }
 
+            // Energy and wear, joined only where both exist — a
+            // peripheral reports neither and gets no line at all rather
+            // than a row of dashes.
             Text {
+                readonly property string energy: Battery.deviceEnergy(root.device)
+                readonly property string health: Battery.deviceHealth(root.device)
+
                 visible: text !== ""
-                text: root.detail
+                text: energy !== "" && health !== "" ? energy + " · " + health
+                    : energy !== "" ? energy
+                    : health
                 color: Appearance.fgFaint
                 font.pixelSize: Theme.fontTiny
                 font.family: Theme.font

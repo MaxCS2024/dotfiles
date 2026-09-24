@@ -12,6 +12,7 @@ import "network"
 import "volume"
 import "media"
 import "battery"
+import "earbuds"
 import "weather"
 import "calendar"
 import "clipboard"
@@ -96,6 +97,7 @@ ShellRoot {
         "media": mediaLoader,
         "battery": batteryLoader,
         "weather": weatherLoader,
+        "earbuds": earbudsLoader,
         "calendar": calendarLoader,
         "clipboard": clipboardLoader,
         "themes": themesLoader,
@@ -249,6 +251,15 @@ ShellRoot {
         id: weatherLoader
         active: false
         WeatherPanel {}
+    }
+    // The earbuds card (earbuds/EarbudsPanel.qml, user request
+    // 2026-09-24) — left, right and case as rings, under the bar's
+    // earbuds module. Part of the `earbuds` feature, so the gate in
+    // onPanelRequested above keeps it unbuilt while that is off.
+    LazyLoader {
+        id: earbudsLoader
+        active: false
+        EarbudsPanel {}
     }
     // The calendar (calendar/CalendarPanel.qml, user request 2026-09-21)
     // — the card under the bar's clock, in place of the hover dropdown

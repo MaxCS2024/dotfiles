@@ -25,7 +25,7 @@
 		},
 		"earbuds": {
 			"label": "Earbuds",
-			"summary": "The battery of Nothing earbuds (checked with the Ear (3)): left, right and case in the battery rail, and a pill in the bar while they are connected.",
+			"summary": "The battery of Nothing earbuds (checked with the Ear (3)): a pill in the bar while they are connected, and a card with left, right and case behind it.",
 			"recommended": false,
 			"provides": ["python3"],
 			"probe": ["python3", "-c", "import dbus, gi"],

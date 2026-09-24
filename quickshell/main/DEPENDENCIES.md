@@ -271,9 +271,10 @@ running. Grouped by what breaks if it's missing.
   which registers a BlueZ profile for Nothing's own RFCOMM service
   (`aeac4a03-dff5-498f-843a-34487cf133eb`), asks the earbuds for their
   battery and follows what they push. That is left, right and case, where
-  UPower only has the one number the headset profile gives; the battery
-  rail shows the three in place of UPower's row, and `bar/EarbudsButton.qml`
-  shows the lower bud while they are connected. The case reports only with
+  UPower only has the one number the headset profile gives (the battery
+  rail's Devices list drops that row while these are in).
+  `bar/EarbudsButton.qml` shows the lower bud while they are connected, and
+  opens `earbuds/EarbudsPanel.qml`, the three as rings. The case reports only with
   a bud in it and the lid open. Checked with a Nothing Ear (3); other
   Nothing earbuds that offer the same service should work, untested.
   Without the two libraries the watcher exits 127 and the shell stops

@@ -73,6 +73,12 @@ Singleton {
     property real mediaAnchor: 0.12
     property bool mediaShown: false
 
+    // And for the earbuds card (earbuds/EarbudsPanel.qml), published by
+    // bar/EarbudsButton.qml. Its module ships in the right row, beside the
+    // battery.
+    property real earbudsAnchor: 0.9
+    property bool earbudsShown: false
+
     // How much of the right screen edge a rail is covering right now, its
     // own 8px inset included — 0 whenever none is showing.
     // notifications/NotificationPopups.qml reads this and steps the toast
@@ -251,6 +257,7 @@ Singleton {
         { ipc: "battery", fn: "Battery", shortcut: "battery-toggle", desc: "Toggle the battery rail" },
         { ipc: "weather", fn: "Weather", shortcut: "weather-toggle", desc: "Toggle the weather rail" },
         { ipc: "calendar", fn: "Calendar", shortcut: "calendar-toggle", desc: "Toggle the calendar" },
+        { ipc: "earbuds", fn: "Earbuds", shortcut: "earbuds-toggle", desc: "Toggle the earbuds card" },
 
         // Unbound like the rails: the bar's clipboard module is the way
         // in (bar/ClipboardButton.qml). A `hl.dsp.global` bind is the

@@ -108,9 +108,9 @@ Singleton {
     //
     // Less the Nothing earbuds while services/Earbuds.qml has their three
     // readings: UPower's row for them is a single number from the headset
-    // profile, the same earbuds a second time, and the rail's Earbuds
-    // section is the better answer. Matched on the address, which is in
-    // UPower's nativePath (/org/bluez/hci0/dev_2C_BE_…).
+    // profile, and the earbuds have their own card (earbuds/
+    // EarbudsPanel.qml, from their own bar module). Matched on the
+    // address, which is in UPower's nativePath (/org/bluez/hci0/dev_2C_BE_…).
     readonly property var peripherals: {
         const earbuds = Earbuds.ready && Earbuds.address
             ? "dev_" + Earbuds.address.replace(/:/g, "_") : ""

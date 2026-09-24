@@ -332,69 +332,6 @@ ShellSurface {
                 }
             }
 
-            // ── Earbuds ──────────────────────────────────
-            // Nothing earbuds, part by part (services/Earbuds.qml, the
-            // `earbuds` feature). Only while they are connected; UPower's
-            // single row for them leaves the Devices list below for as
-            // long as this is here (Battery.peripherals).
-            //
-            // The case row is always drawn, even before it has said
-            // anything: it only reports with a bud in it and the lid open,
-            // and a section that grew a third row whenever that happened
-            // would read as the case appearing and disappearing.
-            Text {
-                visible: Earbuds.ready
-                text: Earbuds.name || "Earbuds"
-                color: Appearance.fg
-                font.pixelSize: Theme.fontSmall
-                font.family: Theme.font
-                font.capitalization: Font.AllUppercase
-                font.letterSpacing: Theme.tracking(Theme.fontSmall, 0.12)
-                Layout.fillWidth: true
-                Layout.minimumWidth: 0
-                Layout.topMargin: 2
-                elide: Text.ElideRight
-            }
-
-            ColumnLayout {
-                visible: Earbuds.ready
-                Layout.fillWidth: true
-                spacing: Theme.space1
-
-                Repeater {
-                    model: [
-                        { label: "Left", part: Earbuds.left, isCase: false },
-                        { label: "Right", part: Earbuds.right, isCase: false },
-                        { label: "Case", part: Earbuds.caseBattery, isCase: true }
-                    ]
-
-                    delegate: BatteryDeviceRow {
-                        required property var modelData
-                        readonly property var part: modelData.part
-                        readonly property bool known: part !== null
-                        readonly property bool fresh: known && !part.stale
-
-                        Layout.fillWidth: true
-                        label: modelData.label
-                        pct: known ? part.level : 0
-                        valueText: known ? part.level + "%" : "—"
-                        // A reading the earbuds have stopped repeating is
-                        // drawn at rest, not in the warning colours: it was
-                        // true a while ago, and a case that read 20% before
-                        // it went on the charger is not low now.
-                        tone: fresh ? Battery.levelColor(part.level, part.charging) : Appearance.fgMuted
-                        glyph: known ? Battery.levelIcon(part.level, fresh && part.charging) : "󰂑"
-                        stateText: !known ? ""
-                            : part.stale ? "Last seen"
-                            : part.charging ? "Charging"
-                            : "Discharging"
-                        detail: known ? ""
-                            : modelData.isCase ? "Reads with a bud inside and the lid open"
-                            : "Not reported"
-                    }
-                }
-            }
-
             // ── Peripherals ──────────────────────────────
             // A mouse, a keyboard, a headset — whatever else UPower knows
             // a charge for. Nothing on this machine has ever appeared
