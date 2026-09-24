@@ -4,7 +4,6 @@ The configuration tool. What you run at a terminal, deliberately.
 
 ```bash
 rack deploy          # make reality match the manifest
-rack theme dark      # render templates, then tell everything to reload
 rack diff            # has anything drifted from the repo?
 rack validate        # would these configs actually load?
 ```
@@ -51,38 +50,20 @@ hex colour demonstrates.
 | `manifest` | the table, and `check` for typos in it |
 | `deploy`   | link it all into place; `--adopt`, `--force`, `remove` |
 | `diff`     | where reality has drifted from the repo |
-| `theme`    | render templates for a theme, then reload |
 | `validate` | syntax-check configs before they break a session |
 | `reload`   | run the reload commands on their own |
 | `edit`     | open the repo copy, validate on exit |
 
 Most modules have one obvious verb, so `rack deploy` means `rack deploy run`
-and `rack theme dark` means `rack theme set dark`.
+and `rack reload hypr` means `rack reload run hypr`.
 
-## Theming
+## Colours
 
-Deploying is a solved problem — stow does it. Switching a theme is not, and
-that is what makes rack worth writing.
-
-The mechanism is deliberately dumb. A theme is a file of `key = value`. Any
-file ending in `.in` anywhere under the dotfiles is a template, `{{key}}` is
-replaced, and the result is written beside it without the `.in`:
-
-```
-themes/dark.conf         accent = #89b4fa
-hypr/colors.conf.in      col.active_border = rgb({{accent}})
-                      -> hypr/colors.conf
-```
-
-Then the manifest's reload commands run. Nothing in the module knows what a
-colour is, so adding an application means adding a template, not editing code.
-
-`rack theme dark` also records the choice in `~/.config/rig/config`, which
-`rig config get theme` reads. One writer, many readers — that file is the only
-thing the three tools share, and rack is the only thing that writes it.
-
-Rendered outputs are generated files. Gitignore them, or commit them and
-accept the churn — but pick one.
+rack does not theme anything. The palette is the shell's: the wallpaper, a
+preset or a hand-edited palette (see `quickshell/CONTEXT.md`), and the shell
+writes it into the terminals itself. A `rack theme` that rendered `{{key}}`
+templates from `themes/*.conf` was here until 2026-09-24; no template ever
+existed, so it rendered nothing and reloaded everything.
 
 ## Safety
 
@@ -114,14 +95,21 @@ whole command worthless.
 ## Tests
 
 ```bash
-tests/run            # everything
-tests/run theme      # one file
+tests/run            # every suite
+tests/run deploy     # just tests/rack-deploy.test.sh
 ```
 
-61 tests against a throwaway dotfiles tree rebuilt between files, so no test
-can leave the next one deploying into a half-broken home. They cover manifest
-parsing, every deploy state, drift detection, template rendering and the
-rig handoff.
+`deploy` is covered: each state a target can be in (absent, a stale or
+broken link, something real in the way), `--force` and where it keeps what
+it moves, the first-launch defaults it moves on its own, `--adopt`, dry run,
+`status`, `remove`, and picking entries by name. Every test runs the real
+`rack deploy` against a home and a dotfiles tree of its own, made fresh for
+it and deleted after, so nothing touches yours.
+
+`diff`, `reload` and `validate` are covered for the entry names they take
+(`tests/rack-names.test.sh`): an unknown one stops the command with exit 2,
+where it used to be logged and then reported as success. The rest of what
+they do, and the other modules, have no tests yet.
 
 ## Next
 

@@ -26,8 +26,9 @@ ShellRoot {
 
     Bar {}
 
-    // Writes the active palette out as foot's, kitty's and ghostty's colours.
-    TerminalTheme {}
+    // Writes the active palette out as the app colours: the terminals'
+    // and GTK's.
+    AppColors {}
 
     // Not dead code — deleting this turns the Night light switch on the
     // network rail back into a no-op. NightLight is a Singleton, so it is

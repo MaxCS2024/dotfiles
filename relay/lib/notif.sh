@@ -3,7 +3,7 @@
 # Quickshell's NotificationServer (services/Notifications.qml) is the running
 # notification daemon, so anything sent here shows up styled like every other
 # desktop notification and lands in its history. This module is both the sender
-# the rest of the desktop uses (rack theme, rack sync, rack update, ...) and the
+# the rest of the desktop uses (rack sync, rack update, ...) and the
 # control surface for the popups already on screen.
 #
 # Two things it deliberately does NOT do:

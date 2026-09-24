@@ -2,9 +2,7 @@
 #
 # The manifest's third column is a shell command per application, and this is
 # what runs it. Deploying a file and reloading the program that reads it are
-# separate steps on purpose: `rack deploy` links, `rack reload` re-reads, and
-# `rack theme set` does both because a colour nobody reloaded is a colour
-# nobody sees.
+# separate steps on purpose: `rack deploy` links, `rack reload` re-reads.
 #
 # The command is a shell string rather than an argv vector, which is the
 # manifest's design ("reload commands live in data rather than code"): the
@@ -13,9 +11,6 @@
 # input from anywhere else, so `sh -c` is the right amount of machinery. A
 # failing reload is reported and does not stop the others — a dead waybar must
 # not keep hyprland from re-reading.
-#
-# Written for this repo: the shipped rack calls rack::reload::run from
-# theme.sh but has no reload module, so `rack theme` failed to load at all.
 
 rig::load log proc
 rack::load manifest
@@ -39,9 +34,15 @@ rack::reload::run() {
         shift
     done
 
-    local name source target reload ran=0 failed=0
+    local name source target reload entries ran=0 failed=0
+
+    # Selected before anything runs: one unknown name in the list stops the
+    # whole command, rather than reloading the rest and exiting 0 (a process
+    # substitution here used to drop select's status).
+    entries=$(rack::manifest::select "${names[@]+"${names[@]}"}") || return $?
+
     while IFS=$'\t' read -r name source target reload; do
-        [[ -n $reload ]] || continue
+        [[ -n $name && -n $reload ]] || continue
         ran=$((ran + 1))
 
         if ((${RIG_DRY_RUN:-0})); then
@@ -57,7 +58,7 @@ rack::reload::run() {
             printf '  %-12s reload failed (not running?)\n' "$name"
             failed=$((failed + 1))
         fi
-    done < <(rack::manifest::select "${names[@]+"${names[@]}"}")
+    done <<<"$entries"
 
     ((ran)) || {
         rig::log::info "nothing to reload"
@@ -70,10 +71,12 @@ rack::reload::run() {
 # What would run, without running it. `rack reload list` answers "which of
 # these even has a reload command" without the dry-run flag.
 rack::reload::list() {
-    local name source target reload
+    local name source target reload entries
+    entries=$(rack::manifest::select "$@") || return $?
     while IFS=$'\t' read -r name source target reload; do
+        [[ -n $name ]] || continue
         printf '  %-12s %s\n' "$name" "${reload:--}"
-    done < <(rack::manifest::select "$@")
+    done <<<"$entries"
 }
 
 rack::reload::__default() { rack::reload::run "$@"; }

@@ -17,8 +17,9 @@ import QtQuick
 //
 // Single in-flight command at a time: starting a new run() while one is
 // already active abandons tracking of the previous one's callbacks.
-// Acceptable for a UI that already serializes package actions one at a
-// time via its own "installing"/"uninstalling" button states.
+// services/Packages.qml, the one caller, queues its commands for that
+// reason — two windows each calling this directly used to lose the first
+// one's answer.
 Singleton {
     id: root
 

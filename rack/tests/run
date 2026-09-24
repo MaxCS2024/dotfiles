@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Runs rack's tests: every tests/*.test.sh, or the ones whose name matches.
+#
+#   tests/run            everything
+#   tests/run deploy     just rack-deploy.test.sh
+#
+# Each file is a whole suite of its own, runnable directly and building a
+# throwaway home and dotfiles tree per test, so this only runs them and
+# adds up the answer.
+
+set -uo pipefail
+
+here=$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)
+failed=0 ran=0
+
+for file in "$here"/*${1:-}*.test.sh; do
+    [[ -f $file ]] || continue
+    ran=$((ran + 1))
+    bash "$file" || failed=$((failed + 1))
+    printf '\n'
+done
+
+((ran)) || {
+    printf 'no test file matches "%s"\n' "${1:-}" >&2
+    exit 2
+}
+((failed == 0)) || {
+    printf '%d of %d suites failed\n' "$failed" "$ran"
+    exit 1
+}
+printf 'all %d suites passed\n' "$ran"

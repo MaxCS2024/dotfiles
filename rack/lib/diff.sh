@@ -15,9 +15,15 @@ RACK_MODULE_TIER[diff]="core"
 # drift only ever means the link is wrong, or something real replaced it.
 # When it is a real file, showing the actual diff is the useful part.
 rack::diff::run() {
-    local name source target reload state drift=0
+    local name source target reload state entries drift=0
+
+    # Selected up front, not read through a process substitution, which
+    # drops select's status: `rack diff tol` would log the unknown name and
+    # then say everything matches. deploy.sh has the same note.
+    entries=$(rack::manifest::select "$@") || return $?
 
     while IFS=$'\t' read -r name source target reload; do
+        [[ -n $name ]] || continue
         state=$(rig::link::check "$source" "$target") || true
 
         case $state in
@@ -49,7 +55,7 @@ rack::diff::run() {
                 drift=$((drift + 1))
                 ;;
         esac
-    done < <(rack::manifest::select "$@")
+    done <<<"$entries"
 
     if ((drift)); then
         rig::log::warn "$drift entr(ies) have drifted — rack deploy, or rack diff show <name>"

@@ -35,12 +35,10 @@ hl.on("hyprland.start", function ()
 	hl.exec_cmd("awww-daemon")
 	hl.exec_cmd("wl-paste --watch cliphist store")
 	hl.exec_cmd("hypridle") -- idle/lock daemon, config in hypr/hypridle.conf
-	-- GTK4/libadwaita apps take light vs. dark from this setting alone;
-	-- gtk-{3,4}.0/settings.ini's gtk-application-prefer-dark-theme only
-	-- reaches GTK3. Without it the libadwaita colors that matugen doesn't
-	-- override (sidebars especially) stay light — see matugen/templates/
-	-- gtk-colors.css. It's dconf state, so this is just to keep a fresh
-	-- machine reproducible.
-	hl.exec_cmd("gsettings set org.gnome.desktop.interface color-scheme prefer-dark")
+	-- No color-scheme here: GTK4/libadwaita takes light vs. dark from that
+	-- setting alone, and the shell sets it to match the active palette
+	-- whenever it writes GTK's colours (quickshell/main/theme/AppColors.qml).
+	-- Pinning prefer-dark at login would put a light palette on the dark
+	-- stylesheet until the shell corrected it.
 	hl.exec_cmd("hyprsunset") -- blue-light filter daemon, controlled live via `hyprctl hyprsunset ...` (see quickshell/main/services/NightLight.qml)
 end)

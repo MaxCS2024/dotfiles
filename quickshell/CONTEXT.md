@@ -12,7 +12,8 @@ _Avoid_: theme (that also covers sizes, fonts and motion), colour scheme
 
 **Base palette**:
 The few colours a palette is built from: background, foreground and
-accent, plus optional surface, border and status colours.
+accent, plus optional surface, border and status colours, and the
+magenta and cyan a terminal needs.
 _Avoid_: seed colours, custom colours
 
 **Palette source**:
@@ -51,8 +52,49 @@ One named colour in the palette that a surface draws with, such as
 `surface`, `fgMuted` or `accent`.
 _Avoid_: variable, swatch
 
+**App colours**:
+The palette written out as the files other apps read their colours
+from — the terminals and GTK — so they match the shell in either mode.
+_Avoid_: terminal theme, matugen colours
+
 **Compositor colours**:
 The pair of colours Hyprland draws window borders with. They always
 come from the wallpaper, even in custom mode, so shell frames match the
 window borders around them.
 _Avoid_: border tokens, frame colours
+
+## Default apps
+
+**Role**:
+A job on this desktop that one app is picked to do: terminal, editor,
+browser or file manager.
+_Avoid_: app type, category
+
+**Candidate**:
+An app that can fill a role, in a fixed ranked order per role.
+_Avoid_: option, choice
+
+**Default**:
+The app a role resolves to: the one the user set, else the first
+installed candidate, else the first candidate. It is what the role's
+keybind runs. The user can set a candidate or a custom command.
+_Avoid_: current app, preferred app
+
+**Custom command**:
+A default the user wrote by hand rather than picked from the
+candidates. It runs as written, and nothing about the app it names is
+assumed.
+_Avoid_: raw command, override
+
+**Handler**:
+The app the XDG database opens a role's files or links with. Setting a
+default rewrites the handler to match; when the two differ, the default
+is the answer.
+_Avoid_: XDG default, mime default
+
+## Packages
+
+**Source**:
+Where a package comes from: the official repositories (pacman), the AUR,
+or Flathub. One package name belongs to one source.
+_Avoid_: backend, manager, repo

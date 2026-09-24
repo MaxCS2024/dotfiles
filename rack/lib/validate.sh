@@ -153,10 +153,17 @@ rack::validate::__one() {
 }
 
 rack::validate::run() {
-    local name source target reload broken=0
+    local name source target reload entries broken=0
+
+    # Selected up front: read through a process substitution, an unknown
+    # name was logged and then "nothing obviously broken" reported with
+    # success. deploy.sh has the same note.
+    entries=$(rack::manifest::select "$@") || return $?
+
     while IFS=$'\t' read -r name source target reload; do
+        [[ -n $name ]] || continue
         rack::validate::__one "$name" "$source" || [[ $? == 2 ]] || broken=$((broken + 1))
-    done < <(rack::manifest::select "$@")
+    done <<<"$entries"
 
     ((broken)) && {
         rig::log::error "$broken config(s) would not load"

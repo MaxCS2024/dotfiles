@@ -8,11 +8,11 @@ launcher, notifications, lockscreen, and the panels behind them all live in
 hypr/             the compositor — hyprland.lua sources modules/
 quickshell/main/  the shell — shell.qml is the entry point
 rig/              shell library: logging, locking, linking, process handling
-rack/             the config tool — deploys this repo, checks, themes
+rack/             the config tool — deploys this repo, checks it, sets a machine up
 relay/            the runtime CLI — what binds and panels call to do things
-matugen/          templates that turn a wallpaper into a colour scheme
+matugen/          turns a wallpaper into the palette the shell writes out
 gtk-3.0/ gtk-4.0/ GTK theming, and the icon theme Qt reads through gtk3
-foot/             terminal, and Theme.terminal's default
+foot/             terminal, one of the default terminal's candidates
 kitty/ ghostty/   terminals, colours only — the same palette foot gets
 bin/ btop/ nvim/ starship/ zsh/ zshenv/
 ```
@@ -86,7 +86,6 @@ to remove exactly what they added.
 rack diff             # has anything drifted from the repo?
 rack validate         # would these configs actually load?
 rack deploy hypr      # just one entry
-rack theme dark       # render templates, then reload what needs it
 rack list             # every module and its status
 ```
 
