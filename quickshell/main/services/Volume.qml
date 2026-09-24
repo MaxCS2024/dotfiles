@@ -16,18 +16,12 @@ Singleton {
     property bool muted: false
     property string deviceName: "No device"
 
-    // wireplumber names Bluetooth-routed nodes with a "bluez_" prefix
-    // (e.g. "bluez_output.AA_BB_CC_DD_EE_FF.1"), distinct from
-    // ALSA-backed nodes ("alsa_output...."). Detecting via the sink
-    // actually carrying audio, rather than cross-referencing the
-    // separate Bt device list, means this reflects the real audio
-    // route even if a BT device is connected for something else
-    // (e.g. a keyboard) without being the active output.
-    property bool isBluetooth: false
-
+    // The speaker glyph whatever the output is. It used to turn into
+    // headphones (U+F025) while the default sink was a Bluetooth one; the
+    // user wanted the default icon to stay (2026-09-24), and with earbuds
+    // connected the bar already shows them in their own module.
     readonly property string icon: {
         if (root.muted || root.volume === 0) return "\uf026"
-        if (root.isBluetooth) return "\uf025"
         if (root.volume < 50) return "\uf027"
         return "\uf028"
     }
@@ -44,12 +38,10 @@ Singleton {
             root.volume = Math.min(100, v * 100)
             root.muted = root.sink.audio.muted
             root.deviceName = root.sink.description || root.sink.name || "Unknown"
-            root.isBluetooth = (root.sink.name || "").startsWith("bluez_")
         } else {
             root.volume = 0
             root.muted = false
             root.deviceName = "No device"
-            root.isBluetooth = false
         }
     }
 
