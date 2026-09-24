@@ -67,7 +67,7 @@ RowLayout {
         implicitHeight: 24
         radius: Theme.radius
         color: Appearance.surfaceAlt
-        border.color: hexField.activeFocus ? Appearance.accent : Appearance.border
+        border.color: Appearance.border
         border.width: 1
 
         TextInput {

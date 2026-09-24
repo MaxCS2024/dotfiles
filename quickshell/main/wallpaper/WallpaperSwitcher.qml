@@ -250,11 +250,7 @@ ShellSurface {
                     radius: Theme.radius
                     color: Qt.rgba(1, 1, 1, 0.08)
                     border.width: 1
-                    border.color: filterInput.activeFocus ? Appearance.accent : Qt.rgba(1, 1, 1, 0.18)
-
-                    Behavior on border.color {
-                        ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
-                    }
+                    border.color: Qt.rgba(1, 1, 1, 0.18)
 
                     Text {
                         anchors.left: parent.left

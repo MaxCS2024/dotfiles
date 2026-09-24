@@ -70,10 +70,7 @@ ShellSurface {
     // on that path the tile row could end up never taking keyboard focus
     // at all, leaving the arrow keys, Enter and Escape silently dead.
     // ShellSurface focuses focusTarget for the same reason.
-    onSurfaceOpened: {
-        box.kbIndex = 0
-        box.kbNav = true
-    }
+    onSurfaceOpened: box.kbIndex = 0
 
     Process { id: execProc }
     function runCmd(cmd) {
@@ -132,20 +129,12 @@ ShellSurface {
         Behavior on opacity { NumberAnimation { duration: Theme.animPanel; easing.type: Theme.easingStandard } }
         Behavior on scale { NumberAnimation { duration: Theme.animPanel; easing.type: Theme.easingQuint } }
 
-        // The design's focus ring needs something to be
-        // "the current stop"; this popout never had that concept before
-        // (mouse-hover only).
+        // The current stop for arrow keys and Enter; hover moves it too,
+        // so pointer and keyboard always agree on which tile is selected.
         property int kbIndex: 0
-        // See launcher/Launcher.qml's `kbNav` for the full
-        // reasoning: hover drives `kbIndex` too, so the ring (a keyboard
-        // affordance) can't key off the index alone or it would follow the
-        // pointer around. Starts true because this popout takes keyboard
-        // focus on open and Enter already acts on tile 0 from frame one.
-        property bool kbNav: true
 
         function step(delta) {
             box.kbIndex = (box.kbIndex + delta + box.items.length) % box.items.length
-            box.kbNav = true
         }
 
         focus: true
@@ -184,7 +173,7 @@ ShellSurface {
             if (typed === "j") { box.step(1); event.accepted = true; return }
             if (typed === "k") { box.step(-1); event.accepted = true; return }
         }
-        onVisibleChanged: if (panel.shown) { box.kbIndex = 0; box.kbNav = true; box.forceActiveFocus() }
+        onVisibleChanged: if (panel.shown) { box.kbIndex = 0; box.forceActiveFocus() }
 
         // ── The slab ─────────────────────────────────────
         Rectangle {
@@ -305,37 +294,16 @@ ShellSurface {
                                 }
                             }
 
-                            FocusRing {
-                                active: box.kbNav && tile.kbFocused
-                                targetRadius: SlabStyle.cardRadius
-                                // The ring takes the tile's own hue
-                                // rather than Theme's fixed brand accent:
-                                // this slab is painted from
-                                // theme/Appearance.qml, so on a custom
-                                // palette the two are different colors,
-                                // and an amber ring around a blue tile
-                                // reads as a glitch. Red on the danger
-                                // tile for the same reason.
-                                ringColor: tile.tone
-                            }
-
-                            // The hover marker: a short rule that grows
-                            // along the tile's top edge. Kept well inside
-                            // the corner radius so it reads as a tab
-                            // indicator rather than a broken border.
-                            //
-                            // It yields to the focus ring rather than
-                            // stacking with it — a ring 2px outside the
-                            // edge plus a rule 1px inside it merge into
-                            // one thick, lopsided border at a glance. So:
-                            // pointer selection is marked by the rule,
-                            // keyboard selection by the ring, one marker
-                            // at a time either way.
+                            // The selection marker: a short rule that
+                            // grows along the tile's top edge, for pointer
+                            // and keyboard selection alike. Kept well
+                            // inside the corner radius so it reads as a
+                            // tab indicator rather than a broken border.
                             Rectangle {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.top: parent.top
                                 anchors.topMargin: 1
-                                width: tile.active && !(box.kbNav && tile.kbFocused) ? tile.width * 0.42 : 0
+                                width: tile.active ? tile.width * 0.42 : 0
                                 height: 2
                                 radius: 1
                                 color: tile.tone
@@ -395,7 +363,7 @@ ShellSurface {
                             HoverHandler {
                                 id: tileHover
                                 cursorShape: Qt.PointingHandCursor
-                                onHoveredChanged: if (hovered) { box.kbIndex = tile.index; box.kbNav = false }
+                                onHoveredChanged: if (hovered) box.kbIndex = tile.index
                             }
                             TapHandler { id: tileTap; onTapped: panel.runCmd(tile.modelData.cmd) }
                         }

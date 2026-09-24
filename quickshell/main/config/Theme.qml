@@ -59,7 +59,7 @@ Singleton {
     // ── Spacing scale ────────────────────────────────────
     // Every gap, margin and padding sits on a 4px grid: spaceN is N × 4.
     // Reach for these instead of a literal. 1–2px hairlines (borders,
-    // focus rings) are the only exception.
+    // dividers) are the only exception.
     readonly property int space1: 4
     readonly property int space2: 8
     readonly property int space3: 12
@@ -84,10 +84,6 @@ Singleton {
     readonly property int platePaddingH: space4
     readonly property int platePaddingV: space4
     readonly property int plateHeaderGap: space2
-
-    // ── Focus ring (common/FocusRing.qml) ─────────────────
-    readonly property int focusRingWidth: 2
-    readonly property int focusRingOffset: 2
 
     // ── Geometry & motion ────────────────────────────────
     readonly property int radius: Settings.cornerRadius

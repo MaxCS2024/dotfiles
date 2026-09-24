@@ -35,11 +35,6 @@ Rectangle {
         }
     }
 
-    FocusRing {
-        active: root.activeFocus
-        targetRadius: Theme.radiusLarge
-    }
-
     ColumnLayout {
         id: column
         anchors.left: parent.left

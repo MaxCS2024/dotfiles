@@ -86,8 +86,7 @@ Leave enough space between neighbours to tell them apart (`Theme.space2`,
   `Theme.cardPadding`. Heights and widths of controls, rows and icon
   buttons are multiples of 4 (24, 28, 32, 40, …). If a value falls between
   two steps, take the nearer step; don't add in-between tokens.
-- Allowed off-grid values: 1–2px hairlines (borders, dividers, focus
-  rings), a radius of `height / 2`, and negative margins that only enlarge
+- Allowed off-grid values: 1–2px hairlines (borders, dividers), a radius of `height / 2`, and negative margins that only enlarge
   an invisible hit area. A repeating grid may use a hairline gap if the
   cell plus the gap is a multiple of 4 (the calendar's 34 + 2).
 
@@ -161,4 +160,6 @@ Add to this list whenever the user rejects a visual pattern.
   hover colour, because HoverPill faded from `"transparent"` (see §7).
 - 2026-09-24: clicking a volume/mic slider drew the accent focus ring,
   because a click gives the slider focus. Hiding it only for clicks wasn't
-  enough: sliders get no focus ring at all, Tab included (see §1).
+  enough, and the user then had focus rings removed everywhere (sliders,
+  tiles, power menu, lock screen) along with accent borders on focused
+  text fields. There is no focus ring component; don't add one back (see §1).

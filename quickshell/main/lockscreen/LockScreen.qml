@@ -148,10 +148,6 @@ ShellSurface {
                         color: Appearance.border
                     }
 
-                    FocusRing {
-                        active: passwordInput.activeFocus
-                    }
-
                     TextInput {
                         id: passwordInput
                         anchors.left: parent.left

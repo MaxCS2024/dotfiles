@@ -6,8 +6,7 @@ import "../theme"
 // track that only appears once there is something to scroll, and a thumb
 // whose position and length are the view's own contentY/contentHeight
 // ratios. The launcher and the Conf menu had a copy each and had already
-// drifted apart on width and corner radius, which is exactly the drift
-// common/FocusRing.qml exists to prevent for focus rings.
+// drifted apart on width and corner radius.
 //
 // Geometry stays per-site (the menu's rail is thinner and square, the
 // launcher's is wider and takes Theme.radius); it's the thumb arithmetic

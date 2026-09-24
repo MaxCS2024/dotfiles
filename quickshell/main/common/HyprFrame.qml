@@ -15,9 +15,8 @@ import "../theme"
 // the target draws inside still composites against the target, not
 // against a patch that has to be kept in sync with it.
 //
-// Anchored to fill its parent like common/FocusRing.qml, so a consumer
-// writes `HyprFrame {}` and nothing else — and, like that file, it exists
-// so the recipe can't drift per site. Declare it as the target's *first*
+// Anchored to fill its parent, so a consumer writes `HyprFrame {}` and
+// nothing else — and it exists so the recipe can't drift per site. Declare it as the target's *first*
 // child so everything else paints over it.
 //
 // Appearance.compositorStart/End are the same two swatches Hyprland is given,
