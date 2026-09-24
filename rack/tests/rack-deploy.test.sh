@@ -171,11 +171,11 @@ test_broken_link_is_replaced() {
 
 test_single_file_target() {
 	it "a single file lands where its target says, even at the top of HOME"
-	app zshenv/.zshenv
-	entry zshenv/.zshenv "~/.zshenv"
+	app zsh/.zshenv
+	entry zsh/.zshenv "~/.zshenv"
 	run
 	assert_eq "status" "$STATUS" 0 || return
-	assert_linked "$HOME/.zshenv" "$DOTS/zshenv/.zshenv" || return
+	assert_linked "$HOME/.zshenv" "$DOTS/zsh/.zshenv" || return
 	ok
 }
 

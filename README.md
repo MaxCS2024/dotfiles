@@ -14,7 +14,7 @@ matugen/          turns a wallpaper into the palette the shell writes out
 gtk-3.0/ gtk-4.0/ GTK theming, and the icon theme Qt reads through gtk3
 foot/             terminal, one of the default terminal's candidates
 kitty/ ghostty/   terminals, colours only — the same palette foot gets
-bin/ btop/ nvim/ starship/ zsh/ zshenv/
+bin/ btop/ nvim/ starship/ zsh/
 ```
 
 `rack/manifest.conf` is the table of what gets deployed where. Adding an
