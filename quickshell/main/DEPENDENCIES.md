@@ -91,6 +91,15 @@ running. Grouped by what breaks if it's missing.
   `brightnessctl -l -c backlight` if `Brightness.available` stays
   false.
 
+- **lua** (the standalone interpreter, `pacman -S lua`) — the default
+  apps. `hypr/modules/defaults.lua` owns the terminal, editor, browser
+  and file manager; Hyprland runs it with its own built-in Lua, but
+  everything outside Hyprland reaches it through the `lua` binary:
+  `relay default`, and for now `services/Terminal.qml` and
+  `menu/MenuActions.qml` directly. Without it the Setup › Defaults
+  level shows nothing set and every terminal the shell opens is
+  `Theme.terminal`'s foot. See docs/adr/0001.
+
 - **coreutils / POSIX shell tooling** (`sh`, `cat`, `test`, `awk`, `sed`,
   `grep`, `printf`, `mkdir`) — used throughout via `["sh", "-c", "..."]` commands: hwmon
   discovery in `services/SystemMonitor.qml`, clipboard delete in

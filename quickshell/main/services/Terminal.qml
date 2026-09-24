@@ -59,7 +59,7 @@ Singleton {
     // Everything outside the table goes through positional parameters,
     // so the command needs no second round of quoting.
     readonly property string launchScript: [
-        't=$(lua -e \'io.write(dofile(os.getenv("HOME").."/.config/hypr/modules/vars.lua").terminal or "")\' 2>/dev/null)',
+        't=$(lua -e \'package.path = os.getenv("HOME").."/.config/hypr/?.lua;"..package.path io.write(dofile(os.getenv("HOME").."/.config/hypr/modules/vars.lua").terminal or "")\' 2>/dev/null)',
         '[ -n "$t" ] || t="$4"',
         'id=$1 title=$2 cmd=$3',
         'case "$t" in',

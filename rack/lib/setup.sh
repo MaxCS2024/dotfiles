@@ -37,6 +37,7 @@ declare -ga RACK_SETUP_REQUIRED=(
     "wl-clipboard:wl-copy"
     "cliphist:cliphist"
     "brightnessctl:brightnessctl"
+    "lua:lua"
 )
 
 # Required by the config's *default* values — DEPENDENCIES.md says these are

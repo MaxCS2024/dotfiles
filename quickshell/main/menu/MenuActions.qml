@@ -194,7 +194,7 @@ QtObject {
     // Read through ~/.config/hypr, the deployed link, rather than the
     // repo, so this works wherever the repo was cloned.
     readonly property string varsCur:
-        "cur() { ROLE=\"$1\" lua -e 'local v = dofile(os.getenv(\"HOME\")..\"/.config/hypr/modules/vars.lua\") io.write(v[os.getenv(\"ROLE\")] or \"\")' 2>/dev/null; }"
+        "cur() { ROLE=\"$1\" lua -e 'package.path = os.getenv(\"HOME\")..\"/.config/hypr/?.lua;\"..package.path local v = dofile(os.getenv(\"HOME\")..\"/.config/hypr/modules/vars.lua\") io.write(v[os.getenv(\"ROLE\")] or \"\")' 2>/dev/null; }"
 
     readonly property string defaultsScript: {
         const roles = actions.defaultRoles
