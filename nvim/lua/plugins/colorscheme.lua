@@ -5,7 +5,9 @@ return {
     priority = 1000,
     opts = {
       style = "dark",
-      transparent = false,
+      -- No background of its own: the terminal's shows through, which is
+      -- the palette the shell writes out (foot, kitty, ghostty).
+      transparent = true,
       italic_comments = true,
     },
   },
