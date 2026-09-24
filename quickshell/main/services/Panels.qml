@@ -134,19 +134,11 @@ Singleton {
     // exiting 0 without ever calling in, and a name that collides with
     // one of those is a function that silently never runs.
     IpcHandler {
-        target: "installer"
-        function open(): void { root.open("installer", undefined) }
-        function close(): void { root.close("installer") }
-        function toggle(): void { root.toggle("installer") }
-        function find(text: string): void { root.open("installer", text) }
-    }
-
-    IpcHandler {
-        target: "packages"
-        function open(): void { root.open("packages", undefined) }
-        function close(): void { root.close("packages") }
-        function toggle(): void { root.toggle("packages") }
-        function source(name: string): void { root.open("packages", name) }
+        target: "apps"
+        function open(): void { root.open("apps", undefined) }
+        function close(): void { root.close("apps") }
+        function toggle(): void { root.toggle("apps") }
+        function find(text: string): void { root.open("apps", text) }
     }
 
     IpcHandler {
@@ -214,7 +206,7 @@ Singleton {
     // and nothing else, because `qs ipc` answers `show`, `wait`, `listen`
     // and `prop` itself: a function with one of those names is never
     // reached and exits 0 without saying so. The targets needing a
-    // fourth verb (installer, packages, keybinds) or returning state
+    // fourth verb (apps, keybinds) or returning state
     // rather than void (bar) are still written out by hand below —
     // they are genuinely different, not repetitive.
     readonly property var surfaces: [
@@ -275,13 +267,12 @@ Singleton {
         // `ownHandler` keeps these out of the generated set below without
         // keeping them out of the table: they are surfaces like any other
         // and answer open/close/toggle like any other, but each has a
-        // handler the generated trio cannot express — installer and
-        // keybinds take a query, packages takes a source, and the power
+        // handler the generated trio cannot express — apps and keybinds
+        // take a query, and the power
         // menu registers its own IPC and shortcut in
         // powermenu/PowerMenuPopout.qml because it is not lazily built.
-        { ipc: "installer", fn: "Installer", ownHandler: true },
+        { ipc: "apps", fn: "Apps", ownHandler: true },
         { ipc: "keybinds", fn: "Keybinds", ownHandler: true },
-        { ipc: "packages", fn: "Packages", ownHandler: true },
         { ipc: "powermenu", fn: "PowerMenu", ownHandler: true }
     ]
 

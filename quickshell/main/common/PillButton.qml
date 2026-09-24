@@ -3,9 +3,8 @@ import "../config"
 import "../theme"
 
 // The small outlined pill that sits at the right-hand end of a section
-// header and does whatever that section's one action is — "Refresh" in
-// packages/PackagesList.qml, "Install" in packages/PackagesWindow.qml,
-// "+" in theme/ThemesPanel.qml. The list read "clipboard, dashboard,
+// header and does whatever that section's one action is — "+" in
+// theme/ThemesPanel.qml. The list read "clipboard, dashboard,
 // system and packages panes, 'Rescan' in the network one" until
 // 2026-09-21; three of those surfaces have been deleted since and the
 // other two stopped using a pill, so it is call sites by filename now

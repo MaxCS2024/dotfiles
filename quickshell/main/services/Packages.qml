@@ -21,6 +21,8 @@ import "packages.js" as Plan
 //   installer/AppInstaller.qml  `pacman -Q <pkg>`, exit code is the answer
 //   packages/PackagesList.qml   `pacman -Qe` and `-Qm`, the full lists
 //
+// (Those two are one window now, apps/AppManager.qml.)
+//
 // and `flatpak list` four times over, with four flag sets and four
 // parsers. MenuActions' invocation carries a careful note about machines
 // without flatpak installed; AppInstaller's, written separately, has no
@@ -34,7 +36,8 @@ import "packages.js" as Plan
 // the per-source rules in packages.js, which tests/packages covers.
 //
 // ── Shape ────────────────────────────────────────────────
-// Entries are the shape packages/PackagesList.qml already drew:
+// Entries are the shape the old packages list drew, which
+// apps/AppManager.qml still draws:
 //
 //   { source, id, name, version, description, installed }
 //
@@ -73,10 +76,19 @@ Singleton {
     // empty list after each install or removal.
     function refresh() {
         root._loading = true
-        for (const p of [pacmanProc, aurProc, allPacmanProc, flatpakUserProc, flatpakSystemProc]) {
+        for (const p of [pacmanProc, aurProc, allPacmanProc, appsProc, flatpakUserProc, flatpakSystemProc]) {
             p.running = false
             p.running = true
         }
+    }
+
+    // Is this an app, as the app manager's installed view means it —
+    // something with a launcher entry, rather than a library or a piece
+    // of the base system? A pacman package counts when it owns a
+    // .desktop file in /usr/share/applications that isn't NoDisplay or
+    // Hidden; every flatpak counts, since `--app` is how they are listed.
+    function isApp(entry): bool {
+        return entry.source === "Flatpak" || root._apps[entry.id] === true
     }
 
     // Is this exact flatpak application id installed? Asked by name
@@ -333,6 +345,8 @@ Singleton {
 
     // Set, not list: this is only ever asked "is this in you".
     property var _allPacman: ({})
+    // Same shape: the pacman packages isApp() says yes to.
+    property var _apps: ({})
 
     property var _pacman: []
     property var _aur: []
@@ -419,6 +433,28 @@ Singleton {
                 // runs second is the one that excludes the foreign
                 // entries from the native list.
                 root._pacman = root._pacman.filter(e => !root._aur.some(a => a.id === e.id))
+                root.refreshed()
+            }
+        }
+    }
+
+    // Which packages own a launcher entry. One pacman call over the
+    // .desktop files that would show in a launcher; `-Qqo` prints the
+    // owner of each, and a file no package owns is simply skipped.
+    Process {
+        id: appsProc
+        command: ["sh", "-c",
+            "cd /usr/share/applications 2>/dev/null || exit 0; "
+            + "grep -L -E '^(NoDisplay|Hidden)=true' -- *.desktop 2>/dev/null "
+            + "| sed 's|^|/usr/share/applications/|' | xargs -r pacman -Qqo 2>/dev/null; true"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const set = ({})
+                for (const line of text.split("\n")) {
+                    const n = line.trim()
+                    if (n !== "") set[n] = true
+                }
+                root._apps = set
                 root.refreshed()
             }
         }

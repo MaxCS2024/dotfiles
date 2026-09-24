@@ -16,9 +16,8 @@ import "earbuds"
 import "weather"
 import "calendar"
 import "clipboard"
-import "installer"
+import "apps"
 import "keybinds"
-import "packages"
 import "theme"
 import "services"
 
@@ -60,9 +59,9 @@ ShellRoot {
     // built the first time something names it.
     readonly property var wallpapers: Wallpapers
 
-    // Launcher, WallpaperSwitcher and the packages window are the
-    // heaviest (packages/PackagesList.qml spawns four pacman/flatpak
-    // queries the moment it is built) and most sessions never open some
+    // Launcher, WallpaperSwitcher and the app manager are the heaviest
+    // (apps/AppManager.qml has services/Packages.qml run six pacman and
+    // flatpak queries the moment it is built) and most sessions never open some
     // of them — LazyLoader defers construction to first use.
     // `active` only ever goes true here, on an open/toggle request; it
     // never goes false again afterward, so a window is built at most
@@ -101,8 +100,7 @@ ShellRoot {
         "calendar": calendarLoader,
         "clipboard": clipboardLoader,
         "themes": themesLoader,
-        "installer": installerLoader,
-        "packages": packagesLoader
+        "apps": appsLoader
     })
 
     Connections {
@@ -180,7 +178,7 @@ ShellRoot {
     // its filter at the time. That query is the reason this one needs
     // the wasInactive handoff the plain self-opening windows above don't
     // — `find` on a window that does not exist yet has nowhere to land,
-    // exactly as with the installer below.
+    // exactly as with the app manager below.
     LazyLoader {
         id: keybindsLoader
         active: false
@@ -292,27 +290,18 @@ ShellRoot {
         active: false
         ThemesPanel {}
     }
-    // The app installer (installer/AppInstaller.qml) — one search over
-    // pacman, the AUR and Flathub. Lazy like the windows above: it
-    // spawns three package queries per search and most sessions never
-    // open it. Opens itself from Component.onCompleted for the request
-    // that built it, and a query that came with that request is handed
-    // over the same way the dashboard's first-open handoff above does,
-    // since `find` on a window that does not exist yet has nowhere to
-    // land.
+    // The app manager (apps/AppManager.qml) — what is installed, and one
+    // search over pacman, the AUR and Flathub for what isn't. Lazy like
+    // the windows above: it spawns three package queries per search and
+    // most sessions never open it. Opens itself from
+    // Component.onCompleted for the request that built it, and a query
+    // that came with that request is handed over the same way the
+    // dashboard's first-open handoff above does, since `find` on a window
+    // that does not exist yet has nowhere to land.
     LazyLoader {
-        id: installerLoader
+        id: appsLoader
         active: false
-        AppInstaller {}
-    }
-    // The packages window (packages/PackagesWindow.qml) — the installer's
-    // other half: what is already on the machine, and how to take it off.
-    // Lazy for the same reason that one is (four pacman/flatpak queries
-    // per build) and self-opening on the same contract.
-    LazyLoader {
-        id: packagesLoader
-        active: false
-        PackagesWindow {}
+        AppManager {}
     }
     WallpaperPopup {}
     // Replaces PowerOrbMenu.qml per the "retire the orb,

@@ -102,7 +102,8 @@ PanelWindow {
     // What open() is handed at Component.onCompleted, for a surface
     // whose first request carried a payload the signal could not deliver
     // (the signal is the one that built the item). Bind it to wherever
-    // the payload was parked — see packages/PackagesWindow.qml.
+    // the payload was parked. Nothing sets it today: _firstArg() below
+    // falls back on what Panels parked, which covers every window.
     property var firstOpenArg: undefined
 
     // Read-only on purpose: open(), close() and toggle() are the only

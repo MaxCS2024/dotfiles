@@ -31,7 +31,7 @@ import "../keybinds"
 // Where the leaves go, and why they're not all the same kind of thing:
 //
 //   * A leaf that has a panel already — Wallpaper, Themes, and
-//     Apps › Install and Apps › Remove — calls Panels and lets the window
+//     Apps › Manage apps — calls Panels and lets the window
 //     this shell already built do the work. The menu is a way *in* to
 //     those, not a second copy of them.
 //   * A leaf whose job is a long, interactive, privileged command —
@@ -192,12 +192,13 @@ ShellSurface {
             // Putting apps on the machine, taking them off, keeping them
             // current, and saying which of them opens what.
             { label: "Apps", icon: "\u{F003B}", children: [
-                // A leaf: installer/AppInstaller.qml searches pacman, the
-                // AUR and flathub at once, so choosing a backend first
-                // would be asking the question that window exists to
-                // remove.
-                { label: "Install", icon: "", hint: "all sources",
-                  run: () => Panels.open("installer", "") },
+                // One window for what is installed and for finding what
+                // isn't (apps/AppManager.qml), where Install and Remove
+                // were two until 2026-09-24. `search` keeps both words
+                // finding it from the top of this menu.
+                { label: "Manage apps", icon: "", hint: "install · remove",
+                  search: "install remove uninstall packages",
+                  run: () => Panels.open("apps", "") },
                 // The same install rows, picked from a short list by
                 // category rather than searched for.
                 { label: "Browse", icon: "\u{F009}", hint: "by category", children: [
@@ -210,8 +211,6 @@ ShellSurface {
                     { label: "General", icon: "", hint: "everyday",
                       children: panel.generalApps.map(app => panel.installRow(app)) }
                 ]},
-                { label: "Remove", icon: "", hint: "installed",
-                  run: () => Panels.open("packages", "Pacman") },
                 // "Update all" is rack's own three-stage update (repo,
                 // then AUR, then flatpak, each gated on the one before
                 // it); the three rows under it are the single stages, for

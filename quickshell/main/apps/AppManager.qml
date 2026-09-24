@@ -7,56 +7,61 @@ import "../config"
 import "../services"
 import "../theme"
 
-// One search box over pacman, the AUR and Flathub at once.
+// The app manager: what is installed, and one search over pacman, the AUR
+// and Flathub for what isn't. One window for putting apps on the machine
+// and taking them off (user request, 2026-09-24).
 //
-// The shell's installer, and the reason systemsettings/
-// SettingsPackagesTab.qml is now an Installed/Remove list and nothing
-// else. That tab searched all three too, and then showed one source at
-// a time, because it was arrived at with a source already chosen — the
-// Conf menu deep-linked "search Flatpak". Right for a settings tab you
-// open knowing what you want; wrong for "how do I install Obsidian",
-// which is the question this window is for: you do not know yet whether
-// the answer is a repo package, an AUR build or a flatpak, and picking
-// the backend first is being asked to answer the question in order to
-// ask it.
+// It was two until then, this one as the installer and
+// packages/PackagesWindow.qml as the list you removed things from. They
+// were answering the same question from opposite ends — the installer's
+// results already knew which were installed, and the list was every
+// installed package with nothing to find one by — so they are one list
+// that changes with the search field:
 //
-// So: one ranked list, three badges, and what follows from that —
+//   * Empty field: what is installed. Apps by default — the packages that
+//     put a launcher entry in /usr/share/applications, and every flatpak
+//     (Packages.isApp) — with a toggle for all of it. The whole `pacman
+//     -Qe` list is two hundred lines of base, bc and bluez-utils, and a
+//     red button beside `base` is one careless click from a broken system.
+//   * Two letters or more: the search. One ranked list, three badges —
 //
-//   * Results are ranked by how well the *name* matches, not grouped by
-//     where they came from, so `firefox` puts the repo package on top
-//     however long yay took to answer.
-//   * Each source reports separately while it works. pacman answers in
-//     a few hundred ms, `yay -Ss` takes seconds against the AUR RPC,
-//     and one shared spinner makes the fast answer feel as slow as the
-//     slow one. The chips fill in as each lands.
-//   * The filter chips narrow a list that is already there instead of
-//     choosing what to fetch, so switching is instant and reversible.
-//   * `flatpak search` does not say what is already installed, so this
-//     asks `flatpak list` once at startup and marks rows itself —
-//     otherwise every flatpak looks installable, including the ones on
-//     this machine right now.
+//       - ranked by how well the *name* matches, not grouped by where it
+//         came from, so `firefox` puts the repo package on top however
+//         long yay took to answer;
+//       - each source reports separately while it works: pacman answers
+//         in a few hundred ms, `yay -Ss` takes seconds against the AUR
+//         RPC, and one shared spinner makes the fast answer feel as slow
+//         as the slow one. The chips fill in as each lands;
+//       - `flatpak search` does not say what is installed, so rows are
+//         marked from Packages' inventory.
 //
-// Installing is services/Packages.qml's, as it is for the Conf menu and
-// the packages list: pacman and flatpak run behind this window with the
-// password its PasswordPrompt collects (`sudo -S`, no polkit agent in
-// this session), and the AUR goes to a real terminal because `yay` wants
-// to show a PKGBUILD diff and ask about it. services/packages.js has the
-// rules, and tests/packages checks them.
+// Either way a row offers what can be done to it: Install, or Remove once
+// it is here. Enter installs; removing is a click or Delete, never Enter,
+// because a flatpak installed for the user alone comes off with no
+// password to stop a stray keypress.
 //
-// Removal stays in the settings tab. This window is the answer to "get
-// me this", which is a thing you do by name; removal is a thing you do
-// by looking at a list of what you already have.
+// The filter chips narrow a list that is already there instead of choosing
+// what to fetch, so switching is instant and reversible, in both views.
+//
+// Installing and removing are services/Packages.qml's: pacman and system
+// flatpaks run behind this window with the password its PasswordPrompt
+// collects (`sudo -S`, no polkit agent in this session), and an AUR
+// install goes to a real terminal because `yay` wants to show a PKGBUILD
+// diff and ask about it. services/packages.js has the rules, and
+// tests/packages checks them.
 ShellSurface {
-    id: installer
+    id: manager
 
-    surfaceNamespace: "quickshell:installer"
-    surfaceName: "installer"
+    surfaceNamespace: "quickshell:apps"
+    surfaceName: "apps"
 
+    // A query opens straight on its search (the Conf menu's search, `qs
+    // ipc call apps find <text>`). A bare open keeps whatever was showing.
     onSurfaceOpened: (query) => {
         if (!query) return
         searchInput.text = query
-        installer.query = query
-        installer.runSearch()
+        manager.query = query
+        manager.runSearch()
     }
     focusTarget: searchInput
 
@@ -73,33 +78,47 @@ ShellSurface {
     // "All" | "Pacman" | "AUR" | "Flatpak"
     property string sourceFilter: "All"
     property int selectedIndex: 0
+    // The installed view's toggle: every package rather than apps only.
+    property bool allPackages: false
 
     property bool searchingPacman: false
     property bool searchingAur: false
     property bool searchingFlatpak: false
-    readonly property bool searching: installer.searchingPacman
-        || installer.searchingAur || installer.searchingFlatpak
+    readonly property bool searching: manager.searchingPacman
+        || manager.searchingAur || manager.searchingFlatpak
 
-    // True once a search has actually been run, so the empty list can
-    // tell "nothing matched" apart from "you haven't typed anything".
-    property bool searched: false
+    // Short queries match thousands of packages and none of them
+    // usefully — `-Ss a` is a wall of noise that takes seconds to
+    // render. Below this the field is empty as far as the list is
+    // concerned, and it shows what is installed.
+    readonly property int minQueryLength: 2
+    readonly property bool browsing: manager.query.trim().length < manager.minQueryLength
 
-    // Application ids of the flatpaks already on this machine, as an
-    // object used as a set — `flatpak search` won't say.
+    // What is installed, as the installed view lists it: apps unless the
+    // toggle says otherwise, by name.
+    readonly property var installedList: Packages.installed
+        .filter(e => manager.allPackages || Packages.isApp(e))
+        .slice()
+        .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
 
-    readonly property var visibleResults: installer.sourceFilter === "All"
-        ? installer.results
-        : installer.results.filter(r => r.source === installer.sourceFilter)
+    // Whichever of the two lists the field is showing, before the chips.
+    readonly property var listed: manager.browsing ? manager.installedList : manager.results
+
+    readonly property var visibleResults: manager.sourceFilter === "All"
+        ? manager.listed
+        : manager.listed.filter(r => r.source === manager.sourceFilter)
 
     function countFor(source) {
-        return installer.results.filter(r => r.source === source).length
+        return source === "All" ? manager.listed.length
+            : manager.listed.filter(r => r.source === source).length
     }
 
     function busyFor(source) {
-        if (source === "Pacman") return installer.searchingPacman
-        if (source === "AUR") return installer.searchingAur
-        if (source === "Flatpak") return installer.searchingFlatpak
-        return installer.searching
+        if (manager.browsing) return !Packages.loadedOnce
+        if (source === "Pacman") return manager.searchingPacman
+        if (source === "AUR") return manager.searchingAur
+        if (source === "Flatpak") return manager.searchingFlatpak
+        return manager.searching
     }
 
     function badgeFor(source) {
@@ -109,24 +128,12 @@ ShellSurface {
     }
 
     // ── Open/close ────────────────────────────────────────
-    // The flatpak inventory is asked for once, when this window is first
-    // built — the installer is the only surface that wants it before the
-    // packages window has ever been opened.
+    // The inventory is asked for once, when this window is first built;
+    // after that Packages refreshes itself whenever something changes.
     Component.onCompleted: if (!Packages.loadedOnce) Packages.refresh()
 
-    // Open on a query, which is what the Conf menu's Install row and
-    // `qs ipc call installer find <text>` both come in on. The IpcHandler
-    // itself lives on services/Panels.qml with every other window's, so
-    // the call works before this window has ever been built.
-    // The query rides in on open() and arrives at onSurfaceOpened, so
-    // one path serves the keybind, the IPC and the Conf menu row alike.
-    function find(text) { installer.open(text) }
+    function find(text) { manager.open(text) }
 
-    // This window does not exist until something asks for it, and the
-    // request that caused shell.qml to build it never reaches the
-    // Connections below — they weren't subscribed yet. So the first open
-    // is Component.onCompleted's, and every later one arrives here. Same
-    // arrangement as launcher/Launcher.qml, which spells it out in full.
     // ── Searching ─────────────────────────────────────────
     // Typing doesn't search. Three processes per keystroke would queue
     // `yay -Ss` runs faster than they finish, and the window would spend
@@ -136,41 +143,34 @@ ShellSurface {
     Timer {
         id: debounce
         interval: 350
-        onTriggered: installer.runSearch()
+        onTriggered: manager.runSearch()
     }
 
-    // Short queries match thousands of packages and none of them
-    // usefully — `-Ss a` is a wall of noise that takes seconds to
-    // render.
-    readonly property int minQueryLength: 2
-
     function runSearch() {
-        const q = installer.query.trim()
-        if (q.length < installer.minQueryLength) {
-            installer.results = []
-            installer.searched = false
-            return
-        }
-
-        installer.results = []
-        installer.selectedIndex = 0
-        installer.searched = true
+        const q = manager.query.trim()
+        manager.selectedIndex = 0
         // A filter is about the list in front of you, not a standing
         // preference: carrying "Flatpak" over into the next query is how
         // you search for ripgrep and get told there is one result.
-        installer.sourceFilter = "All"
+        manager.sourceFilter = "All"
+        if (q.length < manager.minQueryLength) {
+            manager.results = []
+            return
+        }
 
-        installer.searchingPacman = true
+        manager.results = []
+
+        manager.searchingPacman = true
         pacmanSearch.command = ["pacman", "-Ss", q]
         pacmanSearch.running = false
         pacmanSearch.running = true
 
-        installer.searchingAur = true
+        manager.searchingAur = true
         aurSearch.command = ["yay", "-Ss", "--aur", q]
         aurSearch.running = false
         aurSearch.running = true
 
-        installer.searchingFlatpak = true
+        manager.searchingFlatpak = true
         flatpakSearch.command = ["flatpak", "search",
                                  "--columns=name,description,application", q]
         flatpakSearch.running = false
@@ -232,7 +232,7 @@ ShellSurface {
                 version: m[3],
                 description: description,
                 installed: header.includes("[installed"),
-                rank: installer.rank(name, installer.query.trim())
+                rank: manager.rank(name, manager.query.trim())
             })
         }
         return out
@@ -257,8 +257,8 @@ ShellSurface {
                 // Flathub names are titles ("Visual Studio Code"), not
                 // package names, so rank the id too and keep whichever
                 // answers better.
-                rank: Math.max(installer.rank(parts[0], installer.query.trim()),
-                               installer.rank(appId, installer.query.trim()))
+                rank: Math.max(manager.rank(parts[0], manager.query.trim()),
+                               manager.rank(appId, manager.query.trim()))
             })
         }
         return out
@@ -268,29 +268,29 @@ ShellSurface {
     // each source's block, which is what makes the three backends read
     // as one answer instead of three.
     function mergeIn(entries) {
-        const merged = installer.results.concat(entries)
+        const merged = manager.results.concat(entries)
         merged.sort((a, b) => b.rank - a.rank || a.name.localeCompare(b.name))
-        installer.results = merged
+        manager.results = merged
 
         // A result landing under the cursor must not move what pressing
         // Enter would install, so the selection is clamped, never reset.
-        if (installer.selectedIndex >= installer.visibleResults.length)
-            installer.selectedIndex = Math.max(0, installer.visibleResults.length - 1)
+        if (manager.selectedIndex >= manager.visibleResults.length)
+            manager.selectedIndex = Math.max(0, manager.visibleResults.length - 1)
     }
 
     Process {
         id: pacmanSearch
         stdout: StdioCollector {
             onStreamFinished: {
-                installer.mergeIn(installer.parsePacmanish(text, "Pacman"))
-                installer.searchingPacman = false
+                manager.mergeIn(manager.parsePacmanish(text, "Pacman"))
+                manager.searchingPacman = false
             }
         }
         onExited: (exitCode, exitStatus) => {
             // pacman exits 1 on "no results", which is an answer, not a
             // failure — the collector has already delivered whatever
             // there was.
-            installer.searchingPacman = false
+            manager.searchingPacman = false
         }
     }
 
@@ -298,88 +298,93 @@ ShellSurface {
         id: aurSearch
         stdout: StdioCollector {
             onStreamFinished: {
-                installer.mergeIn(installer.parsePacmanish(text, "AUR"))
-                installer.searchingAur = false
+                manager.mergeIn(manager.parsePacmanish(text, "AUR"))
+                manager.searchingAur = false
             }
         }
-        onExited: (exitCode, exitStatus) => installer.searchingAur = false
+        onExited: (exitCode, exitStatus) => manager.searchingAur = false
         // Without yay the Process never starts, and a Process that never
         // started emits neither of the two above — the AUR column would
         // say "searching" forever. Stopping running covers that case too.
-        onRunningChanged: if (!running) installer.searchingAur = false
+        onRunningChanged: if (!running) manager.searchingAur = false
     }
 
     Process {
         id: flatpakSearch
         stdout: StdioCollector {
             onStreamFinished: {
-                installer.mergeIn(installer.parseFlatpak(text))
-                installer.searchingFlatpak = false
+                manager.mergeIn(manager.parseFlatpak(text))
+                manager.searchingFlatpak = false
             }
         }
-        onExited: (exitCode, exitStatus) => installer.searchingFlatpak = false
+        onExited: (exitCode, exitStatus) => manager.searchingFlatpak = false
     }
 
-    // ── What flatpaks are already here ────────────────────
-    // services/Packages.qml's, since 2026-09-21. It is asked once at
-    // startup and again after an install rather than per search: the
-    // answer changes only when something installs something, and
-    // `flatpak list` is slow enough to be visible on every keystroke.
-    //
-    // This file used to run that list itself, with its own flags, its own
-    // "Application ID" header skip and no guard for a machine that has no
-    // flatpak at all — which packages/PackagesList.qml and
-    // menu/MenuActions.qml each also had, differently.
+    // Re-mark search results after anything changes what is installed —
+    // an install or removal from here, the Conf menu or a terminal all
+    // end in a Packages refresh. Both ways: a removed package's row goes
+    // back to Install.
     Connections {
         target: Packages
         function onRefreshed() {
-            // Re-mark anything already on screen: an install from here, the
-            // Conf menu or a terminal all end in a refresh.
-            installer.results = installer.results.map(r => {
-                if (r.source === "Flatpak" ? Packages.hasFlatpak(r.id) : Packages.has(r.id))
-                    r.installed = true
+            manager.results = manager.results.map(r => {
+                r.installed = r.source === "Flatpak" ? Packages.hasFlatpak(r.id) : Packages.has(r.id)
                 return r
             })
         }
     }
 
-    // ── Install ───────────────────────────────────────────
+    // ── Install and remove ────────────────────────────────
     // services/Packages.qml's: which command, whether it needs the
-    // password below or a terminal (the AUR, where yay wants its PKGBUILD
-    // read), and when it has landed. This window hands it the row and its
-    // prompt, and reads whether a row is busy from it as well.
+    // password below or a terminal, and when it has landed. This window
+    // hands it the row and its prompt, and reads whether a row is busy
+    // from it as well.
     property string status: ""
+    property bool statusIsError: false
 
-    function say(message) { installer.status = message }
+    function say(message, isError) {
+        manager.status = message
+        manager.statusIsError = isError === true
+    }
 
     function install(entry) {
         if (!entry || entry.installed || Packages.busy(entry.source, entry.id) !== "") return
-        if (entry.source === "AUR") installer.say("Review " + entry.id + " in the terminal")
+        if (entry.source === "AUR") manager.say("Review " + entry.id + " in the terminal")
         Packages.install({ source: entry.source, id: entry.id, name: entry.name }, pwPrompt)
     }
 
-    // Failures are the prompt's to show (a wrong password, a failed
-    // install) or the terminal's; the status line only says what worked.
+    // A search result carries no scope, and a flatpak has to be removed
+    // from the installation it is in (--user or --system), so the
+    // inventory's own entry is what goes to Packages when there is one.
+    function remove(entry) {
+        if (!entry || !entry.installed || Packages.busy(entry.source, entry.id) !== "") return
+        const own = Packages.installed.find(e => e.source === entry.source && e.id === entry.id)
+        Packages.remove(own || { source: entry.source, id: entry.id, name: entry.name }, pwPrompt)
+    }
+
+    // A failure that needed the password is already on the prompt, which
+    // stays up to be tried again; anything else is said here.
     Connections {
         target: Packages
         function onFinished(action, entry, ok, message) {
-            if (action === "install" && ok) installer.say(message)
+            if (ok) manager.say(message)
+            else if (!pwPrompt.shown) manager.say(message, true)
         }
     }
 
     // ── Keyboard ──────────────────────────────────────────
     function move(delta) {
-        const n = installer.visibleResults.length
+        const n = manager.visibleResults.length
         if (n === 0) return
-        installer.selectedIndex = Math.max(0, Math.min(n - 1, installer.selectedIndex + delta))
-        resultList.positionViewAtIndex(installer.selectedIndex, ListView.Contain)
+        manager.selectedIndex = Math.max(0, Math.min(n - 1, manager.selectedIndex + delta))
+        resultList.positionViewAtIndex(manager.selectedIndex, ListView.Contain)
     }
 
     function cycleFilter(delta) {
         const order = ["All", "Pacman", "AUR", "Flatpak"]
-        const at = order.indexOf(installer.sourceFilter)
-        installer.sourceFilter = order[(at + delta + order.length) % order.length]
-        installer.selectedIndex = 0
+        const at = order.indexOf(manager.sourceFilter)
+        manager.sourceFilter = order[(at + delta + order.length) % order.length]
+        manager.selectedIndex = 0
         resultList.positionViewAtBeginning()
     }
 
@@ -408,8 +413,8 @@ ShellSurface {
         border.width: 1
         border.color: Appearance.border
 
-        opacity: installer.shown ? 1 : 0
-        scale: installer.shown ? 1 : 0.97
+        opacity: manager.shown ? 1 : 0
+        scale: manager.shown ? 1 : 0.97
         Behavior on opacity {
             NumberAnimation { duration: Theme.animPanel; easing.type: Theme.easingStandard }
         }
@@ -430,7 +435,7 @@ ShellSurface {
                 spacing: Theme.space2
 
                 Text {
-                    text: "Install apps"
+                    text: "Apps"
                     color: Appearance.fgStrong
                     font.bold: true
                     font.pixelSize: Theme.fontLarge
@@ -438,8 +443,8 @@ ShellSurface {
                 }
 
                 Text {
-                    text: "one search, three sources"
-                    color: Appearance.fgFaint
+                    text: manager.browsing ? "installed" : "search results"
+                    color: Appearance.fgMuted
                     font.pixelSize: Theme.fontSmall
                     font.family: Theme.font
                     Layout.fillWidth: true
@@ -448,23 +453,24 @@ ShellSurface {
                 }
 
                 Text {
-                    text: installer.status
-                    color: Appearance.green
+                    text: manager.status
+                    color: manager.statusIsError ? Appearance.red : Appearance.green
                     font.pixelSize: Theme.fontSmall
                     font.family: Theme.font
                     elide: Text.ElideRight
-                    Layout.maximumWidth: 240
+                    Layout.maximumWidth: 320
                 }
             }
 
             // ── Search field ──────────────────────────────
+            // Focus shows as the caret, not an accent ring (STYLE.md §1).
             Rectangle {
                 Layout.fillWidth: true
                 implicitHeight: 40
                 radius: Theme.radius
                 color: Appearance.surfaceAlt
                 border.width: 1
-                border.color: searchInput.activeFocus ? Appearance.accent : Appearance.border
+                border.color: Appearance.border
 
                 RowLayout {
                     anchors.fill: parent
@@ -473,8 +479,8 @@ ShellSurface {
                     spacing: Theme.space2
 
                     Text {
-                        text: ""
-                        color: Appearance.fgFaint
+                        text: ""
+                        color: Appearance.fgMuted
                         font.pixelSize: Theme.fontNormal
                         font.family: Theme.font
                     }
@@ -492,19 +498,22 @@ ShellSurface {
                         verticalAlignment: TextInput.AlignVCenter
 
                         onTextChanged: {
-                            installer.query = text
+                            manager.query = text
                             debounce.restart()
                         }
 
                         Keys.onPressed: (event) => {
                             if (event.key === Qt.Key_Escape) {
-                                installer.close()
+                                // Out of a search first, then out of the
+                                // window, the way the Conf menu backs out.
+                                if (searchInput.text !== "") searchInput.text = ""
+                                else manager.close()
                                 event.accepted = true
                             } else if (event.key === Qt.Key_Down) {
-                                installer.move(1)
+                                manager.move(1)
                                 event.accepted = true
                             } else if (event.key === Qt.Key_Up) {
-                                installer.move(-1)
+                                manager.move(-1)
                                 event.accepted = true
                             } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                                 // Enter with the debounce still pending
@@ -513,24 +522,32 @@ ShellSurface {
                                 // the one thing debouncing must not do.
                                 if (debounce.running) {
                                     debounce.stop()
-                                    installer.runSearch()
+                                    manager.runSearch()
                                 } else {
-                                    installer.install(
-                                        installer.visibleResults[installer.selectedIndex])
+                                    manager.install(manager.visibleResults[manager.selectedIndex])
                                 }
                                 event.accepted = true
+                            } else if (event.key === Qt.Key_Delete) {
+                                // Delete edits the text while there is
+                                // text after the caret; at the end of the
+                                // field there is nothing for it to do
+                                // there, so it removes the row instead.
+                                if (searchInput.cursorPosition === searchInput.text.length) {
+                                    manager.remove(manager.visibleResults[manager.selectedIndex])
+                                    event.accepted = true
+                                }
                             } else if (event.key === Qt.Key_Tab) {
-                                installer.cycleFilter(1)
+                                manager.cycleFilter(1)
                                 event.accepted = true
                             } else if (event.key === Qt.Key_Backtab) {
-                                installer.cycleFilter(-1)
+                                manager.cycleFilter(-1)
                                 event.accepted = true
                             }
                         }
 
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
-                            text: "Search pacman, the AUR and Flathub…"
+                            text: "Search pacman, the AUR and Flathub to install…"
                             color: Appearance.placeholder
                             font.pixelSize: Theme.fontBig
                             font.family: Theme.font
@@ -542,9 +559,7 @@ ShellSurface {
 
             // ── Source chips ──────────────────────────────
             // Each one says what its backend is doing: a count once it
-            // has answered, a dot while it is still out. main's tab has
-            // a single spinner for all three, which reads as "nothing
-            // has answered yet" for as long as the slowest one takes.
+            // has answered, "…" while it is still out.
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Theme.space2
@@ -560,12 +575,10 @@ ShellSurface {
                         id: chip
                         required property string modelData
 
-                        readonly property bool active: installer.sourceFilter === chip.modelData
-                        readonly property bool busy: installer.busyFor(chip.modelData)
-                        readonly property int count: chip.modelData === "All"
-                            ? installer.results.length : installer.countFor(chip.modelData)
+                        readonly property bool active: manager.sourceFilter === chip.modelData
+                        readonly property bool busy: manager.busyFor(chip.modelData)
 
-                        implicitWidth: chipRow.implicitWidth + 20
+                        implicitWidth: chipRow.implicitWidth + Theme.space5
                         implicitHeight: 28
                         radius: Theme.radius
                         color: chip.active ? SlabStyle.tintSelected
@@ -582,7 +595,7 @@ ShellSurface {
                                 implicitWidth: 8
                                 implicitHeight: 8
                                 radius: 4
-                                color: installer.badgeFor(chip.modelData)
+                                color: manager.badgeFor(chip.modelData)
                                 visible: chip.modelData !== "All"
                             }
 
@@ -594,11 +607,10 @@ ShellSurface {
                             }
 
                             Text {
-                                text: chip.busy ? "…" : chip.count
-                                color: Appearance.fgFaint
+                                text: chip.busy ? "…" : manager.countFor(chip.modelData)
+                                color: Appearance.fgMuted
                                 font.pixelSize: Theme.fontSmall
                                 font.family: Theme.font
-                                visible: installer.searched
                             }
                         }
 
@@ -607,8 +619,8 @@ ShellSurface {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                installer.sourceFilter = chip.modelData
-                                installer.selectedIndex = 0
+                                manager.sourceFilter = chip.modelData
+                                manager.selectedIndex = 0
                                 resultList.positionViewAtBeginning()
                                 searchInput.forceActiveFocus()
                             }
@@ -617,11 +629,58 @@ ShellSurface {
                 }
 
                 Item { Layout.fillWidth: true }
+
+                // Apps only, or everything pacman and flatpak know about.
+                // The installed view's alone: a search already lists
+                // whatever matched.
+                Rectangle {
+                    id: allToggle
+                    visible: manager.browsing
+                    implicitWidth: allRow.implicitWidth + Theme.space5
+                    implicitHeight: 28
+                    radius: Theme.radius
+                    color: manager.allPackages ? SlabStyle.tintSelected
+                         : allHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover)
+                    border.width: manager.allPackages ? 0 : 1
+                    border.color: Appearance.border
+
+                    RowLayout {
+                        id: allRow
+                        anchors.centerIn: parent
+                        spacing: Theme.space2
+
+                        Text {
+                            text: manager.allPackages ? "\u{F0132}" : "\u{F0131}"   // nf-md-checkbox_marked / _blank_outline
+                            color: manager.allPackages ? Appearance.fgStrong : Appearance.fgSoft
+                            font.pixelSize: Theme.fontSmall
+                            font.family: Theme.font
+                        }
+
+                        Text {
+                            text: "All packages"
+                            color: manager.allPackages ? Appearance.fgStrong : Appearance.fgSoft
+                            font.pixelSize: Theme.fontSmall
+                            font.family: Theme.font
+                        }
+                    }
+
+                    HoverHandler { id: allHover }
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            manager.allPackages = !manager.allPackages
+                            manager.selectedIndex = 0
+                            resultList.positionViewAtBeginning()
+                            searchInput.forceActiveFocus()
+                        }
+                    }
+                }
             }
 
             Divider {}
 
-            // ── Results ───────────────────────────────────
+            // ── The list ──────────────────────────────────
             RowLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -635,7 +694,7 @@ ShellSurface {
                         id: resultList
                         anchors.fill: parent
                         clip: true
-                        model: installer.visibleResults
+                        model: manager.visibleResults
                         boundsBehavior: Flickable.StopAtBounds
                         spacing: 2
 
@@ -645,9 +704,15 @@ ShellSurface {
                             required property int index
 
                             width: ListView.view.width
-                            height: 52
+                            // Two lines where there is a description to
+                            // show — search results — and one otherwise:
+                            // pacman's inventory has no descriptions
+                            // (one `pacman -Qi` each would be hundreds of
+                            // processes), and a blank second line down
+                            // the whole installed list is just gaps.
+                            height: row.modelData.description ? 52 : 40
                             radius: Theme.radius
-                            color: row.index === installer.selectedIndex ? SlabStyle.tintSelected
+                            color: row.index === manager.selectedIndex ? SlabStyle.tintSelected
                                  : rowHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover)
 
                             RowLayout {
@@ -664,9 +729,7 @@ ShellSurface {
                                     implicitWidth: 56
                                     implicitHeight: 20
                                     radius: Theme.radius
-                                    color: row.modelData.source === "Pacman" ? Appearance.badgePacman
-                                         : row.modelData.source === "AUR" ? Appearance.badgeAur
-                                         : Appearance.badgeFlatpak
+                                    color: manager.badgeFor(row.modelData.source)
 
                                     Text {
                                         anchors.centerIn: parent
@@ -698,7 +761,7 @@ ShellSurface {
                                         Text {
                                             text: row.modelData.version !== ""
                                                 ? row.modelData.version : row.modelData.id
-                                            color: Appearance.fgDim
+                                            color: Appearance.fgMuted
                                             font.pixelSize: Theme.fontTiny
                                             font.family: Theme.font
                                             Layout.fillWidth: true
@@ -708,8 +771,9 @@ ShellSurface {
                                     }
 
                                     Text {
-                                        text: row.modelData.description
-                                        color: Appearance.fgFaint
+                                        visible: text !== ""
+                                        text: row.modelData.description || ""
+                                        color: Appearance.fgMuted
                                         font.pixelSize: Theme.fontTiny
                                         font.family: Theme.font
                                         Layout.fillWidth: true
@@ -718,28 +782,48 @@ ShellSurface {
                                     }
                                 }
 
+                                // A flatpak installed for every user needs
+                                // the password to come off; one installed
+                                // for you alone does not.
+                                Text {
+                                    visible: row.modelData.scope === "system"
+                                    text: "system"
+                                    color: Appearance.fgMuted
+                                    font.pixelSize: Theme.fontTiny
+                                    font.family: Theme.font
+                                }
+
+                                // Install, or Remove once it is here. The
+                                // two differ by their text colour alone —
+                                // one neutral edge on both, no coloured
+                                // ring (STYLE.md §1). Filled rather than
+                                // see-through: on the selected row's tint
+                                // a bare red label all but disappears.
                                 Rectangle {
                                     id: actionButton
+                                    readonly property bool installed: row.modelData.installed === true
                                     // Packages' answer, so a row being
-                                    // installed from anywhere reads as busy.
+                                    // changed from anywhere reads as busy.
                                     readonly property bool busy:
                                         Packages.busy(row.modelData.source, row.modelData.id) !== ""
-                                    implicitWidth: actionLabel.implicitWidth + 18
+                                    readonly property color hoverFill: actionButton.installed
+                                        ? Appearance.dangerBg : Appearance.hoverStrong
+                                    implicitWidth: actionLabel.implicitWidth + Theme.space5
                                     implicitHeight: 28
                                     radius: Theme.radius
-                                    color: row.modelData.installed ? Appearance.installedBg
-                                         : actionHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)
+                                    color: actionHover.hovered && !actionButton.busy
+                                        ? actionButton.hoverFill : Appearance.surfaceAlt
                                     border.width: 1
-                                    border.color: row.modelData.installed
-                                        ? Appearance.green : Appearance.border
+                                    border.color: Appearance.border
                                     opacity: actionButton.busy ? 0.6 : 1
 
                                     Text {
                                         id: actionLabel
                                         anchors.centerIn: parent
-                                        text: row.modelData.installed ? "Installed"
-                                            : actionButton.busy ? "Working…" : "Install"
-                                        color: row.modelData.installed ? Appearance.green : Appearance.fgSoft
+                                        text: actionButton.busy ? "Working…"
+                                            : actionButton.installed ? "Remove" : "Install"
+                                        color: actionButton.installed && !actionButton.busy
+                                            ? Appearance.red : Appearance.fgSoft
                                         font.pixelSize: Theme.fontTiny
                                         font.family: Theme.font
                                     }
@@ -748,34 +832,38 @@ ShellSurface {
                                     MouseArea {
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor
-                                        enabled: !row.modelData.installed && !actionButton.busy
-                                        onClicked: installer.install(row.modelData)
+                                        enabled: !actionButton.busy
+                                        onClicked: actionButton.installed
+                                            ? manager.remove(row.modelData) : manager.install(row.modelData)
                                     }
                                 }
                             }
 
                             HoverHandler {
                                 id: rowHover
-                                onHoveredChanged: if (hovered) installer.selectedIndex = row.index
+                                onHoveredChanged: if (hovered) manager.selectedIndex = row.index
                             }
                         }
                     }
 
-                    // One line, three different things it can mean: not
-                    // asked yet, asked and still waiting, asked and
-                    // answered nothing. It sits in the space the results
-                    // would have filled rather than under it.
+                    // What the empty space means, in the space the rows
+                    // would have filled.
                     Text {
                         anchors.centerIn: parent
                         width: parent.width
                         horizontalAlignment: Text.AlignHCenter
-                        visible: installer.visibleResults.length === 0
-                        text: !installer.searched ? "Type at least two letters"
-                            : installer.searching ? "Searching…"
-                            : installer.results.length > 0
-                                ? "No " + installer.sourceFilter + " packages match"
-                            : "Nothing matched “" + installer.query.trim() + "”"
-                        color: Appearance.fgFaint
+                        visible: manager.visibleResults.length === 0
+                        text: manager.browsing
+                            ? (!Packages.loadedOnce ? "Reading what is installed…"
+                               : manager.sourceFilter === "All"
+                                   ? "Nothing installed" + (manager.allPackages ? "" : " with a launcher entry")
+                                   : "No " + manager.sourceFilter
+                                       + (manager.allPackages ? " packages" : " apps") + " installed")
+                            : manager.searching ? "Searching…"
+                            : manager.results.length > 0
+                                ? "No " + manager.sourceFilter + " packages match"
+                            : "Nothing matched “" + manager.query.trim() + "”"
+                        color: Appearance.fgMuted
                         font.pixelSize: Theme.fontNormal
                         font.family: Theme.font
                     }
@@ -794,8 +882,9 @@ ShellSurface {
                 Layout.fillWidth: true
 
                 Text {
-                    text: "↑↓ select · Enter install · Tab source · Esc close"
-                    color: Appearance.fgDim
+                    text: "↑↓ select · Enter install · Del remove · Tab source · Esc "
+                        + (manager.browsing ? "close" : "back to installed")
+                    color: Appearance.fgMuted
                     font.pixelSize: Theme.fontTiny
                     font.family: Theme.font
                     Layout.fillWidth: true
@@ -804,10 +893,11 @@ ShellSurface {
                 }
 
                 Text {
-                    text: installer.searching ? "searching…"
-                        : installer.searched ? installer.results.length + " results"
-                        : ""
-                    color: Appearance.fgDim
+                    text: manager.browsing
+                        ? manager.installedList.length + (manager.allPackages ? " packages" : " apps")
+                        : manager.searching ? "searching…"
+                        : manager.results.length + " results"
+                    color: Appearance.fgMuted
                     font.pixelSize: Theme.fontTiny
                     font.family: Theme.font
                 }

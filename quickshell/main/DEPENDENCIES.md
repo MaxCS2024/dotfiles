@@ -74,7 +74,7 @@ running. Grouped by what breaks if it's missing.
   with a password from `common/PasswordPrompt.qml` when a window started
   it, and plain `sudo` in a terminal when the Conf menu did.
 
-- **pacman** — package search in `installer/AppInstaller.qml`; what is
+- **pacman** — package search in `apps/AppManager.qml`; what is
   installed, and installing and removing, in `services/Packages.qml`
   (the commands are `services/packages.js`'s). Present on any Arch
   install by definition.
@@ -149,12 +149,12 @@ running. Grouped by what breaks if it's missing.
 
 ## Optional — config degrades gracefully without these
 
-- **yay** — the AUR. Without it the installer (`installer/AppInstaller.qml`)
+- **yay** — the AUR. Without it the app manager (`apps/AppManager.qml`)
   shows pacman and Flathub results only, the Conf menu's Apps › Update › Yay row
   and the Apps › Browse rows for AUR packages (Heroic, Bottles) are dimmed, and
   `rack update` skips its AUR stage. Flatpak is the install source that is
   required. A different helper (`paru`) means swapping the literal `"yay"`
-  in `services/packages.js` (installing), `installer/AppInstaller.qml`
+  in `services/packages.js` (installing), `apps/AppManager.qml`
   (searching) and the Conf menu's Apps › Update › Yay row.
 
 - **matugen** — `theme/WallpaperSource.qml` reads `~/.cache/matugen/colors.json`
