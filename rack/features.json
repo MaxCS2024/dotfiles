@@ -85,6 +85,22 @@
 			"units": [],
 			"teardown": [],
 			"data": ["~/.local/share/oh-my-zsh", "~/.cache/oh-my-zsh"]
+		},
+		"claudecode": {
+			"label": "Claude Code",
+			"summary": "Anthropic's coding agent in the terminal (claude), from its own installer, and updating itself. Installed or not: there is nothing to switch off. Removing it deletes the program, but not ~/.claude or ~/.claude.json, which hold your login, settings and memory.",
+			"recommended": false,
+			"switch": false,
+			"size": "about 230 MB, and it keeps its last few versions",
+			"provides": ["claude"],
+			"packages": {
+				"repo": [],
+				"aur": []
+			},
+			"setup": [["bash", "-c", "set -o pipefail; curl -fsSL https://claude.ai/install.sh | bash"]],
+			"units": [],
+			"teardown": [],
+			"data": ["~/.local/bin/claude", "~/.local/share/claude", "~/.cache/claude"]
 		}
 	}
 }

@@ -305,7 +305,8 @@ ShellSurface {
         earbuds: "\u{F184F}",
         weather: "\u{F0595}",
         lazyvim: "\u{F04B2}",
-        ohmyzsh: "\u{F07B7}"
+        ohmyzsh: "\u{F07B7}",
+        claudecode: "\u{F06A9}"
     })
 
     function featureRows() {
