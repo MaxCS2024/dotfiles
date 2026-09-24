@@ -9,6 +9,7 @@ BluetoothButton 1.0 BluetoothButton.qml
 ClipboardButton 1.0 ClipboardButton.qml
 Clock 1.0 Clock.qml
 DropdownPanel 1.0 DropdownPanel.qml
+EarbudsButton 1.0 EarbudsButton.qml
 HoverPill 1.0 HoverPill.qml
 LauncherButton 1.0 LauncherButton.qml
 MediaPlayer 1.0 MediaPlayer.qml

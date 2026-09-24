@@ -60,11 +60,14 @@ Singleton {
     // "voxtype" left the centre row on 2026-09-24 the same way: dictation
     // is shown by osd/VoxtypeOsd.qml, the Wispr Flow-style pill at the
     // bottom of the screen, and the bar's pill was the same state twice.
+    //
+    // "earbuds" (2026-09-24) sits beside the battery it opens the rail
+    // of, and takes no room until Nothing earbuds connect.
     property var barLayout: ({
         default: {
             left: ["workspaces", "media"],
             center: ["clock"],
-            right: ["tray", "weather", "network", "volume", "battery"]
+            right: ["tray", "weather", "network", "volume", "earbuds", "battery"]
         }
     })
 

@@ -95,14 +95,18 @@ rack::features::__set() {
 }
 
 # Installed means every binary it provides is on PATH. That is the same probe
-# `rack setup` makes, and it is what the shell sees too.
+# `rack setup` makes, and it is what the shell sees too. A feature whose
+# packages bring no binary of their own (earbuds: two Python libraries) also
+# names a `probe`, one argv that exits 0 only once they are there.
 rack::features::__installed() {
     local bin
+    local -a probe
     while read -r bin; do
         [[ -n $bin ]] || continue
         rig::check::has "$bin" || return 1
     done < <(rack::features::__list "$1" provides)
-    return 0
+    mapfile -t probe < <(rack::features::__list "$1" probe)
+    ((${#probe[@]} == 0)) || "${probe[@]}" >/dev/null 2>&1
 }
 
 # The feature that provides this binary, if that feature is off. `rack setup`

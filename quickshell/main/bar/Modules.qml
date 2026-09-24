@@ -28,14 +28,16 @@ QtObject {
         "tray": trayComponent,
         "sysmon": sysmonComponent,
         "notifications": notificationsComponent,
-        "weather": weatherComponent
+        "weather": weatherComponent,
+        "earbuds": earbudsComponent
     })
 
     // Modules that belong to an optional feature (services/Features.qml,
     // `rack features`): bar/Bar.qml drops one whose feature is off, and
     // shell.qml will not build the panel of the same name.
     readonly property var feature: ({
-        "weather": "weather"
+        "weather": "weather",
+        "earbuds": "earbuds"
     })
 
     readonly property Component workspacesComponent: Component { Workspaces {} }
@@ -52,4 +54,6 @@ QtObject {
     readonly property Component trayComponent: Component { SystemTray {} }
     readonly property Component sysmonComponent: Component { SystemMonitorButton {} }
     readonly property Component notificationsComponent: Component { NotificationsButton {} }
-    readonly property Component weatherComponent: Component { WeatherButton {} }}
+    readonly property Component weatherComponent: Component { WeatherButton {} }
+    readonly property Component earbudsComponent: Component { EarbudsButton {} }
+}

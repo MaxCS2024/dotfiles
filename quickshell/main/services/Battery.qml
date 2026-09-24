@@ -105,10 +105,19 @@ Singleton {
     // section rather than drawing an empty one — and why the filter is
     // kept to the one rule that is certainly right rather than a list of
     // types guessed at from the enum.
+    //
+    // Less the Nothing earbuds while services/Earbuds.qml has their three
+    // readings: UPower's row for them is a single number from the headset
+    // profile, the same earbuds a second time, and the rail's Earbuds
+    // section is the better answer. Matched on the address, which is in
+    // UPower's nativePath (/org/bluez/hci0/dev_2C_BE_…).
     readonly property var peripherals: {
+        const earbuds = Earbuds.ready && Earbuds.address
+            ? "dev_" + Earbuds.address.replace(/:/g, "_") : ""
         const out = []
         for (const d of UPower.devices.values)
-            if (!d.powerSupply && d.type !== UPowerDeviceType.LinePower && d.percentage > 0)
+            if (!d.powerSupply && d.type !== UPowerDeviceType.LinePower && d.percentage > 0
+                && !(earbuds && (d.nativePath || "").endsWith(earbuds)))
                 out.push(d)
         return out
     }
@@ -141,9 +150,14 @@ Singleton {
     // low enough to matter is red whether or not the average is.
     function deviceColor(d) {
         if (!d) return Appearance.icon
-        if (d.state === UPowerDeviceState.Charging || d.state === UPowerDeviceState.FullyCharged)
-            return Appearance.green
-        const pct = d.percentage * 100
+        return root.levelColor(d.percentage * 100,
+            d.state === UPowerDeviceState.Charging || d.state === UPowerDeviceState.FullyCharged)
+    }
+
+    // The same rule for a bare level, which is all an earbud reports
+    // (services/Earbuds.qml).
+    function levelColor(pct, charging) {
+        if (charging) return Appearance.green
         if (pct <= 10) return Appearance.red
         if (pct <= 25) return Appearance.orange
         return Appearance.icon
@@ -170,9 +184,12 @@ Singleton {
     // battery glyph is at least certainly true of anything in that list.
     function deviceIcon(d) {
         if (!d) return "󰂎"
-        if (d.state === UPowerDeviceState.Charging || d.state === UPowerDeviceState.FullyCharged)
-            return "󰂄"
-        const pct = d.percentage * 100
+        return root.levelIcon(d.percentage * 100,
+            d.state === UPowerDeviceState.Charging || d.state === UPowerDeviceState.FullyCharged)
+    }
+
+    function levelIcon(pct, charging) {
+        if (charging) return "󰂄"
         if (pct >= 90) return "󰂂"
         if (pct >= 80) return "󰂁"
         if (pct >= 70) return "󰂀"

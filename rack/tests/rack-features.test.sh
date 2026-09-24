@@ -245,6 +245,26 @@ test_on_installed_only_starts() {
 	ok
 }
 
+test_on_probe_decides_installed() {
+	it "a feature with a probe is installed only once the probe passes"
+	cat >"$RACK_FEATURES" <<-'EOF'
+		{"version": 1, "features": {
+		  "libs": {"label": "Libs", "summary": "x", "recommended": false,
+		    "provides": ["sh"], "probe": ["sh", "-c", "test -e \"$STUB/pkgs/py-thing\""],
+		    "packages": {"repo": ["py-thing"], "aur": []}}
+		}}
+	EOF
+	run features list
+	assert_has "not yet" "$OUT" "libs         on   not installed" || return
+	run features on libs
+	assert_eq "status" "$STATUS" 0 || return
+	assert_has "installed" "$CALLS" "sudo pacman -S --needed py-thing" || return
+	: >"$TMP/calls"
+	run features on libs
+	assert_lacks "not twice" "$CALLS" "pacman -S" || return
+	ok
+}
+
 test_on_without_yay() {
 	it "on refuses an AUR feature without yay, and leaves it off"
 	run features off talk

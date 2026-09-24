@@ -61,12 +61,14 @@ and `rack reload hypr` means `rack reload run hypr`.
 ## Features
 
 Some of the desktop is optional: dictation brings a speech model and a
-daemon, the weather module polls a web API. `features.json` says what each
+daemon, the weather module polls a web API, and the earbuds readout keeps a
+Bluetooth channel open to a pair of Nothing earbuds. `features.json` says what each
 one is made of, which is everything turning it off or removing it has to
 touch:
 
 ```
 provides   binaries that mean it is installed
+probe      optional argv that must also exit 0 (for packages with no binary)
 packages   repo (pacman) and aur (yay) package names
 setup      commands run once, after its packages are installed
 units      systemd user units started with it and stopped without it

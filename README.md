@@ -33,7 +33,8 @@ cd ~/.dotfiles
 ./rack/install.sh
 ./relay/install.sh
 
-rack features         # tick the optional parts you want (dictation, weather);
+rack features         # tick the optional parts you want (dictation, weather,
+                      # Nothing earbuds battery);
                       # it installs and sets up what you tick
 rack setup            # what is missing, grouped by how much it matters
 rack deploy           # link every manifest entry into ~/.config and ~
