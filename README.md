@@ -112,4 +112,3 @@ file it still holds to force one.
 - `quickshell/main/DEPENDENCIES.md` — every dependency, and what breaks without it
 - `rack/README.md` — the manifest format and each module
 - `rig/README.md` — the library the tooling is built on
-- `quickshell/EXPERIMENTS.md` — running experimental shell configs alongside `main`

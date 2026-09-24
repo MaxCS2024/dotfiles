@@ -12,7 +12,7 @@ import QtQuick
 // comes from WEATHER_LATITUDE and WEATHER_LONGITUDE in this config's
 // gitignored .env (user request 2026-09-23: the location stays out of
 // the repo). Without both, nothing is fetched and the bar module stays
-// hidden. An experiment from new-config.sh needs its own copy.
+// hidden.
 //
 // Only today counts (user request 2026-09-23): the forecast is asked for
 // one day, so once four hours out is tomorrow there is no `later` and the

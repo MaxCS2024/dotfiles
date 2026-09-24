@@ -45,8 +45,8 @@ Singleton {
     // them since. bar/Bar.qml filters names the registry doesn't know
     // (see knownModules() there), so the only symptom was a right row
     // that quietly came up with four of its seven slots, on any machine
-    // new enough to have no settings.json of its own — a fresh install
-    // or a new-config.sh experiment. The filter stays: a *saved* layout
+    // new enough to have no settings.json of its own, like a fresh
+    // install. The filter stays: a *saved* layout
     // can still name a module that has since been removed, and that is
     // the case this default no longer is.
     //

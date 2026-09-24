@@ -4,8 +4,9 @@
 # ~/.config/quickshell/<name> for `qs -c <name>` to find it, and the manifest
 # carries one line per config to do exactly that. So linking is `rack deploy`
 # and drift is `rack diff`, the same as everything else — what is left here is
-# the part that is genuinely quickshell-shaped: scaffolding a new experiment,
-# and saying which configs exist and which are actually linked.
+# the part that is genuinely quickshell-shaped: saying which configs exist and
+# which are actually linked. (`new`, which scaffolded an experiment config
+# through quickshell/new-config.sh, went with that script on 2026-09-24.)
 #
 # Ported from `orbit quickshell` (a built-in of bin/orbit). Its link/unlink
 # subcommands are gone rather than reimplemented: they were a bespoke stow
@@ -15,8 +16,8 @@
 rig::load log check link
 rack::load manifest
 
-RACK_MODULE_SUMMARY[quickshell]="scaffold and list the shell's configs"
-RACK_MODULE_ACTIONS[quickshell]="list new"
+RACK_MODULE_SUMMARY[quickshell]="list the shell's configs"
+RACK_MODULE_ACTIONS[quickshell]="list"
 RACK_MODULE_STATUS[quickshell]="ready"
 RACK_MODULE_TIER[quickshell]="general"
 
@@ -53,41 +54,11 @@ rack::quickshell::list() {
     ((found)) || printf '  no configs under %s\n' "$dir"
 }
 
-rack::quickshell::new() {
-    local name=${1-}
-    [[ -n $name ]] || {
-        rig::log::error "usage: rack quickshell new <name>"
-        return "$RIG_EX_USAGE"
-    }
-
-    local dir
-    dir=$(rack::quickshell::__dir) || return $?
-    local script="$dir/new-config.sh"
-    [[ -x $script ]] || {
-        rig::log::error "not executable: $script"
-        return "$RIG_EX_FAIL"
-    }
-
-    "$script" "$name" || return $?
-
-    # A new config is a new manifest line — deploy cannot link what the table
-    # does not mention, and silently doing nothing is the confusing outcome.
-    cat <<EOF
-
-Add it to $(rack::manifest::path):
-
-    quickshell/$name   ~/.config/quickshell/$name   -
-
-then: rack deploy quickshell/$name && qs -c $name
-EOF
-}
-
 rack::quickshell::__default() { rack::quickshell::list "$@"; }
 
 rack::quickshell::__usage() {
     cat <<'EOF'
-  rack quickshell list        which configs exist, and which are linked
-  rack quickshell new <name>  scaffold a new experiment config
+  rack quickshell list   which configs exist, and which are linked
 
 Linking is `rack deploy` and drift is `rack diff`: each config is a manifest
 entry (quickshell/<name> -> ~/.config/quickshell/<name>), not a special case.
