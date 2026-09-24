@@ -59,7 +59,7 @@ ShellSurface {
     // Quickshell's execute() ignores Terminal=true: btop, nvim or yazi
     // started that way gets no terminal and exits on the spot, with
     // nothing on screen. Those go through Terminal.run instead, into the
-    // terminal Setup › Defaults picked, tiled and with no "press Enter" —
+    // terminal Apps › Defaults picked, tiled and with no "press Enter" —
     // an app you opened, not a task to watch. The command has its field
     // codes (%F) stripped already, which is what an app launched with no
     // files wants.

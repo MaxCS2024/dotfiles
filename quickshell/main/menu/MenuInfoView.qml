@@ -5,7 +5,7 @@ import "../services"
 import "../theme"
 
 // The one leaf of the Conf menu that answers a question instead of
-// doing something: About › System, drawn as a list of label/value pairs.
+// doing something: System › About, drawn as a list of label/value pairs.
 //
 // It is a mapping of services/SystemInfo.qml, which the quick settings
 // dashboard and the system settings tab read too. This view used to

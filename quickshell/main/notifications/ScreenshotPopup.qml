@@ -55,7 +55,7 @@ PanelWindow {
     // mode saves to the same folder, copies to the clipboard, prints the
     // path for the handler below, and so lands the same thumbnail and the
     // same history row. Region is what the Print key has always used;
-    // window and screen came in with the Conf menu's Trigger branch
+    // window and screen came in with the Conf menu's Capture branch
     // (menu/ConfMenu.qml) and are reachable over IPC too.
     //
     // Both geometry lookups ask hyprctl for the numbers separately and

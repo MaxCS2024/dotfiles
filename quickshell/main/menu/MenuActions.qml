@@ -144,11 +144,13 @@ QtObject {
     // -Qq` print every package on the machine, and there is no point
     // spawning flatpak for a tree that names none.
     //
-    // Setup › Defaults is the third: services/Defaults.qml, which asks
+    // Apps › Defaults is the third: services/Defaults.qml, which asks
     // `relay default` what each role is set to and which candidates are
     // installed. It had a probe of its own here, a generated script that
     // resolved the options a second time beside hypr/modules/vars.lua,
     // until both moved behind relay (docs/adr/0001).
+    //
+    // Features › is the fourth: `rack features list`, below.
     function refresh() {
         if (actions.probeNames.length > 0) {
             actions.probeProc.running = false
@@ -157,6 +159,67 @@ QtObject {
         if (actions.packageNames.length > 0 || actions.flatpakNames.length > 0)
             Packages.refresh()
         Defaults.refresh()
+        actions.featuresProc.running = false
+        actions.featuresProc.running = true
+    }
+
+    // ── Optional features ────────────────────────────────
+    // Every feature rack/features.json defines, in its order, as `rack
+    // features list` prints them: its name, its label, and whether its
+    // packages are on the machine. The on/off column is read and
+    // dropped — services/Features.qml answers that live from the
+    // choices file, where this is only as fresh as the last open.
+    //
+    // Null until answered, for the same reason `tools` is. An empty list
+    // is rack missing or failing: the row that says so names the
+    // command to run by hand.
+    property var features: null
+
+    readonly property Process featuresProc: Process {
+        command: ["sh", "-c", 'PATH="$HOME/.local/bin:$PATH" exec rack features list']
+        stdout: StdioCollector {
+            id: featuresOut
+            onStreamFinished: actions._parseFeatures(featuresOut.text)
+        }
+    }
+
+    function _parseFeatures(text) {
+        const found = []
+        for (const line of text.split("\n")) {
+            const m = line.match(/^\s*(\S+)\s+(?:on|off)\s+(installed|not installed)\s+(.+?)\s*$/)
+            if (m) found.push({ name: m[1], installed: m[2] === "installed", label: m[3] })
+        }
+        // Only a different answer is published, as with `tools`: the
+        // whole tree is bound to this.
+        if (JSON.stringify(found) !== JSON.stringify(actions.features)) actions.features = found
+    }
+
+    // `rack features on|off` for a feature that is already installed:
+    // nothing to prompt for, so no terminal. It enables or disables the
+    // feature's units, writes the choices file and reloads Hyprland and
+    // this shell; the notification is the only sign of it for a feature
+    // with nothing in the bar, like dictation.
+    readonly property Process featureProc: Process {
+        property string label: ""
+        property string verb: ""
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode === 0)
+                Notifications.post(featureProc.label + " is " + featureProc.verb, "",
+                    "normal", "Conf", "")
+            else
+                Notifications.post("Couldn't turn " + featureProc.label + " " + featureProc.verb,
+                    "rack features " + featureProc.verb + " exited " + exitCode,
+                    "critical", "Conf", "")
+        }
+    }
+
+    function setFeature(name, label, verb) {
+        actions.featureProc.running = false
+        actions.featureProc.label = label
+        actions.featureProc.verb = verb
+        actions.featureProc.command = ["sh", "-c",
+            'PATH="$HOME/.local/bin:$PATH" exec rack features "$1" "$2"', "sh", verb, name]
+        actions.featureProc.running = true
     }
 
     // ── Terminal commands ────────────────────────────────

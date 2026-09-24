@@ -2,7 +2,7 @@
 -- Every consumer does: local vars = require("modules.vars")
 --
 -- The four app roles are whatever modules/defaults.lua resolves them to:
--- the default the user set (SUPER+SPACE > Setup > Defaults, or
+-- the default the user set (SUPER+SPACE > Apps > Defaults, or
 -- `relay default set`), else the first candidate this machine has. That
 -- file owns the candidates and the order; this one only names the roles
 -- the binds use. A bind captures its string here, at config load, which is

@@ -31,18 +31,21 @@ import "../keybinds"
 // Where the leaves go, and why they're not all the same kind of thing:
 //
 //   * A leaf that has a panel already — Wallpaper, Themes, and
-//     everything under Install/Remove — calls Panels and lets the window
+//     Apps › Install and Apps › Remove — calls Panels and lets the window
 //     this shell already built do the work. The menu is a way *in* to
 //     those, not a second copy of them.
 //   * A leaf whose job is a long, interactive, privileged command —
-//     every Update row, Setup › Run Setup — opens a terminal
+//     every Update row, System › Check setup — opens a terminal
 //     (menu/MenuActions.qml).
 //     Those need a password prompt, a y/n per PKGBUILD and a wall of
 //     output that deserves a scrollback, none of which belongs behind a
 //     spinner in a popup.
-//   * A leaf that just answers a question — About › System, Setup ›
+//   * A leaf that just answers a question — System › About, Apps ›
 //     Defaults — renders inline (menu/MenuInfoView.qml) rather than
 //     opening anything at all.
+//   * A Features row flips its feature. That runs headless and answers
+//     with a notification, unless turning it on has packages to
+//     install, which is the terminal case above. See featureRows().
 //
 // Learn › Keybindings was a fourth kind for a while: a level of rows
 // that were each only a fact, answering the question the old Settings
@@ -85,7 +88,7 @@ ShellSurface {
     // Where in the tree we are, as the labels walked to get here — not
     // the item arrays themselves. Storing the path means `levelItems`
     // re-resolves against a freshly built tree on every change, so a row
-    // that depends on live state (Record screen's label, About › System's
+    // that depends on live state (Record screen's label, System › About's
     // kernel hint, anything gated on a binary the probe hasn't answered
     // for yet) updates while the menu is open rather than freezing at
     // whatever it said when the level was entered.
@@ -149,8 +152,105 @@ ShellSurface {
     readonly property var tree: panel._markInstalled(
         panel._markAvailability(panel.buildTree(), actions.tools), actions.packages)
 
+    // Six sections, one per job (regrouped at the user's request,
+    // 2026-09-24): Capture, Style, Apps, Features, System, Learn. Before
+    // that, apps were spread over four top-level entries — a catalogue
+    // under Setup beside Install, Remove and Update — Remove and About
+    // were branches holding one row each, and nothing reached the
+    // optional features at all.
     function buildTree() {
         return [
+            // Screenshots go through the shell's own capture path (see
+            // Panels.capture) so they land in the same folder, on the
+            // same clipboard and in the same notification history as the
+            // Print key — the menu is a third way in, not a second
+            // implementation.
+            { label: "Capture", icon: "", children: [
+                { label: "Screenshot (region)", icon: "",
+                  requires: "slurp", run: () => Panels.capture("region") },
+                { label: "Screenshot (window)", icon: "",
+                  requires: "grim", run: () => Panels.capture("window") },
+                { label: "Screenshot (screen)", icon: "",
+                  requires: "grim", run: () => Panels.capture("screen") },
+                { label: actions.recording ? "Stop recording" : "Record screen",
+                  icon: "", requires: "wf-recorder",
+                  hint: actions.recording ? "recording…" : "",
+                  run: () => actions.record() },
+                { label: "Colour picker", icon: "",
+                  requires: "hyprpicker", run: () => actions.pickColor() }
+            ]},
+
+            { label: "Style", icon: "", children: [
+                { label: "Wallpaper", icon: "\u{F0248}",
+                  run: () => Panels.open("wallpaper", undefined) },
+                // The card (theme/ThemesPanel.qml), which switches a
+                // palette and, behind its Edit pill, edits one.
+                { label: "Themes", icon: "", hint: "palettes",
+                  run: () => Panels.open("themes", undefined) }
+            ]},
+
+            // Putting apps on the machine, taking them off, keeping them
+            // current, and saying which of them opens what.
+            { label: "Apps", icon: "\u{F003B}", children: [
+                // A leaf: installer/AppInstaller.qml searches pacman, the
+                // AUR and flathub at once, so choosing a backend first
+                // would be asking the question that window exists to
+                // remove.
+                { label: "Install", icon: "", hint: "all sources",
+                  run: () => Panels.open("installer", "") },
+                // The same install rows, picked from a short list by
+                // category rather than searched for.
+                { label: "Browse", icon: "\u{F009}", hint: "by category", children: [
+                    { label: "Browsers", icon: "", hint: "web",
+                      children: panel.browserApps.map(app => panel.installRow(app)) },
+                    { label: "Communications", icon: "", hint: "chat",
+                      children: panel.communicationApps.map(app => panel.installRow(app)) },
+                    { label: "Gaming", icon: "", hint: "launchers",
+                      children: panel.gamingApps.map(app => panel.installRow(app)) },
+                    { label: "General", icon: "", hint: "everyday",
+                      children: panel.generalApps.map(app => panel.installRow(app)) }
+                ]},
+                { label: "Remove", icon: "", hint: "installed",
+                  run: () => Panels.open("packages", "Pacman") },
+                // "Update all" is rack's own three-stage update (repo,
+                // then AUR, then flatpak, each gated on the one before
+                // it); the three rows under it are the single stages, for
+                // when only one of them is what you meant.
+                { label: "Update", icon: "", children: [
+                    { label: "Update all", icon: "", hint: "rack update",
+                      run: () => Terminal.rack("update") },
+                    { label: "Pacman", icon: "", hint: "pacman -Syu",
+                      requires: "sudo",
+                      run: () => Terminal.run("sudo pacman -Syu") },
+                    { label: "Yay", icon: "", hint: "yay -Sua", requires: "yay",
+                      run: () => Terminal.run("yay -Sua") },
+                    { label: "Flatpak", icon: "", hint: "flatpak update",
+                      requires: "flatpak",
+                      run: () => Terminal.run("flatpak update") }
+                ]},
+                { label: "Defaults", icon: "", hint: "what opens what",
+                  children: panel.defaultRoles.map(role => ({
+                      label: role.label, icon: role.icon,
+                      hint: panel.defaultHint(role),
+                      children: panel.defaultRows(role)
+                  })) }
+            ]},
+
+            // The parts of the desktop `rack features` can turn on and
+            // off — see featureRows() below.
+            { label: "Features", icon: "\u{F0431}", hint: "optional parts",
+              children: panel.featureRows() },
+
+            { label: "System", icon: "", children: [
+                { label: "About", icon: "", hint: SystemInfo.kernel,
+                  info: "system" },
+                // `rack setup` is the one command that answers "is this
+                // machine set up": every dependency the shell and the
+                // tooling need, and which of them are missing.
+                { label: "Check setup", icon: "", hint: "rack setup",
+                  run: () => Terminal.rack("setup") }
+            ]},
+
             // The two wikis beside the keys: nearly everything this
             // desktop does, it does because Hyprland or Arch documents
             // it that way, and looking one of those up is the same kind
@@ -171,113 +271,50 @@ ShellSurface {
                 { label: "Hyprland", icon: "\u{F359}", hint: "wiki.hypr.land",
                   run: () => Defaults.openWebApp("https://wiki.hypr.land/") },
                 { label: "Arch", icon: "\u{F303}", hint: "wiki.archlinux.org",
-				run: () => Defaults.openWebApp("https://wiki.archlinux.org/") },
-				{ label: "LazyVim", icon: "\u{F04B2}", hint: "lazyvim.org",
-			    run: () => Defaults.openWebApp("https://lazyvim.org/") }
-            ]},
-
-            // Capture, per the user's choice for this branch. Screenshots
-            // go through the shell's own capture path (see
-            // MenuActions.capture) so they land in the same folder, on the
-            // same clipboard and in the same notification history as the
-            // Print key — the menu is a third way in, not a second
-            // implementation.
-            { label: "Trigger", icon: "", children: [
-                { label: "Screenshot (region)", icon: "",
-                  requires: "slurp", run: () => Panels.capture("region") },
-                { label: "Screenshot (window)", icon: "",
-                  requires: "grim", run: () => Panels.capture("window") },
-                { label: "Screenshot (screen)", icon: "",
-                  requires: "grim", run: () => Panels.capture("screen") },
-                { label: actions.recording ? "Stop recording" : "Record screen",
-                  icon: "", requires: "wf-recorder",
-                  hint: actions.recording ? "recording…" : "",
-                  run: () => actions.record() },
-                { label: "Colour picker", icon: "",
-                  requires: "hyprpicker", run: () => actions.pickColor() }
-            ]},
-
-            { label: "Style", icon: "", children: [
-                { label: "Wallpaper", icon: "\u{F0248}",
-                  run: () => Panels.open("wallpaper", undefined) },
-                // The card (theme/ThemesPanel.qml), which switches a
-                // palette and, behind its Edit pill, edits one. This row
-                // opened System settings › Appearance until that panel
-                // was deleted and both halves became the card.
-                { label: "Themes", icon: "", hint: "palettes",
-                  run: () => Panels.open("themes", undefined) }
-            ]},
-
-            // `rack setup` is already the one command that answers "is
-            // this machine set up" — it checks every dependency the shell
-            // and the tooling need and reports what's missing. It was the whole
-            // of this entry, a leaf, until Defaults moved here out of Apps
-            // (user request, 2026-09-17): what opens what is part of
-            // setting a machine up, and Apps is the level for putting the
-            // apps themselves on it. So Setup is a branch now and the
-            // command it used to be is the first row of it.
-            //
-            // Then the rest of Apps followed (user request, 2026-09-18)
-            // and the top-level section is gone: its four category levels
-            // are rows of this one now. Setting a machine up was what all
-            // of it was for — the command that reports what is missing,
-            // the apps that fill the gaps, and the defaults that say
-            // which of them opens what.
-            { label: "Setup", icon: "", children: [
-                { label: "Run Setup", icon: "", hint: "rack setup",
-                  run: () => Terminal.rack("setup") },
-                { label: "Defaults", icon: "", hint: "what opens what",
-                  children: panel.defaultRoles.map(role => ({
-                      label: role.label, icon: role.icon,
-                      hint: panel.defaultHint(role),
-                      children: panel.defaultRows(role)
-                  })) },
-                { label: "Browsers", icon: "", hint: "web",
-                  children: panel.browserApps.map(app => panel.installRow(app)) },
-                { label: "Communications", icon: "", hint: "chat",
-                  children: panel.communicationApps.map(app => panel.installRow(app)) },
-                { label: "Gaming", icon: "", hint: "launchers",
-                  children: panel.gamingApps.map(app => panel.installRow(app)) },
-                { label: "General", icon: "", hint: "everyday",
-                  children: panel.generalApps.map(app => panel.installRow(app)) }
-            ]},
-
-            // A leaf, where it used to be a branch over Pacman, AUR and
-            // Flatpak rows: installer/AppInstaller.qml searches all
-            // three at once, so the thing those rows chose — which
-            // backend to ask — is the decision that window exists to
-            // remove. Choosing it here would just be asking the same
-            // question one level earlier.
-            { label: "Install", icon: "", hint: "all sources",
-              run: () => Panels.open("installer", "") },
-
-            { label: "Remove", icon: "", children: [
-                { label: "Remove Apps", icon: "", hint: "installed",
-                  run: () => Panels.open("packages", "Pacman") }
-            ]},
-
-            // "Update Apps" is rack's own three-stage update (repo, then
-            // AUR, then flatpak, each gated on the one before it); the
-            // three rows under it are the single stages, for when only one
-            // of them is what you meant.
-            { label: "Update", icon: "", children: [
-                { label: "Update Apps", icon: "", hint: "rack update",
-                  run: () => Terminal.rack("update") },
-                { label: "Pacman", icon: "", hint: "pacman -Syu",
-                  requires: "sudo",
-                  run: () => Terminal.run("sudo pacman -Syu") },
-                { label: "Yay", icon: "", hint: "yay -Sua", requires: "yay",
-                  run: () => Terminal.run("yay -Sua") },
-                { label: "Flatpak", icon: "", hint: "flatpak update",
-                  requires: "flatpak",
-                  run: () => Terminal.run("flatpak update") }
-            ]},
-
-            { label: "About", icon: "", children: [
-                { label: "System", icon: "", hint: SystemInfo.kernel,
-                  info: "system" }
+                  run: () => Defaults.openWebApp("https://wiki.archlinux.org/") },
+                { label: "LazyVim", icon: "\u{F04B2}", hint: "lazyvim.org",
+                  run: () => Defaults.openWebApp("https://lazyvim.org/") }
             ]}
         ]
+    }
+
+    // ── Features ─────────────────────────────────────────
+    // One row per feature in rack/features.json, in that file's order,
+    // read through `rack features list` (MenuActions) so that a feature
+    // added there shows up here with nothing else to change. Whether one
+    // is on is services/Features.qml's, which watches the choices file:
+    // the row follows a toggle the moment rack writes it.
+    //
+    // Picking a row flips it. Off, and on for a feature that is already
+    // installed, run headless and say how it went as a notification;
+    // on for one that isn't installed opens a terminal, because that
+    // installs packages — a password prompt, and yay's PKGBUILD review
+    // for the AUR ones. Uninstalling stays `rack features remove`, which
+    // lists what it would delete and asks first.
+    //
+    // A feature that isn't installed never reads "on", whatever its line
+    // in the choices file says: nothing of it can be running.
+    readonly property var featureIcons: ({
+        dictation: "\u{F036C}",
+        earbuds: "\u{F184F}",
+        weather: "\u{F0595}"
+    })
+
+    function featureRows() {
+        if (actions.features === null) return [{ label: "Reading…", icon: "" }]
+        if (actions.features.length === 0)
+            return [{ label: "No features found", icon: "", hint: "rack features list" }]
+        return actions.features.map(f => {
+            const on = f.installed && Features.on(f.name)
+            return {
+                label: f.label, icon: panel.featureIcons[f.name] || "\u{F0431}",
+                hint: !f.installed ? "not installed" : on ? "on" : "off",
+                current: on,
+                run: () => !f.installed
+                    ? Terminal.rack("features on " + f.name, { title: f.label })
+                    : actions.setFeature(f.name, f.label, on ? "off" : "on")
+            }
+        })
     }
 
     // ── Learn › Keybindings ──────────────────────────────
@@ -292,7 +329,7 @@ ShellSurface {
     // The window shows every key at once; this menu keeps the thing it
     // was always better at, which is being the place you type a word.
 
-    // ── Setup › Defaults ─────────────────────────────────
+    // ── Apps › Defaults ──────────────────────────────────
     // What opens what, and a way to change it: one row per role, each
     // offering the candidates this machine actually has. The roles, their
     // candidates, which of those are installed and what picking one does
@@ -340,7 +377,7 @@ ShellSurface {
         }))
     }
 
-    // Setup › Gaming. Five launchers because that is how many places a
+    // Apps › Browse › Gaming. Five launchers because that is how many places a
     // game actually comes from here: Steam's own library, anything Wine
     // or an emulator can be talked into running (Lutris), the Epic and
     // GOG stores (Heroic), a Wine prefix you keep by hand (Bottles), and
@@ -359,7 +396,7 @@ ShellSurface {
         { label: "Prism Launcher", icon: "\u{F0373}", pkg: "prismlauncher" }
     ]
 
-    // Setup › Browsers. All of them as flatpaks, per the user's choice —
+    // Apps › Browse › Browsers. All of them as flatpaks, per the user's choice —
     // and flathub is in fact the only source that carries all of them:
     // chromium and firefox are in extra, google-chrome, zen-browser-bin
     // and brave-bin only in the AUR. One row shape and one updater
@@ -376,7 +413,7 @@ ShellSurface {
         { label: "Zen",           icon: "\u{F0B21}", flatpak: "app.zen_browser.zen" }
     ]
 
-    // Setup › Communications. Discord from flathub, per the user's
+    // Apps › Browse › Communications. Discord from flathub, per the user's
     // choice, not extra/discord: the two package the same client
     // (1.0.157 either way today), so what the choice actually picks is
     // which updater it rides — flatpak, where the build is the vendor's
@@ -385,7 +422,7 @@ ShellSurface {
         { label: "Discord", icon: "\u{F066F}", flatpak: "com.discordapp.Discord" }
     ]
 
-    // Setup > General. What doesn't group with anything else: LocalSend
+    // Apps › Browse › General. What doesn't group with anything else: LocalSend
     // for pushing a file at a phone on the same network, Bitwarden for
     // passwords, Obsidian for notes, Spotify for music. Flatpaks per the
     // user's choice, and for two of the four that is the only packaged
@@ -696,7 +733,7 @@ ShellSurface {
             // long line, and eliding the answer is the one thing that
             // view must not do. So the slab widens for it, on the same
             // easing its height already animates with. (Two other views
-            // used to need it and neither does now: Setup › Defaults is
+            // used to need it and neither does now: Apps › Defaults is
             // a branch of ordinary rows, and Learn › Keybindings is a
             // single row that opens keybinds/KeybindsPanel.qml.)
             implicitWidth: panel.infoKind !== "" ? 430 : 340

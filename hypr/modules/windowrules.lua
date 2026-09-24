@@ -88,7 +88,7 @@ hl.window_rule({
 -- side is Theme.floatAppId + services/Terminal.qml, which passes it with
 -- whichever flag the chosen terminal takes), and anything else that can
 -- name its own app-id gets the same treatment for free. Swapping the
--- terminal in Setup › Defaults changes nothing here.
+-- terminal in Apps › Defaults changes nothing here.
 --
 -- Sized off the monitor rather than in pixels so it lands the same on
 -- any screen. Note the arithmetic form: a plain `size = "60% 65%"` is

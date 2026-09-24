@@ -99,7 +99,7 @@ running. Grouped by what breaks if it's missing.
   and file manager; Hyprland runs it with its own built-in Lua, but
   everything outside Hyprland reaches it through `relay default`, which
   runs the `lua` binary. Without it the shell opens no terminals (a
-  notification says why) and Setup › Defaults can't read what is set.
+  notification says why) and Apps › Defaults can't read what is set.
   See docs/adr/0001.
 
 - **zsh** — the login shell the repo's `zsh/` config is written for.
@@ -154,12 +154,12 @@ running. Grouped by what breaks if it's missing.
 ## Optional — config degrades gracefully without these
 
 - **yay** — the AUR. Without it the installer (`installer/AppInstaller.qml`)
-  shows pacman and Flathub results only, the Conf menu's Update › Yay row
-  and the Setup rows for AUR packages (Heroic, Bottles) are dimmed, and
+  shows pacman and Flathub results only, the Conf menu's Apps › Update › Yay row
+  and the Apps › Browse rows for AUR packages (Heroic, Bottles) are dimmed, and
   `rack update` skips its AUR stage. Flatpak is the install source that is
   required. A different helper (`paru`) means swapping the literal `"yay"`
   in `services/packages.js` (installing), `installer/AppInstaller.qml`
-  (searching) and the Conf menu's Update › Yay row.
+  (searching) and the Conf menu's Apps › Update › Yay row.
 
 - **matugen** — `theme/WallpaperSource.qml` reads `~/.cache/matugen/colors.json`
   for wallpaper mode, and the shell uses the Default preset

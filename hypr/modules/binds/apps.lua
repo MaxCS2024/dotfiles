@@ -16,7 +16,7 @@ local features = require("modules.features")
 local mainMod = vars.mainMod
 
 -- Apps. What each one runs is the role's default (modules/defaults.lua):
--- the one set from Conf > Setup > Defaults or `relay default set`, else
+-- the one set from Conf > Apps > Defaults or `relay default set`, else
 -- the first candidate this machine has installed.
 hl.bind(mainMod .. " + RETURN", hl.dsp.exec_cmd(vars.terminal))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(vars.fileManager))

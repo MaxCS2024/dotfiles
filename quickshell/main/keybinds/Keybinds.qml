@@ -102,7 +102,7 @@ Singleton {
         ]},
 
         // Print goes through this shell's own capture path (the same one
-        // Trigger › Screenshot uses); Shift+Print is media.lua's own
+        // Capture › Screenshot uses); Shift+Print is media.lua's own
         // grim/slurp line, which writes the file as well as copying it.
         { label: "Screenshots", icon: "\u{F0E51}", binds: [
             { action: "Screenshot", keys: ["Print"] },
