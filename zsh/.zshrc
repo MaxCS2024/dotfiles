@@ -1,14 +1,49 @@
 # ╭──────────────────────────────────────────────╮
+# │ oh-my-zsh                                    │
+# ╰──────────────────────────────────────────────╯
+
+# Both live in the repo: ohmyzsh/ is a submodule, custom/ holds the plugins
+# it does not ship (zsh-autosuggestions, also a submodule).
+export ZSH="$ZDOTDIR/ohmyzsh"
+ZSH_CUSTOM="$ZDOTDIR/custom"
+
+# ZDOTDIR is a link into the repo, so oh-my-zsh's defaults would write its
+# cache and completion dump into the working tree.
+ZSH_CACHE_DIR="$XDG_CACHE_HOME/oh-my-zsh"
+ZSH_COMPDUMP="$ZSH_CACHE_DIR/.zcompdump-${HOST%%.*}-$ZSH_VERSION"
+
+# Updated with git like any other submodule; the self-updater would leave
+# the submodule dirty.
+zstyle ':omz:update' mode disabled
+
+# Set before oh-my-zsh loads, or it picks ~/.zsh_history.
+HISTFILE="$ZDOTDIR/.histfile"
+
+# The prompt is starship, started below.
+ZSH_THEME=""
+
+plugins=(
+    fzf
+    zoxide
+    zsh-autosuggestions
+)
+
+source "$ZSH/oh-my-zsh.sh"
+
+
+# ╭──────────────────────────────────────────────╮
 # │ Aliases                                      │
 # ╰──────────────────────────────────────────────╯
 
 alias nv="nvim"
 
-# Files
-alias ls="eza --color=always --icons always"
-alias ll="eza -lah --color=always --icons always"
-alias la="eza -a --color=always --icons always"
-alias lt="eza --tree --icons always"
+# Files. Guarded so a machine without eza keeps a working ls.
+if command -v eza >/dev/null 2>&1; then
+    alias ls="eza --color=always --icons always"
+    alias ll="eza -lah --color=always --icons always"
+    alias la="eza -a --color=always --icons always"
+    alias lt="eza --tree --icons always"
+fi
 
 # Navigation
 alias ..="cd .."
@@ -60,27 +95,9 @@ tat() {
 
 
 # ╭──────────────────────────────────────────────╮
-# │ Zoxide                                       │
-# ╰──────────────────────────────────────────────╯
-
-if command -v zoxide >/dev/null 2>&1; then
-    eval "$(zoxide init zsh)"
-fi
-
-
-# ╭──────────────────────────────────────────────╮
-# │ Colors                                       │
-# ╰──────────────────────────────────────────────╯
-
-autoload -U colors
-colors
-
-
-# ╭──────────────────────────────────────────────╮
 # │ History                                      │
 # ╰──────────────────────────────────────────────╯
 
-HISTFILE="$ZDOTDIR/.histfile"
 HISTSIZE=10000
 SAVEHIST=10000
 
@@ -94,14 +111,6 @@ setopt SHARE_HISTORY
 
 
 # ╭──────────────────────────────────────────────╮
-# │ Completion                                   │
-# ╰──────────────────────────────────────────────╯
-
-autoload -Uz compinit
-compinit
-
-
-# ╭──────────────────────────────────────────────╮
 # │ Starship prompt                              │
 # ╰──────────────────────────────────────────────╯
 
@@ -111,22 +120,11 @@ fi
 
 
 # ╭──────────────────────────────────────────────╮
-# │ Autosuggestions                              │
-# ╰──────────────────────────────────────────────╯
-
-source "$ZDOTDIR/zsh-autosuggestions/zsh-autosuggestions.zsh"
-
-# ╭──────────────────────────────────────────────╮
 # │ Quality of Life                              │
 # ╰──────────────────────────────────────────────╯
 
 # Reload shell configuration
 alias reload="source ~/.config/zsh/.zshrc"
-
-# FZF integration
-if command -v fzf >/dev/null 2>&1; then
-    source <(fzf --zsh)
-fi
 
 # Fastfetch
 if command -v fastfetch >/dev/null 2>&1; then
