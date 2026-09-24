@@ -288,6 +288,16 @@ running. Grouped by what breaks if it's missing.
   asking. `rack features on earbuds` installs them; `rack features off
   earbuds` takes the pill and the rail section away and stops the watcher.
 
+- **fzf** and **zoxide** — the oh-my-zsh plugins of the same names in
+  `zsh/.zshrc` (Ctrl-R history search, `z`), and `tat`, `ff` and `fcd`.
+  Without them oh-my-zsh prints a warning at every shell start.
+
+- **neovim**, **ripgrep**, **fd**, **gcc** and **npm** — LazyVim
+  (`nvim/`). The first launch clones every plugin with git. Without
+  ripgrep, text search (`<leader>/`, `<leader>fs`) doesn't work; fd only
+  makes file search faster. gcc compiles the treesitter parsers, and without it there's no
+  syntax highlighting. Mason installs pyright through npm.
+
 ## Fonts
 
 - **JetBrainsMono Nerd Font** (`Theme.font`) — must be the actual

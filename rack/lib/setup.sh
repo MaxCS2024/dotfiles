@@ -74,6 +74,13 @@ declare -ga RACK_SETUP_OPTIONAL=(
     "psmisc:fuser"
     "voxtype-bin:voxtype"
     "wtype:wtype"
+    "fzf:fzf"
+    "zoxide:zoxide"
+    "neovim:nvim"
+    "ripgrep:rg"
+    "fd:fd"
+    "gcc:cc"
+    "npm:npm"
 )
 
 # What rack and relay need themselves, distinct from anything quickshell shells
