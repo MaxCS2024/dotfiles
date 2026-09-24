@@ -292,12 +292,12 @@ running. Grouped by what breaks if it's missing.
   `zsh/.zshrc` (Ctrl-R history search, `z`), and `tat`, `ff` and `fcd`.
   Without them oh-my-zsh prints a warning at every shell start.
 
-- **neovim**, **ripgrep**, **fd**, **gcc** and **npm** — the Neovim
-  config (`nvim/`). The first launch fetches vim-plug with curl and every
-  plugin with git. Without ripgrep, Telescope's text search
-  (`<leader>fs`) doesn't work; fd only makes file search faster. gcc
-  compiles the treesitter parsers, and without it there's no syntax
-  highlighting. Mason installs pyright through npm.
+- **gcc** and **npm** — the LazyVim feature (`rack features on
+  lazyvim`, or Conf › Features). It installs neovim, ripgrep, fd and
+  lazygit itself, but not these two: too much else uses them for
+  `rack features remove lazyvim` to take them away. gcc compiles the
+  treesitter parsers, and without it there's no syntax highlighting.
+  Mason installs pyright through npm.
 
 ## Fonts
 

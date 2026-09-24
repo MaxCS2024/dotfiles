@@ -51,6 +51,23 @@
 			"units": [],
 			"teardown": [],
 			"data": []
+		},
+		"lazyvim": {
+			"label": "LazyVim",
+			"summary": "Neovim as LazyVim, cloned fresh from its starter, with this repo's options, keymaps and plugins (nvim/) linked on top. Installed or not: there is nothing to switch off. Removing it deletes ~/.config/nvim and Neovim's data.",
+			"recommended": false,
+			"switch": false,
+			"size": "about 300 MB of plugins, parsers and language servers",
+			"provides": ["nvim"],
+			"probe": ["sh", "-c", "grep -qs LazyVim/LazyVim \"${XDG_CONFIG_HOME:-$HOME/.config}/nvim/lua/config/lazy.lua\""],
+			"packages": {
+				"repo": ["neovim", "ripgrep", "fd", "lazygit"],
+				"aur": []
+			},
+			"setup": [["nvim/install.sh"]],
+			"units": [],
+			"teardown": [],
+			"data": ["~/.config/nvim", "~/.local/share/nvim", "~/.local/state/nvim", "~/.cache/nvim"]
 		}
 	}
 }

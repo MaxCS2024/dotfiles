@@ -165,10 +165,12 @@ QtObject {
 
     // ── Optional features ────────────────────────────────
     // Every feature rack/features.json defines, in its order, as `rack
-    // features list` prints them: its name, its label, and whether its
-    // packages are on the machine. The on/off column is read and
-    // dropped — services/Features.qml answers that live from the
-    // choices file, where this is only as fresh as the last open.
+    // features list` prints them: its name, its label, whether its
+    // packages are on the machine, and whether it can be switched at all
+    // ("-" in the state column: installed or not, like lazyvim). Whether
+    // a switchable one is on is not taken from here —
+    // services/Features.qml answers that live from the choices file,
+    // where this is only as fresh as the last open.
     //
     // Null until answered, for the same reason `tools` is. An empty list
     // is rack missing or failing: the row that says so names the
@@ -186,8 +188,9 @@ QtObject {
     function _parseFeatures(text) {
         const found = []
         for (const line of text.split("\n")) {
-            const m = line.match(/^\s*(\S+)\s+(?:on|off)\s+(installed|not installed)\s+(.+?)\s*$/)
-            if (m) found.push({ name: m[1], installed: m[2] === "installed", label: m[3] })
+            const m = line.match(/^\s*(\S+)\s+(on|off|-)\s+(installed|not installed)\s+(.+?)\s*$/)
+            if (m) found.push({ name: m[1], switchable: m[2] !== "-",
+                                installed: m[3] === "installed", label: m[4] })
         }
         // Only a different answer is published, as with `tools`: the
         // whole tree is bound to this.

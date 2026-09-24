@@ -11,6 +11,14 @@
 #           Packages and data stay, so turning it back on is instant.
 #   remove  off, then uninstall its packages and delete its data
 #
+# A feature with `"switch": false` (lazyvim) is installed or it isn't: it has
+# no daemon to stop and nothing in the shell to hide, so there is no off.
+# `off` refuses it, `list` shows "-" for its state, and in the picker its tick
+# means installed — unticking it goes straight to the question remove asks.
+#
+# setup and teardown commands run from the repo root, so a feature can name a
+# script of its own by its path in the repo (nvim/install.sh).
+#
 # What is on is one small file, features.conf, which the shell
 # (quickshell/main/services/Features.qml) and Hyprland
 # (hypr/modules/features.lua) both read. A feature with no line in it is on:
@@ -61,6 +69,11 @@ rack::features::__list() {
 
 rack::features::__field() {
     jq -r --arg n "$1" --arg f "$2" '.features[$n][$f] // ""' "$(rack::features::__registry)"
+}
+
+# False only for a feature that says `"switch": false` (see the header).
+rack::features::__switchable() {
+    jq -e --arg n "$1" '.features[$n].switch != false' "$(rack::features::__registry)" >/dev/null
 }
 
 # ------------------------------------------------------------------ state
@@ -130,7 +143,7 @@ rack::features::__run_each() {
     while read -r cmd; do
         [[ -n $cmd ]] || continue
         mapfile -t argv < <(jq -r '.[]' <<<"$cmd")
-        rig::proc::run "${argv[@]}" || {
+        (cd -- "$RACK_ROOT/.." && rig::proc::run "${argv[@]}") || {
             rig::log::error "$name: '${argv[*]}' failed"
             return "$RIG_EX_FAIL"
         }
@@ -233,7 +246,8 @@ rack::features::on() {
         fi
         rack::features::__units "$name" enable
         rack::features::__set "$name" on
-        rig::log::success "$name is on"
+        rack::features::__switchable "$name" && rig::log::success "$name is on" ||
+            rig::log::success "$name is installed"
     done
     rack::features::__reload
 }
@@ -245,7 +259,13 @@ rack::features::off() {
         rig::log::error "usage: rack features off <feature>..."
         return "$RIG_EX_USAGE"
     }
-    for name in "$@"; do rack::features::__known "$name" || return; done
+    for name in "$@"; do
+        rack::features::__known "$name" || return
+        rack::features::__switchable "$name" || {
+            rig::log::error "$name has nothing to switch off; 'rack features remove $name' uninstalls it"
+            return "$RIG_EX_USAGE"
+        }
+    done
     for name in "$@"; do
         rack::features::__set "$name" off
         rack::features::__units "$name" disable
@@ -261,8 +281,14 @@ rack::features::remove() {
         rig::log::error "usage: rack features remove <feature>..."
         return "$RIG_EX_USAGE"
     }
-    for name in "$@"; do rack::features::__known "$name" || return; done
-    rack::features::off "$@" || return
+    local -a switchable=()
+    for name in "$@"; do
+        rack::features::__known "$name" || return
+        rack::features::__switchable "$name" && switchable+=("$name")
+    done
+    if ((${#switchable[@]})); then
+        rack::features::off "${switchable[@]}" || return
+    fi
     for name in "$@"; do
         rack::features::__purge "$name" || return
     done
@@ -299,11 +325,12 @@ rack::features::__purge() {
 }
 
 rack::features::list() {
-    local name installed
+    local name installed state
     rack::features::__require || return
     while read -r name; do
         rack::features::__installed "$name" && installed=installed || installed="not installed"
-        printf '  %-12s %-4s %-14s %s\n' "$name" "$(rack::features::__state "$name")" "$installed" \
+        rack::features::__switchable "$name" && state=$(rack::features::__state "$name") || state=-
+        printf '  %-12s %-4s %-14s %s\n' "$name" "$state" "$installed" \
             "$(rack::features::__field "$name" label)"
     done < <(rack::features::__names)
 }
@@ -333,7 +360,9 @@ rack::features::pick() {
     mapfile -t names < <(rack::features::__names)
     n=${#names[@]}
     for i in "${!names[@]}"; do
-        if ((first)); then
+        if ! rack::features::__switchable "${names[$i]}"; then
+            rack::features::__installed "${names[$i]}" && ticks[i]=1 || ticks[i]=0
+        elif ((first)); then
             if [[ $(jq -r --arg n "${names[$i]}" '.features[$n].recommended' "$(rack::features::__registry)") == true ]] ||
                 rack::features::__installed "${names[$i]}"; then
                 ticks[i]=1
@@ -406,11 +435,18 @@ rack::features::__draw() {
 rack::features::__apply() {
     local first=$1 i name was
     local -n _names=$2 _ticks=$3
-    local -a turn_on=() turn_off=()
+    local -a turn_on=() turn_off=() uninstall=()
     for i in "${!_names[@]}"; do
         name=${_names[$i]}
         was=$(rack::features::__state "$name")
-        if ((_ticks[i])); then
+        # Installed or not: a tick installs it, an untick asks to remove it.
+        if ! rack::features::__switchable "$name"; then
+            if ((_ticks[i])); then
+                rack::features::__installed "$name" || turn_on+=("$name")
+            elif rack::features::__installed "$name"; then
+                uninstall+=("$name")
+            fi
+        elif ((_ticks[i])); then
             if ((first)) || [[ $was == off ]] || ! rack::features::__installed "$name"; then
                 turn_on+=("$name")
             fi
@@ -418,7 +454,7 @@ rack::features::__apply() {
             turn_off+=("$name")
         fi
     done
-    if ((${#turn_on[@]} + ${#turn_off[@]} == 0)); then
+    if ((${#turn_on[@]} + ${#turn_off[@]} + ${#uninstall[@]} == 0)); then
         printf 'nothing changed\n'
         return 0
     fi
@@ -432,6 +468,9 @@ rack::features::__apply() {
         [[ -n $(rack::features::__removable_packages "$name")$(rack::features::__data "$name") ]] || continue
         printf '\n%s is off but still installed, so ticking it again later is instant.\n' \
             "$(rack::features::__field "$name" label)"
+        rack::features::__purge "$name" || return
+    done
+    for name in "${uninstall[@]}"; do
         rack::features::__purge "$name" || return
     done
 }

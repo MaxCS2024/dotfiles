@@ -294,10 +294,17 @@ ShellSurface {
     //
     // A feature that isn't installed never reads "on", whatever its line
     // in the choices file says: nothing of it can be running.
+    //
+    // One with nothing to switch (lazyvim: `"switch": false` in
+    // features.json) reads installed or not installed instead, and
+    // picking it once it is installed is the removal — in a terminal,
+    // where `rack features remove` lists what it would delete and asks
+    // before it does.
     readonly property var featureIcons: ({
         dictation: "\u{F036C}",
         earbuds: "\u{F184F}",
-        weather: "\u{F0595}"
+        weather: "\u{F0595}",
+        lazyvim: "\u{F04B2}"
     })
 
     function featureRows() {
@@ -305,6 +312,13 @@ ShellSurface {
         if (actions.features.length === 0)
             return [{ label: "No features found", icon: "", hint: "rack features list" }]
         return actions.features.map(f => {
+            if (!f.switchable) return {
+                label: f.label, icon: panel.featureIcons[f.name] || "\u{F0431}",
+                hint: f.installed ? "installed" : "not installed",
+                installed: f.installed,
+                run: () => Terminal.rack("features " + (f.installed ? "remove " : "on ") + f.name,
+                    { title: f.label })
+            }
             const on = f.installed && Features.on(f.name)
             return {
                 label: f.label, icon: panel.featureIcons[f.name] || "\u{F0431}",

@@ -434,6 +434,82 @@ test_apply_nothing_changed() {
 	ok
 }
 
+# ---- a feature with nothing to switch off -------------------------------------
+#
+# kit is lazyvim's shape: `"switch": false`, installed once its probe passes,
+# with a setup step that records where it ran.
+
+kit_registry() {
+	cat >"$RACK_FEATURES" <<-'EOF'
+		{"version": 1, "features": {
+		  "kit": {"label": "Kit", "summary": "x", "recommended": false, "switch": false,
+		    "provides": ["sh"], "probe": ["sh", "-c", "test -e \"$STUB/pkgs/zzkit\""],
+		    "packages": {"repo": ["zzkit"], "aur": []},
+		    "setup": [["sh", "-c", "pwd -P >\"$STUB/setup-cwd\""]],
+		    "data": ["~/.config/kit"]}
+		}}
+	EOF
+}
+
+test_unswitchable_has_no_off() {
+	it "a feature with nothing to switch lists no state and refuses off"
+	kit_registry
+	run features list
+	assert_has "no state" "$OUT" "kit          -    not installed" || return
+	run features off kit
+	assert_eq "status" "$STATUS" 2 || return
+	assert_has "said why" "$ERR" "nothing to switch off" || return
+	ok
+}
+
+test_setup_runs_from_repo_root() {
+	it "setup commands run from the repo root, so a feature can name its own script"
+	kit_registry
+	run features on kit
+	assert_eq "status" "$STATUS" 0 || return
+	assert_eq "cwd" "$(cat "$TMP/setup-cwd")" "$(cd "$(dirname "$RACK")/.." && pwd -P)" || return
+	assert_has "said" "$OUT$ERR" "kit is installed" || return
+	ok
+}
+
+test_unswitchable_remove() {
+	it "removing a feature with nothing to switch skips off and uninstalls it"
+	kit_registry
+	"$RACK" features on kit >/dev/null 2>&1 </dev/null
+	mkdir -p "$HOME/.config/kit"
+	: >"$TMP/calls"
+	RIG_YES=1 run features remove kit
+	assert_eq "status" "$STATUS" 0 || return
+	assert_lacks "no off" "$ERR" "nothing to switch off" || return
+	assert_has "uninstalled" "$CALLS" "pacman -Rns -- zzkit" || return
+	[[ ! -e $HOME/.config/kit ]] || fail "data: ~/.config/kit is still there"
+	ok
+}
+
+test_apply_unswitchable() {
+	it "in the picker, a feature with nothing to switch is ticked to install and unticked to remove"
+	kit_registry
+	OUT=$(
+		source "$RACK"
+		set -euo pipefail
+		rack::load features
+		local -a names=(kit) ticks=(1)
+		rack::features::__apply 0 names ticks
+	) 2>"$TMP/err"
+	assert_has "installed" "$(cat "$TMP/calls")" "pacman -S --needed zzkit" || return
+	: >"$TMP/calls"
+	OUT=$(
+		source "$RACK"
+		set -euo pipefail
+		rack::load features
+		local -a names=(kit) ticks=(0)
+		RIG_YES=1 rack::features::__apply 0 names ticks
+	) 2>"$TMP/err"
+	assert_lacks "no off" "$(cat "$TMP/err")" "nothing to switch off" || return
+	assert_has "removed" "$(cat "$TMP/calls")" "pacman -Rns -- zzkit" || return
+	ok
+}
+
 # ---- runner ------------------------------------------------------------------
 
 main() {
