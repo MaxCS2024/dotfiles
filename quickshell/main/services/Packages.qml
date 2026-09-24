@@ -2,9 +2,11 @@ pragma Singleton
 import Quickshell
 import Quickshell.Io
 import QtQuick
+import "packages.js" as Plan
 
 // What is installed on this machine, from the two package managers this
-// config uses: pacman (native and foreign) and flatpak (user and system).
+// config uses — pacman (native and foreign) and flatpak (user and system)
+// — and the one way to change it.
 //
 // ── Why this exists ──────────────────────────────────────
 // Every other command-line tool in this shell is wrapped exactly once —
@@ -24,17 +26,17 @@ import QtQuick
 // without flatpak installed; AppInstaller's, written separately, has no
 // such guard.
 //
-// ── What is deliberately NOT here ────────────────────────
-// installer/AppInstaller.qml's `pacman -Q <pkg>` stays where it is. It
-// reads like a membership test but it is a poll: after an AUR build is
-// handed off, it asks every two seconds whether the package has appeared
-// yet. A cached set is stale exactly when that question is being asked,
-// so it wants its own live process and keeps one.
+// Changing it went the same way, later: the Conf menu, the installer and
+// the packages list each spelled their own install and remove commands,
+// took root three ways for the same package, kept their own "installing"
+// marks, and only the installer's flatpak path refreshed this afterwards.
+// Those are here now too (see "Changing what is installed" below), with
+// the per-source rules in packages.js, which tests/packages covers.
 //
 // ── Shape ────────────────────────────────────────────────
 // Entries are the shape packages/PackagesList.qml already drew:
 //
-//   { source, id, name, version, description, installed, installing }
+//   { source, id, name, version, description, installed }
 //
 // plus `scope` ("user" | "system") on flatpaks, which is what lets an
 // uninstall pass the matching flag instead of guessing --user.
@@ -64,16 +66,13 @@ Singleton {
     readonly property bool loadedOnce: root._loadedOnce && root._allLoaded
 
     // Fired when a refresh has finished and `installed` is worth reading.
-    // A caller that keeps its own mutable copy — packages/PackagesList.qml
-    // marks entries as uninstalling — re-takes it here.
     signal refreshed()
 
+    // The lists keep their last answer until each process replaces it:
+    // emptied first, every window bound to `installed` would flash an
+    // empty list after each install or removal.
     function refresh() {
         root._loading = true
-        root._pacman = []
-        root._aur = []
-        root._flatpakUser = []
-        root._flatpakSystem = []
         for (const p of [pacmanProc, aurProc, allPacmanProc, flatpakUserProc, flatpakSystemProc]) {
             p.running = false
             p.running = true
@@ -103,6 +102,235 @@ Singleton {
         return root._flatpak.some(e => e.id === name || e.name === name)
     }
 
+    // ── Changing what is installed ───────────────────────
+    //
+    //   Packages.install(entry, prompt)   entry: { source, id, name, scope }
+    //   Packages.remove(entry, prompt)
+    //
+    // `prompt` is the calling window's common/PasswordPrompt, or nothing.
+    // With one, what needs root runs behind the window: the prompt asks, a
+    // wrong password is tried again with it still up, and it closes once
+    // the command has worked. Without one — the Conf menu, which runs a
+    // row after it has closed — root means a terminal with sudo in it.
+    // packages.js decides which, per source; an AUR install always gets a
+    // terminal, because yay wants its PKGBUILD read.
+    //
+    // A terminal reports nothing back, so what runs in one is watched: the
+    // plan's check (`pacman -Q`, `flatpak info`) is asked every two seconds
+    // until the package arrives or leaves, for up to ten minutes — an AUR
+    // build or a first flatpak's runtime can take a while. Giving up only
+    // clears the mark; the terminal carries on regardless.
+    //
+    // Commands behind the window go one at a time. services/PrivilegedExec
+    // tracks a single command, and two windows asking it at once used to
+    // lose the first one's answer.
+    //
+    // While something is being done to a package, busy(source, id) is the
+    // action ("install" or "remove"), and "" otherwise — the one answer a
+    // window's "Working…" reads. finished() fires when it ends, with a
+    // message a window can show in its own way; an action started with no
+    // window gets a desktop notification instead, since nothing else would
+    // say it.
+
+    signal finished(string action, var entry, bool ok, string message)
+
+    function busy(source, id): string {
+        return root._busy[source + ":" + id] || ""
+    }
+
+    function install(entry, prompt) { root._start("install", entry, prompt || null) }
+    function remove(entry, prompt) { root._start("remove", entry, prompt || null) }
+
+    readonly property int watchInterval: 2000
+    readonly property int watchLimit: 10 * 60 * 1000
+
+    // key -> action. Replaced rather than changed in place, so that every
+    // binding reading busy() hears about it.
+    property var _busy: ({})
+
+    function _mark(entry, action) {
+        const next = Object.assign({}, root._busy)
+        if (action === "") delete next[Plan.key(entry)]
+        else next[Plan.key(entry)] = action
+        root._busy = next
+    }
+
+    function _name(entry) { return entry.name || entry.id }
+
+    function _done(action, entry) {
+        return root._name(entry) + (action === "install" ? " installed" : " removed")
+    }
+
+    function _start(action, entry, prompt) {
+        if (!entry || root.busy(entry.source, entry.id) !== "") return
+
+        const plan = Plan.plan(action, entry, prompt !== null)
+        if (plan === null) {
+            root._end(action, entry, prompt, false,
+                "Can't " + action + " " + (entry.id || "that") + ": not a package this knows how to")
+            return
+        }
+
+        if (plan.terminal) {
+            root._mark(entry, action)
+            Terminal.run(plan.commandLine, { title: plan.title })
+            root._watch(action, entry, plan.check, prompt)
+        } else if (plan.privileged) {
+            // The prompt stays up while the command runs, so a second
+            // Enter would queue the same action twice.
+            prompt.ask(plan.title, plan.prompt, password => {
+                if (root.busy(entry.source, entry.id) === "")
+                    root._enqueue({ action, entry, plan, prompt, password })
+            })
+        } else {
+            root._enqueue({ action, entry, plan, prompt, password: "" })
+        }
+    }
+
+    function _end(action, entry, prompt, ok, message) {
+        root._mark(entry, "")
+        if (ok) root.refresh()
+        root.finished(action, entry, ok, message)
+        if (prompt === null)
+            Notifications.post(message, "", ok ? "normal" : "critical", "Packages", "")
+    }
+
+    // ── Behind the window, one at a time ─────────────────
+    property var _queue: []
+    property var _current: null
+
+    function _enqueue(job) {
+        root._mark(job.entry, job.action)
+        root._queue = root._queue.concat([job])
+        root._next()
+    }
+
+    function _next() {
+        if (root._current !== null || root._queue.length === 0) return
+        const job = root._queue[0]
+        root._queue = root._queue.slice(1)
+        root._current = job
+
+        if (job.plan.privileged) {
+            PrivilegedExec.run(job.plan.argv, job.password,
+                () => {
+                    job.prompt.close()
+                    root._finishJob(job, true, root._done(job.action, job.entry))
+                },
+                message => {
+                    // The prompt stays up and still holds the action, so
+                    // submitting again retries — see PasswordPrompt.ask.
+                    job.prompt.showError(message)
+                    root._finishJob(job, false, message)
+                })
+        } else {
+            plainProc.command = job.plan.argv
+            plainProc.running = true
+        }
+    }
+
+    function _finishJob(job, ok, message) {
+        root._current = null
+        root._end(job.action, job.entry, job.prompt, ok, message)
+        root._next()
+    }
+
+    // What needs no root: removing a flatpak installed for the user alone.
+    Process {
+        id: plainProc
+        onExited: (exitCode, exitStatus) => {
+            const job = root._current
+            if (job === null) return
+            root._finishJob(job, exitCode === 0, exitCode === 0
+                ? root._done(job.action, job.entry)
+                : "Couldn't " + job.action + " " + root._name(job.entry))
+        }
+        // A command that is not installed never starts, and a Process
+        // that never started emits no exited() — the queue would wait on
+        // it for good. Checked a turn later, once exited() has had its
+        // chance to finish the job.
+        // The job is taken now, not then: by then exited() may have
+        // finished it and started the next one.
+        onRunningChanged: {
+            if (running) return
+            const job = root._current
+            Qt.callLater(() => {
+                if (job !== null && root._current === job && !job.plan.privileged)
+                    root._finishJob(job, false, "Couldn't run " + job.plan.argv[0])
+            })
+        }
+    }
+
+    // ── In a terminal, watched ───────────────────────────
+    // key -> { action, entry, check, prompt, until }
+    property var _watches: ({})
+
+    function _watch(action, entry, check, prompt) {
+        const next = Object.assign({}, root._watches)
+        next[Plan.key(entry)] = { action, entry, check, prompt, until: Date.now() + root.watchLimit }
+        root._watches = next
+        watchTimer.start()
+    }
+
+    Timer {
+        id: watchTimer
+        interval: root.watchInterval
+        repeat: true
+        onTriggered: {
+            const keys = Object.keys(root._watches)
+            if (keys.length === 0) {
+                watchTimer.stop()
+                return
+            }
+            if (watchProc.running) return
+
+            // One process asks every check: a line per watch, its index and
+            // the check's exit status.
+            watchProc.keys = keys
+            watchProc.command = ["sh", "-c", keys.map((k, i) =>
+                Plan.line(root._watches[k].check) + ' >/dev/null 2>&1; echo "' + i + ' $?"').join("\n")]
+            watchProc.running = true
+        }
+    }
+
+    Process {
+        id: watchProc
+        property var keys: []
+        stdout: StdioCollector {
+            id: watchOut
+            onStreamFinished: root._settle(watchProc.keys, watchOut.text)
+        }
+    }
+
+    function _settle(keys, text) {
+        const now = Date.now()
+        const next = Object.assign({}, root._watches)
+        const ended = []
+        for (const row of text.split("\n")) {
+            const cells = row.trim().split(" ")
+            if (cells.length !== 2) continue
+            const key = keys[Number(cells[0])]
+            const watch = next[key]
+            if (!watch) continue
+            const present = cells[1] === "0"
+            if (present === (watch.action === "install")) {
+                delete next[key]
+                ended.push({ watch, ok: true })
+            } else if (now > watch.until) {
+                delete next[key]
+                ended.push({ watch, ok: false })
+            }
+        }
+        root._watches = next
+
+        for (const e of ended) {
+            const w = e.watch
+            root._end(w.action, w.entry, w.prompt, e.ok, e.ok
+                ? root._done(w.action, w.entry)
+                : "Stopped waiting for " + root._name(w.entry) + " — its terminal has the answer")
+        }
+    }
+
     // Set, not list: this is only ever asked "is this in you".
     property var _allPacman: ({})
 
@@ -127,8 +355,7 @@ Singleton {
                     name: parts[0],
                     version: parts[1] || "",
                     description: "",
-                    installed: true,
-                    installing: false
+                    installed: true
                 }
             })
     }
@@ -146,7 +373,6 @@ Singleton {
                     version: "",
                     description: "",
                     installed: true,
-                    installing: false,
                     scope: scope
                 }
             })

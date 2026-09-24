@@ -69,15 +69,18 @@ running. Grouped by what breaks if it's missing.
   `Quickshell.Bluetooth`, which talks to BlueZ over D-Bus. No adapter
   will be found without it.
 
-- **sudo**, correctly configured for your user — `services/PrivilegedExec.qml`
-  runs `sudo -S` for pacman install/uninstall and Flatpak system-scope
-  uninstall, fed a password from `common/PasswordPrompt.qml`.
+- **sudo**, correctly configured for your user — `services/Packages.qml`
+  installs and removes through it: `sudo -S` (`services/PrivilegedExec.qml`)
+  with a password from `common/PasswordPrompt.qml` when a window started
+  it, and plain `sudo` in a terminal when the Conf menu did.
 
-- **pacman** — package search in `installer/AppInstaller.qml`, install
-  and uninstall in `packages/PackagesList.qml`. Present on any Arch
+- **pacman** — package search in `installer/AppInstaller.qml`; what is
+  installed, and installing and removing, in `services/Packages.qml`
+  (the commands are `services/packages.js`'s). Present on any Arch
   install by definition.
 
-- **flatpak** — same file; both user- and system-scope install/list/uninstall.
+- **flatpak** — the same two files; both user- and system-scope
+  install/list/uninstall.
 
 - **wl-clipboard** (`wl-copy`) and **cliphist** — clipboard history
   (`bar/ClipboardButton.qml`, `clipboard/ClipboardPanel.qml`, whose Wipe
@@ -148,7 +151,8 @@ running. Grouped by what breaks if it's missing.
   and the Setup rows for AUR packages (Heroic, Bottles) are dimmed, and
   `rack update` skips its AUR stage. Flatpak is the install source that is
   required. A different helper (`paru`) means swapping the literal `"yay"`
-  in those two QML files.
+  in `services/packages.js` (installing), `installer/AppInstaller.qml`
+  (searching) and the Conf menu's Update › Yay row.
 
 - **matugen** — `theme/WallpaperSource.qml` reads `~/.cache/matugen/colors.json`
   for wallpaper mode, and the shell uses the Default preset

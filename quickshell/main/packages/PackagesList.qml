@@ -1,4 +1,3 @@
-import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 import "../config"
@@ -30,9 +29,13 @@ Item {
     property string sourceFilter: "Pacman"   // "Pacman" | "AUR" | "Flatpak"
 
     // ── Installed state ───────────────────────────────────
-    property var installedResults: []
-    property bool loadingInstalled: false
-    property bool _installedLoadedOnce: false
+    // services/Packages.qml's, read straight through. This used to keep a
+    // copy it could mark "uninstalling" and drop rows from early; Packages
+    // now says which package is busy, and refreshes itself after a change.
+    readonly property var installedResults: Packages.installed
+    // Only the first load says "Loading…": a refresh after a removal keeps
+    // the list on screen until the new one replaces it.
+    readonly property bool loadingInstalled: !Packages.loadedOnce
     readonly property var filteredInstalled: root.installedResults.filter(r => r.source === root.sourceFilter)
 
 
@@ -42,129 +45,27 @@ Item {
         root.notifyRequested(title, message, urgency === "critical")
     }
 
-    Component.onCompleted: {
-        if (Packages.loadedOnce) root.installedResults = Packages.installed
-        else root.loadInstalled()
-    }
-
-    // The service owns the inventory; this keeps a copy it can mark up —
-    // see setUninstalling below — and re-takes it whenever the service
-    // has asked the system again.
-    Connections {
-        target: Packages
-        function onRefreshed() {
-            root.installedResults = Packages.installed
-            root.loadingInstalled = Packages.loading
-            root._installedLoadedOnce = Packages.loadedOnce
-        }
-    }
+    Component.onCompleted: if (!Packages.loadedOnce) Packages.refresh()
 
     PasswordPrompt { id: pwPrompt }
 
-    function setUninstalling(source, id, value) {
-        root.installedResults = root.installedResults.map(r => {
-            if (r.source === source && r.id === id) r.installing = value
-            return r
-        })
-    }
-
-    // ── Installed: loading ────────────────────────────────
-    function loadInstalled() {
-        root.loadingInstalled = true
-        Packages.refresh()
-    }
-
     // ── Uninstall ─────────────────────────────────────────
-    function uninstallPacmanOrAur(entry) {
-        pwPrompt.ask(
-            "Remove Package",
-            "Enter your password to remove " + entry.id + ".",
-            (password) => {
-                root.setUninstalling(entry.source, entry.id, true)
-                PrivilegedExec.run(
-                    ["pacman", "-Rns", "--noconfirm", entry.id],
-                    password,
-                    () => {
-                        pwPrompt.close()
-                        root.notify("Removed", entry.id + " removed successfully")
-                        root.installedResults = root.installedResults.filter(r => r.id !== entry.id)
-                        // The row is dropped above for immediate
-                        // feedback; this re-asks the system, which is
-                        // what actually knows.
-                        Packages.refresh()
-                    },
-                    (message) => {
-                        root.setUninstalling(entry.source, entry.id, false)
-                        pwPrompt.showError(message)
-                    }
-                )
-            }
-        )
-    }
-
-    // Flatpak removal: --user scope runs directly (low risk, no
-    // elevated privileges needed). --system scope needs root, so it
-    // goes through the same password-prompt + PrivilegedExec path as
-    // pacman above.
-    Process { id: flatpakUninstallProc }
-    property string _pendingFlatpakUninstallId: ""
-
-    function uninstallFlatpak(entry) {
-        if (entry.scope === "system") {
-            pwPrompt.ask(
-                "Remove Flatpak",
-                "Enter your password to remove " + entry.name + " (system-wide).",
-                (password) => {
-                    root.setUninstalling("Flatpak", entry.id, true)
-                    PrivilegedExec.run(
-                        ["flatpak", "uninstall", "-y", "--system", entry.id],
-                        password,
-                        () => {
-                            pwPrompt.close()
-                            root.notify("Removed", entry.name + " uninstalled successfully")
-                            root.installedResults = root.installedResults.filter(r => !(r.source === "Flatpak" && r.id === entry.id))
-                            Packages.refresh()
-                        },
-                        (message) => {
-                            root.setUninstalling("Flatpak", entry.id, false)
-                            pwPrompt.showError(message)
-                        }
-                    )
-                }
-            )
-            return
-        }
-
-        root.setUninstalling("Flatpak", entry.id, true)
-        root._pendingFlatpakUninstallId = entry.id
-        root.notify("Removing", entry.name + " (flatpak)…")
-        flatpakUninstallProc.command = ["flatpak", "uninstall", "-y", "--user", entry.id]
-        flatpakUninstallProc.running = false
-        flatpakUninstallProc.running = true
-    }
-
-    Connections {
-        target: flatpakUninstallProc
-        // exitCode arrives as a signal parameter, not as a property to
-        // read afterward; reading one is what made this report failure
-        // regardless of the real outcome. PrivilegedExec's onExited
-        // carries the same note for the privileged paths.
-        function onExited(exitCode, exitStatus) {
-            const app = root._pendingFlatpakUninstallId
-            if (exitCode === 0) {
-                root.notify("Removed", app + " uninstalled successfully")
-                root.installedResults = root.installedResults.filter(r => !(r.source === "Flatpak" && r.id === app))
-                Packages.refresh()
-            } else {
-                root.notify("Removal Failed", "Could not uninstall " + app, "critical")
-                root.setUninstalling("Flatpak", app, false)
-            }
-        }
-    }
-
+    // Packages decides how: pacman and system-wide flatpaks behind this
+    // window with the password below, a flatpak installed for the user
+    // alone with none.
     function uninstall(entry) {
-        if (entry.source === "Flatpak") root.uninstallFlatpak(entry)
-        else root.uninstallPacmanOrAur(entry)
+        Packages.remove(entry, pwPrompt)
+    }
+
+    // A failure that needed the password is already on the prompt, which
+    // stays up to be tried again; anything else is said here.
+    Connections {
+        target: Packages
+        function onFinished(action, entry, ok, message) {
+            if (action !== "remove") return
+            if (ok) root.notify("Removed", message)
+            else if (!pwPrompt.shown) root.notify("Removal failed", message, "critical")
+        }
     }
 
     ColumnLayout {
@@ -309,18 +210,21 @@ Item {
                     }
 
                     Rectangle {
+                        id: uninstallButton
+                        readonly property bool busy:
+                            Packages.busy(instRow.modelData.source, instRow.modelData.id) !== ""
                         implicitWidth: uninstallLabel.implicitWidth + 16
                         implicitHeight: 24
                         radius: Theme.radius
                         color: uninstallHover.hovered ? Appearance.dangerBg : Appearance.clear(Appearance.dangerBg)
                         border.color: Appearance.dangerBorder
                         border.width: 1
-                        opacity: instRow.modelData.installing ? 0.5 : 1
+                        opacity: uninstallButton.busy ? 0.5 : 1
 
                         Text {
                             id: uninstallLabel
                             anchors.centerIn: parent
-                            text: instRow.modelData.installing ? "…" : "Uninstall"
+                            text: uninstallButton.busy ? "…" : "Uninstall"
                             color: Appearance.red
                             font.pixelSize: Theme.fontTiny
                             font.family: Theme.font
@@ -330,7 +234,7 @@ Item {
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            enabled: !instRow.modelData.installing
+                            enabled: !uninstallButton.busy
                             onClicked: root.uninstall(instRow.modelData)
                         }
                     }

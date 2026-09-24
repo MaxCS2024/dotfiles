@@ -36,14 +36,12 @@ import "../theme"
 //     otherwise every flatpak looks installable, including the ones on
 //     this machine right now.
 //
-// The install paths came from the packages tab and are unchanged:
-// pacman and flatpak go through PasswordPrompt + PrivilegedExec
-// (`sudo -S`, no polkit agent in this session), and the AUR goes to a
-// real terminal because `yay` wants to show a PKGBUILD diff and ask
-// about it. See services/PrivilegedExec.qml's header for why the first
-// two aren't a terminal too. Flatpak installs are system scope because
-// flathub is registered system-wide here — a --user install fails
-// before it reaches the network.
+// Installing is services/Packages.qml's, as it is for the Conf menu and
+// the packages list: pacman and flatpak run behind this window with the
+// password its PasswordPrompt collects (`sudo -S`, no polkit agent in
+// this session), and the AUR goes to a real terminal because `yay` wants
+// to show a PKGBUILD diff and ask about it. services/packages.js has the
+// rules, and tests/packages checks them.
 //
 // Removal stays in the settings tab. This window is the answer to "get
 // me this", which is a thing you do by name; removal is a thing you do
@@ -234,7 +232,6 @@ ShellSurface {
                 version: m[3],
                 description: description,
                 installed: header.includes("[installed"),
-                installing: false,
                 rank: installer.rank(name, installer.query.trim())
             })
         }
@@ -257,7 +254,6 @@ ShellSurface {
                 version: "",
                 description: parts[1],
                 installed: Packages.hasFlatpak(appId),
-                installing: false,
                 // Flathub names are titles ("Visual Studio Code"), not
                 // package names, so rank the id too and keep whichever
                 // answers better.
@@ -272,14 +268,6 @@ ShellSurface {
     // each source's block, which is what makes the three backends read
     // as one answer instead of three.
     function mergeIn(entries) {
-        const inflight = {}
-        installer.results.forEach(r => {
-            if (r.installing) inflight[r.source + ":" + r.id] = true
-        })
-        entries.forEach(e => {
-            if (inflight[e.source + ":" + e.id]) e.installing = true
-        })
-
         const merged = installer.results.concat(entries)
         merged.sort((a, b) => b.rank - a.rank || a.name.localeCompare(b.name))
         installer.results = merged
@@ -345,142 +333,38 @@ ShellSurface {
     Connections {
         target: Packages
         function onRefreshed() {
-            // Re-mark anything already on screen.
+            // Re-mark anything already on screen: an install from here, the
+            // Conf menu or a terminal all end in a refresh.
             installer.results = installer.results.map(r => {
-                if (r.source === "Flatpak" && Packages.hasFlatpak(r.id)) r.installed = true
+                if (r.source === "Flatpak" ? Packages.hasFlatpak(r.id) : Packages.has(r.id))
+                    r.installed = true
                 return r
             })
         }
     }
 
     // ── Install ───────────────────────────────────────────
-    function setInstalling(source, id, value) {
-        installer.results = installer.results.map(r => {
-            if (r.source === source && r.id === id) r.installing = value
-            return r
-        })
-    }
-
-    function setInstalled(source, id) {
-        installer.results = installer.results.map(r => {
-            if (r.source === source && r.id === id) {
-                r.installing = false
-                r.installed = true
-            }
-            return r
-        })
-    }
-
+    // services/Packages.qml's: which command, whether it needs the
+    // password below or a terminal (the AUR, where yay wants its PKGBUILD
+    // read), and when it has landed. This window hands it the row and its
+    // prompt, and reads whether a row is busy from it as well.
     property string status: ""
 
     function say(message) { installer.status = message }
 
     function install(entry) {
-        if (!entry || entry.installed || entry.installing) return
-        if (entry.source === "Pacman") installer.installPacman(entry.id)
-        else if (entry.source === "AUR") installer.installAur(entry.id)
-        else installer.installFlatpak(entry.id)
+        if (!entry || entry.installed || Packages.busy(entry.source, entry.id) !== "") return
+        if (entry.source === "AUR") installer.say("Review " + entry.id + " in the terminal")
+        Packages.install({ source: entry.source, id: entry.id, name: entry.name }, pwPrompt)
     }
 
-    function installPacman(pkg) {
-        pwPrompt.ask(
-            "Install " + pkg,
-            "pacman -S " + pkg,
-            (password) => {
-                installer.setInstalling("Pacman", pkg, true)
-                PrivilegedExec.run(
-                    ["pacman", "-S", "--noconfirm", pkg],
-                    password,
-                    () => {
-                        pwPrompt.close()
-                        installer.setInstalled("Pacman", pkg)
-                        installer.say(pkg + " installed")
-                    },
-                    (message) => {
-                        installer.setInstalling("Pacman", pkg, false)
-                        pwPrompt.showError(message)
-                    }
-                )
-            }
-        )
-    }
-
-    // The AUR build is interactive by nature — yay shows the PKGBUILD
-    // and asks — so it gets a terminal rather than the password path.
-    // That terminal is detached, and the launch returns as soon as it
-    // has been handed off rather than when the build finishes, so the
-    // only honest way to notice the install landing is to watch for the
-    // package appearing.
-
-    function installAur(pkg) {
-        installer.setInstalling("AUR", pkg, true)
-        installer.say("Review " + pkg + " in the terminal")
-        Terminal.run("yay -S '" + pkg + "'", { floating: false, hold: false })
-        aurPoll.pkg = pkg
-        aurPoll.ticks = 0
-        aurPoll.running = true
-    }
-
-    Timer {
-        id: aurPoll
-        property string pkg: ""
-        property int ticks: 0
-        // ~90s, the same budget main's packages tab gives a yay build
-        // before it stops watching. Giving up only drops the spinner —
-        // the build in the terminal is unaffected either way.
-        readonly property int maxTicks: 45
-        interval: 2000
-        repeat: true
-        onTriggered: {
-            aurPoll.ticks++
-            if (aurPoll.ticks > aurPoll.maxTicks) {
-                aurPoll.running = false
-                installer.setInstalling("AUR", aurPoll.pkg, false)
-                return
-            }
-            aurCheck.command = ["pacman", "-Q", aurPoll.pkg]
-            aurCheck.running = false
-            aurCheck.running = true
+    // Failures are the prompt's to show (a wrong password, a failed
+    // install) or the terminal's; the status line only says what worked.
+    Connections {
+        target: Packages
+        function onFinished(action, entry, ok, message) {
+            if (action === "install" && ok) installer.say(message)
         }
-    }
-
-    Process {
-        id: aurCheck
-        onExited: (exitCode, exitStatus) => {
-            if (exitCode !== 0) return
-            aurPoll.running = false
-            installer.setInstalled("AUR", aurPoll.pkg)
-            installer.say(aurPoll.pkg + " installed")
-        }
-    }
-
-    // System scope, not --user: flathub is registered system-wide here,
-    // and a --user install can only pull from remotes the user
-    // installation knows about — it fails before it reaches the
-    // network. Root is what system scope needs, hence the same password
-    // path pacman takes.
-    function installFlatpak(appId) {
-        pwPrompt.ask(
-            "Install " + appId,
-            "flatpak install --system flathub " + appId,
-            (password) => {
-                installer.setInstalling("Flatpak", appId, true)
-                PrivilegedExec.run(
-                    ["flatpak", "install", "-y", "--system", "flathub", appId],
-                    password,
-                    () => {
-                        pwPrompt.close()
-                        installer.setInstalled("Flatpak", appId)
-                        installer.say(appId + " installed")
-                        Packages.refresh()
-                    },
-                    (message) => {
-                        installer.setInstalling("Flatpak", appId, false)
-                        pwPrompt.showError(message)
-                    }
-                )
-            }
-        )
     }
 
     // ── Keyboard ──────────────────────────────────────────
@@ -835,6 +719,11 @@ ShellSurface {
                                 }
 
                                 Rectangle {
+                                    id: actionButton
+                                    // Packages' answer, so a row being
+                                    // installed from anywhere reads as busy.
+                                    readonly property bool busy:
+                                        Packages.busy(row.modelData.source, row.modelData.id) !== ""
                                     implicitWidth: actionLabel.implicitWidth + 18
                                     implicitHeight: 28
                                     radius: Theme.radius
@@ -843,13 +732,13 @@ ShellSurface {
                                     border.width: 1
                                     border.color: row.modelData.installed
                                         ? Appearance.green : Appearance.border
-                                    opacity: row.modelData.installing ? 0.6 : 1
+                                    opacity: actionButton.busy ? 0.6 : 1
 
                                     Text {
                                         id: actionLabel
                                         anchors.centerIn: parent
                                         text: row.modelData.installed ? "Installed"
-                                            : row.modelData.installing ? "Working…" : "Install"
+                                            : actionButton.busy ? "Working…" : "Install"
                                         color: row.modelData.installed ? Appearance.green : Appearance.fgSoft
                                         font.pixelSize: Theme.fontTiny
                                         font.family: Theme.font
@@ -859,7 +748,7 @@ ShellSurface {
                                     MouseArea {
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor
-                                        enabled: !row.modelData.installed && !row.modelData.installing
+                                        enabled: !row.modelData.installed && !actionButton.busy
                                         onClicked: installer.install(row.modelData)
                                     }
                                 }

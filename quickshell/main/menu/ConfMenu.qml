@@ -416,29 +416,20 @@ ShellSurface {
     readonly property var installApps: panel.gamingApps
         .concat(panel.browserApps, panel.communicationApps, panel.generalApps)
 
-    // What a row runs, per source, so that a section is a list of apps
-    // and nothing else. Every part opens in a terminal for the reason the
-    // header gives: steam and lutris are repo packages that want a sudo
-    // password, heroic and bottles are AUR ones that want a PKGBUILD read
-    // and a y/n each, and none of that belongs behind a spinner in a
-    // popup. Each manager takes all of its own names at once, so a row
-    // covering several of them is still one password prompt.
-    //
-    // The flatpak half is `sudo flatpak`, not plain `flatpak`, because
-    // flathub is a system remote here (there is no user one) and this
-    // machine runs no polkit agent — services/PrivilegedExec.qml's header
-    // is the same finding from the other direction. An unprivileged
-    // system install would fail its authentication rather than prompt for
-    // it; sudo in a terminal is what the Update > Pacman row does anyway.
-    function installCommand(apps) {
-        const repo = apps.filter(app => app.pkg && !app.aur).map(app => app.pkg)
-        const aur = apps.filter(app => app.pkg && app.aur).map(app => app.pkg)
-        const refs = apps.filter(app => app.flatpak).map(app => app.flatpak)
-        const parts = []
-        if (repo.length > 0) parts.push("sudo pacman -S --needed " + repo.join(" "))
-        if (aur.length > 0) parts.push("yay -S --needed " + aur.join(" "))
-        if (refs.length > 0) parts.push("sudo flatpak install -y --system flathub " + refs.join(" "))
-        return parts.join(" && ")
+    // What a row runs is services/Packages.qml's, so that a section is a
+    // list of apps and nothing else. A row runs after this slab has
+    // closed, so there is no window left to ask a password in: Packages
+    // takes that as a terminal, with sudo in it for the repo packages and
+    // the flatpaks (flathub is a system remote here, and there is no
+    // polkit agent), and yay for the AUR ones, which want a PKGBUILD read
+    // and a y/n each. It watches for the package to land, and the row's
+    // "installed" follows once it has.
+    function packageEntry(app) {
+        return {
+            source: app.flatpak ? "Flatpak" : app.aur ? "AUR" : "Pacman",
+            id: app.pkg || app.flatpak,
+            name: app.label
+        }
     }
 
     // --needed and -y, so picking a row for something already installed
@@ -453,12 +444,14 @@ ShellSurface {
             // A pacman name is worth showing — it is what you would type
             // yourself. A reverse-DNS ref is not: com.discordapp.Disc…
             // is all this column would fit, and which manager it comes
-            // from is the more useful thing to say in the space.
-            hint: app.pkg || "flatpak",
+            // from is the more useful thing to say in the space. While
+            // Packages is installing it, from here or anywhere, that is
+            // what it says instead.
+            hint: Packages.busy(panel.packageEntry(app).source, app.pkg || app.flatpak) !== ""
+                ? "installing…" : app.pkg || "flatpak",
             requires: app.aur ? "yay" : app.pkg ? "sudo" : "flatpak",
             installs: [app.pkg || app.flatpak],
-            run: () => Terminal.run(panel.installCommand([app]),
-                                    { title: "Install " + app.label })
+            run: () => Packages.install(panel.packageEntry(app))
         }
     }
 

@@ -23,7 +23,7 @@
 # Exits 0 when every check passes, 1 on any failure, 2 if the run never
 # finished (a QML error before the tests started, or a hang).
 #
-# A suite of tst_*.qml files instead (palette) tests plain logic with no
+# A suite of tst_*.qml files instead (palette, packages) tests plain logic with no
 # Quickshell imports: it runs under Qt 6's qmltestrunner on the offscreen
 # platform, so it needs no session at all. That's /usr/lib/qt6/bin's
 # copy — the qmltestrunner on PATH is Qt 5's and can't load Qt 6 QML.
