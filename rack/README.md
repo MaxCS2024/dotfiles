@@ -106,7 +106,10 @@ it moves, the first-launch defaults it moves on its own, `--adopt`, dry run,
 `rack deploy` against a home and a dotfiles tree of its own, made fresh for
 it and deleted after, so nothing touches yours.
 
-`diff`, `validate`, `reload` and the rest have no tests yet.
+`diff`, `reload` and `validate` are covered for the entry names they take
+(`tests/rack-names.test.sh`): an unknown one stops the command with exit 2,
+where it used to be logged and then reported as success. The rest of what
+they do, and the other modules, have no tests yet.
 
 ## Next
 

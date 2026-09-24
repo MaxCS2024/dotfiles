@@ -34,9 +34,15 @@ rack::reload::run() {
         shift
     done
 
-    local name source target reload ran=0 failed=0
+    local name source target reload entries ran=0 failed=0
+
+    # Selected before anything runs: one unknown name in the list stops the
+    # whole command, rather than reloading the rest and exiting 0 (a process
+    # substitution here used to drop select's status).
+    entries=$(rack::manifest::select "${names[@]+"${names[@]}"}") || return $?
+
     while IFS=$'\t' read -r name source target reload; do
-        [[ -n $reload ]] || continue
+        [[ -n $name && -n $reload ]] || continue
         ran=$((ran + 1))
 
         if ((${RIG_DRY_RUN:-0})); then
@@ -52,7 +58,7 @@ rack::reload::run() {
             printf '  %-12s reload failed (not running?)\n' "$name"
             failed=$((failed + 1))
         fi
-    done < <(rack::manifest::select "${names[@]+"${names[@]}"}")
+    done <<<"$entries"
 
     ((ran)) || {
         rig::log::info "nothing to reload"
@@ -65,10 +71,12 @@ rack::reload::run() {
 # What would run, without running it. `rack reload list` answers "which of
 # these even has a reload command" without the dry-run flag.
 rack::reload::list() {
-    local name source target reload
+    local name source target reload entries
+    entries=$(rack::manifest::select "$@") || return $?
     while IFS=$'\t' read -r name source target reload; do
+        [[ -n $name ]] || continue
         printf '  %-12s %s\n' "$name" "${reload:--}"
-    done < <(rack::manifest::select "$@")
+    done <<<"$entries"
 }
 
 rack::reload::__default() { rack::reload::run "$@"; }
