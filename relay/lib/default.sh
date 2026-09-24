@@ -269,7 +269,11 @@ relay::default::set() {
         rig::log::error "no candidate '$value' for $role (candidates: ${found[candidates]}; or use --command)"
         return "$RIG_EX_USAGE"
     fi
-    if [[ ${found[source]} == set && ${found[installed]} == 0 ]]; then
+    # Not installed: another installed candidate stands in until it is
+    # ("missing"), or, with none installed at all, nothing does.
+    if [[ ${found[source]} == missing ]]; then
+        rig::log::warn "${found[wantedLabel]} is not installed — set anyway; ${found[label]} opens until it is"
+    elif [[ ${found[source]} == set && ${found[installed]} == 0 ]]; then
         rig::log::warn "${found[label]} is not installed — set anyway; the $role keybind fails until it is"
     fi
 

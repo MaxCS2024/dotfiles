@@ -293,6 +293,40 @@ test_set_uninstalled_warns_and_sets() {
 	ok
 }
 
+test_set_but_uninstalled_stands_in() {
+	it "a set candidate that was uninstalled gives way to the first installed one"
+	install kitty
+	state terminal foot
+	run get terminal
+	assert_eq "command" "$OUT" "uwsm-app -- kitty" || return
+	run list
+	assert_has "said why" "$OUT" "Foot is set, not installed" || return
+	run list --json
+	assert_has "source" "$OUT" '"source":"missing"' || return
+	assert_has "wanted" "$OUT" '"wanted":"foot"' || return
+	ok
+}
+
+test_set_again_once_reinstalled() {
+	it "the set candidate comes back once it is installed again"
+	install kitty
+	state terminal foot
+	install foot
+	run get terminal
+	assert_eq "command" "$OUT" "uwsm-app -- foot" || return
+	ok
+}
+
+test_set_uninstalled_names_the_stand_in() {
+	it "setting a candidate that is not installed says what opens instead"
+	install kitty
+	run set terminal foot
+	assert_eq "status" "$STATUS" 0 || return
+	assert_has "warning" "$ERR" "Foot is not installed" || return
+	assert_has "stand-in" "$ERR" "Kitty opens until it is" || return
+	ok
+}
+
 test_set_typo_is_refused() {
 	it "a name that is no candidate is refused, not taken as a command"
 	run set browser firefx

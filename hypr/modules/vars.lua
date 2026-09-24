@@ -5,8 +5,9 @@
 -- the default the user set (SUPER+SPACE > Apps > Defaults, or
 -- `relay default set`), else the first candidate this machine has. That
 -- file owns the candidates and the order; this one only names the roles
--- the binds use. A bind captures its string here, at config load, which is
--- why setting a default ends in `hyprctl reload`.
+-- the binds use. These are the answer at config load; the app binds
+-- themselves ask defaults.lua again on each press (binds/apps.lua), so an
+-- uninstalled default hands over without a reload.
 local defaults = require("modules.defaults")
 
 return {

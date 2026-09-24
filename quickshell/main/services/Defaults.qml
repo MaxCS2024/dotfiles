@@ -17,9 +17,13 @@ Singleton {
     //   { role, source, name, label, command, installed,
     //     candidates: [{ name, label, installed, via, default }] }
     //
-    // `source` is "set" (a candidate the user picked), "custom" (a command
-    // they wrote, with no name or label) or "fallback" (nothing set; the
-    // first candidate installed here).
+    // `source` is "set" (a candidate the user picked), "missing" (one they
+    // picked that has since been uninstalled; the first installed
+    // candidate stands in, and `wanted`/`wantedLabel` name the pick),
+    // "custom" (a command they wrote, with no name or label) or
+    // "fallback" (nothing set; the first candidate installed here).
+    // Each also carries `path` or `flatpak`, what a package manager
+    // knows it as — see owners below.
     //
     // null until relay has answered once. A menu that drew an empty level
     // before then would read as "you have no terminals installed".
@@ -95,7 +99,72 @@ Singleton {
         const byRole = ({})
         for (const role of list) byRole[role.role] = role
         root.error = ""
-        if (JSON.stringify(byRole) !== JSON.stringify(root.roles)) root.roles = byRole
+        if (JSON.stringify(byRole) !== JSON.stringify(root.roles)) {
+            root.roles = byRole
+            root._findOwners()
+        }
+    }
+
+    // ── Which package each default is ────────────────────
+    // For apps/AppManager.qml, which tags a default's row and asks before
+    // removing it (user request 2026-09-24). A flatpak default is its ref
+    // already; a native one is a binary on PATH, and pacman names the
+    // package that owns it — `nvim` is neovim's, brave-bin puts `brave`
+    // there. One process, only when the defaults themselves change.
+    //
+    // package or flatpak id -> [role, …]. Custom commands and defaults that
+    // aren't installed own nothing.
+    property var owners: ({})
+
+    // The roles this package or flatpak is the default for, in role order:
+    // [] for most, ["terminal"] for foot here.
+    function rolesFor(id) {
+        return root.owners[id] || []
+    }
+
+    // What would open for a role with this one gone: the first other
+    // installed candidate, or "" when there is none.
+    function standIn(role) {
+        const found = root.roles ? root.roles[role] : null
+        if (!found) return ""
+        const next = found.candidates.find(c => c.installed && c.name !== found.name)
+        return next ? next.label : ""
+    }
+
+    function _findOwners() {
+        const direct = ({})
+        const pairs = []
+        for (const key of Object.keys(root.roles)) {
+            const found = root.roles[key]
+            if (found.source === "custom" || !found.installed) continue
+            if (found.flatpak) (direct[found.flatpak] = direct[found.flatpak] || []).push(key)
+            else if (found.path) pairs.push(key, found.path)
+        }
+        ownerProc.direct = direct
+        // Role and path in pairs as arguments. readlink -f first: /usr/sbin
+        // is a link to /usr/bin here, and pacman only knows the second.
+        ownerProc.command = ["sh", "-c",
+            'while [ $# -gt 1 ]; do '
+            + 'printf "%s\\t%s\\n" "$1" "$(pacman -Qqo "$(readlink -f "$2")" 2>/dev/null)"; '
+            + 'shift 2; done', "sh"].concat(pairs)
+        ownerProc.running = false
+        ownerProc.running = true
+    }
+
+    readonly property Process ownerProc: Process {
+        property var direct: ({})
+        stdout: StdioCollector {
+            id: ownerOut
+            onStreamFinished: {
+                const owners = Object.assign({}, ownerProc.direct)
+                for (const line of ownerOut.text.split("\n")) {
+                    const cells = line.split("\t")
+                    if (cells.length === 2 && cells[0] && cells[1])
+                        (owners[cells[1]] = owners[cells[1]] || []).push(cells[0])
+                }
+                root.owners = owners
+            }
+        }
     }
 
     // relay's last complaint, without rig's level column in front of it.

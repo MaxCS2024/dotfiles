@@ -40,6 +40,12 @@ import "../theme"
 // because a flatpak installed for the user alone comes off with no
 // password to stop a stray keypress.
 //
+// A row that is the default terminal, editor, browser or file manager
+// says so, and removing it takes a second press, with the status line
+// naming what opens instead (user request 2026-09-24). Removing it is
+// still allowed: hypr/modules/defaults.lua hands the role to the next
+// installed candidate, and the keybinds ask it on each press.
+//
 // The filter chips narrow a list that is already there instead of choosing
 // what to fetch, so switching is instant and reversible, in both views.
 //
@@ -130,7 +136,10 @@ ShellSurface {
     // ── Open/close ────────────────────────────────────────
     // The inventory is asked for once, when this window is first built;
     // after that Packages refreshes itself whenever something changes.
-    Component.onCompleted: if (!Packages.loadedOnce) Packages.refresh()
+    Component.onCompleted: {
+        if (!Packages.loadedOnce) Packages.refresh()
+        Defaults.refresh()
+    }
 
     function find(text) { manager.open(text) }
 
@@ -327,6 +336,8 @@ ShellSurface {
     Connections {
         target: Packages
         function onRefreshed() {
+            // What is installed decides what each default resolves to.
+            Defaults.refresh()
             manager.results = manager.results.map(r => {
                 r.installed = r.source === "Flatpak" ? Packages.hasFlatpak(r.id) : Packages.has(r.id)
                 return r
@@ -353,11 +364,43 @@ ShellSurface {
         Packages.install({ source: entry.source, id: entry.id, name: entry.name }, pwPrompt)
     }
 
+    // The row a Remove is waiting to be pressed again on, as source:id,
+    // or "". Anything else you do — another row, another search — lets it
+    // go, so a second press only ever confirms the warning just read.
+    property string confirmKey: ""
+    onSelectedIndexChanged: manager.confirmKey = ""
+    onQueryChanged: manager.confirmKey = ""
+
+    function roleName(role) { return role.replace("-", " ") }
+
+    // "default terminal", "default editor and browser", or "".
+    function defaultTag(entry) {
+        const roles = Defaults.rolesFor(entry.id).map(r => manager.roleName(r))
+        return roles.length === 0 ? "" : "default " + roles.join(" and ")
+    }
+
     // A search result carries no scope, and a flatpak has to be removed
     // from the installation it is in (--user or --system), so the
     // inventory's own entry is what goes to Packages when there is one.
     function remove(entry) {
         if (!entry || !entry.installed || Packages.busy(entry.source, entry.id) !== "") return
+
+        const key = entry.source + ":" + entry.id
+        const roles = Defaults.rolesFor(entry.id)
+        if (roles.length > 0 && manager.confirmKey !== key) {
+            manager.confirmKey = key
+            const after = roles.map(r => {
+                const next = Defaults.standIn(r)
+                const what = roles.length > 1 ? " as " + manager.roleName(r) : ""
+                return next ? next + " takes over" + what
+                            : "no " + manager.roleName(r) + " is left"
+            })
+            manager.say(entry.name + " is your " + manager.defaultTag(entry)
+                + ". Remove again to go ahead: " + after.join(", ") + ".", true)
+            return
+        }
+
+        manager.confirmKey = ""
         const own = Packages.installed.find(e => e.source === entry.source && e.id === entry.id)
         Packages.remove(own || { source: entry.source, id: entry.id, name: entry.name }, pwPrompt)
     }
@@ -447,18 +490,19 @@ ShellSurface {
                     color: Appearance.fgMuted
                     font.pixelSize: Theme.fontSmall
                     font.family: Theme.font
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: 0
-                    elide: Text.ElideRight
                 }
 
+                // The rest of the row: a warning about removing a default
+                // is the one message here that has to be read whole.
                 Text {
                     text: manager.status
                     color: manager.statusIsError ? Appearance.red : Appearance.green
                     font.pixelSize: Theme.fontSmall
                     font.family: Theme.font
-                    elide: Text.ElideRight
-                    Layout.maximumWidth: 320
+                    horizontalAlignment: Text.AlignRight
+                    elide: Text.ElideLeft
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 0
                 }
             }
 
@@ -782,6 +826,17 @@ ShellSurface {
                                     }
                                 }
 
+                                // Which default this is, if any — the
+                                // reason its Remove asks twice.
+                                Text {
+                                    readonly property string tag: manager.defaultTag(row.modelData)
+                                    visible: tag !== ""
+                                    text: tag
+                                    color: Appearance.fgSoft
+                                    font.pixelSize: Theme.fontTiny
+                                    font.family: Theme.font
+                                }
+
                                 // A flatpak installed for every user needs
                                 // the password to come off; one installed
                                 // for you alone does not.
@@ -821,7 +876,9 @@ ShellSurface {
                                         id: actionLabel
                                         anchors.centerIn: parent
                                         text: actionButton.busy ? "Working…"
-                                            : actionButton.installed ? "Remove" : "Install"
+                                            : !actionButton.installed ? "Install"
+                                            : manager.confirmKey === row.modelData.source + ":" + row.modelData.id
+                                                ? "Remove anyway" : "Remove"
                                         color: actionButton.installed && !actionButton.busy
                                             ? Appearance.red : Appearance.fgSoft
                                         font.pixelSize: Theme.fontTiny

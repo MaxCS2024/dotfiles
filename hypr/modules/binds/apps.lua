@@ -18,9 +18,20 @@ local mainMod = vars.mainMod
 -- Apps. What each one runs is the role's default (modules/defaults.lua):
 -- the one set from Conf > Apps > Defaults or `relay default set`, else
 -- the first candidate this machine has installed.
-hl.bind(mainMod .. " + RETURN", hl.dsp.exec_cmd(vars.terminal))
-hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(vars.fileManager))
-hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(vars.browser))
+--
+-- Asked on each press rather than captured at config load, so a default
+-- that is uninstalled — from the app manager, say — hands over to the
+-- next installed candidate straight away instead of at the next reload.
+-- Answering is a few file opens and no process (see defaults.lua).
+local defaults = require("modules.defaults")
+local function run(role)
+	return function()
+		hl.exec_cmd(defaults.command(role))
+	end
+end
+hl.bind(mainMod .. " + RETURN", run("terminal"))
+hl.bind(mainMod .. " + E", run("file-manager"))
+hl.bind(mainMod .. " + B", run("browser"))
 
 -- hyprshutdown leaves the session the way the power menu does; Hyprland's
 -- own exit is the fallback for a machine that has not installed it. Not

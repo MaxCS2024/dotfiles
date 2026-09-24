@@ -166,14 +166,19 @@ local function present(path)
 	return true
 end
 
-local function onPath(bin)
+-- Where on PATH a binary is, or nil.
+local function whereOnPath(bin)
 	for dir in env("PATH", ""):gmatch("[^:]+") do
 		if present(dir .. "/" .. bin) then
-			return true
+			return dir .. "/" .. bin
 		end
 	end
 
-	return false
+	return nil
+end
+
+local function onPath(bin)
+	return whereOnPath(bin) ~= nil
 end
 
 -- Checked in both installations rather than through PATH: the system
@@ -310,6 +315,16 @@ local function candidateNamed(role, name)
 	return nil
 end
 
+local function firstInstalled(role)
+	for _, candidate in ipairs(role.candidates) do
+		if installedVia(candidate) then
+			return candidate
+		end
+	end
+
+	return nil
+end
+
 -- ── Resolving ────────────────────────────────────────────
 
 -- Every role, in the order they are listed.
@@ -329,8 +344,17 @@ end
 -- not, without writing the file first.
 --
 -- Returns nil for a role that does not exist, else a table:
---   role, source ("set" | "custom" | "fallback"), command,
+--   role, source ("set" | "missing" | "custom" | "fallback"), command,
 --   and unless custom: name, label, installed, via, desktop, argv, app.
+--
+-- "missing" is a candidate that was set and has since been uninstalled
+-- (user request 2026-09-24): the first installed candidate stands in, the
+-- way it does when nothing is set, and `wanted`/`wantedLabel` name the one
+-- that was set. The choice itself is kept, so installing it again brings
+-- it back. Before, the role went on naming the missing app, and the
+-- keybind and every terminal the shell opens failed until someone set
+-- another. With nothing installed at all there is nothing to stand in,
+-- and the set candidate is named anyway, as "set".
 function M.describe(roleName, stored)
 	local role = BY_NAME[roleName]
 	if role == nil then
@@ -352,15 +376,18 @@ function M.describe(roleName, stored)
 			return found
 		end
 		found.source = "set"
-	else
-		found.source = "fallback"
-		for _, candidate in ipairs(role.candidates) do
-			if installedVia(candidate) then
-				app = candidate
-				break
+		if installedVia(app) == nil then
+			local standIn = firstInstalled(role)
+			if standIn ~= nil then
+				found.source = "missing"
+				found.wanted = app.name
+				found.wantedLabel = app.label
+				app = standIn
 			end
 		end
-		app = app or role.candidates[1]
+	else
+		found.source = "fallback"
+		app = firstInstalled(role) or role.candidates[1]
 	end
 
 	local via = installedVia(app)
@@ -528,7 +555,14 @@ local function public(found)
 	local out = {
 		role = found.role,
 		source = found.source,
+		wanted = found.wanted,
+		wantedLabel = found.wantedLabel,
 		command = found.command,
+		-- What the default is, as a package manager knows it: the binary's
+		-- path for pacman to name the owner of (the app manager marks
+		-- that package's row), or the flatpak ref itself.
+		path = found.via == "native" and whereOnPath(found.app.bin) or nil,
+		flatpak = found.via == "flatpak" and found.app.flatpak or nil,
 		name = found.name,
 		label = found.label,
 		installed = found.installed,
@@ -573,7 +607,9 @@ local function listText()
 		else
 			shown = found.label
 			why = found.source == "set" and "set" or "first installed"
-			if not found.installed then
+			if found.source == "missing" then
+				why = found.wantedLabel .. " is set, not installed"
+			elseif not found.installed then
 				why = found.source == "set" and "set, not installed" or "nothing installed"
 			end
 		end
@@ -606,6 +642,8 @@ local function describeText(found)
 
 	line("role", found.role)
 	line("source", found.source)
+	line("wanted", found.wanted)
+	line("wantedLabel", found.wantedLabel)
 	line("name", found.name)
 	line("label", found.label)
 	line("installed", found.installed)
