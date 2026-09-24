@@ -95,13 +95,18 @@ whole command worthless.
 ## Tests
 
 ```bash
-tests/run            # everything
+tests/run            # every suite
+tests/run deploy     # just tests/rack-deploy.test.sh
 ```
 
-61 tests against a throwaway dotfiles tree rebuilt between files, so no test
-can leave the next one deploying into a half-broken home. They cover manifest
-parsing, every deploy state, drift detection, template rendering and the
-rig handoff.
+`deploy` is covered: each state a target can be in (absent, a stale or
+broken link, something real in the way), `--force` and where it keeps what
+it moves, the first-launch defaults it moves on its own, `--adopt`, dry run,
+`status`, `remove`, and picking entries by name. Every test runs the real
+`rack deploy` against a home and a dotfiles tree of its own, made fresh for
+it and deleted after, so nothing touches yours.
+
+`diff`, `validate`, `reload` and the rest have no tests yet.
 
 ## Next
 
