@@ -192,10 +192,11 @@ running. Grouped by what breaks if it's missing.
   fetches the model and `voxtype setup systemd` installs and starts the
   unit. `~/.config/voxtype/config.toml` needs `hotkey.enabled = false`
   (the bind replaces its evdev hotkey, which can't read /dev/input
-  without the `input` group anyway) and `osd.enabled = false` (the bar's
-  pill replaces its GTK popup). `services/Voxtype.qml` follows
-  `voxtype status --follow` for `bar/VoxtypeIndicator.qml`, shown left of
-  the clock while recording or transcribing. Without voxtype the pill
+  without the `input` group anyway) and `osd.enabled = false` (the
+  shell's pill replaces its GTK popup). `services/Voxtype.qml` follows
+  `voxtype status --follow` for `osd/VoxtypeOsd.qml`, a pill at the
+  bottom of the screen while recording or transcribing, with the mic's
+  waveform from Pipewire's peak monitor. Without voxtype the pill
   never appears and the service stops after one check; without wtype the
   text lands on the clipboard instead of being typed.
 

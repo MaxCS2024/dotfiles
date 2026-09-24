@@ -351,7 +351,8 @@ Variants {
                 // row as a whole moved the clock every time a module
                 // with `hasContent` came or went — half the voxtype
                 // pill's width each time dictation started (user request
-                // 2026-09-24). Without a clock in the row, the row
+                // 2026-09-24; that pill has since moved off the bar, to
+                // osd/VoxtypeOsd.qml). Without a clock in the row, the row
                 // centres as a whole, the way it always did.
                 //
                 // `x`, not anchors.centerIn plus a horizontalCenterOffset:

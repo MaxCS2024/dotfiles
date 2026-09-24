@@ -52,9 +52,10 @@ hl.bind(mainMod .. " + SHIFT + T", hl.dsp.global("quickshell:themes-toggle"))
 
 -- Dictation: press once to start recording, again to stop, and voxtype
 -- types what it heard into the focused window (through wtype). The daemon
--- is voxtype's own systemd user unit (`voxtype setup systemd`); the bar
--- shows a pill left of the clock while it is recording or transcribing
--- (quickshell/main/bar/VoxtypeIndicator.qml). V for voice, and it was free.
+-- is voxtype's own systemd user unit (`voxtype setup systemd`); the shell
+-- shows a pill at the bottom of the screen while it is recording or
+-- transcribing (quickshell/main/osd/VoxtypeOsd.qml). V for voice, and it
+-- was free.
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("voxtype record toggle"))
 
 -- The bar itself: hide it, or focus it for arrow-key navigation

@@ -56,10 +56,14 @@ Singleton {
     // a bar icon for the same card was one way in too many. The saved
     // layout on this machine still names it, which the filter above
     // covers exactly as it does the three names before it.
+    //
+    // "voxtype" left the centre row on 2026-09-24 the same way: dictation
+    // is shown by osd/VoxtypeOsd.qml, the Wispr Flow-style pill at the
+    // bottom of the screen, and the bar's pill was the same state twice.
     property var barLayout: ({
         default: {
             left: ["workspaces", "media"],
-            center: ["voxtype", "clock"],
+            center: ["clock"],
             right: ["tray", "weather", "network", "volume", "battery"]
         }
     })

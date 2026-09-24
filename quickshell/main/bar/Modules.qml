@@ -28,8 +28,7 @@ QtObject {
         "tray": trayComponent,
         "sysmon": sysmonComponent,
         "notifications": notificationsComponent,
-        "weather": weatherComponent,
-        "voxtype": voxtypeComponent
+        "weather": weatherComponent
     })
 
     readonly property Component workspacesComponent: Component { Workspaces {} }
@@ -46,6 +45,4 @@ QtObject {
     readonly property Component trayComponent: Component { SystemTray {} }
     readonly property Component sysmonComponent: Component { SystemMonitorButton {} }
     readonly property Component notificationsComponent: Component { NotificationsButton {} }
-    readonly property Component weatherComponent: Component { WeatherButton {} }
-    readonly property Component voxtypeComponent: Component { VoxtypeIndicator {} }
-}
+    readonly property Component weatherComponent: Component { WeatherButton {} }}

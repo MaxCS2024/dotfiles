@@ -122,6 +122,7 @@ ShellRoot {
     MicOsd {}
     CapsLockOsd {}
     ZenOsd {}
+    VoxtypeOsd {}
     NotificationPopups {}
     ScreenshotPopup {}
 

@@ -6,7 +6,7 @@ import QtQuick
 // What the voxtype dictation daemon is doing: "idle", "recording",
 // "transcribing", or "stopped" when the daemon isn't running. SUPER+V
 // (hypr/modules/binds/apps.lua) is what starts and stops a recording;
-// bar/VoxtypeIndicator.qml is what shows it.
+// osd/VoxtypeOsd.qml is what shows it.
 //
 // `voxtype status --follow` prints one state per line whenever it
 // changes, and it outlives the daemon: stopping the systemd unit prints
