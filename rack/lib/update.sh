@@ -32,6 +32,24 @@ rack::update::__colors() {
     fi
 }
 
+# The logo. Shown once at the top of an interactive run, before the managers
+# take over the terminal — a moment to see the run has started and by what.
+# Skipped when stdout is not a terminal (the settings pane captures this
+# output), so it never lands in a log or a pipe.
+rack::update::__banner() {
+    [[ -t 1 ]] || return 0
+    printf '%s' "$C_BOLD"
+    cat <<'EOF'
+┏━━━━━━━━━━┓ ┏━━━━┓ ┏━━━━━━━━━━┓
+┃          ┃ ┃    ┃ ┃          ┃
+┃          ┃ ┗━━━━┛ ┃          ┃
+┃          ┃ ┏━━━━┓ ┃          ┃
+┃          ┃ ┃    ┃ ┃          ┃
+┗━━━━━━━━━━┛ ┗━━━━┛ ┗━━━━━━━━━━┛
+EOF
+    printf '%s' "$C_OFF"
+}
+
 rack::update::__stage() {
     _stage_n=$((_stage_n + 1))
     printf '\n%s[%d/%d] %s%s\n' "$C_BOLD" "$_stage_n" "$RACK_UPDATE_STAGE_COUNT" "$1" "$C_OFF"
@@ -249,6 +267,7 @@ rack::update::run() {
         return "$RIG_EX_NODEP"
     }
     rack::update::__colors
+    rack::update::__banner
 
     # A stale lock from an interrupted run makes pacman fail with a confusing
     # message. Say plainly what it is and let the user decide.
