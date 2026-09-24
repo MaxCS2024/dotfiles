@@ -1,15 +1,23 @@
--- Loaded before lazy.nvim starts, on top of LazyVim's defaults
--- (https://www.lazyvim.org/configuration/general). Only what differs from
--- them is here: number, relativenumber, wrap, ignorecase, smartcase,
--- cursorline, undofile, splitright, splitbelow and the system clipboard
--- are already LazyVim's.
+vim.o.clipboard = "unnamedplus"
 
+vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
--- LazyVim formats on save; the old config never did. <leader>uf turns it on.
-vim.g.autoformat = false
+vim.o.number = true
+vim.o.relativenumber = true 
 
-vim.o.tabstop = 4
+vim.o.wrap = false 
+vim.o.tabstop = 4 
 vim.o.shiftwidth = 4
-vim.o.expandtab = false
+vim.o.ignorecase = true
+vim.o.smartcase = true
+vim.o.cursorline = true
+
 vim.o.swapfile = false
+vim.o.undofile = true
+
+vim.o.splitright = true
+vim.o.splitbelow = true
+
+--vim.o.scrolloff = 999
+--vim.o.sidescrolloff = 8
