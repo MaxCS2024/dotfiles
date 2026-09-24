@@ -22,8 +22,8 @@
 //
 // Content is quicksettings/VolumeTab.qml and quicksettings/MixerTab.qml —
 // the two leaves of the settings panel's "sound" group — on one card:
-// the output and microphone sliders, the output device picker, and the
-// per-app mixer. Those tabs are still there and still reachable from the
+// the output slider and device picker, the input (microphone) slider and
+// device picker, and the per-app mixer. Those tabs are still there and still reachable from the
 // footer; this is the surface you open to reach for a slider, that one is
 // the surface you open to configure. Same split the other two rails keep.
 //
@@ -102,7 +102,15 @@ ShellSurface {
     // unbound — a slider would read 0 and setting it would go nowhere.
     // services/Volume.qml already tracks the default sink; this is every
     // other node on the card.
+    // Sources are the input devices: audio nodes that are neither a sink
+    // nor a client's stream. The Input section's picker.
+    readonly property var audioSources: Pipewire.nodes.values.filter(
+        n => !n.isSink && n.audio && !n.isStream)
+
+    readonly property bool hasInput: Mic.deviceName !== "No device"
+
     PwObjectTracker { objects: panel.audioSinks }
+    PwObjectTracker { objects: panel.audioSources }
     PwObjectTracker { objects: panel.streams }
 
     function isBt(node) { return (node.name || "").startsWith("bluez_") }
@@ -350,7 +358,7 @@ ShellSurface {
                 // A badge standing beside the whole header, at fontHuge,
                 // like both other rails. Inert, also like both: the mute
                 // control is the speaker on the output row below, where
-                // the microphone's own mute sits on the row under that,
+                // the microphone's own mute sits in the Input section,
                 // and a card with two mute controls for the same device
                 // would have you guessing which one you pressed.
                 Text {
@@ -463,65 +471,6 @@ ShellSurface {
                 }
             }
 
-            // ── Microphone ───────────────────────────────
-            // Hidden outright when there is no input device, rather than
-            // shown at zero — on a machine with no microphone this row is
-            // not a control that happens to be down, it is a control for
-            // something that isn't there. A content-sized card is the one
-            // surface where that distinction costs nothing to honour: the
-            // card is simply a row shorter.
-            RowLayout {
-                visible: Mic.deviceName !== "No device"
-                Layout.fillWidth: true
-                spacing: Theme.space2
-
-                Text {
-                    text: Mic.icon
-                    // Orange rather than red while recording is live, the
-                    // one state on this card that is about something
-                    // reaching the outside rather than leaving it.
-                    color: Mic.muted ? Appearance.red
-                         : Mic.inUse ? Appearance.orange
-                         : Appearance.fg
-                    font.pixelSize: 18
-                    font.family: Theme.font
-
-                    Behavior on color {
-                        ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        anchors.margins: -6
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: Mic.toggleMute()
-                    }
-                }
-
-                Slider {
-                    Layout.fillWidth: true
-                    interactive: true
-                    showKnob: true
-                    trackHeight: 4
-                    value: Mic.volume / 100
-                    trackColor: Appearance.trackBg
-                    fillColor: Mic.muted ? Appearance.fgDim : Appearance.orange
-                    onMoved: (v) => {
-                        Mic.setLinear(v)
-                        if (v > 0 && Mic.muted) Mic.toggleMute()
-                    }
-                }
-
-                Text {
-                    text: Mic.muted ? "Muted" : Math.round(Mic.volume) + "%"
-                    color: Mic.muted ? Appearance.red : Appearance.fg
-                    font.pixelSize: Theme.fontNormal
-                    font.family: Theme.font
-                    Layout.preferredWidth: 44
-                    horizontalAlignment: Text.AlignRight
-                }
-            }
-
             // ── Output device ────────────────────────────
             // Capitals and tracking, the section-label shape the network
             // rail settled on (2026-09-18) — set with capitalization
@@ -560,7 +509,7 @@ ShellSurface {
                 visible: panel.audioSinks.length > 1
                 Layout.fillWidth: true
                 Layout.fillHeight: false
-                Layout.preferredHeight: Math.min(panel.audioSinks.length, 4) * 30
+                Layout.preferredHeight: Math.min(panel.audioSinks.length, 4) * 32
                 Layout.maximumHeight: Layout.preferredHeight
                 spacing: Theme.space1
 
@@ -631,6 +580,171 @@ ShellSurface {
 
                 ListScrollBar {
                     view: sinkList
+                    Layout.fillHeight: true
+                    trackColor: Appearance.scrollTrack
+                    thumbColor: Appearance.scrollThumb
+                }
+            }
+
+            // ── Input ────────────────────────────────────
+            // The microphone: its level and mute, and which device it is.
+            // The whole section goes when there is no input device at all
+            // rather than showing a slider at zero — on a machine with no
+            // microphone it is a control for something that isn't there.
+            Text {
+                visible: panel.hasInput
+                text: "Input"
+                color: Appearance.fg
+                font.pixelSize: Theme.fontSmall
+                font.family: Theme.font
+                font.capitalization: Font.AllUppercase
+                font.letterSpacing: Theme.tracking(Theme.fontSmall, 0.12)
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.topMargin: 2
+                elide: Text.ElideRight
+            }
+
+            RowLayout {
+                visible: panel.hasInput
+                Layout.fillWidth: true
+                spacing: Theme.space2
+
+                Text {
+                    text: Mic.icon
+                    // Orange rather than red while recording is live, the
+                    // one state on this card that is about something
+                    // reaching the outside rather than leaving it.
+                    color: Mic.muted ? Appearance.red
+                         : Mic.inUse ? Appearance.orange
+                         : Appearance.fg
+                    font.pixelSize: 18
+                    font.family: Theme.font
+
+                    Behavior on color {
+                        ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        anchors.margins: -6
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: Mic.toggleMute()
+                    }
+                }
+
+                Slider {
+                    Layout.fillWidth: true
+                    interactive: true
+                    showKnob: true
+                    trackHeight: 4
+                    value: Mic.volume / 100
+                    trackColor: Appearance.trackBg
+                    fillColor: Mic.muted ? Appearance.fgDim : Appearance.orange
+                    onMoved: (v) => {
+                        Mic.setLinear(v)
+                        if (v > 0 && Mic.muted) Mic.toggleMute()
+                    }
+                }
+
+                Text {
+                    text: Mic.muted ? "Muted" : Math.round(Mic.volume) + "%"
+                    color: Mic.muted ? Appearance.red : Appearance.fg
+                    font.pixelSize: Theme.fontNormal
+                    font.family: Theme.font
+                    Layout.preferredWidth: 44
+                    horizontalAlignment: Text.AlignRight
+                }
+            }
+
+            // Which microphone, when there is only one to pick: a picker
+            // with one row in it would be chrome, but the slider above
+            // does not say what it is the level of.
+            Text {
+                visible: panel.hasInput && panel.audioSources.length <= 1
+                text: Mic.deviceName
+                color: Appearance.fgMuted
+                font.pixelSize: Theme.fontSmall
+                font.family: Theme.font
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                elide: Text.ElideRight
+            }
+
+            // The input devices, when there is more than one — the output
+            // picker's rows and cap, pointed at the default source.
+            RowLayout {
+                visible: panel.audioSources.length > 1
+                Layout.fillWidth: true
+                Layout.fillHeight: false
+                Layout.preferredHeight: Math.min(panel.audioSources.length, 4) * 32
+                Layout.maximumHeight: Layout.preferredHeight
+                spacing: Theme.space1
+
+                ListView {
+                    id: sourceList
+
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    model: panel.audioSources
+                    boundsBehavior: Flickable.StopAtBounds
+
+                    delegate: Rectangle {
+                        id: sourceRow
+                        required property var modelData
+
+                        readonly property bool isActive: sourceRow.modelData === Mic.source
+
+                        width: ListView.view.width
+                        height: 32
+                        radius: Theme.radius
+                        color: sourceRow.isActive ? SlabStyle.tintSelected
+                             : (sourceHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover))
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: Theme.space2
+                            anchors.rightMargin: Theme.space2
+                            spacing: Theme.space2
+
+                            Text {
+                                text: sourceRow.isActive ? "" : ""
+                                color: Appearance.green
+                                font.pixelSize: Theme.fontSmall
+                                font.family: Theme.font
+                                Layout.preferredWidth: 16
+                            }
+
+                            Text {
+                                text: panel.isBt(sourceRow.modelData) ? "" : ""
+                                color: Appearance.fgFaint
+                                font.pixelSize: Theme.fontSmall
+                                font.family: Theme.font
+                            }
+
+                            Text {
+                                text: panel.labelFor(sourceRow.modelData)
+                                color: Appearance.fg
+                                font.pixelSize: Theme.fontNormal
+                                font.family: Theme.font
+                                Layout.fillWidth: true
+                                Layout.minimumWidth: 0
+                                elide: Text.ElideRight
+                            }
+                        }
+
+                        HoverHandler { id: sourceHover }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: Pipewire.preferredDefaultAudioSource = sourceRow.modelData
+                        }
+                    }
+                }
+
+                ListScrollBar {
+                    view: sourceList
                     Layout.fillHeight: true
                     trackColor: Appearance.scrollTrack
                     thumbColor: Appearance.scrollThumb
