@@ -101,6 +101,70 @@
 			"units": [],
 			"teardown": [],
 			"data": ["~/.local/bin/claude", "~/.local/share/claude", "~/.cache/claude"]
+		},
+		"codex": {
+			"label": "Codex",
+			"summary": "OpenAI's coding agent in the terminal (codex), from extra, updated with the rest of the system. Installed or not: there is nothing to switch off. Removing it uninstalls the package, but not ~/.codex, which holds your login and settings.",
+			"recommended": false,
+			"switch": false,
+			"size": "about 320 MB",
+			"provides": ["codex"],
+			"packages": {
+				"repo": ["openai-codex"],
+				"aur": []
+			},
+			"setup": [],
+			"units": [],
+			"teardown": [],
+			"data": []
+		},
+		"gemini": {
+			"label": "Gemini CLI",
+			"summary": "Google's coding agent in the terminal (gemini), from extra, updated with the rest of the system. Installed or not: there is nothing to switch off. Removing it uninstalls the package, but not ~/.gemini, which holds your login and settings.",
+			"recommended": false,
+			"switch": false,
+			"size": "about 60 MB, and Node.js if it isn't there yet",
+			"provides": ["gemini"],
+			"packages": {
+				"repo": ["gemini-cli"],
+				"aur": []
+			},
+			"setup": [],
+			"units": [],
+			"teardown": [],
+			"data": []
+		},
+		"opencode": {
+			"label": "OpenCode",
+			"summary": "The open-source coding agent in the terminal (opencode), for any model provider, from extra and updated with the rest of the system. Installed or not: there is nothing to switch off. Removing it uninstalls the package and its cache, but not ~/.config/opencode or ~/.local/share/opencode, which hold your settings and logins.",
+			"recommended": false,
+			"switch": false,
+			"size": "about 190 MB",
+			"provides": ["opencode"],
+			"packages": {
+				"repo": ["opencode"],
+				"aur": []
+			},
+			"setup": [],
+			"units": [],
+			"teardown": [],
+			"data": ["~/.cache/opencode"]
+		},
+		"hermes": {
+			"label": "Hermes",
+			"summary": "Nous Research's self-improving agent (hermes), from the AUR rather than its own installer, which appends to your shell rc files and links its own node and npm into ~/.local/bin. Installed or not: there is nothing to switch off. Removing it uninstalls the package, but not ~/.hermes, which holds your settings, keys, skills and memory.",
+			"recommended": false,
+			"switch": false,
+			"size": "about 400 MB with Python 3.11",
+			"provides": ["hermes"],
+			"packages": {
+				"repo": [],
+				"aur": ["hermes-agent"]
+			},
+			"setup": [],
+			"units": [],
+			"teardown": [],
+			"data": []
 		}
 	}
 }

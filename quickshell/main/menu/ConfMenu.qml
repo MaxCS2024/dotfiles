@@ -202,6 +202,12 @@ ShellSurface {
                 // The same install rows, picked from a short list by
                 // category rather than searched for.
                 { label: "Browse", icon: "\u{F009}", hint: "by category", children: [
+                    // Coding agents for the terminal. These are rack
+                    // features rather than install rows (see aiFeatures),
+                    // so a row here installs one and, once installed,
+                    // removes it, as it did under Features.
+                    { label: "AI", icon: "\u{F0674}", hint: "coding agents",
+                      children: panel.featureRows(panel.aiFeatures) },
                     { label: "Browsers", icon: "", hint: "web",
                       children: panel.browserApps.map(app => panel.installRow(app)) },
                     { label: "Communications", icon: "", hint: "chat",
@@ -237,9 +243,11 @@ ShellSurface {
             ]},
 
             // The parts of the desktop `rack features` can turn on and
-            // off — see featureRows() below.
+            // off — see featureRows() below. The coding agents are
+            // features too, but they are apps you pick, so they live in
+            // Apps › Browse › AI instead.
             { label: "Features", icon: "\u{F0431}", hint: "optional parts",
-              children: panel.featureRows() },
+              children: panel.featureRows(null) },
 
             { label: "System", icon: "", children: [
                 { label: "About", icon: "", hint: SystemInfo.kernel,
@@ -306,14 +314,27 @@ ShellSurface {
         weather: "\u{F0595}",
         lazyvim: "\u{F04B2}",
         ohmyzsh: "\u{F07B7}",
-        claudecode: "\u{F06A9}"
+        claudecode: "\u{F06A9}",
+        codex: "\u{F0169}",
+        gemini: "\u{F0AE2}",
+        opencode: "\u{F10D6}",
+        hermes: "\u{F06D3}"
     })
 
-    function featureRows() {
+    // The features Apps › Browse › AI shows, and Features leaves out.
+    // A new agent in features.json turns up under Features until its
+    // name is added here.
+    readonly property var aiFeatures: ["claudecode", "codex", "gemini", "opencode", "hermes"]
+
+    // `only` is the names to list, in features.json's order; null is
+    // every feature that isn't one of aiFeatures.
+    function featureRows(only) {
         if (actions.features === null) return [{ label: "Reading…", icon: "" }]
         if (actions.features.length === 0)
             return [{ label: "No features found", icon: "", hint: "rack features list" }]
-        return actions.features.map(f => {
+        return actions.features.filter(f => only
+            ? only.indexOf(f.name) !== -1
+            : panel.aiFeatures.indexOf(f.name) === -1).map(f => {
             if (!f.switchable) return {
                 label: f.label, icon: panel.featureIcons[f.name] || "\u{F0431}",
                 hint: f.installed ? "installed" : "not installed",
