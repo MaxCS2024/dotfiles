@@ -344,7 +344,31 @@ Variants {
             }
 
             RowLayout {
-                anchors.centerIn: parent
+                id: centerRow
+                anchors.verticalCenter: parent.verticalCenter
+                // The clock holds the middle of the bar, and whatever
+                // shares the row grows out from beside it. Centring the
+                // row as a whole moved the clock every time a module
+                // with `hasContent` came or went — half the voxtype
+                // pill's width each time dictation started (user request
+                // 2026-09-24). Without a clock in the row, the row
+                // centres as a whole, the way it always did.
+                //
+                // `x`, not anchors.centerIn plus a horizontalCenterOffset:
+                // the anchor rounds its half-pixel one way and the offset
+                // another, which left the clock 1px off whenever the pill
+                // was up. One Math.round over the whole sum lands the
+                // clock on the same pixel either way.
+                x: {
+                    let pivot = null
+                    for (let i = 0; i < centerRepeater.count; i++) {
+                        const it = centerRepeater.itemAt(i)
+                        if (it && it.name === "clock") pivot = it
+                    }
+                    return pivot
+                        ? Math.round(parent.width / 2 - (pivot.x + pivot.width / 2))
+                        : Math.round((parent.width - centerRow.width) / 2)
+                }
                 spacing: Theme.space2
 
                 Repeater {
