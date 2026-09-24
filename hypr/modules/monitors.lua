@@ -2,7 +2,9 @@
 
 hl.monitor({
 	output = "eDP-1",
-	mode = "1920x1080@60",
+	-- The panel's own best mode rather than this laptop's numbers, so the
+	-- same line suits a screen with another resolution or refresh rate.
+	mode = "preferred",
 	position = "0x0",
 	scale = 1,
 })

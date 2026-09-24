@@ -22,9 +22,11 @@ hl.bind(mainMod .. " + RETURN", hl.dsp.exec_cmd(vars.terminal))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(vars.fileManager))
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(vars.browser))
 
--- hyprshutdown leaves the session the way the power menu does; `uwsm
--- stop` is the fallback for a machine that has not installed it.
-hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || uwsm stop"))
+-- hyprshutdown leaves the session the way the power menu does; Hyprland's
+-- own exit is the fallback for a machine that has not installed it. Not
+-- `uwsm stop`: that only ends a session uwsm started, and ly starts this
+-- one. The same line as Hyprland's default config, and Theme.logoutCmd.
+hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"))
 
 -- Conf, the nested menu over everything this config can do
 -- (quickshell/main/menu/ConfMenu.qml). omarchy puts its own menu on

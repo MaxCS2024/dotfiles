@@ -28,7 +28,13 @@ plugins=(
     zsh-autosuggestions
 )
 
-source "$ZSH/oh-my-zsh.sh"
+# A clone without --recurse-submodules has an empty ohmyzsh/; say how to
+# fetch it rather than fail on the source line at every start.
+if [[ -f $ZSH/oh-my-zsh.sh ]]; then
+    source "$ZSH/oh-my-zsh.sh"
+else
+    print -u2 "oh-my-zsh is missing: git -C ${ZDOTDIR:A:h} submodule update --init"
+fi
 
 
 # ╭──────────────────────────────────────────────╮
@@ -189,7 +195,7 @@ ff() {
         fzf \
             --style=full \
             --border=rounded \
-            --preview='bat -p --color=always {}' \
+            --preview='bat -p --color=always {} 2>/dev/null || cat {}' \
             --preview-window=right:55%:wrap \
             --bind='ctrl-p:toggle-preview' \
             --bind='ctrl-u:preview-page-up' \

@@ -125,10 +125,6 @@ running. Grouped by what breaks if it's missing.
   resolves (`relay default list`); with none installed, both fail, the
   shell's with a notification saying so.
 
-- **uwsm** — `Theme.logoutCmd` defaults to `uwsm stop`. App launches
-  are wrapped in `uwsm-app` when it is installed and not otherwise
-  (`hypr/modules/defaults.lua`).
-
 - **awww** — `wallpaper/WallpaperSwitcher.qml`'s `applyWallpaper()`
   (`awww img ... && matugen image ...`). Pre-existing gap — never
   listed even though the wallpaper switcher
@@ -290,7 +286,17 @@ running. Grouped by what breaks if it's missing.
 
 - **fzf** and **zoxide** — the oh-my-zsh plugins of the same names in
   `zsh/.zshrc` (Ctrl-R history search, `z`), and `tat`, `ff` and `fcd`.
-  Without them oh-my-zsh prints a warning at every shell start.
+  Without them oh-my-zsh prints a warning at every shell start. **bat**
+  is `ff`'s preview, which falls back to plain `cat` without it.
+
+- **playerctl** — the media keys (`hypr/modules/binds/media.lua`: play,
+  pause, next, previous). Without it they do nothing.
+
+- **uwsm** — app launches are wrapped in `uwsm-app` when it is
+  installed and not otherwise (`hypr/modules/defaults.lua`). Logging
+  out doesn't use it: `uwsm stop` only ends a session uwsm started, and
+  ly starts this one, so `Theme.logoutCmd` and SUPER+M run
+  `hyprshutdown`, or Hyprland's own exit without it.
 
 - **gcc** and **npm** — the LazyVim feature (`rack features on
   lazyvim`, or Conf › Features). It installs neovim, ripgrep, fd and

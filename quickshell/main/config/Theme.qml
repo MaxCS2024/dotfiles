@@ -148,7 +148,10 @@ Singleton {
     // ── External commands ────────────────────────────────
     // Which terminal and browser the shell opens is not here: those are
     // default apps, resolved by `relay default` (services/Defaults.qml).
-    readonly property string logoutCmd: "uwsm stop"
+    // What SUPER+M runs too (hypr/modules/binds/apps.lua), and why it is
+    // not `uwsm stop`.
+    readonly property string logoutCmd:
+        "command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"
 
     // The app-id a transient, task-shaped window asks for when it wants to
     // be floated and centred instead of tiled into the layout: a package
