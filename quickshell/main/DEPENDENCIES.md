@@ -284,10 +284,10 @@ running. Grouped by what breaks if it's missing.
   asking. `rack features on earbuds` installs them; `rack features off
   earbuds` takes the pill and the rail section away and stops the watcher.
 
-- **fzf** and **zoxide** — the oh-my-zsh plugins of the same names in
+- **fzf** and **zoxide** — the Oh-My-Zsh plugins of the same names in
   `zsh/.zshrc` (Ctrl-R history search, `z`), and `tat`, `ff` and `fcd`.
-  oh-my-zsh itself is a rack feature: `rack features on ohmyzsh`.
-  Without them oh-my-zsh prints a warning at every shell start. **bat**
+  Oh-My-Zsh itself is a rack feature: `rack features on ohmyzsh`.
+  Without them Oh-My-Zsh prints a warning at every shell start. **bat**
   is `ff`'s preview, which falls back to plain `cat` without it.
 
 - **playerctl** — the media keys (`hypr/modules/binds/media.lua`: play,

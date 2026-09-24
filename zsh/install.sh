@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
-# oh-my-zsh, fresh from upstream, for the .zshrc in this directory.
+# Oh-My-Zsh, fresh from upstream, for the .zshrc in this directory.
 #
-# oh-my-zsh is cloned into ~/.local/share/oh-my-zsh and updates itself from
+# Oh-My-Zsh is cloned into ~/.local/share/oh-my-zsh and updates itself from
 # then on (`zstyle ':omz:update' mode auto` in .zshrc), and the one plugin
 # it doesn't ship, zsh-autosuggestions, is cloned into its custom/plugins —
-# a directory oh-my-zsh's own .gitignore leaves alone, so its updates never
+# a directory Oh-My-Zsh's own .gitignore leaves alone, so its updates never
 # trip over it. What the repo keeps is only .zshrc, which says which plugins
 # to load.
 #
@@ -31,4 +31,4 @@ if [[ ! -f $AUTOSUGGESTIONS/zsh-autosuggestions.plugin.zsh ]]; then
     git clone --depth 1 https://github.com/zsh-users/zsh-autosuggestions "$AUTOSUGGESTIONS"
 fi
 
-printf 'oh-my-zsh is in %s; new shells load it\n' "$ZSH"
+printf 'Oh-My-Zsh is in %s; new shells load it\n' "$ZSH"

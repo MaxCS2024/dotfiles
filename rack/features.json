@@ -70,7 +70,7 @@
 			"data": ["~/.config/nvim", "~/.local/share/nvim", "~/.local/state/nvim", "~/.cache/nvim"]
 		},
 		"ohmyzsh": {
-			"label": "oh-my-zsh",
+			"label": "Oh-My-Zsh",
 			"summary": "The zsh framework zsh/.zshrc loads its plugins through (fzf, zoxide, zsh-autosuggestions), cloned fresh from upstream and updating itself. Installed or not: there is nothing to switch off. Without it zsh still starts, with the aliases but none of the plugins.",
 			"recommended": true,
 			"switch": false,

@@ -1,12 +1,12 @@
 # ╭──────────────────────────────────────────────╮
-# │ oh-my-zsh                                    │
+# │ Oh-My-Zsh                                    │
 # ╰──────────────────────────────────────────────╯
 
 # Not in the repo: `rack features on ohmyzsh` (zsh/install.sh) clones it
 # from upstream, and zsh-autosuggestions into its custom/plugins.
 export ZSH="${XDG_DATA_HOME:-$HOME/.local/share}/oh-my-zsh"
 
-# ZDOTDIR is a link into the repo, and oh-my-zsh's default completion dump
+# ZDOTDIR is a link into the repo, and Oh-My-Zsh's default completion dump
 # goes there, into the working tree.
 ZSH_CACHE_DIR="$XDG_CACHE_HOME/oh-my-zsh"
 ZSH_COMPDUMP="$ZSH_CACHE_DIR/.zcompdump-${HOST%%.*}-$ZSH_VERSION"
@@ -14,7 +14,7 @@ ZSH_COMPDUMP="$ZSH_CACHE_DIR/.zcompdump-${HOST%%.*}-$ZSH_VERSION"
 # It updates itself, without asking, when an update is due.
 zstyle ':omz:update' mode auto
 
-# Set before oh-my-zsh loads, or it picks ~/.zsh_history.
+# Set before Oh-My-Zsh loads, or it picks ~/.zsh_history.
 HISTFILE="$ZDOTDIR/.histfile"
 
 # The prompt is starship, started below.
@@ -31,7 +31,7 @@ plugins=(
 if [[ -f $ZSH/oh-my-zsh.sh ]]; then
     source "$ZSH/oh-my-zsh.sh"
 else
-    print -u2 "oh-my-zsh isn't installed: rack features on ohmyzsh (or Conf › Features)"
+    print -u2 "Oh-My-Zsh isn't installed: rack features on ohmyzsh (or Conf › Features)"
 fi
 
 
