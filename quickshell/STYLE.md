@@ -163,3 +163,6 @@ Add to this list whenever the user rejects a visual pattern.
   enough, and the user then had focus rings removed everywhere (sliders,
   tiles, power menu, lock screen) along with accent borders on focused
   text fields. There is no focus ring component; don't add one back (see §1).
+- 2026-09-24: accent border on "on" quick-settings tiles and a tone-coloured
+  border on hovered/selected power menu tiles; both now keep their neutral
+  edge and show state with fill and text colour only (see §1).

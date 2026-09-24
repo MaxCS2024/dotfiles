@@ -4,7 +4,7 @@ import "../config"
 import "../theme"
 
 // The quick-settings 2-column tile: label +
-// italic state line, gold border/tint when `on`. One component since all
+// italic state line, gold label and tint when `on`. One component since all
 // four tiles (Wi-Fi, Bluetooth, DND, Idle inhibit) share this exact shape
 // and only differ in label/state/on-ness/click target.
 Rectangle {
@@ -22,7 +22,7 @@ Rectangle {
 
     radius: Theme.radiusLarge
     border.width: 1
-    border.color: root.on ? Appearance.accent : Appearance.border
+    border.color: Appearance.border
     color: tap.pressed ? Appearance.hoverStrong
          : root.on ? Qt.rgba(Appearance.accent.r, Appearance.accent.g, Appearance.accent.b, 0.09)
                    : (hover.hovered ? Appearance.hover : Qt.rgba(Appearance.hover.r, Appearance.hover.g, Appearance.hover.b, 0))

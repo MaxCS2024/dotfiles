@@ -223,7 +223,7 @@ ShellSurface {
                             // One hue per tile: the accent for the four
                             // ordinary actions, red for the one that ends
                             // the session with no way back. Everything
-                            // else on the tile (fill wash, edge, rule,
+                            // else on the tile (fill wash, rule,
                             // keycap) is derived from this, so a tile only
                             // ever speaks with one color.
                             readonly property color tone: tile.modelData.danger ? Appearance.red : Appearance.accent
@@ -257,11 +257,10 @@ ShellSurface {
                                  : tile.active  ? tile._wash(0.20, SlabStyle.cardAlpha + 0.10)
                                  : SlabStyle.cardBg
                             border.width: 1
-                            border.color: tile.active ? tile.tone : SlabStyle.cardBorder
+                            border.color: SlabStyle.cardBorder
                             scale: tile.active ? 1.03 : 1.0
 
                             Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
-                            Behavior on border.color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
                             Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
 
                             // ── Reveal ───────────────────────────
