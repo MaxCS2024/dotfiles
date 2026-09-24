@@ -136,19 +136,20 @@
 		},
 		"opencode": {
 			"label": "OpenCode",
-			"summary": "The open-source coding agent in the terminal (opencode), for any model provider, from extra and updated with the rest of the system. Installed or not: there is nothing to switch off. Removing it uninstalls the package and its cache, but not ~/.config/opencode or ~/.local/share/opencode, which hold your settings and logins.",
+			"summary": "The open-source coding agent in the terminal (opencode), for any model provider, from its own installer into ~/.opencode/bin, which zsh/.zshrc already puts on PATH, and updating itself (opencode upgrade). Installed or not: there is nothing to switch off. Removing it deletes the program and its cache, but not ~/.config/opencode, ~/.local/share/opencode or the plugins in ~/.opencode, which hold your settings and logins.",
 			"recommended": false,
 			"switch": false,
 			"size": "about 190 MB",
-			"provides": ["opencode"],
+			"provides": [],
+			"probe": ["sh", "-c", "test -x \"$HOME/.opencode/bin/opencode\""],
 			"packages": {
-				"repo": ["opencode"],
+				"repo": [],
 				"aur": []
 			},
-			"setup": [],
+			"setup": [["bash", "-c", "set -o pipefail; curl -fsSL https://opencode.ai/install | bash -s -- --no-modify-path"]],
 			"units": [],
 			"teardown": [],
-			"data": ["~/.cache/opencode"]
+			"data": ["~/.opencode/bin", "~/.cache/opencode"]
 		},
 		"hermes": {
 			"label": "Hermes",
