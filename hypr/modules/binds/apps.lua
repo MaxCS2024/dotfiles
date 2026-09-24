@@ -50,6 +50,13 @@ hl.bind(mainMod .. " + C", hl.dsp.global("quickshell:clipboard-toggle"))
 -- modules/binds/window.lua and T is still the letter this is about.
 hl.bind(mainMod .. " + SHIFT + T", hl.dsp.global("quickshell:themes-toggle"))
 
+-- Dictation: press once to start recording, again to stop, and voxtype
+-- types what it heard into the focused window (through wtype). The daemon
+-- is voxtype's own systemd user unit (`voxtype setup systemd`); the bar
+-- shows a pill left of the clock while it is recording or transcribing
+-- (quickshell/main/bar/VoxtypeIndicator.qml). V for voice, and it was free.
+hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("voxtype record toggle"))
+
 -- The bar itself: hide it, or focus it for arrow-key navigation
 -- (Left/Right to move, Enter to activate, Escape to release). Focus is
 -- shifted to leave plain SUPER+B to the browser.

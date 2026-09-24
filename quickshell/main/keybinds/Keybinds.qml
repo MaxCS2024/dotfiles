@@ -53,7 +53,8 @@ Singleton {
             { action: "Terminal", keys: ["Super", "Return"] },
             { action: "Browser", keys: ["Super", "B"] },
             { action: "File manager", keys: ["Super", "E"] },
-            { action: "App launcher", keys: ["Super", "P"] }
+            { action: "App launcher", keys: ["Super", "P"] },
+            { action: "Dictation", keys: ["Super", "V"] }
         ]},
 
         // The shell's own surfaces, plus the session's own exit, which

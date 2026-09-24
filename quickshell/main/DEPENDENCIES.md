@@ -185,6 +185,20 @@ running. Grouped by what breaks if it's missing.
   truth, applied outward and never read back), so there is nothing in it
   that could notice the difference and say so.
 
+- **voxtype** (AUR `voxtype-bin`) and **wtype** — dictation. SUPER+V
+  (`hypr/modules/binds/apps.lua`) runs `voxtype record toggle`, and
+  voxtype types what it heard through wtype. The daemon is voxtype's own
+  systemd user unit, not autostart.lua: `voxtype setup --download`
+  fetches the model and `voxtype setup systemd` installs and starts the
+  unit. `~/.config/voxtype/config.toml` needs `hotkey.enabled = false`
+  (the bind replaces its evdev hotkey, which can't read /dev/input
+  without the `input` group anyway) and `osd.enabled = false` (the bar's
+  pill replaces its GTK popup). `services/Voxtype.qml` follows
+  `voxtype status --follow` for `bar/VoxtypeIndicator.qml`, shown left of
+  the clock while recording or transcribing. Without voxtype the pill
+  never appears and the service stops after one check; without wtype the
+  text lands on the clipboard instead of being typed.
+
 - **rfkill** (util-linux, same package as `flock` above) —
   `services/AirplaneMode.qml` shells out to it both to read
   (`rfkill --output SOFT --noheadings`) and to block/unblock every

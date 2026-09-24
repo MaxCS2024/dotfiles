@@ -21,6 +21,7 @@ singleton Defaults 1.0 Defaults.qml
 singleton MprisWatchdog 1.0 MprisWatchdog.qml
 singleton Media 1.0 Media.qml
 singleton Weather 1.0 Weather.qml
+singleton Voxtype 1.0 Voxtype.qml
 
 # Not a singleton: each store is one file, and a caller may own several.
 JsonStore 1.0 JsonStore.qml

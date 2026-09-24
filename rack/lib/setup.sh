@@ -70,6 +70,8 @@ declare -ga RACK_SETUP_OPTIONAL=(
     "procps-ng:pkill"
     "util-linux:rfkill"
     "psmisc:fuser"
+    "voxtype-bin:voxtype"
+    "wtype:wtype"
 )
 
 # What rack and relay need themselves, distinct from anything quickshell shells

@@ -59,7 +59,7 @@ Singleton {
     property var barLayout: ({
         default: {
             left: ["workspaces", "media"],
-            center: ["clock"],
+            center: ["voxtype", "clock"],
             right: ["tray", "weather", "network", "volume", "battery"]
         }
     })

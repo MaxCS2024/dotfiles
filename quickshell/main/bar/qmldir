@@ -17,6 +17,7 @@ NotificationsButton 1.0 NotificationsButton.qml
 SystemMonitorButton 1.0 SystemMonitorButton.qml
 SystemTray 1.0 SystemTray.qml
 VolumeButton 1.0 VolumeButton.qml
+VoxtypeIndicator 1.0 VoxtypeIndicator.qml
 WeatherButton 1.0 WeatherButton.qml
 WorkspacePill 1.0 WorkspacePill.qml
 Workspaces 1.0 Workspaces.qml
