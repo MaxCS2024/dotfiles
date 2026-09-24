@@ -38,17 +38,6 @@ Item {
         }
     }
 
-    // A click focuses the slider too (so arrow keys work after it), but
-    // the ring is only for focus reached by keyboard — a ring appearing
-    // under the pointer on every click reads as a stuck outline.
-    property bool _pointerFocus: false
-    onActiveFocusChanged: if (!root.activeFocus) root._pointerFocus = false
-
-    FocusRing {
-        active: root.interactive && root.activeFocus && !root._pointerFocus
-        targetRadius: root._knobSize / 2
-    }
-
     Rectangle {
         id: track
         anchors.verticalCenter: parent.verticalCenter
@@ -80,7 +69,7 @@ Item {
         enabled: root.interactive
         cursorShape: root.interactive ? Qt.PointingHandCursor : Qt.ArrowCursor
         function setFromX(x) { root.moved(Math.max(0, Math.min(1, x / width))) }
-        onPressed: (mouse) => { root._pointerFocus = true; root.forceActiveFocus(); setFromX(mouse.x) }
+        onPressed: (mouse) => { root.forceActiveFocus(); setFromX(mouse.x) }
         onPositionChanged: (mouse) => { if (pressed) setFromX(mouse.x) }
     }
 }

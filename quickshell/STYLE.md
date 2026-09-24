@@ -160,5 +160,5 @@ Add to this list whenever the user rejects a visual pattern.
 - 2026-09-23: hovering an occupied workspace chip went fill → darker →
   hover colour, because HoverPill faded from `"transparent"` (see §7).
 - 2026-09-24: clicking a volume/mic slider drew the accent focus ring,
-  because a click gives the slider focus. A focus ring is for keyboard
-  focus only; a click must never leave one behind (see §1).
+  because a click gives the slider focus. Hiding it only for clicks wasn't
+  enough: sliders get no focus ring at all, Tab included (see §1).
