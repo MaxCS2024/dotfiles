@@ -133,7 +133,7 @@ fill *plus* a dot *plus* a border for one state). One visual signal per state.
 - Edit files in place (Edit tool, or rewrite the file). `sed -i` replaces
   the file, and the reload watcher stops seeing it. After a failed load,
   the watcher may stop reloading at all; restart the shell once with
-  `kill <pid>` then `hyprctl dispatch 'hl.exec_cmd("env QT_QPA_PLATFORMTHEME=gtk3 qs -c main")'`
+  `kill <pid>` then `hyprctl dispatch 'hl.dsp.exec_cmd("env QT_QPA_PLATFORMTHEME=gtk3 qs -c main")'`
   (the same command autostart uses). Afterwards, `qs list --all` must show
   exactly one instance.
 - Take a screenshot and look at the result before calling it done:
