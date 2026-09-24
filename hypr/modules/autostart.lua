@@ -3,6 +3,8 @@
 -------------------
 
 -- See https://wiki.hypr.land/Configuring/Basics/Autostart/
+local features = require("modules.features")
+
 hl.on("hyprland.start", function () 
 	-- "main" is the stable quickshell config (quickshell/main/shell.qml).
 	-- Experimental layouts live as sibling configs under quickshell/ and
@@ -41,4 +43,14 @@ hl.on("hyprland.start", function ()
 	-- Pinning prefer-dark at login would put a light palette on the dark
 	-- stylesheet until the shell corrected it.
 	hl.exec_cmd("hyprsunset") -- blue-light filter daemon, controlled live via `hyprctl hyprsunset ...` (see quickshell/main/services/NightLight.qml)
+	-- Dictation's daemon. `voxtype setup systemd` installs the unit as
+	-- WantedBy=graphical-session.target, and nothing in this session
+	-- activates that target (Hyprland is started by ly, not uwsm), so the
+	-- unit is enabled and never starts: dictation worked only until the
+	-- first reboot after `rack features on dictation` (found 2026-09-24).
+	-- `rack features off dictation` disables the unit; the check here keeps
+	-- this from starting it again at the next login.
+	if features.on("dictation") then
+		hl.exec_cmd("systemctl --user start voxtype.service")
+	end
 end)
