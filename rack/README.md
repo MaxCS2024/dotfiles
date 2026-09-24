@@ -53,9 +53,49 @@ hex colour demonstrates.
 | `validate` | syntax-check configs before they break a session |
 | `reload`   | run the reload commands on their own |
 | `edit`     | open the repo copy, validate on exit |
+| `features` | pick the optional parts of the desktop; `on`, `off`, `remove` |
 
 Most modules have one obvious verb, so `rack deploy` means `rack deploy run`
 and `rack reload hypr` means `rack reload run hypr`.
+
+## Features
+
+Some of the desktop is optional: dictation brings a speech model and a
+daemon, the weather module polls a web API. `features.json` says what each
+one is made of, which is everything turning it off or removing it has to
+touch:
+
+```
+provides   binaries that mean it is installed
+packages   repo (pacman) and aur (yay) package names
+setup      commands run once, after its packages are installed
+units      systemd user units started with it and stopped without it
+teardown   commands run before its packages are uninstalled
+data       paths under ~ that a remove deletes
+```
+
+```bash
+rack features                 # the picker: a checklist in the terminal
+rack features list            # on/off, installed or not
+rack features on dictation    # install what is missing, set it up, start it
+rack features off dictation   # stop it; keep it installed
+rack features remove dictation   # off, then uninstall and delete its data
+```
+
+Off and remove are two steps on purpose: off is instant to undo, remove
+shows every package and directory it would delete, with sizes, and asks
+first. A package another feature that is still on also lists is kept.
+
+The choices are `~/.config/rack/features.conf`, one `name on|off` per line.
+Hyprland reads it for binds (`hypr/modules/features.lua`) and the shell for
+everything it draws (`quickshell/main/services/Features.qml`); rack reloads
+Hyprland and tells the shell after every change. A feature with no line is
+on, so a machine that never ran the picker keeps everything it had.
+
+Adding a feature is an entry in `features.json`, plus a
+`features.on("<name>")` around its binds and a `Features.on("<name>")` on
+whatever the shell builds for it — a bar module only needs a line in
+`bar/Modules.qml`'s `feature` map.
 
 ## Colours
 
@@ -110,6 +150,12 @@ it and deleted after, so nothing touches yours.
 (`tests/rack-names.test.sh`): an unknown one stops the command with exit 2,
 where it used to be logged and then reported as success. The rest of what
 they do, and the other modules, have no tests yet.
+
+`features` is covered (`tests/rack-features.test.sh`) against a registry of
+made-up features and stand-ins for pacman, yay, sudo and systemctl, on a PATH
+with the real ones taken out: on, off and remove, the package two features
+share, a missing yay, dry run, a data path outside `$HOME`, and what the
+picker does with its ticks. The checklist's drawing and keys are not.
 
 ## Next
 

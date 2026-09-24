@@ -18,8 +18,16 @@ import QtQuick
 // the end of it: retrying would put a failed spawn in the log every few
 // seconds on a machine that doesn't use dictation. Any other exit
 // (voxtype upgraded under it, killed) is retried.
+//
+// Dictation is an optional feature (services/Features.qml). A singleton
+// outlives whatever built it, so when the feature goes off and shell.qml
+// drops the pill, this is still here: the follower stops with the
+// feature rather than with the pill, and starts again when it comes back.
 Singleton {
     id: root
+
+    readonly property bool wanted: Features.on("dictation")
+    onWantedChanged: follow.running = root.wanted
 
     property string state: "stopped"
     readonly property bool recording: root.state === "recording"
@@ -31,20 +39,20 @@ Singleton {
 
     Process {
         id: follow
-        running: true
+        running: root.wanted
         command: ["sh", "-c", "command -v voxtype >/dev/null || exit 127; exec voxtype status --follow"]
         stdout: SplitParser {
             onRead: (line) => root.state = line.trim()
         }
         onExited: (exitCode) => {
             root.state = "stopped"
-            if (exitCode !== 127) retry.start()
+            if (exitCode !== 127 && root.wanted) retry.start()
         }
     }
 
     Timer {
         id: retry
         interval: 5000
-        onTriggered: follow.running = true
+        onTriggered: follow.running = root.wanted
     }
 }

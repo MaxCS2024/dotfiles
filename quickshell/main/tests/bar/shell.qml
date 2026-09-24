@@ -61,6 +61,15 @@ ShellRoot {
                        root.same(root.bar.layout, { left: ["button", "widget"], center: [], right: ["button"] }),
                        JSON.stringify(root.bar.layout))
         },
+        () => {
+            root.useLayout(["button", "widget"], [], [])
+            Features.off = ["fakefeature"]
+            root.check("a module whose feature is off is dropped",
+                       root.same(root.bar.layout.left, ["button"]), JSON.stringify(root.bar.layout.left))
+            Features.off = []
+            root.check("it comes back when the feature is turned on",
+                       root.same(root.bar.layout.left, ["button", "widget"]), JSON.stringify(root.bar.layout.left))
+        },
 
         // ── height ─────────────────────────────────────────
         () => {

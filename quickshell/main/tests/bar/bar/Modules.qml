@@ -15,6 +15,11 @@ QtObject {
         "selfhiding": selfHidingComponent
     })
 
+    // The widget belongs to a feature, so the test can turn it off.
+    readonly property var feature: ({
+        "widget": "fakefeature"
+    })
+
     readonly property Component buttonComponent: Component { FakeButton {} }
     readonly property Component widgetComponent: Component { FakeWidget {} }
     readonly property Component selfHidingComponent: Component { FakeSelfHiding {} }

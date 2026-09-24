@@ -1,0 +1,41 @@
+{
+	"version": 1,
+	"features": {
+		"dictation": {
+			"label": "Dictation",
+			"summary": "SUPER+V, talk, SUPER+V again: what you said is typed into the focused window. A pill at the bottom of the screen shows while it listens.",
+			"recommended": false,
+			"size": "about 150 MB with the default model",
+			"provides": ["voxtype", "wtype"],
+			"packages": {
+				"repo": ["wtype"],
+				"aur": ["voxtype-bin"]
+			},
+			"setup": [
+				["voxtype", "setup", "--download", "--quiet"],
+				["voxtype", "config", "set", "hotkey.enabled", "false"],
+				["voxtype", "config", "set", "osd.enabled", "false"],
+				["voxtype", "setup", "systemd"]
+			],
+			"units": ["voxtype.service"],
+			"teardown": [
+				["voxtype", "setup", "systemd", "--uninstall"]
+			],
+			"data": ["~/.local/share/voxtype", "~/.config/voxtype"]
+		},
+		"weather": {
+			"label": "Weather",
+			"summary": "The forecast in the bar, and a rail with the week behind it. Needs your coordinates in quickshell/main/.env (see DEPENDENCIES.md).",
+			"recommended": true,
+			"provides": ["curl"],
+			"packages": {
+				"repo": [],
+				"aur": []
+			},
+			"setup": [],
+			"units": [],
+			"teardown": [],
+			"data": []
+		}
+	}
+}

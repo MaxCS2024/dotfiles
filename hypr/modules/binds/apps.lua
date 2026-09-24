@@ -12,6 +12,7 @@
 -- window that held them are gone, each replaced by a surface below.
 
 local vars = require("modules.vars")
+local features = require("modules.features")
 local mainMod = vars.mainMod
 
 -- Apps. What each one runs is the role's default (modules/defaults.lua):
@@ -55,8 +56,10 @@ hl.bind(mainMod .. " + SHIFT + T", hl.dsp.global("quickshell:themes-toggle"))
 -- is voxtype's own systemd user unit (`voxtype setup systemd`); the shell
 -- shows a pill at the bottom of the screen while it is recording or
 -- transcribing (quickshell/main/osd/VoxtypeOsd.qml). V for voice, and it
--- was free.
-hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("voxtype record toggle"))
+-- was free. Only while the dictation feature is on (`rack features`).
+if features.on("dictation") then
+	hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("voxtype record toggle"))
+end
 
 -- The bar itself: hide it, or focus it for arrow-key navigation
 -- (Left/Right to move, Enter to activate, Escape to release). Focus is

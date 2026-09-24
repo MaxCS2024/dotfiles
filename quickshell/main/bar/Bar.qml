@@ -42,7 +42,9 @@ Variants {
         // visible zero-width child, so RowLayout keeps spacing either
         // side of it. Filtering here drops the names nothing can build
         // instead of rendering those gaps.
-        function knownModules(names) { return names.filter(n => n in Modules.registry) }
+        function knownModules(names) {
+            return names.filter(n => n in Modules.registry && Features.on(Modules.feature[n] || ""))
+        }
         readonly property var layout: {
             const l = Settings.barLayoutFor(bar.monitorName)
             return {

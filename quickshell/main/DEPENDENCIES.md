@@ -200,6 +200,11 @@ running. Grouped by what breaks if it's missing.
   never appears and the service stops after one check; without wtype the
   text lands on the clipboard instead of being typed.
 
+  Dictation is an optional feature: `rack features on dictation` installs
+  both packages and does every setup step above (the model, the two
+  config keys, the unit), and `rack features off dictation` drops the
+  bind, the pill and the daemon. See `rack/README.md`, "Features".
+
 - **rfkill** (util-linux, same package as `flock` above) —
   `services/AirplaneMode.qml` shells out to it both to read
   (`rfkill --output SOFT --noheadings`) and to block/unblock every
@@ -247,7 +252,8 @@ running. Grouped by what breaks if it's missing.
   `services/Weather.qml` fetches the forecast every 15 minutes (a minute
   after a failure). Without either the bar's weather module never gets a
   first reading and stays hidden; after one, it keeps showing the last
-  good forecast.
+  good forecast. It is an optional feature too: `rack features off
+  weather` takes the module off the bar and stops the fetching.
 
   The location is per-machine and gitignored: `quickshell/main/.env`
   needs two lines like these (London, as an example):

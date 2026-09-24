@@ -107,6 +107,10 @@ ShellRoot {
         target: Panels
         function onPanelRequested(name, verb, arg) {
             if (verb === "close") return
+            // A panel that belongs to a feature that is off stays unbuilt
+            // (bar/Modules.qml's `feature` map, which names the bar module
+            // and its panel alike).
+            if (!Features.on(Modules.feature[name] || "")) return
             const loader = shell.panelLoaders[name]
             if (loader) loader.active = true
         }
@@ -122,7 +126,14 @@ ShellRoot {
     MicOsd {}
     CapsLockOsd {}
     ZenOsd {}
-    VoxtypeOsd {}
+    // Dictation is an optional feature (`rack features`). Off, the pill
+    // is never built, and neither is services/Voxtype.qml, which only it
+    // names — so no `voxtype status --follow` runs either. Turned back on,
+    // it is built again without a restart.
+    LazyLoader {
+        active: Features.on("dictation")
+        VoxtypeOsd {}
+    }
     NotificationPopups {}
     ScreenshotPopup {}
 

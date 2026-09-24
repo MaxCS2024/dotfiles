@@ -33,6 +33,8 @@ cd ~/.dotfiles
 ./rack/install.sh
 ./relay/install.sh
 
+rack features         # tick the optional parts you want (dictation, weather);
+                      # it installs and sets up what you tick
 rack setup            # what is missing, grouped by how much it matters
 rack deploy           # link every manifest entry into ~/.config and ~
 
@@ -55,6 +57,13 @@ All three installers link back into the repo rather than copying, so editing a
 file here takes effect with no reinstall step. They put their executables in
 `~/.local/bin`; `hypr/modules/env.lua` prepends that to Hyprland's `PATH`, which
 is why binds can call `relay` by bare name.
+
+`rack features` is a checklist of the parts of the desktop that are optional.
+Ticking one installs its packages (pacman, and yay for the AUR) and runs its
+setup; unticking one turns it off — its bind, its bar module and its daemon go
+— and then offers to uninstall it and delete its data too. Run it again any
+time to change your mind. Without it, everything is on. What each feature is
+made of is `rack/features.json`.
 
 `rack setup` is the dependency list in executable form — it checks everything
 `quickshell/main/DEPENDENCIES.md` names and installs nothing. A gap in

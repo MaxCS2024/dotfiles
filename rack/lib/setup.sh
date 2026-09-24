@@ -8,6 +8,7 @@
 # renamed.
 
 rig::load log check
+rack::load features
 
 RACK_MODULE_SUMMARY[setup]="check that every dependency is installed"
 RACK_MODULE_ACTIONS[setup]="check json"
@@ -98,12 +99,15 @@ rack::setup::__font_found() {
 # picture, not just the first gap.
 rack::setup::__check_group() {
     local -n group=$1
-    local entry name bin problems=0
+    local entry name bin feature problems=0
     for entry in "${group[@]}"; do
         name=${entry%%:*}
         bin=${entry#*:}
         if rig::check::has "$bin"; then
             printf '  %-16s found (%s)\n' "$name" "$bin"
+        elif feature=$(rack::features::off_owner "$bin"); then
+            # Turned off with `rack features`, so its absence is a choice.
+            printf '  %-16s not wanted (%s is off)\n' "$name" "$feature"
         else
             printf '  %-16s missing (%s not on PATH)\n' "$name" "$bin"
             problems=1
