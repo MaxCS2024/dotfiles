@@ -12,10 +12,11 @@ import "palette.js" as Palette
 // to derived afterwards with the row's own "reset".
 //
 // magenta and cyan are the exception to that: they are not editable
-// rows and matchesPalette() ignores them. They exist because the
-// terminal palette written from theme/Appearance.qml needs all sixteen
-// ANSI slots, and the eight rows have no opinion about those two hues —
-// a hand-edited palette gets them derived from its accent instead.
+// rows and matchesPalette() ignores them. They exist because the app
+// colours (theme/appcolors.js) give the terminals all sixteen ANSI slots,
+// and the eight rows have no opinion about those two hues. Appearance
+// passes a preset's pair on only while the palette still matches it; a
+// hand-edited palette gets them derived from its accent (palette.js).
 //
 // Colors are the upstream projects' published values, lowercase so
 // Appearance.matchesPalette() can compare them as plain strings. Where a

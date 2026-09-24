@@ -9,6 +9,8 @@
         "color2": "{{colors.green.default.hex}}",
         "color3": "{{colors.orange.default.hex}}",
         "color4": "{{colors.primary.default.hex}}",
+        "color5": "{{base16.base0e.default.hex}}",
+        "color6": "{{base16.base0c.default.hex}}",
         "color8": "{{colors.outline.default.hex}}"
     }
 }

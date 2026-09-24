@@ -132,4 +132,41 @@ TestCase {
     function test_unusable_matugen_file_is_rejected(data) {
         compare(Palette.fromMatugen(data.text), null)
     }
+
+    // ── The terminal hues ────────────────────────────────
+
+    function test_a_palette_that_names_its_hues_keeps_them() {
+        const t = Palette.derive(Palette.fromCustom({
+            bg: "#1a1b26", fg: "#c0caf5", accent: "#7aa2f7",
+            magenta: "#bb9af7", cyan: "#7dcfff" }))
+        verify(Qt.colorEqual(t.magenta, "#bb9af7"))
+        verify(Qt.colorEqual(t.cyan, "#7dcfff"))
+    }
+
+    function test_unset_hues_come_from_the_accent() {
+        // Canonical hues at the accent's own saturation and lightness.
+        const t = Palette.derive(tokyoNight)
+        const accent = Qt.color(tokyoNight.accent)
+        fuzzyCompare(t.magenta.hslHue, 300 / 360, 0.01)
+        fuzzyCompare(t.cyan.hslHue, 180 / 360, 0.01)
+        fuzzyCompare(t.magenta.hslSaturation, accent.hslSaturation, 0.01)
+        fuzzyCompare(t.cyan.hslLightness, accent.hslLightness, 0.01)
+    }
+
+    function test_matugen_hues_are_read_when_present() {
+        const w = Palette.fromMatugen(JSON.stringify({
+            special: { background: "#111418", foreground: "#e1e2e8" },
+            colors: { color1: "#ffb1c2", color2: "#8bd6b5", color3: "#ffb599",
+                      color4: "#a0cafd", color5: "#d9bde3", color6: "#9ad0e8" } }))
+        const t = Palette.derive(w.base)
+        verify(Qt.colorEqual(t.magenta, "#d9bde3"))
+        verify(Qt.colorEqual(t.cyan, "#9ad0e8"))
+    }
+
+    function test_matugen_without_hues_still_makes_a_palette() {
+        // A colors.json from before color5/color6 were templated.
+        const w = Palette.fromMatugen(matugenJson)
+        verify(w !== null)
+        fuzzyCompare(Palette.derive(w.base).magenta.hslHue, 300 / 360, 0.01)
+    }
 }

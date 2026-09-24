@@ -3,8 +3,9 @@
 // The one place a palette is derived. Every palette source — the
 // wallpaper, a preset, a hand-edited palette — first becomes a *base
 // palette* (bg, fg, accent, plus optional surface, border, green,
-// orange, red), and derive() turns that into every token the shell
-// draws with. theme/Appearance.qml is the only caller; tests/palette
+// orange, red, magenta, cyan), and derive() turns that into every token
+// the shell draws with — and the app colours theme/appcolors.js writes
+// out for the terminals and GTK. theme/Appearance.qml is the only caller; tests/palette
 // tests this file directly, so it has no QML or I/O in it.
 //
 // Colours may be passed as "#rrggbb" strings or Qt colours. Everything
@@ -33,7 +34,7 @@ var TOKENS = [
     "border", "separator",
     "fgStrong", "fg", "fgSoft", "fgMuted", "fgFaint", "fgDim",
     "placeholder", "icon", "disabled",
-    "accent", "green", "orange", "red",
+    "accent", "green", "orange", "red", "magenta", "cyan",
     "dangerBg", "dangerBorder", "badgePacman", "badgeAur", "badgeFlatpak", "installedBg"
 ]
 
@@ -69,7 +70,9 @@ function fromCustom(f) {
         border: _set(f.border) ? f.border : undefined,
         green: _set(f.green) ? f.green : DEFAULT.green,
         orange: _set(f.orange) ? f.orange : DEFAULT.orange,
-        red: _set(f.red) ? f.red : DEFAULT.red
+        red: _set(f.red) ? f.red : DEFAULT.red,
+        magenta: _set(f.magenta) ? f.magenta : undefined,
+        cyan: _set(f.cyan) ? f.cyan : undefined
     }
 }
 
@@ -88,7 +91,11 @@ function fromMatugen(text) {
     return {
         base: {
             bg: s.background, fg: s.foreground, accent: c.color4,
-            green: c.color2, orange: c.color3, red: c.color1
+            green: c.color2, orange: c.color3, red: c.color1,
+            // Optional: a colors.json from before these were templated
+            // still makes a palette, with the two hues derived.
+            magenta: _set(c.color5) ? c.color5 : undefined,
+            cyan: _set(c.color6) ? c.color6 : undefined
         },
         // The pair hypr/modules/colors.lua gives col.active_border.
         compositor: { start: c.color4, end: c.color2 }
@@ -139,6 +146,14 @@ function derive(base) {
     var orange = _col(_set(base.orange) ? base.orange : DEFAULT.orange)
     var red = _col(_set(base.red) ? base.red : DEFAULT.red)
 
+    // The two terminal hues a palette may leave unset (a hand-edited one
+    // always does): the canonical hues at the accent's own saturation and
+    // lightness, so they read as magenta and cyan but belong to this
+    // palette rather than to whatever the last wallpaper produced.
+    function atHue(h) { return Qt.hsla(h, accent.hslSaturation, accent.hslLightness, 1) }
+    var magenta = _set(base.magenta) ? _col(base.magenta) : atHue(300 / 360)
+    var cyan = _set(base.cyan) ? _col(base.cyan) : atHue(180 / 360)
+
     return {
         // One step *below* the bar: a recessed track set into it (the
         // workspace strip). Moves the opposite way from the surface
@@ -171,6 +186,8 @@ function derive(base) {
         green: green,
         orange: orange,
         red: red,
+        magenta: magenta,
+        cyan: cyan,
 
         // Washes of the status colours, so a palette's red drags its
         // danger background along with it.

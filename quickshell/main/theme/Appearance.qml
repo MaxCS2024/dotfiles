@@ -160,15 +160,32 @@ Singleton {
     // menu previews it on its "Wallpaper" row.
     readonly property var wallpaperBase: wallpaper.base || Palette.DEFAULT
 
+    // The preset the custom palette still matches, if any. A preset's
+    // magenta and cyan aren't rows you can edit (see Palettes.qml), so
+    // they ride along only while the palette is still that preset; edit
+    // any row and palette.js derives them from the accent instead.
+    readonly property var _preset: {
+        if (!root.active) return null
+        for (const p of Palettes.list)
+            if (root.matchesPalette(p)) return p
+        return null
+    }
+
     readonly property var base: root.active
         ? Palette.fromCustom({
             bg: root.customBg, fg: root.customFg, accent: root.customAccent,
             surface: root.customSurface, border: root.customBorder,
-            green: root.customGreen, orange: root.customOrange, red: root.customRed
+            green: root.customGreen, orange: root.customOrange, red: root.customRed,
+            magenta: root._preset ? root._preset.magenta : "",
+            cyan: root._preset ? root._preset.cyan : ""
           })
         : root.wallpaperBase
 
     readonly property var _t: Palette.derive(root.base)
+
+    // Every token at once, for what writes the palette out rather than
+    // drawing with it: theme/AppColors.qml.
+    readonly property var tokens: root._t
 
     // ── Surfaces ─────────────────────────────────────────
     readonly property color sunken: root._t.sunken
@@ -203,6 +220,10 @@ Singleton {
     readonly property color green: root._t.green
     readonly property color orange: root._t.orange
     readonly property color red: root._t.red
+    // The two terminal hues. Nothing in the shell draws with them; they
+    // are here so the app colours have all sixteen ANSI slots.
+    readonly property color magenta: root._t.magenta
+    readonly property color cyan: root._t.cyan
 
     readonly property color dangerBg: root._t.dangerBg
     readonly property color dangerBorder: root._t.dangerBorder

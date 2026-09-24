@@ -1,13 +1,12 @@
-/* Wallpaper-derived accent/window colors — see matugen/config.toml's
- * [templates.gtk4-colors], which renders gtk-colors.css into this
- * directory on every wallpaper change.
+/* The shell's active palette, wallpaper or preset — written into this
+ * directory as gtk-colors.css by quickshell/main/theme/AppColors.qml
+ * whenever the palette changes.
  *
  * The import is relative because it has to be: GTK's CSS @import expands
- * neither ~ nor $HOME, and matugen cannot put a home directory into a
- * template's contents either. Rendering the palette beside this file is
- * what lets the path stay relative, and portable. gtk-3.0/gtk.css
- * does the same with its own copy.
+ * neither ~ nor $HOME. Writing the palette beside this file is what lets
+ * the path stay relative, and portable. gtk-3.0/gtk.css does the
+ * same with its own copy.
  *
- * Missing file just means matugen hasn't run yet — GTK falls back to the
- * base theme's defaults. */
+ * A missing file just means the shell hasn't run yet — GTK falls back to
+ * the base theme's defaults. */
 @import url("gtk-colors.css");

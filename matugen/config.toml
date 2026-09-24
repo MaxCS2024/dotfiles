@@ -7,8 +7,17 @@ prefer = "saturation"
 # matugen derives a Material You palette from the active wallpaper and
 # writes it to ~/.cache/matugen/colors.json, in the same shape pywal's
 # colors.json used to have (special.background/foreground + colors.colorN).
-# quickshell/config/Theme.qml and hypr/modules/colors.lua both watch that
-# file — see the comments there for how it's consumed.
+# That file is all it writes: it is the wallpaper palette source for the
+# shell (quickshell/main/theme/WallpaperSource.qml) and the colours of
+# Hyprland's borders (hypr/modules/colors.lua).
+#
+# It used to render the terminals' and GTK's colour files as well, from
+# templates of their own. The shell writes those now, from whichever
+# palette is active (quickshell/main/theme/AppColors.qml), so they follow
+# a preset as well as the wallpaper and each app reads one file.
+#
+# color5 and color6 are the magenta and cyan a terminal needs, from
+# base16 because Material has no role for either.
 #
 # red/green/orange are defined here (rather than left to whatever hue
 # Material's tonal roles land on) so status colors stay recognizably
@@ -22,48 +31,3 @@ orange = "#fb923c"
 [templates.quickshell]
 input_path = "./templates/colors.json"
 output_path = "~/.cache/matugen/colors.json"
-
-# foot includes this file (see foot/foot.ini) so its ANSI palette follows
-# the wallpaper too — fastfetch then inherits it, since it just prints the
-# terminal's own colors for its blocks/logo rather than theming itself.
-[templates.foot]
-input_path = "./templates/foot-colors.ini"
-output_path = "~/.cache/matugen/foot-colors.ini"
-
-# The same palette for kitty and ghostty, included from kitty/kitty.conf
-# and ghostty/config.ghostty. Unlike foot, both re-read their config on a
-# signal, so the hooks carry a wallpaper change into terminals already
-# open. `|| true` because pkill exits 1 when none is running, and matugen
-# reports a failed hook as an error.
-[templates.kitty]
-input_path = "./templates/kitty-colors.conf"
-output_path = "~/.cache/matugen/kitty-colors.conf"
-post_hook = "pkill -USR1 -x kitty || true"
-
-[templates.ghostty]
-input_path = "./templates/ghostty-colors"
-output_path = "~/.cache/matugen/ghostty-colors"
-post_hook = "pkill -USR2 -x ghostty || true"
-
-# gtk-3.0/gtk.css and gtk-4.0/gtk.css each @import the palette beside them,
-# so GTK apps' accent/window colors follow the wallpaper too.
-#
-# Rendered twice, into the GTK directories rather than once into
-# ~/.cache/matugen, because neither end of that import can name a home
-# directory portably: GTK's CSS @import expands neither ~ nor $HOME, and
-# matugen's templates cannot reach the environment (`{{env.HOME}}` and
-# `{{home}}` both fail to resolve — checked against 4.2.0). Writing the
-# file next to its importer makes the import relative, so no absolute path
-# has to exist. output_path is the one place ~ does get expanded, which is
-# what makes this work at all.
-#
-# A deployed gtk-3.0/ may be a symlink back into this repo, so these two
-# outputs are gitignored — matugen rewrites them on every wallpaper change
-# and they are generated state, not config.
-[templates.gtk3-colors]
-input_path = "./templates/gtk-colors.css"
-output_path = "~/.config/gtk-3.0/gtk-colors.css"
-
-[templates.gtk4-colors]
-input_path = "./templates/gtk-colors.css"
-output_path = "~/.config/gtk-4.0/gtk-colors.css"

@@ -4,5 +4,5 @@ singleton SlabStyle 1.0 SlabStyle.qml
 singleton ConfStyle 1.0 ConfStyle.qml
 ThemesPanel 1.0 ThemesPanel.qml
 PaletteColorRow 1.0 PaletteColorRow.qml
-TerminalTheme 1.0 TerminalTheme.qml
+AppColors 1.0 AppColors.qml
 internal WallpaperSource WallpaperSource.qml
