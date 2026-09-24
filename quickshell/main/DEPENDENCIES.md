@@ -286,6 +286,7 @@ running. Grouped by what breaks if it's missing.
 
 - **fzf** and **zoxide** — the oh-my-zsh plugins of the same names in
   `zsh/.zshrc` (Ctrl-R history search, `z`), and `tat`, `ff` and `fcd`.
+  oh-my-zsh itself is a rack feature: `rack features on ohmyzsh`.
   Without them oh-my-zsh prints a warning at every shell start. **bat**
   is `ff`'s preview, which falls back to plain `cat` without it.
 

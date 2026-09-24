@@ -294,7 +294,7 @@ ShellSurface {
     // A feature that isn't installed never reads "on", whatever its line
     // in the choices file says: nothing of it can be running.
     //
-    // One with nothing to switch (lazyvim: `"switch": false` in
+    // One with nothing to switch (lazyvim, ohmyzsh: `"switch": false` in
     // features.json) reads installed or not installed instead, and
     // picking it once it is installed is the removal — in a terminal,
     // where `rack features remove` lists what it would delete and asks
@@ -303,7 +303,8 @@ ShellSurface {
         dictation: "\u{F036C}",
         earbuds: "\u{F184F}",
         weather: "\u{F0595}",
-        lazyvim: "\u{F04B2}"
+        lazyvim: "\u{F04B2}",
+        ohmyzsh: "\u{F07B7}"
     })
 
     function featureRows() {

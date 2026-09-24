@@ -26,7 +26,7 @@ You need `git`, `jq` and `flock` (util-linux) before anything else; the rest
 gets named for you in step 3.
 
 ```bash
-git clone --recurse-submodules https://github.com/MaxCS2024/dotfiles.git ~/.dotfiles
+git clone https://github.com/MaxCS2024/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 
 ./rig/install.sh      # rack and relay both sit on rig, so it goes first
@@ -34,7 +34,7 @@ cd ~/.dotfiles
 ./relay/install.sh
 
 rack features         # tick the optional parts you want (dictation, weather,
-                      # Nothing earbuds battery, LazyVim);
+                      # Nothing earbuds battery, LazyVim, oh-my-zsh);
                       # it installs and sets up what you tick
 rack setup            # what is missing, grouped by how much it matters
 rack deploy           # link every manifest entry into ~/.config and ~

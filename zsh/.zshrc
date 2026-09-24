@@ -2,19 +2,17 @@
 # │ oh-my-zsh                                    │
 # ╰──────────────────────────────────────────────╯
 
-# Both live in the repo: ohmyzsh/ is a submodule, custom/ holds the plugins
-# it does not ship (zsh-autosuggestions, also a submodule).
-export ZSH="$ZDOTDIR/ohmyzsh"
-ZSH_CUSTOM="$ZDOTDIR/custom"
+# Not in the repo: `rack features on ohmyzsh` (zsh/install.sh) clones it
+# from upstream, and zsh-autosuggestions into its custom/plugins.
+export ZSH="${XDG_DATA_HOME:-$HOME/.local/share}/oh-my-zsh"
 
-# ZDOTDIR is a link into the repo, so oh-my-zsh's defaults would write its
-# cache and completion dump into the working tree.
+# ZDOTDIR is a link into the repo, and oh-my-zsh's default completion dump
+# goes there, into the working tree.
 ZSH_CACHE_DIR="$XDG_CACHE_HOME/oh-my-zsh"
 ZSH_COMPDUMP="$ZSH_CACHE_DIR/.zcompdump-${HOST%%.*}-$ZSH_VERSION"
 
-# Updated with git like any other submodule; the self-updater would leave
-# the submodule dirty.
-zstyle ':omz:update' mode disabled
+# It updates itself, without asking, when an update is due.
+zstyle ':omz:update' mode auto
 
 # Set before oh-my-zsh loads, or it picks ~/.zsh_history.
 HISTFILE="$ZDOTDIR/.histfile"
@@ -28,12 +26,12 @@ plugins=(
     zsh-autosuggestions
 )
 
-# A clone without --recurse-submodules has an empty ohmyzsh/; say how to
-# fetch it rather than fail on the source line at every start.
+# On a machine that hasn't installed it yet, say how rather than fail on
+# the source line at every start.
 if [[ -f $ZSH/oh-my-zsh.sh ]]; then
     source "$ZSH/oh-my-zsh.sh"
 else
-    print -u2 "oh-my-zsh is missing: git -C ${ZDOTDIR:A:h} submodule update --init"
+    print -u2 "oh-my-zsh isn't installed: rack features on ohmyzsh (or Conf › Features)"
 fi
 
 
