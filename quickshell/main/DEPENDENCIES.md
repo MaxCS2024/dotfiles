@@ -102,6 +102,13 @@ running. Grouped by what breaks if it's missing.
   notification says why) and Setup › Defaults can't read what is set.
   See docs/adr/0001.
 
+- **zsh** — the login shell the repo's `zsh/` config is written for.
+  Nothing in quickshell runs it, and `foot/foot.ini` names no shell, so
+  foot starts whatever the login shell is. Without zsh that is bash with
+  none of this config: no ZDOTDIR, no `~/.local/bin` from `.zshrc`, no
+  prompt. Required because this repo is the whole desktop, shell
+  included. Make it the login shell with `chsh -s /usr/bin/zsh`.
+
 - **coreutils / POSIX shell tooling** (`sh`, `cat`, `test`, `awk`, `sed`,
   `grep`, `printf`, `mkdir`) — used throughout via `["sh", "-c", "..."]` commands: hwmon
   discovery in `services/SystemMonitor.qml`, clipboard delete in
@@ -280,12 +287,6 @@ running. Grouped by what breaks if it's missing.
   Without the two libraries the watcher exits 127 and the shell stops
   asking. `rack features on earbuds` installs them; `rack features off
   earbuds` takes the pill and the rail section away and stops the watcher.
-
-- **zsh** — the login shell the repo's `zsh/` config is written for.
-  Nothing in quickshell runs it, and `foot/foot.ini` names no shell, so
-  foot starts whatever the login shell is. Without zsh that is bash with
-  none of this config: no ZDOTDIR, no `~/.local/bin` from `.zshrc`, no
-  prompt. Make it the login shell with `chsh -s /usr/bin/zsh`.
 
 ## Fonts
 

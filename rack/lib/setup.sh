@@ -39,6 +39,7 @@ declare -ga RACK_SETUP_REQUIRED=(
     "cliphist:cliphist"
     "brightnessctl:brightnessctl"
     "lua:lua"
+    "zsh:zsh"
 )
 
 # Required by the config's *default* values — DEPENDENCIES.md says these are
@@ -73,7 +74,6 @@ declare -ga RACK_SETUP_OPTIONAL=(
     "psmisc:fuser"
     "voxtype-bin:voxtype"
     "wtype:wtype"
-    "zsh:zsh"
 )
 
 # What rack and relay need themselves, distinct from anything quickshell shells
