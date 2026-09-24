@@ -71,8 +71,14 @@ _Avoid_: option, choice
 **Default**:
 The app a role resolves to: the one the user set, else the first
 installed candidate, else the first candidate. It is what the role's
-keybind runs.
+keybind runs. The user can set a candidate or a custom command.
 _Avoid_: current app, preferred app
+
+**Custom command**:
+A default the user wrote by hand rather than picked from the
+candidates. It runs as written, and nothing about the app it names is
+assumed.
+_Avoid_: raw command, override
 
 **Handler**:
 The app the XDG database opens a role's files or links with. Setting a
