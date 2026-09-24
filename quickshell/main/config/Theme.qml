@@ -146,11 +146,8 @@ Singleton {
     readonly property real shadowVerticalOffsetDocked: shadowVerticalOffsetBar
 
     // ── External commands ────────────────────────────────
-    // Only the fallback: services/Terminal.qml opens whichever terminal
-    // Setup › Defaults picked (hypr/modules/vars.lua), and uses this when
-    // that can't be resolved.
-    readonly property string terminal: "foot"
-    readonly property string appLauncherPrefix: "uwsm-app"
+    // Which terminal and browser the shell opens is not here: those are
+    // default apps, resolved by `relay default` (services/Defaults.qml).
     readonly property string logoutCmd: "uwsm stop"
 
     // The app-id a transient, task-shaped window asks for when it wants to

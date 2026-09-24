@@ -94,11 +94,10 @@ running. Grouped by what breaks if it's missing.
 - **lua** (the standalone interpreter, `pacman -S lua`) — the default
   apps. `hypr/modules/defaults.lua` owns the terminal, editor, browser
   and file manager; Hyprland runs it with its own built-in Lua, but
-  everything outside Hyprland reaches it through the `lua` binary:
-  `relay default`, and for now `services/Terminal.qml` and
-  `menu/MenuActions.qml` directly. Without it the Setup › Defaults
-  level shows nothing set and every terminal the shell opens is
-  `Theme.terminal`'s foot. See docs/adr/0001.
+  everything outside Hyprland reaches it through `relay default`, which
+  runs the `lua` binary. Without it the shell opens no terminals (a
+  notification says why) and Setup › Defaults can't read what is set.
+  See docs/adr/0001.
 
 - **coreutils / POSIX shell tooling** (`sh`, `cat`, `test`, `awk`, `sed`,
   `grep`, `printf`, `mkdir`) — used throughout via `["sh", "-c", "..."]` commands: hwmon
@@ -110,13 +109,15 @@ running. Grouped by what breaks if it's missing.
 
 ## Required by default config values — swap via `config/Theme.qml` if you use something else
 
-- **foot** — `Theme.terminal`, the fallback for `services/Terminal.qml`
-  when the terminal picked in Setup › Defaults can't be resolved. foot,
-  kitty, ghostty and alacritty are all handled there.
+- **A terminal** — any of the terminal role's candidates in
+  `hypr/modules/defaults.lua`: kitty, foot, ghostty or alacritty.
+  SUPER+RETURN and every terminal the shell opens use whichever one
+  resolves (`relay default list`); with none installed, both fail, the
+  shell's with a notification saying so.
 
-- **uwsm** — `Theme.appLauncherPrefix`, used to launch apps from
-  `Launcher.qml` and to wrap the terminal launch above.
-  `Theme.logoutCmd` also defaults to `uwsm stop`.
+- **uwsm** — `Theme.logoutCmd` defaults to `uwsm stop`. App launches
+  are wrapped in `uwsm-app` when it is installed and not otherwise
+  (`hypr/modules/defaults.lua`).
 
 - **awww** — `wallpaper/WallpaperSwitcher.qml`'s `applyWallpaper()`
   (`awww img ... && matugen image ...`). Pre-existing gap — never

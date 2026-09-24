@@ -63,10 +63,11 @@ hl.layer_rule({
 -- deleted on 2026-09-21 -- every card in it had a surface of its own
 -- elsewhere, bar the two toggles that moved to the network rail.
 
--- The terminal (foot, see vars.lua) isn't a quickshell layer surface —
--- it's a normal toplevel, so it gets blur "for free" from decoration.blur
--- .enabled in decorations.lua (a compositor-wide setting, no per-window
--- rule needed) behind whatever transparency foot.ini itself sets.
+-- The terminal (the default one, see defaults.lua) isn't a quickshell
+-- layer surface — it's a normal toplevel, so it gets blur "for free" from
+-- decoration.blur.enabled in decorations.lua (a compositor-wide setting,
+-- no per-window rule needed) behind whatever transparency its own config
+-- sets.
 
 -- Hyprland-run windowrule
 hl.window_rule({

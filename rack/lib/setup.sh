@@ -41,10 +41,11 @@ declare -ga RACK_SETUP_REQUIRED=(
 )
 
 # Required by the config's *default* values — DEPENDENCIES.md says these are
-# swappable (Theme.terminal, Theme.appLauncherPrefix, etc), so a missing one
-# here is a config change away from being fine, not a real blocker.
+# swappable (Theme.logoutCmd, etc), so a missing one here is a config change
+# away from being fine, not a real blocker. No terminal is named: any of the
+# terminal role's candidates will do, and `relay default list` is the check
+# for which one resolves.
 declare -ga RACK_SETUP_DEFAULT_CONFIG=(
-    "foot:foot"
     "uwsm:uwsm"
     "awww:awww"
 )

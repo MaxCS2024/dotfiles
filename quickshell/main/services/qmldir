@@ -17,6 +17,7 @@ singleton NightLight 1.0 NightLight.qml
 singleton SystemInfo 1.0 SystemInfo.qml
 singleton Packages 1.0 Packages.qml
 singleton Terminal 1.0 Terminal.qml
+singleton Defaults 1.0 Defaults.qml
 singleton MprisWatchdog 1.0 MprisWatchdog.qml
 singleton Media 1.0 Media.qml
 singleton Weather 1.0 Weather.qml

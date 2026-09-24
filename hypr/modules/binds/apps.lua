@@ -14,9 +14,9 @@
 local vars = require("modules.vars")
 local mainMod = vars.mainMod
 
--- Apps. What each one runs is settable from Conf > Setup > Defaults and
--- resolved by modules/vars.lua, which falls back to the first of its
--- candidates this machine has installed.
+-- Apps. What each one runs is the role's default (modules/defaults.lua):
+-- the one set from Conf > Setup > Defaults or `relay default set`, else
+-- the first candidate this machine has installed.
 hl.bind(mainMod .. " + RETURN", hl.dsp.exec_cmd(vars.terminal))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(vars.fileManager))
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(vars.browser))

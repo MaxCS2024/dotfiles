@@ -70,7 +70,7 @@ setup() {
 	done
 
 	local stub
-	for stub in xdg-mime xdg-settings hyprctl uwsm-app xdg-open; do
+	for stub in xdg-mime xdg-settings hyprctl uwsm-app xdg-open notify-send; do
 		recorder "$TMP/bin/$stub"
 	done
 	# xdg-settings says which $BROWSER it saw, since the point of `env -u` is
@@ -92,6 +92,8 @@ setup() {
 	export HYPRLAND_INSTANCE_SIGNATURE=test
 	export BROWSER=should-be-ignored
 	export RIG_COLOR=never RIG_LOG_JOURNAL=never
+	# rig only notifies with a session bus to reach; the stub is what answers.
+	export DBUS_SESSION_BUS_ADDRESS=unix:path=/nonexistent
 	unset XDG_STATE_HOME XDG_CONFIG_HOME XDG_DATA_HOME RIG_DRY_RUN XDG_RUNTIME_DIR
 
 	# The stubs are only protection if they are what is found. A PATH that
@@ -595,6 +597,24 @@ test_lua_missing() {
 	run get terminal
 	assert_eq "status" "$STATUS" 127 || return
 	assert_has "message" "$ERR" "lua not found" || return
+	ok
+}
+
+test_exec_failure_is_a_notification() {
+	it "exec that cannot start anything says so as a notification"
+	rm -f "$TMP/sys/lua"
+	run exec terminal -- btop
+	assert_eq "status" "$STATUS" 127 || return
+	assert_has "notified" "$(calls)" "Couldn't open the terminal lua not found" || return
+	assert_has "urgency" "$(calls)" "notify-send -u critical" || return
+	ok
+}
+
+test_other_failures_are_not_notifications() {
+	it "only exec notifies; a failing get is just an error"
+	rm -f "$TMP/sys/lua"
+	run get terminal
+	[[ $(calls) == *notify-send* ]] && { fail "notified: [$(calls)]"; return; }
 	ok
 }
 

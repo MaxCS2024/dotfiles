@@ -125,7 +125,6 @@ ShellSurface {
         probeNames: panel.treeRequires()
         packageNames: panel.installApps.filter(app => app.pkg).map(app => app.pkg)
         flatpakNames: panel.installApps.filter(app => app.flatpak).map(app => app.flatpak)
-        defaultRoles: panel.defaultRoles
     }
 
     function treeRequires() {
@@ -156,7 +155,7 @@ ShellSurface {
             // desktop does, it does because Hyprland or Arch documents
             // it that way, and looking one of those up is the same kind
             // of errand as looking up a key. They open as their own
-            // window rather than a tab — see MenuActions.openWebApp.
+            // window rather than a tab — see Defaults.openWebApp.
             //
             // Keybindings is a leaf, not a branch: the keys live in
             // their own window now (keybinds/KeybindsPanel.qml).
@@ -170,11 +169,11 @@ ShellSurface {
                   search: Keybinds.searchText,
                   run: () => Panels.open("keybinds", panel.filter) },
                 { label: "Hyprland", icon: "\u{F359}", hint: "wiki.hypr.land",
-                  run: () => actions.openWebApp("https://wiki.hypr.land/") },
+                  run: () => Defaults.openWebApp("https://wiki.hypr.land/") },
                 { label: "Arch", icon: "\u{F303}", hint: "wiki.archlinux.org",
-				run: () => actions.openWebApp("https://wiki.archlinux.org/") },
+				run: () => Defaults.openWebApp("https://wiki.archlinux.org/") },
 				{ label: "LazyVim", icon: "\u{F04B2}", hint: "lazyvim.org",
-			    run: () => actions.openWebApp("https://lazyvim.org/") }
+			    run: () => Defaults.openWebApp("https://lazyvim.org/") }
             ]},
 
             // Capture, per the user's choice for this branch. Screenshots
@@ -294,137 +293,50 @@ ShellSurface {
     // was always better at, which is being the place you type a word.
 
     // ── Setup › Defaults ─────────────────────────────────
-    // What opens what — and now what sets it. This was a read-only info
-    // leaf (menu/MenuInfoView.qml) printing the same answers the `cur`
-    // half of MenuActions' probe still gathers; it is a branch of three
-    // roles now — terminal, editor, browser — each offering the apps this
-    // machine actually has.
+    // What opens what, and a way to change it: one row per role, each
+    // offering the candidates this machine actually has. The roles, their
+    // candidates, which of those are installed and what picking one does
+    // (the keybind, the XDG handler, the Hyprland reload) are all
+    // `relay default`'s, read through services/Defaults.qml. What stays
+    // here is only what this slab draws: which roles get a row, and their
+    // labels and glyphs.
     //
-    // Six of them until 2026-09-17, when file manager, images and PDFs
-    // came out at the user's request. Only the first of those three was
-    // ever more than an XDG handler, and its state file and vars.lua
-    // fallback are both still live: `fileManager` keeps reading
-    // ~/.local/state/rack/defaults/file-manager, it just isn't settable
-    // from this menu any more.
-    //
-    // Two different kinds of default sit behind the three rows left, and
-    // each role says which of them it writes:
-    //
-    //   * `state` names a file under ~/.local/state/rack/defaults/,
-    //     which hypr/modules/vars.lua reads — so this is what
-    //     SUPER+RETURN and the other launch binds actually run. Setting
-    //     one writes the file and runs `hyprctl reload`, because a bind
-    //     captures the string at config load. With no file, vars.lua
-    //     falls back to the first of its candidates this machine has
-    //     installed, so none of these files has to exist.
-    //   * `mimes` and `xdgBrowser` are the XDG side — `xdg-mime default`
-    //     and `xdg-settings set default-web-browser` — which is what
-    //     everything that isn't a keybind obeys. Terminal also writes
-    //     ~/.config/xdg-terminals.list, the file xdg-terminal-exec reads.
-    //
-    // A role can be both, and all three of these are: picking Brave sets
-    // the bind *and* the http handler in one press. Those two
-    // disagreeing is exactly what the old read-only view existed to show
-    // — this machine's bind says native brave and its http handler says
-    // the flatpak — so a row that fixed only one of them would be a
-    // worse answer than the report it replaced.
-    //
-    // The options are a curated table and not a scan of every .desktop
-    // file here: a scan answers "what opens a text file" with twenty
-    // entries, most of them wrong. MenuActions resolves each against the
-    // machine and drops what it can't find — native binary first, then
-    // the flathub ref this menu's own Setup section would install, so a
-    // browser that arrived as a flatpak is offered with the command that
-    // runs it. `desktop` is a list because the id isn't always
-    // guessable: first one that exists wins, and an option that resolves
-    // to none is still offered to the roles that only need a command.
-    //
-    // `wrap: false` is for the ones that are not apps to launch but
-    // commands to run — a terminal editor gets no uwsm-app in front of
-    // it, the way vars.lua's own `editor` never had one.
+    // Three roles have a row. The fourth, the file manager, came out at
+    // the user's request on 2026-09-17 and is still set with `relay
+    // default set file-manager <name>`. A key relay doesn't know shows
+    // nothing, not an error.
     readonly property var defaultRoles: [
-        { key: "terminal", label: "Terminal", icon: "\u{F018D}",
-          noun: "terminal", state: "terminal", terminalsList: true, mimes: [],
-          vars: "terminal", options: [
-            { label: "Foot", bin: "foot", desktop: ["foot.desktop"] },
-            { label: "Ghostty", bin: "ghostty", flatpak: "com.mitchellh.ghostty",
-              desktop: ["com.mitchellh.ghostty.desktop", "ghostty.desktop"] },
-            { label: "Kitty", bin: "kitty", desktop: ["kitty.desktop"] },
-            { label: "Alacritty", bin: "alacritty",
-              desktop: ["Alacritty.desktop", "alacritty.desktop"] }
-        ]},
-
-        // text/plain and nothing wider: nvim.desktop is already this
-        // machine's handler for it and carries Terminal=true, so a
-        // terminal editor is a real answer here and not a trap.
-        { key: "editor", label: "Editor", icon: "\u{F0DC8}",
-          noun: "editor", state: "editor", mimes: ["text/plain"],
-          vars: "editor", options: [
-            { label: "Neovim", bin: "nvim", wrap: false, desktop: ["nvim.desktop"] },
-            { label: "Vim", bin: "vim", wrap: false, desktop: ["vim.desktop"] },
-            { label: "Helix", bin: "hx", wrap: false,
-              desktop: ["helix.desktop", "Helix.desktop"] },
-            { label: "VS Code", bin: "code", desktop: ["code.desktop"] },
-            { label: "Zed", bin: "zeditor", flatpak: "dev.zed.Zed",
-              desktop: ["dev.zed.Zed.desktop"] }
-        ]},
-
-        // No `mimes`: xdg-settings set default-web-browser is the one
-        // that sets x-scheme-handler/http, https and text/html together,
-        // which is the whole of what "default browser" means to anything
-        // that isn't a keybind.
-        { key: "browser", label: "Browser", icon: "\u{F059F}",
-          noun: "browser", state: "browser", xdgBrowser: true, mimes: [],
-          vars: "browser", options: [
-            { label: "Brave", bin: "brave", args: " --password-store=basic",
-              flatpak: "com.brave.Browser",
-              desktop: ["brave-browser.desktop", "brave.desktop"] },
-            { label: "Firefox", bin: "firefox", flatpak: "org.mozilla.firefox",
-              desktop: ["firefox.desktop"] },
-            { label: "Chromium", bin: "chromium", flatpak: "org.chromium.Chromium",
-              desktop: ["chromium.desktop"] },
-            { label: "Google Chrome", bin: "google-chrome-stable",
-              flatpak: "com.google.Chrome", desktop: ["google-chrome.desktop"] },
-            { label: "Zen", bin: "zen-browser", flatpak: "app.zen_browser.zen",
-              desktop: ["zen.desktop", "app.zen_browser.zen.desktop"] }
-        ]}
+        { key: "terminal", label: "Terminal", icon: "\u{F018D}" },
+        { key: "editor", label: "Editor", icon: "\u{F0DC8}" },
+        { key: "browser", label: "Browser", icon: "\u{F059F}" }
     ]
 
-    // The role row's own hint is what is set right now, by the name of
-    // the option it matches. No match means what is set is not on the
-    // list — a browser that was uninstalled out from under the bind, or
-    // a hand-written state file — and the raw value says more there than
-    // "custom" would, minus the uwsm-app the whole column would
-    // otherwise start with.
+    // The role row's own hint is what it resolves to right now. A custom
+    // command has no name, so the command itself says more there than
+    // "custom" would, minus the uwsm-app the column would otherwise start
+    // with.
     function defaultHint(role) {
-        const answer = actions.defaultsByRole
-        if (answer === null) return ""
-        const found = answer[role.key]
+        const found = Defaults.roles ? Defaults.roles[role.key] : null
         if (!found) return ""
-        for (let i = 0; i < found.options.length; i++)
-            if (found.options[i].current) return found.options[i].label
-        return panel.shortenDefault(found.current)
+        if (found.source === "custom") return found.command.replace(/^uwsm-app -- /, "")
+        return found.installed ? found.label : found.label + ", not installed"
     }
 
-    function shortenDefault(value) {
-        if (!value) return "unset"
-        return value.replace(/^uwsm-app -- /, "").replace(/\.desktop$/, "")
-    }
-
-    // Inert placeholder rows, like the ones under Keybindings: the probe
-    // is a process, and a level that came up empty for the tenth of a
-    // second before it answered would read as "you have no terminals".
+    // Inert placeholder rows, like the ones under Keybindings: relay is a
+    // process, and a level that came up empty for the tenth of a second
+    // before it answered would read as "you have no terminals".
     function defaultRows(role) {
-        const answer = actions.defaultsByRole
-        if (answer === null) return [{ label: "Reading…", icon: "" }]
-        const found = answer[role.key]
-        if (!found || found.options.length === 0)
-            return [{ label: "Nothing installed", icon: "" }]
-        return found.options.map(option => ({
-            label: option.label, icon: "",
-            hint: option.current ? "current" : "",
-            current: option.current,
-            run: () => actions.setDefault(role, option)
+        if (Defaults.error !== "")
+            return [{ label: "Can't read the defaults", icon: "", hint: Defaults.error }]
+        if (Defaults.roles === null) return [{ label: "Reading…", icon: "" }]
+        const found = Defaults.roles[role.key]
+        const installed = found ? found.candidates.filter(c => c.installed) : []
+        if (installed.length === 0) return [{ label: "Nothing installed", icon: "" }]
+        return installed.map(c => ({
+            label: c.label, icon: "",
+            hint: c.default ? "current" : "",
+            current: c.default,
+            run: () => Defaults.set(role.key, c.name)
         }))
     }
 

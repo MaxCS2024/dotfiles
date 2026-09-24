@@ -13,7 +13,7 @@
 # candidates, resolves to a default, and has a handler that setting the
 # default rewrites to match.
 
-rig::load log check proc tmp trap
+rig::load log check proc tmp trap notify
 
 RELAY_MODULE_SUMMARY[default]="the default terminal, editor, browser and file manager"
 RELAY_MODULE_ACTIONS[default]="get list set unset exec"
@@ -41,12 +41,12 @@ relay::default::__lua() {
     local module status line
 
     rig::check::has lua || {
-        rig::log::error "lua not found — the default apps need it (pacman -S lua)"
+        relay::default::__error "lua not found — the default apps need it (pacman -S lua)"
         return "$RIG_EX_NODEP"
     }
     module=$(relay::default::__module)
     [[ -r $module ]] || {
-        rig::log::error "no $module — is hypr deployed? (rack deploy hypr)"
+        relay::default::__error "no $module — is hypr deployed? (rack deploy hypr)"
         return "$RIG_EX_FAIL"
     }
 
@@ -56,9 +56,15 @@ relay::default::__lua() {
     status=0
     lua "$module" "$@" >"$RELAY_DEFAULT_OUT" 2>"$RELAY_DEFAULT_ERR" || status=$?
     while IFS= read -r line; do
-        [[ -n $line ]] && rig::log::error "$line"
+        [[ -n $line ]] && relay::default::__error "$line"
     done <"$RELAY_DEFAULT_ERR"
     return "$status"
+}
+
+# Logged, and kept: exec may have to say it somewhere a person will see.
+relay::default::__error() {
+    RELAY_DEFAULT_LAST_ERROR=$1
+    rig::log::error "$1"
 }
 
 # describe <array name> <role> [--stored <value> | --unset] — what the role
@@ -291,6 +297,19 @@ relay::default::unset() {
 
 # ---- starting ----------------------------------------------------------------
 
+# exec is mostly called with nobody watching its stderr -- the shell spawns
+# it detached, a keybind has no terminal -- so a failure that stopped a
+# terminal from opening would otherwise be silent. Said as a notification
+# too, then, whenever there is no terminal to say it on.
+relay::default::__exec_failed() {
+    local role=$1 status=$2
+    rig::check::tty 2 && return "$status"
+    rig::notify::available &&
+        rig::notify::send -u critical "Couldn't open the $role" \
+            "${RELAY_DEFAULT_LAST_ERROR:-relay default exec $role failed}"
+    return "$status"
+}
+
 # exec <role>
 # exec terminal [--app-id <id>] [--title <title>] [-- <command...>]
 # exec browser [--app <url>]
@@ -343,23 +362,26 @@ relay::default::exec() {
 
     # The words after -- are one shell command line, joined with spaces the
     # way ssh joins them, so `-- make -j8` and `-- 'make -j8'` are the same.
+    local status=0
     if [[ $role == terminal ]]; then
         if ((has_command)); then
-            relay::default::__lua argv terminal "$app_id" "$title" "${words[*]}" || return $?
+            relay::default::__lua argv terminal "$app_id" "$title" "${words[*]}" || status=$?
         else
-            relay::default::__lua argv terminal "$app_id" "$title" || return $?
+            relay::default::__lua argv terminal "$app_id" "$title" || status=$?
         fi
     elif [[ -n $url ]]; then
-        relay::default::__lua argv webapp "$url" || return $?
+        relay::default::__lua argv webapp "$url" || status=$?
     else
-        relay::default::__lua argv "$role" || return $?
+        relay::default::__lua argv "$role" || status=$?
     fi
+    ((status == 0)) || relay::default::__exec_failed "$role" "$status" || return $?
 
     local -a argv=()
     mapfile -d '' -t argv <"$RELAY_DEFAULT_OUT"
     ((${#argv[@]})) || {
-        rig::log::error "nothing to run for $role"
-        return "$RIG_EX_FAIL"
+        relay::default::__error "nothing to run for $role"
+        relay::default::__exec_failed "$role" "$RIG_EX_FAIL"
+        return
     }
 
     if ((${RIG_DRY_RUN:-0})); then
