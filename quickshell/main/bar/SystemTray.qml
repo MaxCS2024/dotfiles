@@ -47,6 +47,20 @@ Item {
                 implicitWidth: root.iconSize
                 implicitHeight: root.iconSize
 
+                // Some apps ask for their -symbolic icon, which is one
+                // flat grey (#bebebe) by design: Spotify's tray item
+                // names com.spotify.Client-symbolic, so its icon showed
+                // grey instead of green (2026-09-25). Where the theme
+                // has the full-colour icon of the same name, that is
+                // drawn instead; otherwise the symbolic one stays.
+                readonly property string iconSource: {
+                    const src = trayItem.modelData.icon
+                    const m = /^image:\/\/icon\/([^?]+)-symbolic$/.exec(src)
+                    if (!m) return src
+                    const full = Quickshell.iconPath(m[1], true)
+                    return full !== "" ? full : src
+                }
+
                 Image {
                     id: trayIcon
                     anchors.fill: parent
@@ -54,7 +68,7 @@ Item {
                     // this file's own git history, 2026-09-16, for
                     // the doubled image://icon/ prefix that used to
                     // make every tray icon a "not found" placeholder.
-                    source: trayItem.modelData.icon
+                    source: trayItem.iconSource
                     // Rasterises the SVG at the size it's drawn
                     // instead of being rescaled into it — see the
                     // same day's measurement (28 vs 69 tones).
@@ -77,7 +91,7 @@ Item {
                         running: true
                         onTriggered: {
                             trayIcon.source = ""
-                            trayIcon.source = Qt.binding(() => trayItem.modelData.icon)
+                            trayIcon.source = Qt.binding(() => trayItem.iconSource)
                         }
                     }
                 }
