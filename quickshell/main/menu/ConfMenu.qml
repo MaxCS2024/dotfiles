@@ -456,9 +456,17 @@ ShellSurface {
     // choice, not extra/discord: the two package the same client
     // (1.0.157 either way today), so what the choice actually picks is
     // which updater it rides — flatpak, where the build is the vendor's
-    // own, rather than pacman.
+    // own, rather than pacman. Signal, Telegram and Zoom are flatpaks too,
+    // at the user's request (2026-09-25).
+    //
+    // Signal takes a message with a lock, like Brave's shield: the font has
+    // no Signal mark, and end-to-end encryption is what it's known for.
+    // Zoom takes a video camera, the font having no Zoom mark either.
     readonly property var communicationApps: [
-        { label: "Discord", icon: "\u{F066F}", flatpak: "com.discordapp.Discord" }
+        { label: "Discord",  icon: "\u{F066F}", flatpak: "com.discordapp.Discord" },
+        { label: "Signal",   icon: "\u{F0FCC}", flatpak: "org.signal.Signal" },
+        { label: "Telegram", icon: "\u{F2C6}",  flatpak: "org.telegram.desktop" },
+        { label: "Zoom",     icon: "\u{F0567}", flatpak: "us.zoom.Zoom" }
     ]
 
     // Apps › Browse, as rows beside the categories. What doesn't group
