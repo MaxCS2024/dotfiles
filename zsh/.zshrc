@@ -152,6 +152,32 @@ alias myip="curl -s https://ipinfo.io/ip"
 alias weather="curl -s 'wttr.in/?format=3'"
 
 # ╭──────────────────────────────────────────────╮
+# │ Coloured man pages                           │
+# ╰──────────────────────────────────────────────╯
+
+# less draws bold, underline and standout with these instead of plain
+# attributes: bold (headings, options) red, underline (arguments) green,
+# the search/status line yellow on blue.
+export LESS_TERMCAP_mb=$'\e[1;31m'
+export LESS_TERMCAP_md=$'\e[1;31m'
+export LESS_TERMCAP_me=$'\e[0m'
+export LESS_TERMCAP_se=$'\e[0m'
+export LESS_TERMCAP_so=$'\e[1;33;44m'
+export LESS_TERMCAP_ue=$'\e[0m'
+export LESS_TERMCAP_us=$'\e[4;1;32m'
+export LESS_TERMCAP_mr=$'\e[7m'
+export LESS_TERMCAP_mh=$'\e[2m'
+export LESS_TERMCAP_ZN=$'\e[74m'
+export LESS_TERMCAP_ZV=$'\e[75m'
+export LESS_TERMCAP_ZO=$'\e[73m'
+export LESS_TERMCAP_ZW=$'\e[75m'
+export MANPAGER='less'
+# groff 1.23+ writes bold and underline as SGR escapes, which less passes
+# through untouched, so the colours above never apply. -P -c makes grotty
+# fall back to overstrike (x\bx, _\bx), which is what less recolours.
+export MANROFFOPT='-P -c'
+
+# ╭──────────────────────────────────────────────╮
 # │ Fuzzy directory finder                      │
 # ╰──────────────────────────────────────────────╯
 
