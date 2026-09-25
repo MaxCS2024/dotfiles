@@ -53,12 +53,29 @@ Item {
                 // grey instead of green (2026-09-25). Where the theme
                 // has the full-colour icon of the same name, that is
                 // drawn instead; otherwise the symbolic one stays.
+                //
+                // Some name an icon the host doesn't have: Flatpak VLC's
+                // tray item asks for "vlc", but the Flatpak exports it as
+                // org.videolan.VLC, so it drew as a "not found" placeholder
+                // (2026-09-25). Then the app's desktop entry, found from
+                // the item's id, supplies the icon. Desktop entries load
+                // after startup; reading the list re-runs this when they do.
                 readonly property string iconSource: {
                     const src = trayItem.modelData.icon
-                    const m = /^image:\/\/icon\/([^?]+)-symbolic$/.exec(src)
+                    const m = /^image:\/\/icon\/([^?]+)$/.exec(src)
                     if (!m) return src
-                    const full = Quickshell.iconPath(m[1], true)
-                    return full !== "" ? full : src
+                    const sym = /^(.+)-symbolic$/.exec(m[1])
+                    if (sym) {
+                        const full = Quickshell.iconPath(sym[1], true)
+                        if (full !== "") return full
+                    }
+                    if (Quickshell.iconPath(m[1], true) !== "") return src
+                    DesktopEntries.applications.values
+                    const entry = DesktopEntries.heuristicLookup(trayItem.modelData.id)
+                        ?? DesktopEntries.heuristicLookup(m[1])
+                    if (!entry || entry.icon === "") return src
+                    const fromEntry = Quickshell.iconPath(entry.icon, true)
+                    return fromEntry !== "" ? fromEntry : src
                 }
 
                 Image {
