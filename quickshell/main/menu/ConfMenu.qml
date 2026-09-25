@@ -463,21 +463,25 @@ ShellSurface {
         { label: "Prism Launcher", icon: "\u{F0373}", pkg: "prismlauncher" }
     ]
 
-    // Apps › Browse › Browsers. All of them as flatpaks, per the user's choice —
-    // and flathub is in fact the only source that carries all of them:
-    // chromium and firefox are in extra, google-chrome, zen-browser-bin
-    // and brave-bin only in the AUR. One row shape and one updater
-    // whichever browser you pick.
+    // Apps › Browse › Browsers. All of them native, per the user's choice
+    // (2026-09-25), after the flatpak brave was timed: 3.7s to a window
+    // warm and slower still on the first launch after login, much of it
+    // spent building the sandbox and then a zypak helper sandbox for
+    // every child process. Native, the browser also gets its own sandbox back
+    // instead of handing it to flatpak's. Chromium and Firefox come from
+    // extra, Brave, Chrome and Zen from the AUR, so the rows ride two
+    // updaters rather than one. defaults.lua already prefers a native
+    // binary over the flatpak, so an installed one is picked up as is.
     //
     // Brave takes a shield rather than its own mark, which this font
     // hasn't got: its whole pitch is the blocker it calls Shields, so the
     // stand-in is at least the right idea.
     readonly property var browserApps: [
-        { label: "Brave",         icon: "",          flatpak: "com.brave.Browser" },
-        { label: "Chromium",      icon: "\u{F059F}", flatpak: "org.chromium.Chromium" },
-        { label: "Firefox",       icon: "",          flatpak: "org.mozilla.firefox" },
-        { label: "Google Chrome", icon: "",          flatpak: "com.google.Chrome" },
-        { label: "Zen",           icon: "\u{F0B21}", flatpak: "app.zen_browser.zen" }
+        { label: "Brave",         icon: "",          pkg: "brave-bin", aur: true },
+        { label: "Chromium",      icon: "\u{F059F}", pkg: "chromium" },
+        { label: "Firefox",       icon: "",          pkg: "firefox" },
+        { label: "Google Chrome", icon: "",          pkg: "google-chrome", aur: true },
+        { label: "Zen",           icon: "\u{F0B21}", pkg: "zen-browser-bin", aur: true }
     ]
 
     // Apps › Browse › Communications. Discord from flathub, per the user's
