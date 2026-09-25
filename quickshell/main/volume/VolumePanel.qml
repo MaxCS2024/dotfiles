@@ -81,8 +81,14 @@ ShellSurface {
     // mixer. `!n.isStream` is what separates them; both are `isSink` on
     // this side of the graph. Lifted verbatim from quicksettings/
     // VolumeTab.qml, whose list this is.
+    //
+    // A device with nothing plugged in (an HDMI port with no monitor, a
+    // headset jack with no headset) is left out; see services/
+    // AudioPorts.qml. The default is always kept, so the picker never
+    // loses the row that is actually in use.
     readonly property var audioSinks: Pipewire.nodes.values.filter(
-        n => n.isSink && n.audio && !n.isStream)
+        n => n.isSink && n.audio && !n.isStream
+            && (n === Pipewire.defaultAudioSink || !AudioPorts.isUnplugged(n)))
 
     // AudioOutStream marks a client's playback stream into a sink (a
     // browser tab, a game, a music player) — distinct from AudioInStream,
@@ -103,9 +109,11 @@ ShellSurface {
     // services/Volume.qml already tracks the default sink; this is every
     // other node on the card.
     // Sources are the input devices: audio nodes that are neither a sink
-    // nor a client's stream. The Input section's picker.
+    // nor a client's stream. The Input section's picker. Unplugged ones are
+    // left out the same way as the sinks above.
     readonly property var audioSources: Pipewire.nodes.values.filter(
-        n => !n.isSink && n.audio && !n.isStream)
+        n => !n.isSink && n.audio && !n.isStream
+            && (n === Pipewire.defaultAudioSource || !AudioPorts.isUnplugged(n)))
 
     readonly property bool hasInput: Mic.deviceName !== "No device"
 

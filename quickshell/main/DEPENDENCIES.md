@@ -293,6 +293,15 @@ running. Grouped by what breaks if it's missing.
 - **playerctl** — the media keys (`hypr/modules/binds/media.lua`: play,
   pause, next, previous). Without it they do nothing.
 
+- **libpulse** (`pactl`) — `services/AudioPorts.qml` reads which ports
+  have nothing plugged in, so the volume rail can hide an HDMI output
+  with no monitor or a headset mic with no headset. Without it every
+  device PipeWire reports is listed.
+
+- **man-db** and **less** — `man`, and the pager `zsh/.zshrc` colours
+  man pages through (`LESS_TERMCAP_*`, `MANROFFOPT`). Neither comes with
+  a bare Arch install; **man-pages** adds the section 2 and 3 pages.
+
 - **uwsm** — app launches are wrapped in `uwsm-app` when it is
   installed and not otherwise (`hypr/modules/defaults.lua`). Logging
   out doesn't use it: `uwsm stop` only ends a session uwsm started, and

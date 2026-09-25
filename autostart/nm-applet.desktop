@@ -1,0 +1,9 @@
+# The network-manager-applet package ships /etc/xdg/autostart/nm-applet.desktop,
+# and systemd's XDG autostart generator starts it in the Hyprland session, so a
+# second network icon showed up in the tray next to the bar's own network button
+# (quickshell/main/bar/NetworkButton.qml). Found 2026-09-25 on a fresh install
+# that pulled the package in. A same-named entry here with Hidden=true masks it.
+[Desktop Entry]
+Type=Application
+Name=NetworkManager Applet
+Hidden=true

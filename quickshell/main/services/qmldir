@@ -24,6 +24,7 @@ singleton Weather 1.0 Weather.qml
 singleton Voxtype 1.0 Voxtype.qml
 singleton Features 1.0 Features.qml
 singleton Earbuds 1.0 Earbuds.qml
+singleton AudioPorts 1.0 AudioPorts.qml
 
 # Not a singleton: each store is one file, and a caller may own several.
 JsonStore 1.0 JsonStore.qml
