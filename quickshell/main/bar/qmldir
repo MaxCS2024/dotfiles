@@ -17,6 +17,7 @@ NetworkButton 1.0 NetworkButton.qml
 NotificationsButton 1.0 NotificationsButton.qml
 SystemMonitorButton 1.0 SystemMonitorButton.qml
 SystemTray 1.0 SystemTray.qml
+TrayMenu 1.0 TrayMenu.qml
 VolumeButton 1.0 VolumeButton.qml
 WeatherButton 1.0 WeatherButton.qml
 WorkspacePill 1.0 WorkspacePill.qml

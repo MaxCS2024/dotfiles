@@ -82,28 +82,34 @@ Item {
                     }
                 }
 
+                TrayMenu {
+                    id: trayMenu
+                    anchorItem: trayItem
+                    barWindow: root.barWindow
+                    rootMenu: trayItem.modelData.menu
+                }
+
                 MouseArea {
                     id: trayMouse
                     anchors.fill: parent
                     acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
                     hoverEnabled: true
-                    // Menu coordinates must be mapped into `root`,
-                    // since that's the item passed as the menu's
-                    // parent.
-                    function showMenu(x, y) {
+                    // Drawn by the shell, not modelData.display() — see
+                    // TrayMenu.qml for why the platform menu never opened.
+                    function showMenu() {
                         if (!trayItem.modelData.hasMenu) return
-                        const p = trayItem.mapToItem(root, x, y)
-                        trayItem.modelData.display(root, p.x, p.y)
+                        if (trayMenu.visible) trayMenu.visible = false
+                        else trayMenu.open()
                     }
 
                     onClicked: mouse => {
                         if (mouse.button === Qt.LeftButton) {
-                            if (trayItem.modelData.onlyMenu) trayMouse.showMenu(mouse.x, mouse.y)
+                            if (trayItem.modelData.onlyMenu) trayMouse.showMenu()
                             else trayItem.modelData.activate()
                         } else if (mouse.button === Qt.MiddleButton) {
                             trayItem.modelData.secondaryActivate()
                         } else if (mouse.button === Qt.RightButton) {
-                            trayMouse.showMenu(mouse.x, mouse.y)
+                            trayMouse.showMenu()
                         }
                     }
 
