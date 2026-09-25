@@ -52,11 +52,9 @@ Item {
         const image = root.row.image || ""
         if (image !== "") {
             return (image.startsWith("/") || image.includes("://"))
-                ? image : Quickshell.iconPath(image, true)
+                ? image : AppIcons.path(image)
         }
-        const appIcon = root.row.appIcon || ""
-        if (appIcon !== "") return Quickshell.iconPath(appIcon, true)
-        return ""
+        return AppIcons.path(root.row.appIcon || "")
     }
 
     // The summary is the headline; the app name is the small line at the

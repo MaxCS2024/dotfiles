@@ -386,8 +386,10 @@ ShellSurface {
                                 Image {
                                     id: appIcon
                                     anchors.fill: parent
-                                    source: resultRow.modelData.icon !== ""
-                                        ? Quickshell.iconPath(resultRow.modelData.icon, true) : ""
+                                    // AppIcons, not Quickshell.iconPath: an
+                                    // app installed since the shell started
+                                    // had a letter tile (see that file).
+                                    source: AppIcons.path(resultRow.modelData.icon)
                                     // Matches the 32x32 container above so the
                                     // SVG rasterises at the size it is drawn
                                     // rather than being rescaled into it — see

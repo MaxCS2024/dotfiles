@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 import "../config"
+import "../services"
 import "../theme"
 
 // Shows the focused window's icon + title. ToplevelManager.activeToplevel
@@ -50,8 +51,7 @@ Item {
                 id: appIcon
                 Layout.preferredWidth: Theme.iconSize
                 Layout.preferredHeight: Theme.iconSize
-                source: (root.desktopEntry && root.desktopEntry.icon !== "")
-                    ? Quickshell.iconPath(root.desktopEntry.icon, true) : ""
+                source: root.desktopEntry ? AppIcons.path(root.desktopEntry.icon) : ""
                 // Matches the Layout size above so the SVG rasterises at the
                 // size it is drawn rather than being rescaled into it — see
                 // bar/SystemTray.qml for the measurement.

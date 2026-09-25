@@ -3,6 +3,7 @@ import Quickshell.Services.SystemTray
 import QtQuick
 import QtQuick.Layouts
 import "../config"
+import "../services"
 import "../theme"
 import "../common"
 
@@ -60,21 +61,26 @@ Item {
                 // (2026-09-25). Then the app's desktop entry, found from
                 // the item's id, supplies the icon. Desktop entries load
                 // after startup; reading the list re-runs this when they do.
+                //
+                // Names go through AppIcons rather than Quickshell.iconPath
+                // so an app installed since the shell started still gets its
+                // icon (see that file).
                 readonly property string iconSource: {
                     const src = trayItem.modelData.icon
                     const m = /^image:\/\/icon\/([^?]+)$/.exec(src)
                     if (!m) return src
                     const sym = /^(.+)-symbolic$/.exec(m[1])
                     if (sym) {
-                        const full = Quickshell.iconPath(sym[1], true)
+                        const full = AppIcons.path(sym[1])
                         if (full !== "") return full
                     }
-                    if (Quickshell.iconPath(m[1], true) !== "") return src
+                    const named = AppIcons.path(m[1])
+                    if (named !== "") return named
                     DesktopEntries.applications.values
                     const entry = DesktopEntries.heuristicLookup(trayItem.modelData.id)
                         ?? DesktopEntries.heuristicLookup(m[1])
-                    if (!entry || entry.icon === "") return src
-                    const fromEntry = Quickshell.iconPath(entry.icon, true)
+                    if (!entry) return src
+                    const fromEntry = AppIcons.path(entry.icon)
                     return fromEntry !== "" ? fromEntry : src
                 }
 
