@@ -25,6 +25,7 @@
 # and opens install or remove in a terminal, for sudo.
 
 rig::load log check proc
+rack::load ui
 
 RACK_MODULE_SUMMARY[patches]="hardware fixes, one udev rule per device"
 RACK_MODULE_ACTIONS[patches]="list install remove"
@@ -92,11 +93,70 @@ rack::patches::__state() {
 
 rack::patches::list() {
     local f label
+    rack::ui::rich && {
+        rack::patches::__rich_list
+        return
+    }
     while read -r f; do
         label=$(rack::patches::__header "$f" Patch)
         printf '  %-18s %-14s %s\n' "$(rack::patches::__name "$f")" \
             "$(rack::patches::__state "$f")" "${label:-$(rack::patches::__name "$f")}"
     done < <(rack::patches::__files)
+}
+
+# The list on a terminal, by label, with the name the commands take on the
+# right. The Conf menu parses the plain list, which stays as it is.
+rack::patches::__rich_list() {
+    local f label state n=0 installed=0
+    local -a rows=()
+    local RACK_UI_NAME_WIDTH=20 RACK_UI_TEXT_WIDTH=14
+    local -A level=([installed]=ok ["out of date"]=warn ["not installed"]=skip)
+    while read -r f; do
+        n=$((n + 1))
+        state=$(rack::patches::__state "$f")
+        [[ $state == installed ]] && installed=$((installed + 1))
+        label=$(rack::patches::__header "$f" Patch)
+        rows+=("${level[$state]}"$'\t'"${label:-$(rack::patches::__name "$f")}"$'\t'"$state"$'\t'"$(rack::patches::__name "$f")")
+    done < <(rack::patches::__files)
+    rack::ui::header "Patches" "hardware fixes · $installed of $n installed on this machine"
+    printf '\n'
+    local row lvl text name
+    for row in "${rows[@]}"; do
+        IFS=$'\t' read -r lvl label text name <<<"$row"
+        rack::ui::row "$lvl" "$label" "$text" "$name"
+    done
+    ((n)) || rack::ui::note "no patches in $(rack::patches::__source)"
+}
+
+# Header for install and remove on a terminal: the labels of what is being
+# done, which is also the window title the Conf menu gives it.
+rack::patches::__title() {
+    rack::ui::rich || return 0
+    local doing=$1
+    shift
+    rack::ui::header "Patches" "$doing $(rack::patches::__labels "$@")"
+}
+
+# "Apple SuperDrive, Other thing" for the names given.
+rack::patches::__labels() {
+    local name f label labels=""
+    for name in "$@"; do
+        f=$(rack::patches::__file "$name" 2>/dev/null) || continue
+        label=$(rack::patches::__header "$f" Patch)
+        labels+="${labels:+, }${label:-$name}"
+    done
+    printf '%s' "${labels:-$*}"
+}
+
+# The closing line of install or remove on a terminal.
+rack::patches::__done() {
+    local verb=$1
+    shift
+    if [[ $RIG_DRY_RUN != 0 ]]; then
+        rack::ui::finish info "Dry run — nothing $verb"
+    else
+        rack::ui::finish ok "$(rack::patches::__labels "$@") $verb"
+    fi
 }
 
 rack::patches::install() {
@@ -114,11 +174,17 @@ rack::patches::install() {
         trigger=$(rack::patches::__header "$f" Trigger)
         [[ -n $trigger ]] && triggers+=("$trigger")
     done
+    rack::patches::__title "installing" "$@"
     if ((${#pkgs[@]})); then
+        rack::ui::rule "" "Packages" "${pkgs[*]}"
         rig::proc::run sudo pacman -S --needed -- "${pkgs[@]}" || return "$RIG_EX_FAIL"
     fi
+    rack::ui::rule "" "Rules" "$(rack::patches::__target)"
     rig::proc::run sudo install -m644 -t "$(rack::patches::__target)" -- "${files[@]}" ||
         return "$RIG_EX_FAIL"
+    if rack::ui::rich; then
+        for f in "${files[@]}"; do rack::ui::say ok "${f##*/}"; done
+    fi
     rig::proc::run sudo udevadm control --reload || return "$RIG_EX_FAIL"
     # So a device already plugged in gets it now, not on its next plug-in.
     # read -a splits the header into words without globbing sr*.
@@ -126,7 +192,12 @@ rack::patches::install() {
         read -ra args <<<"$trigger"
         rig::proc::run sudo udevadm trigger --action=add "${args[@]}" || return "$RIG_EX_FAIL"
     done
-    rig::log::success "installed $*"
+    rack::ui::rich && ((${#triggers[@]})) && rack::ui::say ok "applied to devices already plugged in"
+    if rack::ui::rich; then
+        rack::patches::__done installed "$@"
+    else
+        rig::log::success "installed $*"
+    fi
 }
 
 # Takes the rule out and asks first. The packages stay: sg3_utils is
@@ -138,25 +209,44 @@ rack::patches::remove() {
     }
     local name f installed
     local -a gone=()
+    for name in "$@"; do rack::patches::__file "$name" >/dev/null || return; done
+    rack::patches::__title "removing" "$@"
+    rack::ui::rich && printf '\n'
     for name in "$@"; do
         f=$(rack::patches::__file "$name") || return
         installed="$(rack::patches::__target)/${f##*/}"
         if [[ -f $installed ]]; then
             gone+=("$installed")
+        elif rack::ui::rich; then
+            rack::ui::say skip "$name: not installed"
         else
             printf '  %s: not installed\n' "$name"
         fi
     done
     ((${#gone[@]})) || return 0
-    printf '\nRemoving would delete:\n'
-    printf '  %s\n' "${gone[@]}"
+    if rack::ui::rich; then
+        rack::ui::rule "" "Removing would delete"
+        for f in "${gone[@]}"; do rack::ui::say warn "$f" 2>&1; done
+        printf '\n'
+    else
+        printf '\nRemoving would delete:\n'
+        printf '  %s\n' "${gone[@]}"
+    fi
     if [[ $RIG_DRY_RUN == 0 ]] && ! rig::check::confirm "remove?"; then
-        printf '  left installed\n'
+        if rack::ui::rich; then
+            rack::ui::finish info "Nothing removed" "left installed"
+        else
+            printf '  left installed\n'
+        fi
         return 0
     fi
     rig::proc::run sudo rm -f -- "${gone[@]}" || return "$RIG_EX_FAIL"
     rig::proc::run sudo udevadm control --reload || return "$RIG_EX_FAIL"
-    rig::log::success "removed $*"
+    if rack::ui::rich; then
+        rack::patches::__done removed "$@"
+    else
+        rig::log::success "removed $*"
+    fi
 }
 
 rack::patches::__default() {

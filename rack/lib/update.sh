@@ -15,6 +15,7 @@
 # Ported from bin/orbit-update.
 
 rig::load log check proc tmp
+rack::load ui
 
 RACK_MODULE_SUMMARY[update]="update pacman, AUR and flatpak packages"
 RACK_MODULE_ACTIONS[update]="run"
@@ -34,57 +35,6 @@ readonly RACK_UPDATE_STAGE_COUNT=3
 # glance, not the manifest.
 readonly RACK_UPDATE_PREVIEW_ROWS=8
 
-# Plain ANSI slots, never RGB: the terminal's sixteen colours are the shell's
-# palette (quickshell/main/theme/appcolors.js writes them), with blue as the
-# accent and bright black as the muted text. Using the slots is what makes
-# this read as part of the desktop, and follow it when the wallpaper changes.
-rack::update::__colors() {
-    if rig::log::color_enabled; then
-        C_RED=$'\033[31m' C_GREEN=$'\033[32m' C_YELLOW=$'\033[33m'
-        C_ACCENT=$'\033[34m' C_MUTED=$'\033[90m'
-        C_BOLD=$'\033[1m' C_OFF=$'\033[0m'
-    else
-        C_RED='' C_GREEN='' C_YELLOW='' C_ACCENT='' C_MUTED='' C_BOLD='' C_OFF=''
-    fi
-}
-
-# Rules and the summary are drawn to this width. Capped, because the task
-# window is 60% of the monitor and a rule across all of it reads as a page
-# break, not a heading.
-rack::update::__width() {
-    local cols
-    cols=$(tput cols 2>/dev/null) || cols=80
-    ((cols > 84)) && cols=84
-    ((cols < 40)) && cols=40
-    _width=$((cols - 4))
-}
-
-# A heading with a rule running out to the width:  ── 1/3  Title ─────── note
-# The note is plain text, painted in the colour given (muted by default), so
-# its length is its width.
-rack::update::__rule() {
-    local lead=$1 title=$2 note=${3:-} note_colour=${4:-$C_MUTED}
-    local plain="── ${lead:+$lead  }$title "
-    [[ -n $note ]] && plain+=" $note"
-    local fill=$((_width - ${#plain} - 1))
-    ((fill < 3)) && fill=3
-    local bar
-    printf -v bar '%*s' "$fill" ''
-    bar=${bar// /─}
-    printf '\n  %s──%s ' "$C_MUTED" "$C_OFF"
-    [[ -n $lead ]] && printf '%s%s%s  ' "$C_ACCENT" "$lead" "$C_OFF"
-    printf '%s%s%s %s%s%s' "$C_BOLD" "$title" "$C_OFF" "$C_MUTED" "$bar" "$C_OFF"
-    [[ -n $note ]] && printf ' %s%s%s' "$note_colour" "$note" "$C_OFF"
-    printf '\n'
-}
-
-# "1m 12s", "48s". A stage that took no time to speak of says nothing.
-rack::update::__duration() {
-    local s=$1
-    ((s >= 60)) && { printf '%dm %02ds' $((s / 60)) $((s % 60)); return 0; }
-    printf '%ds' "$s"
-}
-
 # When the last real upgrade started, from pacman's own log. A skipped run
 # (nothing waiting) never reaches pacman, so it doesn't reset this — which is
 # what "last updated" should mean.
@@ -101,9 +51,9 @@ rack::update::__last_run() {
     if ((ago < 3600)); then
         printf 'last updated %s' "$( ((ago < 120)) && echo "just now" || echo "$((ago / 60)) minutes ago")"
     elif ((ago < 86400)); then
-        printf 'last updated %s' "$(rack::update::__plural $((ago / 3600)) hour) ago"
+        printf 'last updated %s' "$(rack::ui::plural $((ago / 3600)) hour) ago"
     elif ((ago < 14 * 86400)); then
-        printf 'last updated %s' "$(rack::update::__plural $((ago / 86400)) day) ago"
+        printf 'last updated %s' "$(rack::ui::plural $((ago / 86400)) day) ago"
     else
         printf 'last updated %s' "$(date -d "@$then" '+%-d %b')"
     fi
@@ -115,7 +65,8 @@ rack::update::__last_run() {
 # this output), so it never lands in a log or a pipe; a narrow window gets the
 # text without the mark.
 rack::update::__banner() {
-    [[ -t 1 ]] || return 0
+    rack::ui::rich || return 0
+    RACK_UI_HEADED=1
     local host distro="Arch Linux"
     host=$(cat /etc/hostname 2>/dev/null || uname -n)
     # shellcheck disable=SC1091
@@ -139,7 +90,7 @@ rack::update::__banner() {
     )
     local i
     printf '\n'
-    if ((_width < 64)); then
+    if ((RACK_UI_WIDTH < 64)); then
         for i in 1 2 3 4; do printf '  %s\n' "${text[i]}"; done
         return 0
     fi
@@ -150,7 +101,11 @@ rack::update::__banner() {
 
 rack::update::__stage() {
     _stage_n=$((_stage_n + 1))
-    rack::update::__rule "$_stage_n/$RACK_UPDATE_STAGE_COUNT" "$1" "${2:-}"
+    if rack::ui::rich; then
+        rack::ui::rule "$_stage_n/$RACK_UPDATE_STAGE_COUNT" "$1" "${2:-}"
+    else
+        printf '\n[%d/%d] %s%s\n' "$_stage_n" "$RACK_UPDATE_STAGE_COUNT" "$1" "${2:+ ($2)}"
+    fi
 }
 
 # What a stage's heading says on its right: skipped, nothing waiting, the
@@ -162,7 +117,7 @@ rack::update::__stage_note() {
     elif [[ $waiting == 0 ]]; then
         printf 'nothing waiting'
     elif [[ -n $waiting ]]; then
-        rack::update::__plural "$waiting" update
+        rack::ui::plural "$waiting" update
     fi
 }
 
@@ -172,7 +127,7 @@ rack::update::__note() { printf '  %s%s%s\n' "$C_MUTED" "$*" "$C_OFF"; }
 # verdict for that stage, where you are already looking.
 rack::update::__done() {
     local key=$1
-    printf '\n  %s %s' "$(rack::update::__glyph "${_level[$key]}")" "${_text[$key]}"
+    printf '\n  %s %s' "$(rack::ui::glyph "${_level[$key]}")" "${_text[$key]}"
     [[ -n ${_time[$key]:-} ]] && printf ' %sin %s%s' "$C_MUTED" "${_time[$key]}" "$C_OFF"
     printf '\n'
 }
@@ -190,23 +145,13 @@ rack::update::__record() {
     _text[$1]=$3
 }
 
-# ok ✓, warn !, bad ✗, and skip · for a stage that had nothing to do or was
-# switched off — not a warning, just nothing to report.
-rack::update::__glyph() {
-    case $1 in
-        ok) printf '%s✓%s' "$C_GREEN" "$C_OFF" ;;
-        warn) printf '%s!%s' "$C_YELLOW" "$C_OFF" ;;
-        bad) printf '%s✗%s' "$C_RED" "$C_OFF" ;;
-        *) printf '%s·%s' "$C_MUTED" "$C_OFF" ;;
-    esac
-}
-
 rack::update::__summary() {
     declare -A label=(
         [repo]="Repository" [aur]="AUR" [flatpak]="Flatpak"
         [reboot]="Reboot" [pacnew]=".pacnew"
     )
-    rack::update::__rule "" "Summary"
+    rack::ui::rule "" "Summary"
+    rack::ui::rich || printf '\nsummary\n'
     local key colour worst=ok
     for key in "${_rows[@]}"; do
         case ${_level[$key]} in
@@ -215,7 +160,7 @@ rack::update::__summary() {
         esac
         colour=""
         [[ ${_level[$key]} == skip ]] && colour=$C_MUTED
-        printf '  %s  %-12s%s%s%s' "$(rack::update::__glyph "${_level[$key]}")" \
+        printf '  %s  %-12s%s%s%s' "$(rack::ui::glyph "${_level[$key]}")" \
             "${label[$key]:-$key}" "$colour" "${_text[$key]}" "$C_OFF"
         [[ -n ${_time[$key]:-} ]] && printf '  %s%s%s' "$C_MUTED" "${_time[$key]}" "$C_OFF"
         printf '\n'
@@ -223,7 +168,7 @@ rack::update::__summary() {
     [[ -n $_summary_extra ]] && printf '%s%s%s\n' "$C_MUTED" "$_summary_extra" "$C_OFF"
 
     local took
-    took=$(rack::update::__duration $((SECONDS - _started)))
+    took=$(rack::ui::duration $((SECONDS - _started)))
     printf '\n'
     case $worst in
         ok) printf '  %sAll done%s %sin %s%s\n' "$C_GREEN$C_BOLD" "$C_OFF" "$C_MUTED" "$took" "$C_OFF" ;;
@@ -259,35 +204,34 @@ rack::update::__try() {
 
 rack::update::__lookup() {
     local dir=$1
+    local -a pids=()
     if rig::check::has checkupdates; then
         rack::update::__try "$dir/repo.rc" checkupdates >"$dir/repo" 2>/dev/null &
+        pids+=($!)
     fi
     if ((!_skip_aur)) && rig::check::has yay; then
         # yay -Qua exits 1 both when nothing is waiting and when it failed;
         # only the second says anything on stderr.
         rack::update::__try "$dir/aur.rc" yay -Qua >"$dir/aur" 2>"$dir/aur.err" &
+        pids+=($!)
     fi
     if ((!_skip_flatpak)) && rig::check::has flatpak; then
         rack::update::__try "$dir/flatpak.rc" flatpak remote-ls --updates --app \
             --columns=application,name,version >"$dir/flatpak" 2>/dev/null &
+        pids+=($!)
         rack::update::__try "$dir/flatpak-all.rc" flatpak remote-ls --updates \
             --columns=application >"$dir/flatpak-all" 2>/dev/null &
+        pids+=($!)
         rack::update::__try "$dir/flatpak-installed.rc" flatpak list --app \
             --columns=application,version >"$dir/flatpak-installed" 2>/dev/null &
+        pids+=($!)
     fi
 
-    # A spinner while they run, on a terminal only, on one line that is
-    # cleared before the list is drawn.
-    local frames='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏' i=0
-    if [[ -t 1 ]]; then
-        while [[ -n $(jobs -rp) ]]; do
-            printf '\r  %s%s%s %sLooking for updates…%s' \
-                "$C_ACCENT" "${frames:i++%${#frames}:1}" "$C_OFF" "$C_MUTED" "$C_OFF"
-            sleep 0.08
-        done
-        printf '\r\033[K'
-    fi
-    wait
+    # Waits on these pids only: a bare `wait` would also wait for the
+    # spinner, which never ends on its own.
+    rack::ui::spin_start "Looking for updates…"
+    ((${#pids[@]})) && { wait "${pids[@]}" || true; }
+    rack::ui::spin_stop
 }
 
 # Reads one source's lookup into _waiting[<key>] (a count, or empty for
@@ -370,7 +314,7 @@ rack::update::__show_source() {
     done <<<"${_preview[$key]}"
     ((rows > shown)) && rack::update::__note "  and $((rows - shown)) more"
     [[ $key == flatpak ]] && ((_runtimes)) &&
-        rack::update::__note "  and $(rack::update::__plural "$_runtimes" runtime)"
+        rack::update::__note "  and $(rack::ui::plural "$_runtimes" runtime)"
     return 0
 }
 
@@ -402,8 +346,9 @@ rack::update::__preview() {
     fi
 
     local note=""
-    ((total)) && note=$(rack::update::__plural "$total" update)
-    rack::update::__rule "" "Waiting" "$note" "$C_ACCENT"
+    ((total)) && note=$(rack::ui::plural "$total" update)
+    rack::ui::rule "" "Waiting" "$note" "$C_ACCENT"
+    rack::ui::rich || printf '\nwaiting%s\n' "${note:+ ($note)}"
     rack::update::__show_source repo "Repository"
     ((_skip_aur)) || ! rig::check::has yay || rack::update::__show_source aur "AUR"
     ((_skip_flatpak)) || ! rig::check::has flatpak || rack::update::__show_source flatpak "Flatpak"
@@ -436,12 +381,6 @@ rack::update::__flatpak_snapshot() {
 rack::update::__snapshot_changed() {
     comm -13 <(printf '%s\n' "$1") <(printf '%s\n' "$2") |
         grep -c '[^[:space:]]' || true
-}
-
-# "3 packages" / "1 package". A count that reads wrong is the kind of small
-# wrongness that makes the rest of the output look careless.
-rack::update::__plural() {
-    printf '%s %s' "$1" "$2$( (($1 == 1)) || printf 's')"
 }
 
 # A stage the preview found nothing for. Its header still prints, with the
@@ -478,7 +417,7 @@ rack::update::__check_pacnew() {
     n=$(printf '%s\n' "$files" | wc -l)
     # Surfaced here because an upgrade is what creates them, and this is the
     # one moment the user is guaranteed to be looking.
-    rack::update::__record pacnew warn "$(rack::update::__plural "$n" file) pending — review with pacdiff"
+    rack::update::__record pacnew warn "$(rack::ui::plural "$n" file) pending — review with pacdiff"
     _summary_extra=$(printf '%s\n' "$files" | sed 's/^/                 /')
 }
 
@@ -510,8 +449,8 @@ rack::update::__repo() {
 
     after=$(rack::update::__pkg_snapshot)
     n=$(rack::update::__snapshot_changed "$before" "$after")
-    _time[repo]=$(rack::update::__duration $((SECONDS - t0)))
-    ((n)) && rack::update::__record repo ok "$(rack::update::__plural "$n" package) changed" ||
+    _time[repo]=$(rack::ui::duration $((SECONDS - t0)))
+    ((n)) && rack::update::__record repo ok "$(rack::ui::plural "$n" package) changed" ||
         rack::update::__record repo ok "already up to date"
     rack::update::__done repo
 }
@@ -546,8 +485,8 @@ rack::update::__aur() {
 
     after=$(rack::update::__pkg_snapshot)
     n=$(rack::update::__snapshot_changed "$before" "$after")
-    _time[aur]=$(rack::update::__duration $((SECONDS - t0)))
-    ((n)) && rack::update::__record aur ok "$(rack::update::__plural "$n" package) changed" ||
+    _time[aur]=$(rack::ui::duration $((SECONDS - t0)))
+    ((n)) && rack::update::__record aur ok "$(rack::ui::plural "$n" package) changed" ||
         rack::update::__record aur ok "already up to date"
     rack::update::__done aur
 }
@@ -582,13 +521,13 @@ rack::update::__flatpak() {
 
     after=$(rack::update::__flatpak_snapshot)
     n=$(rack::update::__snapshot_changed "$before" "$after")
-    _time[flatpak]=$(rack::update::__duration $((SECONDS - t0)))
+    _time[flatpak]=$(rack::ui::duration $((SECONDS - t0)))
     # Runtimes are not in the app snapshot, so a run that only moved runtimes
     # counts no apps; say what the preview saw instead of "up to date".
     if ((n)); then
-        rack::update::__record flatpak ok "$(rack::update::__plural "$n" app) changed"
+        rack::update::__record flatpak ok "$(rack::ui::plural "$n" app) changed"
     elif ((_runtimes)); then
-        rack::update::__record flatpak ok "$(rack::update::__plural "$_runtimes" runtime) updated"
+        rack::update::__record flatpak ok "$(rack::ui::plural "$_runtimes" runtime) updated"
     else
         rack::update::__record flatpak ok "already up to date"
     fi
@@ -599,11 +538,10 @@ rack::update::__flatpak() {
 
 rack::update::run() {
     local _yes=0 _skip_aur=0 _skip_flatpak=0
-    local _stage_n=0 _stage_failed=0 _summary_extra="" _runtimes=0 _width=76 _all_current=0
+    local _stage_n=0 _stage_failed=0 _summary_extra="" _runtimes=0 _all_current=0
     local _started=$SECONDS
     local -a _rows=()
     local -A _level=() _text=() _time=() _waiting=() _preview=()
-    local C_RED C_GREEN C_YELLOW C_ACCENT C_MUTED C_BOLD C_OFF
 
     while (($#)); do
         case "$1" in
@@ -622,8 +560,7 @@ rack::update::run() {
         rig::log::error "not an Arch system (pacman not found)"
         return "$RIG_EX_NODEP"
     }
-    rack::update::__colors
-    rack::update::__width
+    rack::ui::init
     rack::update::__banner
 
     # A stale lock from an interrupted run makes pacman fail with a confusing

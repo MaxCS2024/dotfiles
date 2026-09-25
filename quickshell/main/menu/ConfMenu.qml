@@ -256,7 +256,7 @@ ShellSurface {
                 // machine set up": every dependency the shell and the
                 // tooling need, and which of them are missing.
                 { label: "Check setup", icon: "", hint: "rack setup",
-                  run: () => Terminal.rack("setup") },
+                  run: () => Terminal.rack("setup", { title: "Setup check" }) },
                 // Fixes for one piece of hardware each (udev/), which a
                 // machine without the device doesn't need — see
                 // patchRows() below.

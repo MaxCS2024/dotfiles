@@ -10,6 +10,7 @@
 # global to survive.
 
 rig::load log check proc tmp trap
+rack::load ui
 
 RACK_MODULE_SUMMARY[mirrors]="refresh the pacman mirrorlist with reflector"
 RACK_MODULE_ACTIONS[mirrors]="run"
@@ -51,9 +52,36 @@ rack::mirrors::run() {
     local tmp
     rig::tmp::file tmp || return $?
 
-    printf 'querying mirrors%s...\n' "${country:+ in $country}"
-    reflector "${args[@]}" --save "$tmp" || {
-        rig::log::error "reflector failed — $RACK_MIRRORS_LIST left untouched"
+    rack::ui::header "Mirrors" "the $RACK_MIRRORS_LATEST fastest HTTPS mirrors${country:+ in $country}, via reflector$(
+        ((dry)) && printf ' · dry run')"
+    RACK_UI_NAME_WIDTH=10
+    if rack::ui::rich; then
+        printf '\n'
+        rack::ui::spin_start "Ranking mirrors${country:+ in $country}…"
+    else
+        printf 'querying mirrors%s...\n' "${country:+ in $country}"
+    fi
+    # On a terminal reflector's stderr is held back while the spinner runs
+    # and shown after it, one muted line per warning (a mirror that timed out
+    # while being rated is routine); plain, it goes straight through.
+    local rc=0 errors="" line
+    if rack::ui::rich; then
+        rig::tmp::file errors || return $?
+        reflector "${args[@]}" --save "$tmp" 2>"$errors" || rc=$?
+        rack::ui::spin_stop
+        if [[ -s $errors ]]; then
+            rack::ui::row warn "reflector" "$(rack::ui::plural "$(grep -c . "$errors")" warning)"
+            while IFS= read -r line; do
+                line=${line#\[*\] }
+                rack::ui::note "  ${line#WARNING: }"
+            done <"$errors"
+            printf '\n'
+        fi
+    else
+        reflector "${args[@]}" --save "$tmp" || rc=$?
+    fi
+    ((rc == 0)) || {
+        rack::ui::finish bad "reflector failed — $RACK_MIRRORS_LIST left untouched"
         return "$RIG_EX_FAIL"
     }
 
@@ -62,13 +90,21 @@ rack::mirrors::run() {
     local count
     count=$(grep -c '^Server = ' "$tmp" || true)
     ((count > 0)) || {
-        rig::log::error "reflector returned no mirrors — $RACK_MIRRORS_LIST left untouched"
+        rack::ui::finish bad "reflector returned no mirrors — $RACK_MIRRORS_LIST left untouched"
         return "$RIG_EX_FAIL"
     }
 
     if ((dry)); then
-        printf '\nwould install %s mirrors:\n' "$count"
-        grep '^Server = ' "$tmp" | sed 's/^Server = /  /'
+        if rack::ui::rich; then
+            local server
+            while read -r server; do
+                rack::ui::note "  ${server#Server = }"
+            done < <(grep '^Server = ' "$tmp")
+            rack::ui::finish info "Dry run — would install $count mirrors"
+        else
+            printf '\nwould install %s mirrors:\n' "$count"
+            grep '^Server = ' "$tmp" | sed 's/^Server = /  /'
+        fi
         return 0
     fi
 
@@ -79,13 +115,21 @@ rack::mirrors::run() {
     sudo mkdir -p "$RACK_MIRRORS_BACKUP_DIR"
     if [[ -f $RACK_MIRRORS_LIST ]]; then
         sudo cp "$RACK_MIRRORS_LIST" "$backup"
-        printf 'backed up to %s\n' "$backup"
+        if rack::ui::rich; then
+            rack::ui::row ok "backed up" "the old list" "$backup"
+        else
+            printf 'backed up to %s\n' "$backup"
+        fi
     fi
 
     # install(1) rather than cp so ownership and mode are set in one step and
     # the file is never briefly world-writable.
     sudo install -m 0644 -o root -g root "$tmp" "$RACK_MIRRORS_LIST"
-    printf 'installed %s mirrors\n' "$count"
+    if rack::ui::rich; then
+        rack::ui::row ok "installed" "$count mirrors" "$RACK_MIRRORS_LIST"
+    else
+        printf 'installed %s mirrors\n' "$count"
+    fi
 
     # Oldest backups pruned last, so a failure above never costs you a backup.
     local -a old
@@ -93,7 +137,11 @@ rack::mirrors::run() {
         sort -rn | tail -n "+$((RACK_MIRRORS_KEEP_BACKUPS + 1))" | cut -d' ' -f2-)
     ((${#old[@]})) && sudo rm -f "${old[@]}"
 
-    printf '\nrun: rack update\n'
+    if rack::ui::rich; then
+        rack::ui::finish ok "Mirrorlist refreshed" "next: rack update"
+    else
+        printf '\nrun: rack update\n'
+    fi
 }
 
 rack::mirrors::__default() { rack::mirrors::run "$@"; }

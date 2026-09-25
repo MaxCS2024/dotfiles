@@ -11,6 +11,7 @@
 # Ported from bin/orbit-health.
 
 rig::load log check diag
+rack::load ui
 
 RACK_MODULE_SUMMARY[health]="failed units, updates, pacnew, disk, journal"
 RACK_MODULE_ACTIONS[health]="report"
@@ -214,6 +215,48 @@ rack::health::__run_checks() {
     rack::health::__mirrors
 }
 
+# The report on a terminal: the same findings, as rows under a header, the
+# hint a finding carries — "(run: rack clean)" — moved to the right where it
+# reads as the thing to do about it. The checks take a few seconds (the
+# update lookup most of them), hence the spinner.
+rack::health::__rich() {
+    local -A label=(
+        [units]="Services" [updates]="Updates" [pacnew]=".pacnew" [orphans]="Orphans"
+        [disk]="Disk" [journal]="Journal" [cache]="Package cache" [mirrors]="Mirrors"
+    )
+    local -A level=([ok]=ok [info]=info [warn]=warn [problem]=bad)
+    local up
+    up=$(uptime -p 2>/dev/null | sed 's/^up //') || up=""
+    RACK_UI_NAME_WIDTH=14
+    rack::ui::header "Health" "$(cat /etc/hostname 2>/dev/null || uname -n)${up:+ · up $up}"
+
+    rig::diag::reset
+    rack::ui::spin_start "Checking…"
+    rack::health::__run_checks
+    rack::ui::spin_stop
+    printf '\n'
+
+    local i text aside
+    for i in "${!RIG_DIAG_NAME[@]}"; do
+        text=${RIG_DIAG_TEXT[$i]}
+        aside=""
+        if [[ $text =~ ^(.*)\ \((.*)\)$ ]]; then
+            text=${BASH_REMATCH[1]}
+            aside=${BASH_REMATCH[2]#run: }
+        fi
+        rack::ui::row "${level[${RIG_DIAG_STATUS[$i]}]:-skip}" \
+            "${label[${RIG_DIAG_NAME[$i]}]:-${RIG_DIAG_NAME[$i]}}" "$text" "$aside"
+    done
+
+    case $RIG_DIAG_OVERALL in
+        ok | info) rack::ui::finish ok "All healthy" ;;
+        warn) rack::ui::finish warn "Healthy, with something worth a look" ;;
+        *) rack::ui::finish bad "Something needs attention" ;;
+    esac
+    rig::diag::failed && return 1
+    return 0
+}
+
 rack::health::report() {
     while (($#)); do
         case "$1" in
@@ -236,6 +279,10 @@ rack::health::report() {
 
     # These names are longer than the subsystem checks', so the column widens.
     RIG_DIAG_WIDTH=14
+    if ((!RIG_DIAG_JSON)) && rack::ui::rich; then
+        rack::health::__rich
+        return
+    fi
     rig::diag::status "system health" rack::health::__run_checks
 }
 

@@ -142,12 +142,21 @@ rack::validate::__one() {
     esac
 
     case $status in
-        0) printf '  %-12s ok\n' "$name" ;;
+        0) rack::ui::item ok "$name" "ok" "loads" ;;
         1)
-            printf '  %-12s BROKEN\n' "$name"
-            [[ -n $out ]] && printf '%s\n' "$out" | sed 's/^/    /'
+            rack::ui::item bad "$name" "BROKEN" "would not load"
+            if [[ -n $out ]]; then
+                if rack::ui::rich; then
+                    local line
+                    while IFS= read -r line; do
+                        printf '      %s%s%s\n' "$C_RED" "$line" "$C_OFF"
+                    done <<<"$out"
+                else
+                    printf '%s\n' "$out" | sed 's/^/    /'
+                fi
+            fi
             ;;
-        *) printf '  %-12s no validator\n' "$name" ;;
+        *) rack::ui::item skip "$name" "no validator" "no validator here" ;;
     esac
     return "$status"
 }
@@ -159,17 +168,37 @@ rack::validate::run() {
     # name was logged and then "nothing obviously broken" reported with
     # success. deploy.sh has the same note.
     entries=$(rack::manifest::select "$@") || return $?
+    rack::manifest::header "Validate" "$entries"
 
+    local unchecked=0 rc
     while IFS=$'\t' read -r name source target reload; do
         [[ -n $name ]] || continue
-        rack::validate::__one "$name" "$source" || [[ $? == 2 ]] || broken=$((broken + 1))
+        rc=0
+        rack::validate::__one "$name" "$source" || rc=$?
+        case $rc in
+            0) ;;
+            2) unchecked=$((unchecked + 1)) ;;
+            *) broken=$((broken + 1)) ;;
+        esac
     done <<<"$entries"
 
+    # "no validator" is not a pass, so the closing line says how many went
+    # unchecked rather than folding them into "nothing broken".
+    local aside=""
+    ((unchecked)) && aside="$unchecked not checked"
     ((broken)) && {
-        rig::log::error "$broken config(s) would not load"
+        if rack::ui::rich; then
+            rack::ui::finish bad "$(rack::ui::plural "$broken" config) would not load" "$aside"
+        else
+            rig::log::error "$broken config(s) would not load"
+        fi
         return "$RIG_EX_FAIL"
     }
-    rig::log::success "nothing obviously broken"
+    if rack::ui::rich; then
+        rack::ui::finish ok "Nothing obviously broken" "$aside"
+    else
+        rig::log::success "nothing obviously broken"
+    fi
 }
 
 # file <path> — check something that is not in the manifest yet.
@@ -182,13 +211,13 @@ rack::validate::file() {
     out=$(rack::validate::__by_extension "$path")
     status=$?
     case $status in
-        0) rig::log::success "${path##*/} is fine" ;;
+        0) rack::ui::say ok "${path##*/} is fine" ;;
         1)
-            rig::log::error "${path##*/}: ${out:-invalid}"
+            rack::ui::say bad "${path##*/}: ${out:-invalid}"
             return "$RIG_EX_FAIL"
             ;;
         *)
-            rig::log::warn "no validator for ${path##*/}"
+            rack::ui::say warn "no validator for ${path##*/}"
             return 0
             ;;
     esac

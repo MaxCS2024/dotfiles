@@ -29,6 +29,7 @@
 # runs first (README.md, "On a new machine").
 
 rig::load log check proc
+rack::load ui
 
 RACK_MODULE_SUMMARY[features]="pick which optional features this desktop has"
 RACK_MODULE_ACTIONS[features]="pick list on off remove path"
@@ -231,6 +232,19 @@ rack::features::__reload() {
 
 # ------------------------------------------------------------------ verbs
 
+# The header for on and remove, on a terminal: "Features", and what is
+# being done to which. Opened from the Conf menu these run in a window of
+# their own, and this is what that window opens with.
+rack::features::__header() {
+    rack::ui::rich || return 0
+    local doing=$1 name labels=""
+    shift
+    for name in "$@"; do
+        labels+="${labels:+, }$(rack::features::__field "$name" label)"
+    done
+    rack::ui::header "Features" "$doing $labels"
+}
+
 rack::features::on() {
     local name
     rack::features::__require || return
@@ -239,15 +253,35 @@ rack::features::on() {
         return "$RIG_EX_USAGE"
     }
     for name in "$@"; do rack::features::__known "$name" || return; done
+    rack::features::__header "turning on" "$@"
+    local label
     for name in "$@"; do
+        label=$(rack::features::__field "$name" label)
         if ! rack::features::__installed "$name"; then
-            rig::log::info "installing $name"
-            rack::features::__install "$name" || return
+            if rack::ui::rich; then
+                rack::ui::rule "" "Installing ${label:-$name}"
+            else
+                rig::log::info "installing $name"
+            fi
+            rack::features::__install "$name" || {
+                rack::ui::rich && rack::ui::finish bad "${label:-$name} did not install" "see above"
+                return "$RIG_EX_FAIL"
+            }
         fi
         rack::features::__units "$name" enable
         rack::features::__set "$name" on
-        rack::features::__switchable "$name" && rig::log::success "$name is on" ||
-            rig::log::success "$name is installed"
+        if rack::ui::rich; then
+            if [[ $RIG_DRY_RUN != 0 ]]; then
+                rack::ui::finish info "Dry run — ${label:-$name} unchanged"
+            elif rack::features::__switchable "$name"; then
+                rack::ui::finish ok "${label:-$name} is on"
+            else
+                rack::ui::finish ok "${label:-$name} is installed"
+            fi
+        else
+            rack::features::__switchable "$name" && rig::log::success "$name is on" ||
+                rig::log::success "$name is installed"
+        fi
     done
     rack::features::__reload
 }
@@ -269,7 +303,12 @@ rack::features::off() {
     for name in "$@"; do
         rack::features::__set "$name" off
         rack::features::__units "$name" disable
-        rig::log::success "$name is off (still installed; 'rack features remove $name' uninstalls it)"
+        if rack::ui::rich; then
+            rack::ui::say ok "$(rack::features::__field "$name" label) is off"
+            rack::ui::note "still installed — rack features remove $name uninstalls it"
+        else
+            rig::log::success "$name is off (still installed; 'rack features remove $name' uninstalls it)"
+        fi
     done
     rack::features::__reload
 }
@@ -286,6 +325,8 @@ rack::features::remove() {
         rack::features::__known "$name" || return
         rack::features::__switchable "$name" && switchable+=("$name")
     done
+    rack::features::__header "removing" "$@"
+    rack::ui::rich && printf '\n'
     if ((${#switchable[@]})); then
         rack::features::off "${switchable[@]}" || return
     fi
@@ -301,17 +342,37 @@ rack::features::__purge() {
     local -a pkgs data
     mapfile -t pkgs < <(rack::features::__removable_packages "$name")
     mapfile -t data < <(rack::features::__data "$name")
+    local label
+    label=$(rack::features::__field "$name" label)
     if ((${#pkgs[@]} + ${#data[@]} == 0)); then
-        printf '  %s: nothing installed to remove\n' "$name"
+        if rack::ui::rich; then
+            rack::ui::say skip "${label:-$name}: nothing installed to remove"
+        else
+            printf '  %s: nothing installed to remove\n' "$name"
+        fi
         return 0
     fi
-    printf '\nRemoving %s would delete:\n' "$name"
-    for p in "${pkgs[@]}"; do printf '  package  %s\n' "$p"; done
-    for p in "${data[@]}"; do
-        printf '  files    %s (%s)\n' "${p/#$HOME/\~}" "$(du -sh -- "$p" 2>/dev/null | cut -f1)"
-    done
+    if rack::ui::rich; then
+        RACK_UI_NAME_WIDTH=8
+        rack::ui::rule "" "Removing ${label:-$name} would delete"
+        for p in "${pkgs[@]}"; do rack::ui::row warn "package" "$p"; done
+        for p in "${data[@]}"; do
+            rack::ui::row warn "files" "${p/#$HOME/\~}" "$(du -sh -- "$p" 2>/dev/null | cut -f1)"
+        done
+        printf '\n'
+    else
+        printf '\nRemoving %s would delete:\n' "$name"
+        for p in "${pkgs[@]}"; do printf '  package  %s\n' "$p"; done
+        for p in "${data[@]}"; do
+            printf '  files    %s (%s)\n' "${p/#$HOME/\~}" "$(du -sh -- "$p" 2>/dev/null | cut -f1)"
+        done
+    fi
     if [[ $RIG_DRY_RUN == 0 ]] && ! rig::check::confirm "remove these?"; then
-        printf '  %s is off and still installed\n' "$name"
+        if rack::ui::rich; then
+            rack::ui::finish info "Nothing removed" "${label:-$name} is off and still installed"
+        else
+            printf '  %s is off and still installed\n' "$name"
+        fi
         return 0
     fi
     # Teardown runs while the packages are still there to run it
@@ -321,18 +382,59 @@ rack::features::__purge() {
         rig::proc::run sudo pacman -Rns -- "${pkgs[@]}" || return "$RIG_EX_FAIL"
     fi
     for p in "${data[@]}"; do rig::proc::run rm -rf -- "$p"; done
-    rig::log::success "$name removed"
+    if rack::ui::rich && [[ $RIG_DRY_RUN != 0 ]]; then
+        rack::ui::finish info "Dry run — nothing removed"
+    elif rack::ui::rich; then
+        rack::ui::finish ok "${label:-$name} removed"
+    else
+        rig::log::success "$name removed"
+    fi
 }
 
 rack::features::list() {
     local name installed state
     rack::features::__require || return
+    rack::ui::rich && {
+        rack::features::__rich_list
+        return
+    }
     while read -r name; do
         rack::features::__installed "$name" && installed=installed || installed="not installed"
         rack::features::__switchable "$name" && state=$(rack::features::__state "$name") || state=-
         printf '  %-12s %-4s %-14s %s\n' "$name" "$state" "$installed" \
             "$(rack::features::__field "$name" label)"
     done < <(rack::features::__names)
+}
+
+# The list on a terminal: each feature by its label, ✓ when it is installed
+# and on, · when off or not installed, its name (what the commands take) on
+# the right. Only here — the Conf menu parses the plain list above.
+rack::features::__rich_list() {
+    local name label on_count=0 total=0
+    local RACK_UI_NAME_WIDTH=16 RACK_UI_TEXT_WIDTH=14
+    local -a rows=()
+    while read -r name; do
+        total=$((total + 1))
+        label=$(rack::features::__field "$name" label)
+        if ! rack::features::__installed "$name"; then
+            rows+=("skip"$'\t'"$label"$'\t'"not installed"$'\t'"$name")
+        elif ! rack::features::__switchable "$name"; then
+            on_count=$((on_count + 1))
+            rows+=("ok"$'\t'"$label"$'\t'"installed"$'\t'"$name")
+        elif [[ $(rack::features::__state "$name") == on ]]; then
+            on_count=$((on_count + 1))
+            rows+=("ok"$'\t'"$label"$'\t'"on"$'\t'"$name")
+        else
+            rows+=("skip"$'\t'"$label"$'\t'"off"$'\t'"$name")
+        fi
+    done < <(rack::features::__names)
+    rack::ui::header "Features" "$on_count of $total in use · rack features to pick"
+    printf '\n'
+    local row level text
+    for row in "${rows[@]}"; do
+        IFS=$'\t' read -r level label text name <<<"$row"
+        rack::ui::row "$level" "$label" "$text" "$name"
+    done
 }
 
 # ------------------------------------------------------------------ picker
@@ -408,7 +510,9 @@ rack::features::__draw() {
     local cursor=$1 first=$2 i name tag
     local -n _names=$3 _ticks=$4
     printf '\e[H\e[2J'
-    printf '\n  \e[1mFeatures\e[0m\n\n'
+    rack::ui::init
+    printf '\n  %s┏━━┓┏┓┏━━┓%s  \e[1mFeatures\e[0m\n' "$C_ACCENT" "$C_OFF"
+    printf '  %s┗━━┛┗┛┗━━┛%s  \e[2mthe optional parts of this desktop\e[0m\n\n' "$C_ACCENT" "$C_OFF"
     if ((first)); then
         printf '  Pick the parts of this desktop you want. You can change this later\n'
         printf '  with \e[1mrack features\e[0m.\n\n'

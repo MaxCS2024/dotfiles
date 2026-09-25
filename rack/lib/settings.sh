@@ -16,6 +16,7 @@
 # rack/schema.json with it.
 
 rig::load log check
+rack::load ui
 
 RACK_MODULE_SUMMARY[settings]="inspect the shell's schema and live settings"
 RACK_MODULE_ACTIONS[settings]="list get schema path"
@@ -159,6 +160,11 @@ rack::settings::list() {
         return 0
     fi
 
+    if rack::ui::rich; then
+        rack::settings::__rich_list "$s" "$live" "$path"
+        return
+    fi
+
     local key value_json suffix
     while IFS= read -r key; do
         if jq -e --arg k "$key" 'has($k)' <<<"$live" >/dev/null; then
@@ -183,6 +189,53 @@ rack::settings::list() {
             printf '  %-22s %s\n' "$key" "$(jq -c --arg k "$key" '.[$k]' <<<"$live")"
         done <<<"$unknown"
     }
+}
+
+# The list on a terminal, grouped under the pane each setting lives in (the
+# schema's `pane`), a changed value in the accent and a default muted. Plain,
+# it is the one line per key that scripts read.
+rack::settings::__rich_list() {
+    local s=$1 live=$2 path=$3 pane key value is_default n=0 changed=0 last=""
+    local RACK_UI_NAME_WIDTH=24
+    local -a rows
+    # A colour is stored as Qt's whole colour object; on a terminal it reads
+    # as the #rrggbb it is.
+    mapfile -t rows < <(jq -r --argjson live "$live" '
+        def show: if type == "object" and has("r") and has("g") and has("b")
+            then "#" + ([.r, .g, .b] | map((. * 255 | round) as $n
+                | "0123456789abcdef"[($n / 16 | floor):($n / 16 | floor) + 1]
+                + "0123456789abcdef"[($n % 16):($n % 16) + 1]) | join(""))
+            else tojson end;
+        .settings | to_entries | sort_by(.value.pane, .key)[] | .key as $k |
+        [.value.pane, $k,
+         (if ($live | has($k)) then ($live[$k] | show) else (.value.default | show) end),
+         (if ($live | has($k)) then "0" else "1" end)] | @tsv' "$s")
+    for key in "${rows[@]}"; do
+        n=$((n + 1))
+        [[ ${key##*$'\t'} == 0 ]] && changed=$((changed + 1))
+    done
+    rack::ui::header "Settings" "$(rack::ui::plural "$n" setting) · $changed saved by the shell, $((n - changed)) at their default"
+    local row
+    for row in "${rows[@]}"; do
+        IFS=$'\t' read -r pane key value is_default <<<"$row"
+        [[ $pane != "$last" ]] && rack::ui::rule "" "${pane^}"
+        last=$pane
+        if ((is_default)); then
+            rack::ui::row skip "$key" "$value" "default"
+        else
+            rack::ui::row info "$key" "$value"
+        fi
+    done
+    local unknown
+    unknown=$(jq -r --argjson schema "$(cat "$s")" '
+        keys[] as $k | select($schema.settings | has($k) | not) | $k' <<<"$live")
+    if [[ -n $unknown ]]; then
+        rack::ui::rule "" "Not in the schema" "written by a newer shell?"
+        while IFS= read -r key; do
+            rack::ui::row warn "$key" "$(jq -c --arg k "$key" '.[$k]' <<<"$live")"
+        done <<<"$unknown"
+    fi
+    return 0
 }
 
 rack::settings::get() {

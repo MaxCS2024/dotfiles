@@ -6,6 +6,7 @@
 # Ported from bin/orbit-clean.
 
 rig::load log check proc
+rack::load ui
 
 RACK_MODULE_SUMMARY[clean]="reclaim disk from caches, orphans and journals"
 RACK_MODULE_ACTIONS[clean]="run"
@@ -23,8 +24,17 @@ rack::clean::__say() {
     if ((${_json:-0})); then printf '%s\n' "$*" >&2; else printf '%s\n' "$*"; fi
 }
 
+# step <plain heading> <title> — "cache:" plain, a numbered rule on a
+# terminal. --json keeps its human output on stderr and plain.
 rack::clean::__step() {
-    if ((${_json:-0})); then printf '\n%s\n' "$*" >&2; else printf '\n%s\n' "$*"; fi
+    _step_n=$((_step_n + 1))
+    if ((${_json:-0})); then
+        printf '\n%s\n' "$1" >&2
+    elif rack::ui::rich; then
+        rack::ui::rule "$_step_n/4" "$2"
+    else
+        printf '\n%s\n' "$1"
+    fi
 }
 
 rack::clean::__cache_mb() {
@@ -52,7 +62,7 @@ rack::clean::__journal_mb() {
 
 rack::clean::__cache() {
     local before after
-    rack::clean::__step "cache:"
+    rack::clean::__step "cache:" "Package cache"
 
     if ! rig::check::has paccache; then
         rack::clean::__say "  paccache not found (install pacman-contrib) — skipped"
@@ -82,7 +92,7 @@ rack::clean::__cache() {
 rack::clean::__orphans() {
     local orphans count
     local -a pkgs
-    rack::clean::__step "orphans:"
+    rack::clean::__step "orphans:" "Orphans"
 
     orphans=$(pacman -Qtdq 2>/dev/null) || orphans=""
     if [[ -z $orphans ]]; then
@@ -114,7 +124,7 @@ rack::clean::__orphans() {
 }
 
 rack::clean::__flatpak() {
-    rack::clean::__step "flatpak:"
+    rack::clean::__step "flatpak:" "Unused flatpaks"
     if ! rig::check::has flatpak; then
         rack::clean::__say "  not installed — skipped"
         return 0
@@ -133,7 +143,7 @@ rack::clean::__flatpak() {
 
 rack::clean::__journal() {
     local before after
-    rack::clean::__step "journal:"
+    rack::clean::__step "journal:" "Journal"
     before=$(rack::clean::__journal_mb)
     rack::clean::__say "  currently ${before}MB"
 
@@ -158,7 +168,8 @@ rack::clean::__journal() {
 
 rack::clean::run() {
     local _dry=0 _json=0
-    local _freed_cache=0 _freed_journal=0 _removed_orphans=0
+    local _freed_cache=0 _freed_journal=0 _removed_orphans=0 _step_n=0
+    local started=$SECONDS
 
     while (($#)); do
         case "$1" in
@@ -187,7 +198,12 @@ rack::clean::run() {
     # own, but the steps branch on _dry well before they ever ask, so the two
     # are kept in step explicitly rather than by coincidence.
     ((_dry)) && RIG_DRY_RUN=1
-    ((_dry)) && rack::clean::__say "dry run — nothing will be removed"
+    if ((!_json)) && rack::ui::rich; then
+        rack::ui::header "Clean" "package cache, orphans, unused flatpaks, old journals$(
+            ((_dry)) && printf ' · dry run')"
+    else
+        ((_dry)) && rack::clean::__say "dry run — nothing will be removed"
+    fi
 
     rack::clean::__cache
     rack::clean::__orphans
@@ -201,6 +217,15 @@ rack::clean::run() {
             --argjson o "$_removed_orphans" \
             --argjson d "$_dry" \
             '{dry_run: ($d == 1), freed_mb: {cache: $c, journal: $j}, removed_orphans: $o}'
+    elif rack::ui::rich; then
+        local freed=$((_freed_cache + _freed_journal)) parts=""
+        ((_removed_orphans)) && parts="$(rack::ui::plural "$_removed_orphans" orphan) removed"
+        if ((_dry)); then
+            rack::ui::finish info "Dry run — nothing removed"
+        else
+            rack::ui::finish ok "Reclaimed ${freed}MB" \
+                "${parts:+$parts · }in $(rack::ui::duration $((SECONDS - started)))"
+        fi
     else
         printf '\nreclaimed %sMB\n' "$((_freed_cache + _freed_journal))"
     fi

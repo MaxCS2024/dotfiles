@@ -14,7 +14,7 @@
 # replaces. `doctor` is `rack diff`.
 
 rig::load log check link
-rack::load manifest
+rack::load manifest ui
 
 RACK_MODULE_SUMMARY[quickshell]="list the shell's configs"
 RACK_MODULE_ACTIONS[quickshell]="list"
@@ -37,12 +37,23 @@ rack::quickshell::list() {
     target=$(rack::quickshell::__target)
 
     local found=0
+    rack::ui::header "Quickshell" "the shell's configs in ${dir/#$HOME/\~}"
+    rack::ui::rich && printf '\n'
+    local RACK_UI_NAME_WIDTH=16
     for name in "$dir"/*/; do
         [[ -d $name ]] || continue
         name=$(basename "$name")
         found=1
         link="$target/$name"
-        if [[ -L $link && -e $link ]]; then
+        if rack::ui::rich; then
+            if [[ -L $link && -e $link ]]; then
+                rack::ui::row ok "$name" "linked" "$([[ $name == main ]] && printf 'daily driver')"
+            elif [[ -L $link ]]; then
+                rack::ui::row bad "$name" "broken symlink" "→ $(readlink "$link")"
+            else
+                rack::ui::row skip "$name" "not linked" "rack deploy quickshell/$name"
+            fi
+        elif [[ -L $link && -e $link ]]; then
             printf '  %-16s linked%s\n' "$name" \
                 "$([[ $name == main ]] && printf ' (daily driver)')"
         elif [[ -L $link ]]; then
@@ -52,6 +63,7 @@ rack::quickshell::list() {
         fi
     done
     ((found)) || printf '  no configs under %s\n' "$dir"
+    return 0
 }
 
 rack::quickshell::__default() { rack::quickshell::list "$@"; }

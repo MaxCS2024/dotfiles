@@ -107,7 +107,17 @@ rack::__load_all() {
 # ---------------------------------------------------------------- reflection
 
 rack::__version() {
-    rack::load manifest
+    rack::load manifest ui
+    if rack::ui::rich; then
+        rack::ui::header "rack $RACK_VERSION" "configuration: deploy, check, set up"
+        printf '\n'
+        local RACK_UI_NAME_WIDTH=9
+        rack::ui::row ok "modules" "${RACK_LIB_DIR/#$HOME/\~}"
+        rack::ui::row ok "manifest" "$(rack::manifest::path | sed "s|^$HOME|~|")"
+        rack::ui::row ok "dotfiles" "$(rack::manifest::dotfiles | sed "s|^$HOME|~|")"
+        rack::ui::row ok "rig" "$RIG_VERSION" "${RIG_EXE/#$HOME/\~}"
+        return 0
+    fi
     printf 'rack %s\n' "$RACK_VERSION"
     printf 'modules   %s\n' "$RACK_LIB_DIR"
     printf 'manifest  %s\n' "$(rack::manifest::path)"
@@ -118,16 +128,26 @@ rack::__version() {
 rack::__list() {
     local tier mod
     rack::__load_all
+    rack::ui::header "rack $RACK_VERSION" "configuration: deploy, check, set up"
     for tier in core general planned; do
         local -a in_tier=()
         for mod in "${!RACK_MODULE_SUMMARY[@]}"; do
             [[ ${RACK_MODULE_TIER[$mod]:-general} == "$tier" ]] && in_tier+=("$mod")
         done
         ((${#in_tier[@]})) || continue
-        printf '\n%s\n' "$tier"
+        if rack::ui::rich; then
+            rack::ui::rule "" "${tier^}"
+        else
+            printf '\n%s\n' "$tier"
+        fi
         while read -r mod; do
-            printf '  %-10s %s%s\n' "$mod" "${RACK_MODULE_SUMMARY[$mod]}" \
-                "$([[ ${RACK_MODULE_STATUS[$mod]:-} == planned ]] && echo '  (planned)')"
+            if rack::ui::rich; then
+                printf '    %-10s %s%s%s%s\n' "$mod" "$C_MUTED" "${RACK_MODULE_SUMMARY[$mod]}" \
+                    "$([[ ${RACK_MODULE_STATUS[$mod]:-} == planned ]] && echo '  (planned)')" "$C_OFF"
+            else
+                printf '  %-10s %s%s\n' "$mod" "${RACK_MODULE_SUMMARY[$mod]}" \
+                    "$([[ ${RACK_MODULE_STATUS[$mod]:-} == planned ]] && echo '  (planned)')"
+            fi
         done < <(printf '%s\n' "${in_tier[@]}" | sort)
     done
     printf '\n'
@@ -141,7 +161,11 @@ rack::__help() {
             echo "rack: no such module: $mod" >&2
             return "$RIG_EX_USAGE"
         }
-        printf '%s — %s\n' "$mod" "${RACK_MODULE_SUMMARY[$mod]:-no description}"
+        if rack::ui::rich; then
+            rack::ui::header "rack $mod" "${RACK_MODULE_SUMMARY[$mod]:-no description}"
+        else
+            printf '%s — %s\n' "$mod" "${RACK_MODULE_SUMMARY[$mod]:-no description}"
+        fi
         [[ ${RACK_MODULE_STATUS[$mod]:-} == planned ]] &&
             printf '\nPlanned, not implemented yet.\n'
         printf '\nactions: %s\n' "${RACK_MODULE_ACTIONS[$mod]:-none}"
@@ -152,9 +176,15 @@ rack::__help() {
         return 0
     fi
 
+    # On a terminal the name line is the header, and the module list below
+    # draws its own sections.
+    if rack::ui::rich; then
+        rack::ui::header "rack $RACK_VERSION" "configuration: deploy, check, set up"
+        printf '\n'
+    else
+        printf 'rack %s — configuration: deploy, check, set up\n\n' "$RACK_VERSION"
+    fi
     cat <<EOF
-rack $RACK_VERSION — configuration: deploy, check, set up
-
 usage
   rack <module> <action> [args...]
   rack deploy | rack diff | rack reload hypr    (shortcuts for the common ones)
@@ -169,6 +199,7 @@ env
   RACK_MANIFEST   path to manifest.conf
   RACK_DOTFILES   what the manifest's sources are relative to
   RIG_DRY_RUN=1   print what would happen, change nothing
+  RACK_UI=plain   the plain output even on a terminal (it is what pipes get)
 EOF
     rack::__list
 }
@@ -207,6 +238,7 @@ rack::__completion() {
 
 rack::main() {
     local mod action fn
+    rack::load ui
 
     (($# == 0)) && {
         rack::__help

@@ -40,31 +40,41 @@ rack::reload::run() {
     # whole command, rather than reloading the rest and exiting 0 (a process
     # substitution here used to drop select's status).
     entries=$(rack::manifest::select "${names[@]+"${names[@]}"}") || return $?
+    rack::manifest::header "Reload" "$(awk -F'\t' '$4 != ""' <<<"$entries")"
 
     while IFS=$'\t' read -r name source target reload; do
         [[ -n $name && -n $reload ]] || continue
         ran=$((ran + 1))
 
         if ((${RIG_DRY_RUN:-0})); then
-            printf '  %-12s would run: %s\n' "$name" "$reload"
+            rack::ui::item skip "$name" "would run: $reload" "would run" "$reload"
             continue
         fi
 
         if sh -c "$reload" >/dev/null 2>&1; then
-            printf '  %-12s reloaded\n' "$name"
+            rack::ui::item ok "$name" "reloaded"
         else
             # Not fatal: the usual cause is that the program is not running,
             # which is a perfectly ordinary state for a machine mid-session.
-            printf '  %-12s reload failed (not running?)\n' "$name"
+            rack::ui::item warn "$name" "reload failed (not running?)" "not reloaded" "not running?"
             failed=$((failed + 1))
         fi
     done <<<"$entries"
 
     ((ran)) || {
-        rig::log::info "nothing to reload"
+        rack::ui::finish info "nothing to reload"
         return 0
     }
-    ((failed)) && return "$RIG_EX_FAIL"
+    if ((failed)); then
+        rack::ui::rich && rack::ui::finish warn "Reloaded $((ran - failed)) of $ran" \
+            "a program that isn't running has nothing to reload"
+        return "$RIG_EX_FAIL"
+    fi
+    if ((${RIG_DRY_RUN:-0})); then
+        rack::ui::rich && rack::ui::finish info "Dry run — nothing reloaded"
+    else
+        rack::ui::rich && rack::ui::finish ok "Reloaded $ran"
+    fi
     return 0
 }
 

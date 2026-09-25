@@ -45,11 +45,30 @@ rack::deploy::__untouched() {
     return 0
 }
 
+# What an entry was before it was linked, in words, for the row's aside.
+rack::deploy::__was() {
+    case $1 in
+        absent) printf 'new' ;;
+        stale) printf 'was linked elsewhere' ;;
+        broken) printf 'was a dangling link' ;;
+        conflict) printf 'replaced what was there' ;;
+    esac
+}
+
+# An entry that could not be deployed: on a terminal a ✗ row with the
+# reason, plain the error line it always was.
+rack::deploy::__fail() {
+    if rack::ui::rich; then
+        rack::ui::row bad "$1" "$2" >&2
+    else
+        rig::log::error "$1: $2"
+    fi
+}
+
 # run [--force] [--adopt] [name...]
 rack::deploy::run() {
     local force=0 adopt=0
     local -a names=()
-
     while (($#)); do
         case $1 in
             --force) force=1 ;;
@@ -64,7 +83,7 @@ rack::deploy::run() {
         shift
     done
 
-    local name source target reload state moved why changed=0 failed=0
+    local name source target reload state moved why changed=0 failed=0 inplace=0 planned=0
     local stamp entries
     stamp=$(date +%Y%m%d-%H%M%S)
 
@@ -73,6 +92,7 @@ rack::deploy::run() {
     # (`rack deploy hyrp`) would log its error and then report "nothing to
     # do" with success.
     entries=$(rack::manifest::select "${names[@]}") || return $?
+    [[ -n $entries ]] && rack::manifest::header "Deploy" "$entries"
 
     while IFS=$'\t' read -r name source target reload; do
         [[ -n $name ]] || continue
@@ -80,7 +100,11 @@ rack::deploy::run() {
 
         case $state in
             ok)
-                printf '  %-12s ok\n' "$name"
+                # On a terminal an entry already in place is counted, not
+                # listed: among thirty of them the two that changed are
+                # what you are looking for.
+                inplace=$((inplace + 1))
+                rack::ui::rich || printf '  %-12s ok\n' "$name"
                 continue
                 ;;
 
@@ -90,19 +114,21 @@ rack::deploy::run() {
                 # machine that had configuration before it had a repo.
                 if ((adopt)); then
                     if [[ -e $source ]]; then
-                        rig::log::error "$name: cannot adopt, $source already exists in the repo"
+                        rack::deploy::__fail "$name" "cannot adopt, $source already exists in the repo"
                         failed=$((failed + 1))
                         continue
                     fi
                     if [[ ${RIG_DRY_RUN:-0} != 0 ]]; then
-                        printf '  %-12s would adopt %s\n' "$name" "${target/#$HOME/\~}"
+                        rack::ui::item skip "$name" "would adopt ${target/#$HOME/\~}" \
+                            "would adopt" "${target/#$HOME/\~}"
+                        planned=$((planned + 1))
                         continue
                     fi
                     rig::link::adopt "$target" "$source" || {
                         failed=$((failed + 1))
                         continue
                     }
-                    printf '  %-12s adopted\n' "$name"
+                    rack::ui::item ok "$name" "adopted" "adopted into the repo" "${target/#$HOME/\~}"
                     changed=$((changed + 1))
                     continue
                 fi
@@ -113,56 +139,99 @@ rack::deploy::run() {
                     # of its own, which for a manifest entry is almost
                     # never — so name the one that will actually work.
                     if [[ -e $source ]]; then
-                        rig::log::error "$name: ${target/#$HOME/\~} exists and is not ours (--force moves it aside)"
+                        rack::deploy::__fail "$name" "${target/#$HOME/\~} exists and is not ours (--force moves it aside)"
                     else
-                        rig::log::error "$name: ${target/#$HOME/\~} exists and is not ours (--adopt moves it into the repo)"
+                        rack::deploy::__fail "$name" "${target/#$HOME/\~} exists and is not ours (--adopt moves it into the repo)"
                     fi
                     failed=$((failed + 1))
                     continue
                 fi
                 if [[ ${RIG_DRY_RUN:-0} != 0 ]]; then
-                    printf '  %-12s would move aside%s and link\n' "$name" "$why"
+                    rack::ui::item skip "$name" "would move aside$why and link"
+                    planned=$((planned + 1))
                     continue
                 fi
                 moved=$(rack::deploy::__backup "$target" "$stamp") || {
-                    rig::log::error "$name: could not move ${target/#$HOME/\~} aside"
+                    rack::deploy::__fail "$name" "could not move ${target/#$HOME/\~} aside"
                     failed=$((failed + 1))
                     continue
                 }
-                printf '  %-12s moved aside%s to %s\n' "$name" "$why" "${moved/#$HOME/\~}"
+                rack::ui::item warn "$name" "moved aside$why to ${moved/#$HOME/\~}" \
+                    "moved aside$why" "${moved/#$HOME/\~}"
                 ;;
         esac
 
         if [[ ${RIG_DRY_RUN:-0} != 0 ]]; then
-            printf '  %-12s would link (%s)\n' "$name" "$state"
+            rack::ui::item skip "$name" "would link ($state)" "would link" "$(rack::deploy::__was "$state")"
+            planned=$((planned + 1))
             continue
         fi
 
         if rig::link::make "$source" "$target"; then
-            printf '  %-12s linked (%s)\n' "$name" "$state"
+            rack::ui::item ok "$name" "linked ($state)" "linked" "$(rack::deploy::__was "$state")"
             changed=$((changed + 1))
         else
+            rack::ui::rich && rack::ui::row bad "$name" "could not link" >&2
             failed=$((failed + 1))
         fi
     done <<<"$entries"
 
-    ((failed)) && {
-        rig::log::error "$failed entr(ies) could not be deployed"
+    if ! rack::ui::rich; then
+        ((failed)) && {
+            rig::log::error "$failed entr(ies) could not be deployed"
+            return "$RIG_EX_FAIL"
+        }
+        ((changed)) || rig::log::info "nothing to do"
+        return 0
+    fi
+
+    # Nothing listed above means everything was in place: say so as a row,
+    # rather than leave a gap under the header.
+    local rest=""
+    if ((changed + failed + planned == 0)); then
+        ((inplace)) && rack::ui::row ok "all $inplace" "already in place"
+    elif ((inplace)); then
+        rest="$inplace already in place"
+    fi
+    if ((failed)); then
+        rack::ui::finish bad "$(rack::ui::plural "$failed" entry entries) could not be deployed" "$rest"
         return "$RIG_EX_FAIL"
-    }
-    ((changed)) || rig::log::info "nothing to do"
+    elif [[ ${RIG_DRY_RUN:-0} != 0 ]]; then
+        rack::ui::finish info "Dry run — nothing changed" "$rest"
+    elif ((changed)); then
+        rack::ui::finish ok "Linked $changed" "$rest"
+    else
+        rack::ui::finish ok "Nothing to do"
+    fi
     return 0
 }
 
 # What deploy would say, without doing anything.
 rack::deploy::status() {
-    local name source target reload state entries
+    local name source target reload state entries linked=0 total=0
+    local -A level=([ok]=ok [absent]=skip [stale]=warn [broken]=bad [conflict]=warn)
+    local -A words=([ok]=linked [absent]="not deployed" [stale]="links elsewhere"
+        [broken]="dangling link" [conflict]="real file in the way")
     entries=$(rack::manifest::select "$@") || return $?
+    [[ -n $entries ]] && rack::manifest::header "Deploy status" "$entries"
     while IFS=$'\t' read -r name source target reload; do
         [[ -n $name ]] || continue
         state=$(rig::link::check "$source" "$target") || true
-        printf '  %-12s %-9s %s\n' "$name" "$state" "${target/#$HOME/\~}"
+        total=$((total + 1))
+        [[ $state == ok ]] && linked=$((linked + 1))
+        if rack::ui::rich; then
+            rack::ui::row "${level[$state]:-warn}" "$name" "${words[$state]:-$state}" "${target/#$HOME/\~}"
+        else
+            printf '  %-12s %-9s %s\n' "$name" "$state" "${target/#$HOME/\~}"
+        fi
     done <<<"$entries"
+
+    rack::ui::rich && ((total)) || return 0
+    if ((linked == total)); then
+        rack::ui::finish ok "All $total linked"
+    else
+        rack::ui::finish warn "$linked of $total linked" "rack deploy links the rest"
+    fi
 }
 
 # The one you need the moment you drop an app from the manifest.
@@ -170,23 +239,29 @@ rack::deploy::remove() {
     local name source target reload dotfiles entries removed=0
     dotfiles=$(rack::manifest::dotfiles)
     entries=$(rack::manifest::select "$@") || return $?
+    [[ -n $entries ]] && rack::manifest::header "Deploy remove" "$entries"
 
     while IFS=$'\t' read -r name source target reload; do
         [[ -n $name ]] || continue
         if ! rig::link::points_into "$target" "$dotfiles"; then
-            [[ -e $target ]] && printf '  %-12s left alone (not ours)\n' "$name"
+            [[ -e $target ]] && rack::ui::item skip "$name" "left alone (not ours)"
             continue
         fi
         if [[ ${RIG_DRY_RUN:-0} != 0 ]]; then
-            printf '  %-12s would unlink\n' "$name"
+            rack::ui::item skip "$name" "would unlink"
             continue
         fi
         rig::link::remove "$target" --into "$dotfiles" &&
-            printf '  %-12s unlinked\n' "$name"
+            rack::ui::item ok "$name" "unlinked" "unlinked" "${target/#$HOME/\~}"
         removed=$((removed + 1))
     done <<<"$entries"
 
-    ((removed)) || rig::log::info "nothing to remove"
+    if ((removed)); then
+        rack::ui::rich && rack::ui::finish ok "Unlinked $removed"
+    else
+        rack::ui::finish info "nothing to remove"
+    fi
+    return 0
 }
 
 # adopt <name...> — explicit form of the same move deploy --adopt makes.

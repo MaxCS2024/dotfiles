@@ -15,42 +15,55 @@ RACK_MODULE_TIER[diff]="core"
 # drift only ever means the link is wrong, or something real replaced it.
 # When it is a real file, showing the actual diff is the useful part.
 rack::diff::run() {
-    local name source target reload state entries drift=0
+    local name source target reload state entries drift=0 total=0
 
     # Selected up front, not read through a process substitution, which
     # drops select's status: `rack diff tol` would log the unknown name and
     # then say everything matches. deploy.sh has the same note.
     entries=$(rack::manifest::select "$@") || return $?
+    rack::manifest::header "Drift" "$entries"
 
+    # Plain, the second line of a conflict is indented under the text;
+    # on a terminal it is a note under the row.
+    local detail
     while IFS=$'\t' read -r name source target reload; do
         [[ -n $name ]] || continue
+        total=$((total + 1))
         state=$(rig::link::check "$source" "$target") || true
+        detail=""
 
         case $state in
             ok) continue ;;
 
             absent)
-                printf '  %-12s not deployed\n' "$name"
+                rack::ui::item skip "$name" "not deployed" "not deployed" "${target/#$HOME/\~}"
                 drift=$((drift + 1))
                 ;;
 
             stale)
-                printf '  %-12s links elsewhere: %s\n' "$name" \
-                    "$(rig::link::target "$target")"
+                rack::ui::item warn "$name" "links elsewhere: $(rig::link::target "$target")" \
+                    "links elsewhere" "$(rig::link::target "$target" | sed "s|^$HOME|~|")"
                 drift=$((drift + 1))
                 ;;
 
             broken)
-                printf '  %-12s dangling link\n' "$name"
+                rack::ui::item bad "$name" "dangling link" "dangling link" "${target/#$HOME/\~}"
                 drift=$((drift + 1))
                 ;;
 
             conflict)
-                printf '  %-12s real file, not a link\n' "$name"
                 if [[ -f $target && -f $source ]] && ! cmp -s -- "$target" "$source"; then
-                    printf '               content differs from the repo\n'
+                    detail="content differs from the repo"
                 elif [[ -d $target ]]; then
-                    printf '               a real directory is in the way\n'
+                    detail="a real directory is in the way"
+                fi
+                rack::ui::item warn "$name" "real file, not a link" "real file, not a link" "${target/#$HOME/\~}"
+                if [[ -n $detail ]]; then
+                    if rack::ui::rich; then
+                        rack::ui::note "$detail — rack diff show $name"
+                    else
+                        printf '               %s\n' "$detail"
+                    fi
                 fi
                 drift=$((drift + 1))
                 ;;
@@ -58,10 +71,20 @@ rack::diff::run() {
     done <<<"$entries"
 
     if ((drift)); then
-        rig::log::warn "$drift entr(ies) have drifted — rack deploy, or rack diff show <name>"
+        if rack::ui::rich; then
+            rack::ui::finish warn "$(rack::ui::plural "$drift" entry entries) drifted" \
+                "rack deploy, or rack diff show <name>"
+        else
+            rig::log::warn "$drift entr(ies) have drifted — rack deploy, or rack diff show <name>"
+        fi
         return "$RIG_EX_FAIL"
     fi
-    rig::log::success "everything matches the manifest"
+    if rack::ui::rich; then
+        rack::ui::row ok "all $total" "match the repo"
+        rack::ui::finish ok "Nothing has drifted"
+    else
+        rig::log::success "everything matches the manifest"
+    fi
 }
 
 # show <name> — the actual content diff, when there is one to show.

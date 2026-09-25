@@ -10,7 +10,7 @@
 # a special case in the script.
 
 rig::load log check proc
-rack::load manifest deploy reload
+rack::load manifest deploy reload ui
 
 RACK_MODULE_SUMMARY[sync]="git pull, then deploy what changed"
 RACK_MODULE_ACTIONS[sync]="run"
@@ -30,6 +30,16 @@ rack::sync::__notify() {
     fi
 }
 
+# One step's heading: a numbered rule on a terminal, the old line plain.
+rack::sync::__step() {
+    if rack::ui::rich; then
+        rack::ui::rule "$1/3" "$2"
+    else
+        (($1 > 1)) && printf '\n'
+        printf '%s\n' "$3"
+    fi
+}
+
 rack::sync::run() {
     local dotfiles
     dotfiles=$(rack::manifest::dotfiles) || return $?
@@ -45,19 +55,46 @@ rack::sync::run() {
         return "$RIG_EX_FAIL"
     }
 
-    printf 'pulling %s...\n' "$dotfiles"
-    git -C "$dotfiles" pull --ff-only || {
-        rig::log::error "pull failed — nothing was deployed"
+    # Plain, the three steps are the one-line announcements they always were;
+    # on a terminal, numbered rules, with deploy and reload drawing their own
+    # rows under them (the header is printed once, here).
+    local started=$SECONDS before after
+    before=$(git -C "$dotfiles" rev-parse --short HEAD 2>/dev/null || true)
+    rack::ui::header "Sync" "${dotfiles/#$HOME/\~} · $(git -C "$dotfiles" rev-parse --abbrev-ref HEAD 2>/dev/null) at $before"
+
+    rack::sync::__step 1 "Pull" "pulling $dotfiles..."
+    # On a terminal the row under this says what came in, so git's own
+    # diffstat is left out; plain, git talks as it always did.
+    local -a quiet=()
+    rack::ui::rich && quiet=(--quiet)
+    git -C "$dotfiles" pull --ff-only "${quiet[@]}" || {
+        rack::ui::finish bad "pull failed — nothing was deployed"
         return "$RIG_EX_FAIL"
     }
+    after=$(git -C "$dotfiles" rev-parse --short HEAD 2>/dev/null || true)
+    if rack::ui::rich; then
+        if [[ $before == "$after" ]]; then
+            rack::ui::row skip "git" "already up to date"
+        else
+            rack::ui::row ok "git" "$before → $after" \
+                "$(rack::ui::plural "$(git -C "$dotfiles" rev-list --count "$before..$after")" commit)"
+        fi
+    fi
 
-    printf '\ndeploying...\n'
+    local RACK_UI_NESTED=1
+    rack::sync::__step 2 "Deploy" "deploying..."
     rack::deploy::run "$@" || return $?
 
-    printf '\nreloading...\n'
+    rack::sync::__step 3 "Reload" "reloading..."
     rack::reload::run || true
+    RACK_UI_NESTED=0
 
-    rig::log::success "synced"
+    if rack::ui::rich; then
+        rack::ui::rule "" "Done"
+        rack::ui::finish ok "Synced" "in $(rack::ui::duration $((SECONDS - started)))"
+    else
+        rig::log::success "synced"
+    fi
     rack::sync::__notify "Dotfiles synced" "pulled and deployed $dotfiles" 󰓦
 }
 

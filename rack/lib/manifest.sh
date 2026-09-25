@@ -5,6 +5,7 @@
 # adding an application is adding a line.
 
 rig::load log path
+rack::load ui
 
 RACK_MODULE_SUMMARY[manifest]="the table of app, target and reload command"
 RACK_MODULE_ACTIONS[manifest]="show names get check path dotfiles"
@@ -114,6 +115,22 @@ rack::manifest::select() {
         }
     done
     return "$status"
+}
+
+# The header every manifest command opens with on a terminal: its name, how
+# many entries, from where, and whether this is a dry run. Sizes the name
+# column to the longest entry name (autostart/nm-applet.desktop), up to a
+# point, so the rows under it line up.
+rack::manifest::header() {
+    local title=$1 entries=$2 n dotfiles
+    rack::ui::rich && [[ -n $entries ]] || return 0
+    n=$(grep -c . <<<"$entries" || true)
+    dotfiles=$(rack::manifest::dotfiles)
+    RACK_UI_NAME_WIDTH=$(cut -f1 <<<"$entries" |
+        awk '{ if (length > w) w = length } END { print (w > 28 ? 28 : w < 10 ? 10 : w) }')
+    rack::ui::header "$title" "$(rack::ui::plural "$n" entry entries) from ${dotfiles/#$HOME/\~}$(
+        [[ ${RIG_DRY_RUN:-0} != 0 ]] && printf ' · dry run')"
+    printf '\n'
 }
 
 rack::manifest::show() {

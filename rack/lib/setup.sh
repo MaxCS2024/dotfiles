@@ -8,7 +8,7 @@
 # renamed.
 
 rig::load log check
-rack::load features
+rack::load features ui
 
 RACK_MODULE_SUMMARY[setup]="check that every dependency is installed"
 RACK_MODULE_ACTIONS[setup]="check json"
@@ -154,7 +154,81 @@ rack::setup::json() {
     printf ']\n'
 }
 
+# The same check on a terminal. Missing and switched-off entries get a row
+# each; what is installed is one row per group with the names wrapped under
+# it — forty ✓ rows would bury the one ✗ this exists to show.
+#
+# rich_group <array> <level-if-missing> <title> [note]
+rack::setup::__rich_group() {
+    local -n group=$1
+    local missing_level=$2 entry name bin feature problems=0
+    local -a found=()
+    rack::ui::rule "" "$3" "${4:-}"
+    for entry in "${group[@]}"; do
+        name=${entry%%:*}
+        bin=${entry#*:}
+        if rig::check::has "$bin"; then
+            found+=("$name")
+        elif feature=$(rack::features::off_owner "$bin"); then
+            rack::ui::row skip "$name" "not wanted" "$feature is off"
+        else
+            rack::ui::row "$missing_level" "$name" \
+                "$([[ $missing_level == skip ]] && echo "not installed" || echo missing)" "$bin not on PATH"
+            [[ $missing_level == bad ]] && problems=1
+            _optional_missing=$((_optional_missing + 1))
+        fi
+    done
+    if ((${#found[@]})); then
+        rack::ui::row ok "$(rack::ui::plural "${#found[@]}" "installed" "installed")" ""
+        local line="" item
+        for item in "${found[@]}"; do
+            if ((${#line} + ${#item} + 3 > RACK_UI_WIDTH - 6)); then
+                rack::ui::note "  $line"
+                line=""
+            fi
+            line+="${line:+ · }$item"
+        done
+        [[ -n $line ]] && rack::ui::note "  $line"
+    fi
+    return $problems
+}
+
+rack::setup::__rich_check() {
+    local problems=0 _optional_missing=0 required_missing
+    RACK_UI_NAME_WIDTH=16
+    rack::ui::header "Setup check" "what this desktop depends on · $(cat /etc/hostname 2>/dev/null || uname -n)"
+
+    rack::setup::__rich_group RACK_SETUP_REQUIRED bad "Required" || problems=1
+    rack::setup::__rich_group RACK_SETUP_OWN bad "rack and relay" || problems=1
+    required_missing=$_optional_missing
+    _optional_missing=0
+    rack::setup::__rich_group RACK_SETUP_DEFAULT_CONFIG warn "Default config" "swap the setting if missing" || true
+    rack::setup::__rich_group RACK_SETUP_OPTIONAL skip "Optional" "degrades gracefully" || true
+
+    rack::ui::rule "" "Fonts"
+    if rack::setup::__font_found; then
+        rack::ui::row ok "$RACK_SETUP_NERD_FONT" ""
+    else
+        rack::ui::row bad "$RACK_SETUP_NERD_FONT" "missing"
+        problems=1
+        required_missing=$((required_missing + 1))
+    fi
+
+    local aside=""
+    ((_optional_missing)) && aside="$_optional_missing optional not installed"
+    if ((problems)); then
+        rack::ui::finish bad "$(rack::ui::plural "$required_missing" "required dependency" "required dependencies") missing" "$aside"
+    else
+        rack::ui::finish ok "Everything required is installed" "$aside"
+    fi
+    return $problems
+}
+
 rack::setup::check() {
+    rack::ui::rich && {
+        rack::setup::__rich_check
+        return
+    }
     local problems=0
 
     printf 'required:\n'
