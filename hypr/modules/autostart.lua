@@ -4,6 +4,7 @@
 
 -- See https://wiki.hypr.land/Configuring/Basics/Autostart/
 local features = require("modules.features")
+local defaults = require("modules.defaults")
 
 hl.on("hyprland.start", function () 
 	-- "main" is the stable quickshell config (quickshell/main/shell.qml).
@@ -52,5 +53,13 @@ hl.on("hyprland.start", function ()
 	-- this from starting it again at the next login.
 	if features.on("dictation") then
 		hl.exec_cmd("systemctl --user start voxtype.service")
+	end
+	-- The browser, started with no window so SUPER+B only has to open one.
+	-- Measured 2026-09-25 on the T480s in power-saver: a cold Brave window
+	-- took ~2.8s, the first one from a preloaded Brave ~1.5s and later ones
+	-- ~0.9s. It costs a few hundred MB of RAM for the whole session.
+	local preload = defaults.preloadArgv()
+	if preload ~= nil then
+		hl.exec_cmd(table.concat(preload, " "))
 	end
 end)

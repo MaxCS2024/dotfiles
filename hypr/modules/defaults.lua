@@ -113,18 +113,23 @@ local ROLES = {
 		-- page as its own window with no browser chrome. The firefox family
 		-- has no equivalent left.
 		--
+		-- `preload`: takes --no-startup-window, which starts the browser
+		-- with no window and keeps it running after its last window closes,
+		-- so the autostart can have it up before the first SUPER+B. Also
+		-- chromium-only; firefox quits when it has no window.
+		--
 		-- --password-store=basic keeps brave off a keyring that nothing in
 		-- this session unlocks.
 		candidates = {
 			{ name = "brave", label = "Brave", bin = "brave", flatpak = "com.brave.Browser",
 				args = { "--password-store=basic" },
-				desktop = { "brave-browser.desktop", "brave.desktop" }, appMode = true },
+				desktop = { "brave-browser.desktop", "brave.desktop" }, appMode = true, preload = true },
 			{ name = "firefox", label = "Firefox", bin = "firefox", flatpak = "org.mozilla.firefox",
 				desktop = { "firefox.desktop" } },
 			{ name = "chromium", label = "Chromium", bin = "chromium", flatpak = "org.chromium.Chromium",
-				desktop = { "chromium.desktop" }, appMode = true },
+				desktop = { "chromium.desktop" }, appMode = true, preload = true },
 			{ name = "chrome", label = "Google Chrome", bin = "google-chrome-stable", flatpak = "com.google.Chrome",
-				desktop = { "google-chrome.desktop" }, appMode = true },
+				desktop = { "google-chrome.desktop" }, appMode = true, preload = true },
 			{ name = "zen", label = "Zen", bin = "zen-browser", flatpak = "app.zen_browser.zen",
 				desktop = { "zen.desktop", "app.zen_browser.zen.desktop" } },
 		},
@@ -480,6 +485,19 @@ function M.webAppArgv(url)
 	end
 
 	return append(launcher(), "xdg-open", url)
+end
+
+-- Start the default browser with no window, or nil when it cannot be
+-- preloaded. A later launch hands its window to this process, so the
+-- argv must be the browser's own, flags included: the first process's
+-- --password-store is the one every window gets.
+function M.preloadArgv()
+	local found = M.describe("browser")
+	if found.source == "custom" or not found.installed or not found.app.preload then
+		return nil
+	end
+
+	return append(copy(found.argv), "--no-startup-window")
 end
 
 -- Run a role's default as it is.
