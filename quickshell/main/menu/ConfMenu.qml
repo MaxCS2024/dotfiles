@@ -224,7 +224,7 @@ ShellSurface {
                 // when only one of them is what you meant.
                 { label: "Update", icon: "", children: [
                     { label: "Update all", icon: "", hint: "rack update",
-                      run: () => Terminal.rack("update") },
+                      run: () => Terminal.rack("update", { title: "System update" }) },
                     { label: "Pacman", icon: "", hint: "pacman -Syu",
                       requires: "sudo",
                       run: () => Terminal.run("sudo pacman -Syu") },
