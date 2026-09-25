@@ -150,7 +150,8 @@ QtObject {
     // resolved the options a second time beside hypr/modules/vars.lua,
     // until both moved behind relay (docs/adr/0001).
     //
-    // Features › is the fourth: `rack features list`, below.
+    // Features › is the fourth: `rack features list`, below. System ›
+    // Patches is the fifth: `rack patches list`.
     function refresh() {
         if (actions.probeNames.length > 0) {
             actions.probeProc.running = false
@@ -161,6 +162,8 @@ QtObject {
         Defaults.refresh()
         actions.featuresProc.running = false
         actions.featuresProc.running = true
+        actions.patchesProc.running = false
+        actions.patchesProc.running = true
     }
 
     // ── Optional features ────────────────────────────────
@@ -195,6 +198,30 @@ QtObject {
         // Only a different answer is published, as with `tools`: the
         // whole tree is bound to this.
         if (JSON.stringify(found) !== JSON.stringify(actions.features)) actions.features = found
+    }
+
+    // ── Hardware patches ─────────────────────────────────
+    // Every udev rule in udev/, as `rack patches list` prints them: its
+    // name, whether the copy in /etc matches the repo's ("installed",
+    // "out of date", "not installed"), and its label. Null until
+    // answered, empty when rack is missing or failing, like `features`.
+    property var patches: null
+
+    readonly property Process patchesProc: Process {
+        command: ["sh", "-c", 'PATH="$HOME/.local/bin:$PATH" exec rack patches list']
+        stdout: StdioCollector {
+            id: patchesOut
+            onStreamFinished: actions._parsePatches(patchesOut.text)
+        }
+    }
+
+    function _parsePatches(text) {
+        const found = []
+        for (const line of text.split("\n")) {
+            const m = line.match(/^\s*(\S+)\s+(installed|out of date|not installed)\s+(.+?)\s*$/)
+            if (m) found.push({ name: m[1], state: m[2], label: m[3] })
+        }
+        if (JSON.stringify(found) !== JSON.stringify(actions.patches)) actions.patches = found
     }
 
     // `rack features on|off` for a feature that is already installed:

@@ -1,3 +1,7 @@
+# Patch: Apple SuperDrive
+# Needs: sg3_utils
+# Trigger: --subsystem-match=block --sysname-match=sr*
+#
 # Apple USB SuperDrive (05ac:1500) rejects every disc until the host sends
 # Apple's vendor wake-up command; macOS does it, Linux doesn't. Send it
 # whenever the drive appears (plug-in, boot, or a USB reset).

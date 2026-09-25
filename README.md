@@ -14,8 +14,8 @@ matugen/          turns a wallpaper into the palette the shell writes out
 gtk-3.0/ gtk-4.0/ GTK theming, and the icon theme Qt reads through gtk3
 foot/             terminal, one of the default terminal's candidates
 kitty/ ghostty/   terminals, colours only — the same palette foot gets
-udev/             hardware fixes, one rule per device; udev/install.sh
-                  copies them into /etc on a machine that has the device
+udev/             hardware fixes, one rule per device; `rack patches`
+                  (or Conf › System › Patches) copies one into /etc
 bin/ btop/ nvim/ starship/ zsh/
 ```
 

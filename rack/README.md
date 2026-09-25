@@ -54,6 +54,7 @@ hex colour demonstrates.
 | `reload`   | run the reload commands on their own |
 | `edit`     | open the repo copy, validate on exit |
 | `features` | pick the optional parts of the desktop; `on`, `off`, `remove` |
+| `patches`  | hardware fixes, one udev rule per device; `list`, `install`, `remove` |
 
 Most modules have one obvious verb, so `rack deploy` means `rack deploy run`
 and `rack reload hypr` means `rack reload run hypr`.

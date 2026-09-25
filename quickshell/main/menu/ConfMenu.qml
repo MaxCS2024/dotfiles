@@ -256,7 +256,12 @@ ShellSurface {
                 // machine set up": every dependency the shell and the
                 // tooling need, and which of them are missing.
                 { label: "Check setup", icon: "", hint: "rack setup",
-                  run: () => Terminal.rack("setup") }
+                  run: () => Terminal.rack("setup") },
+                // Fixes for one piece of hardware each (udev/), which a
+                // machine without the device doesn't need — see
+                // patchRows() below.
+                { label: "Patches", icon: "\u{F05B7}", hint: "hardware fixes",
+                  children: panel.patchRows() }
             ]},
 
             // The two wikis beside the keys: nearly everything this
@@ -352,6 +357,29 @@ ShellSurface {
                     : actions.setFeature(f.name, f.label, on ? "off" : "on")
             }
         })
+    }
+
+    // ── System › Patches ─────────────────────────────────
+    // One row per rule in udev/, read through `rack patches list`
+    // (MenuActions), so a rule added there shows up here with nothing
+    // else to change. Every patch is listed whether or not the device is
+    // plugged in: a drive comes and goes, and the rule is what makes it
+    // work the first time it does.
+    //
+    // Picking a row installs it, or takes it out once it is installed.
+    // Both open a terminal: they need sudo, and remove asks before it
+    // deletes anything. "out of date" is a rule edited in the repo since
+    // it was copied into /etc; picking it copies it again.
+    function patchRows() {
+        if (actions.patches === null) return [{ label: "Reading…", icon: "" }]
+        if (actions.patches.length === 0)
+            return [{ label: "No patches found", icon: "", hint: "rack patches list" }]
+        return actions.patches.map(p => ({
+            label: p.label, icon: "\u{F05B7}", hint: p.state,
+            installed: p.state === "installed",
+            run: () => Terminal.rack("patches " + (p.state === "installed" ? "remove " : "install ")
+                + p.name, { title: p.label })
+        }))
     }
 
     // ── Learn › Keybindings ──────────────────────────────
