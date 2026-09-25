@@ -47,9 +47,16 @@ Singleton {
         property double lastReloadAt: 0
     }
 
+    // --acquired: names someone actually owns. Without it busctl also
+    // lists *activatable* names — installed D-Bus services that aren't
+    // running — and playerctl ships one (org.mpris.MediaPlayer2.playerctld).
+    // On a machine with playerctl installed and nothing playing, that
+    // counted as one player against Mpris's (correct) zero: a mismatch no
+    // reload can fix, so the shell reloaded once per cooldown, forever
+    // (found 2026-09-25 on a fresh install).
     Process {
         id: busList
-        command: ["busctl", "--user", "list", "--no-legend"]
+        command: ["busctl", "--user", "list", "--no-legend", "--acquired"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const live = text.split("\n")
