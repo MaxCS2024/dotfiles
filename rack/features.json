@@ -65,6 +65,24 @@
 			"teardown": [["fingerprint/install.sh", "--remove"]],
 			"data": []
 		},
+		"secureboot": {
+			"label": "Secure Boot",
+			"summary": "Secure Boot with this machine's own keys, and Microsoft's alongside: the firmware boots a signed kernel image (a UKI) directly, and every kernel update is signed as it is built. It stops twice for a step in the BIOS, and carries on when you pick it again. It can't be removed from here: switching it off is a BIOS setting.",
+			"recommended": false,
+			"switch": false,
+			"size": "a few MB, and a kernel image on the EFI partition",
+			"provides": ["sbctl"],
+			"probe": ["sh", "-c", "sbctl status --json 2>/dev/null | jq -e '.installed and .secure_boot' >/dev/null"],
+			"packages": {
+				"repo": ["sbctl", "efibootmgr"],
+				"aur": []
+			},
+			"setup": [["secureboot/install.sh"]],
+			"units": [],
+			"teardown": [],
+			"data": [],
+			"removal": "Uninstalling sbctl with Secure Boot on would leave the next kernel update unsigned, and the machine unable to boot. To stop using Secure Boot, switch it off in the BIOS (Security › Secure Boot on a ThinkPad). The kernel image still boots without it, and sbctl can stay."
+		},
 		"weather": {
 			"label": "Weather",
 			"summary": "The forecast in the bar, and a rail with the week behind it. Needs your coordinates in quickshell/main/.env (see DEPENDENCIES.md).",
