@@ -23,6 +23,12 @@
 # exits 0 taking the place of `packages` (fingerprint: which driver depends
 # on the reader).
 #
+# Some setup has a step only a person can take in the middle (Secure Boot:
+# the BIOS). A setup command that exits 75 has stopped at one: it has said
+# what to do, `on` reports the feature as not finished rather than failed,
+# and running `on` again carries on. A feature whose `removal` holds text
+# can't be removed from here at all; remove prints that text instead.
+#
 # What is on is one small file, features.conf, which the shell
 # (quickshell/main/services/Features.qml) and Hyprland
 # (hypr/modules/features.lua) both read. A feature with no line in it is on:
@@ -34,6 +40,10 @@
 
 rig::load log check proc
 rack::load ui
+
+# What a setup command exits with when it stopped at a step a person has to
+# take (see the header). EX_TEMPFAIL from sysexits.h.
+declare -gr RACK_FEATURES_PENDING=75
 
 RACK_MODULE_SUMMARY[features]="pick which optional features this desktop has"
 RACK_MODULE_ACTIONS[features]="pick list on off remove path"
@@ -169,6 +179,8 @@ rack::features::__run_each() {
         [[ -n $cmd ]] || continue
         mapfile -t argv < <(jq -r '.[]' <<<"$cmd")
         (cd -- "$RACK_ROOT/.." && rig::proc::run "${argv[@]}") || {
+            local status=$?
+            ((status == RACK_FEATURES_PENDING)) && return "$status"
             rig::log::error "$name: '${argv[*]}' failed"
             return "$RIG_EX_FAIL"
         }
@@ -287,6 +299,14 @@ rack::features::on() {
                 rig::log::info "installing $name"
             fi
             rack::features::__install "$name" || {
+                if (($? == RACK_FEATURES_PENDING)); then
+                    if rack::ui::rich; then
+                        rack::ui::finish info "${label:-$name} is not finished" "rack features on $name again after the step above"
+                    else
+                        rig::log::info "$name is not finished: run 'rack features on $name' again after the step above"
+                    fi
+                    continue
+                fi
                 rack::ui::rich && rack::ui::finish bad "${label:-$name} did not install" "see above"
                 return "$RIG_EX_FAIL"
             }
@@ -346,6 +366,7 @@ rack::features::remove() {
     local -a switchable=()
     for name in "$@"; do
         rack::features::__known "$name" || return
+        rack::features::__refuse_removal "$name" && return "$RIG_EX_USAGE"
         rack::features::__switchable "$name" && switchable+=("$name")
     done
     rack::features::__header "removing" "$@"
@@ -356,6 +377,16 @@ rack::features::remove() {
     for name in "$@"; do
         rack::features::__purge "$name" || return
     done
+}
+
+# Prints why a feature with `removal` text can't be removed, and says so
+# with its status; one without says nothing and fails.
+rack::features::__refuse_removal() {
+    local why
+    why=$(rack::features::__field "$1" removal)
+    [[ -n $why ]] || return 1
+    rig::log::error "$(rack::features::__field "$1" label) can't be removed from here"
+    printf '%s\n' "$why" | fold -s -w 76 >&2
 }
 
 # Shows exactly what would go — each package, each directory and its size —
@@ -598,6 +629,7 @@ rack::features::__apply() {
         rack::features::__purge "$name" || return
     done
     for name in "${uninstall[@]}"; do
+        rack::features::__refuse_removal "$name" && continue
         rack::features::__purge "$name" || return
     done
 }

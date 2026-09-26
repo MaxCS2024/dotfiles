@@ -78,6 +78,7 @@ setup      commands run once, after its packages are installed
 units      systemd user units started with it and stopped without it
 teardown   commands run before its packages are uninstalled
 data       paths under ~ that a remove deletes
+removal    text printed instead of removing it (secureboot can't be)
 ```
 
 ```bash
@@ -87,6 +88,10 @@ rack features on dictation    # install what is missing, set it up, start it
 rack features off dictation   # stop it; keep it installed
 rack features remove dictation   # off, then uninstall and delete its data
 ```
+
+A setup command that exits 75 has stopped at a step only a person can take
+(Secure Boot stops twice for the BIOS). It says what to do, `on` reports the
+feature as not finished rather than failed, and `on` again carries on.
 
 Off and remove are two steps on purpose: off is instant to undo, remove
 shows every package and directory it would delete, with sizes, and asks

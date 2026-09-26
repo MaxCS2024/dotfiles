@@ -571,6 +571,60 @@ test_before_runs_ahead_of_install() {
 	ok
 }
 
+# ---- pending setup and refused removal -----------------------------------------
+#
+# boot is secureboot's shape: setup stops at a step only a person can take
+# (the BIOS) until a file says it has been taken, and it can't be removed.
+
+boot_registry() {
+	cat >"$RACK_FEATURES" <<-'EOF'
+		{"version": 1, "features": {
+		  "boot": {"label": "Boot", "summary": "x", "recommended": false, "switch": false,
+		    "provides": ["sh"], "probe": ["sh", "-c", "test -e \"$STUB/done\""],
+		    "packages": {"repo": ["zzboot"], "aur": []},
+		    "setup": [["sh", "-c", "test -e \"$STUB/bios\" && touch \"$STUB/done\" || { echo 'go to the BIOS'; exit 75; }"]],
+		    "removal": "Turn it off in the BIOS instead."}
+		}}
+	EOF
+}
+
+test_pending_setup_is_not_a_failure() {
+	it "setup exiting 75 reads as not finished, and on carries on the next time"
+	boot_registry
+	run features on boot
+	assert_eq "status" "$STATUS" 0 || return
+	assert_has "said what to do" "$OUT" "go to the BIOS" || return
+	assert_has "not finished" "$OUT$ERR" "boot is not finished" || return
+	assert_lacks "not failed" "$OUT$ERR" "failed" || return
+	touch "$TMP/bios"
+	run features on boot
+	assert_eq "second status" "$STATUS" 0 || return
+	assert_has "finished" "$OUT$ERR" "boot is installed" || return
+	ok
+}
+
+test_removal_refused() {
+	it "a feature with removal text refuses remove, and the picker's untick, and touches nothing"
+	boot_registry
+	touch "$TMP/bios" "$TMP/pkgs/zzboot"
+	"$RACK" features on boot >/dev/null 2>&1 </dev/null
+	: >"$TMP/calls"
+	RIG_YES=1 run features remove boot
+	assert_eq "status" "$STATUS" 2 || return
+	assert_has "why" "$ERR" "Turn it off in the BIOS instead." || return
+	assert_lacks "nothing removed" "$CALLS" "-Rns" || return
+	OUT=$(
+		source "$RACK"
+		set -euo pipefail
+		rack::load features
+		local -a names=(boot) ticks=(0)
+		RIG_YES=1 rack::features::__apply 0 names ticks 2>"$TMP/err"
+	)
+	assert_has "picker says why" "$(cat "$TMP/err")" "Turn it off in the BIOS instead." || return
+	assert_lacks "picker removed nothing" "$(cat "$TMP/calls")" "-Rns" || return
+	ok
+}
+
 # ---- runner ------------------------------------------------------------------
 
 main() {
