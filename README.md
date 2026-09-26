@@ -14,6 +14,7 @@ matugen/          turns a wallpaper into the palette the shell writes out
 gtk-3.0/ gtk-4.0/ GTK theming, and the icon theme Qt reads through gtk3
 foot/             terminal, one of the default terminal's candidates
 kitty/ ghostty/   terminals, colours only — the same palette foot gets
+fingerprint/      the reader's driver and sudo's finger; `rack features`
 udev/             hardware fixes, one rule per device; `rack patches`
                   (or Conf › System › Patches) copies one into /etc
 bin/ btop/ nvim/ starship/ zsh/
@@ -36,8 +37,9 @@ cd ~/.dotfiles
 ./relay/install.sh
 
 rack features         # tick the optional parts you want (dictation, weather,
-                      # Nothing earbuds battery, LazyVim, Oh-My-Zsh, Claude
-                      # Code); it installs and sets up what you tick
+                      # Nothing earbuds battery, fingerprint, LazyVim,
+                      # Oh-My-Zsh, Claude Code); it installs and sets up
+                      # what you tick
 rack setup            # what is missing, grouped by how much it matters
 rack deploy           # link every manifest entry into ~/.config and ~
 

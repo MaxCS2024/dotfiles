@@ -38,6 +38,33 @@
 			"teardown": [],
 			"data": []
 		},
+		"fingerprint": {
+			"label": "Fingerprint",
+			"summary": "Unlock the lock screen, and sudo in a terminal, with a finger as well as the password. Installs the reader's driver (fprintd, or python-validity for the older Synaptics readers in ThinkPads like the T480), enrols a finger, and adds it to /etc/pam.d/sudo. Installed or not: there is nothing to switch off. Removing it deletes the enrolled fingers and puts sudo back to the password alone.",
+			"recommended": false,
+			"switch": false,
+			"size": "a few MB",
+			"provides": ["fprintd-enroll"],
+			"probe": ["sh", "-c", "grep -qs pam_fprintd.so /etc/pam.d/sudo"],
+			"packages": {
+				"repo": ["fprintd"],
+				"aur": []
+			},
+			"variants": [
+				{
+					"probe": ["fingerprint/install.sh", "--validity"],
+					"packages": {
+						"repo": [],
+						"aur": ["python-validity"]
+					}
+				}
+			],
+			"before": [["fingerprint/install.sh", "--prepare"]],
+			"setup": [["fingerprint/install.sh"]],
+			"units": [],
+			"teardown": [["fingerprint/install.sh", "--remove"]],
+			"data": []
+		},
 		"weather": {
 			"label": "Weather",
 			"summary": "The forecast in the bar, and a rail with the week behind it. Needs your coordinates in quickshell/main/.env (see DEPENDENCIES.md).",

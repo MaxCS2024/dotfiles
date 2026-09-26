@@ -317,22 +317,24 @@ running. Grouped by what breaks if it's missing.
 
 - **fprintd** (the `net.reactivated.Fprint` D-Bus service) and an enrolled
   finger — fingerprint unlock in `hypr/hyprlock.conf`, alongside the
-  password. The T480's reader (Synaptics `06cb:009a`) needs the AUR's
-  `python-validity`, which brings `open-fprintd` in fprintd's place.
-  Without either, hyprlock logs that it couldn't connect and the prompt
-  under the password field stays empty. sudo takes a finger only through
-  a per-machine edit to `/etc/pam.d/sudo`, not part of this repo, and only
-  in a terminal window:
+  password. Without it, hyprlock logs that it couldn't connect and the
+  prompt under the password field stays empty. It is an optional feature:
+  `rack features on fingerprint` (`fingerprint/install.sh`) installs the
+  driver the reader needs — fprintd, or the AUR's `python-validity`, which
+  brings `open-fprintd` in fprintd's place, for the older Synaptics
+  readers like the T480's `06cb:009a` — enrols a finger, and puts two
+  lines above `auth include system-auth` in `/etc/pam.d/sudo`:
 
   ```
   auth  [success=ignore default=1]  pam_succeed_if.so quiet tty =~ *pts/*
   auth  sufficient                  pam_fprintd.so max-tries=3 timeout=10
   ```
 
-  above `auth include system-auth`. The pts test is what keeps
-  `services/PrivilegedExec.qml` working: the shell's controlling tty is
-  tty1 (ly starts Hyprland there), so its `sudo -S` skips the finger and
-  takes the typed password as before. ly stays password-only.
+  So sudo takes a finger in a terminal window only. The pts test is what
+  keeps `services/PrivilegedExec.qml` working: the shell's controlling tty
+  is tty1 (ly starts Hyprland there), so its `sudo -S` skips the finger
+  and takes the typed password as before. ly stays password-only.
+  `rack features remove fingerprint` takes the lines out again.
 
 ## Fonts
 
