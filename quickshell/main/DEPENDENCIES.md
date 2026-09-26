@@ -315,6 +315,25 @@ running. Grouped by what breaks if it's missing.
   treesitter parsers, and without it there's no syntax highlighting.
   Mason installs pyright through npm.
 
+- **fprintd** (the `net.reactivated.Fprint` D-Bus service) and an enrolled
+  finger — fingerprint unlock in `hypr/hyprlock.conf`, alongside the
+  password. The T480's reader (Synaptics `06cb:009a`) needs the AUR's
+  `python-validity`, which brings `open-fprintd` in fprintd's place.
+  Without either, hyprlock logs that it couldn't connect and the prompt
+  under the password field stays empty. sudo takes a finger only through
+  a per-machine edit to `/etc/pam.d/sudo`, not part of this repo, and only
+  in a terminal window:
+
+  ```
+  auth  [success=ignore default=1]  pam_succeed_if.so quiet tty =~ *pts/*
+  auth  sufficient                  pam_fprintd.so max-tries=3 timeout=10
+  ```
+
+  above `auth include system-auth`. The pts test is what keeps
+  `services/PrivilegedExec.qml` working: the shell's controlling tty is
+  tty1 (ly starts Hyprland there), so its `sudo -S` skips the finger and
+  takes the typed password as before. ly stays password-only.
+
 ## Fonts
 
 - **JetBrainsMono Nerd Font** (`Theme.font`) — must be the actual
