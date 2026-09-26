@@ -1,0 +1,4187 @@
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:bcacb8bf-5f1e-4c4a-b871-57426d44f405",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-09-26T10:27:49Z",
+    "lifecycles": [
+      {
+        "phase": "operations"
+      }
+    ],
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "Claude Code"
+        }
+      ]
+    },
+    "component": {
+      "type": "application",
+      "bom-ref": "dotfiles",
+      "name": "dotfiles",
+      "version": "71c5c9c",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "71c5c9cc292491ed638cdf6bf0a447229a92d8dd"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/MaxCS2024/dotfiles"
+        }
+      ],
+      "description": "Hyprland desktop with a Quickshell shell, plus rig/rack/relay tooling"
+    },
+    "properties": [
+      {
+        "name": "dotfiles:resolved-on",
+        "value": "Lenovo"
+      },
+      {
+        "name": "dotfiles:worktree-dirty",
+        "value": "false"
+      },
+      {
+        "name": "dotfiles:note",
+        "value": "Direct dependencies only. Versions are what this host had installed at the timestamp; components with dotfiles:installed=false are named by the repo but absent here, so carry no version. Minimums from DEPENDENCIES.md: quickshell >= 0.3.1, Hyprland >= 0.55."
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "application",
+      "bom-ref": "pkg:quickshell",
+      "name": "quickshell",
+      "scope": "required",
+      "version": "0.3.1-1",
+      "description": "Flexible toolkit for making desktop shells with QtQuick",
+      "purl": "pkg:alpm/arch/quickshell@0.3.1-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "LGPL-3.0-only"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://git.outfoxxed.me/quickshell/quickshell"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "required"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "qs"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:hyprland",
+      "name": "hyprland",
+      "scope": "required",
+      "version": "0.56.2-3",
+      "description": "a highly customizable dynamic tiling Wayland compositor",
+      "purl": "pkg:alpm/arch/hyprland@0.56.2-3?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-3-Clause"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/hyprwm/Hyprland"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "required"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "hyprctl"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:systemd",
+      "name": "systemd",
+      "scope": "required",
+      "version": "262-1",
+      "description": "system and service manager",
+      "purl": "pkg:alpm/arch/systemd@262-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "LGPL-2.1-or-later"
+          }
+        },
+        {
+          "license": {
+            "name": "CC0-1.0"
+          }
+        },
+        {
+          "license": {
+            "name": "GPL-2.0-or-later"
+          }
+        },
+        {
+          "license": {
+            "name": "MIT-0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.github.com/systemd/systemd"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "required"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "systemctl"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:networkmanager",
+      "name": "networkmanager",
+      "scope": "required",
+      "version": "1.58.1-1",
+      "description": "Network connection manager and user applications",
+      "purl": "pkg:alpm/arch/networkmanager@1.58.1-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "LGPL-2.1-or-later"
+          }
+        },
+        {
+          "license": {
+            "name": "GPL-2.0-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://networkmanager.dev/"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "required"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "nmcli"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:iproute2",
+      "name": "iproute2",
+      "scope": "required",
+      "version": "7.2.0-1",
+      "description": "IP Routing Utilities",
+      "purl": "pkg:alpm/arch/iproute2@7.2.0-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-2.0-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://git.kernel.org/pub/scm/network/iproute2/iproute2.git"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "required"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "ip"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:pipewire",
+      "name": "pipewire",
+      "scope": "required",
+      "version": "1:1.6.9-1",
+      "description": "Low-latency audio/video router and processor",
+      "purl": "pkg:alpm/arch/pipewire@1:1.6.9-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        },
+        {
+          "license": {
+            "name": "LGPL-2.1-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://pipewire.org"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "required"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "pipewire"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:wireplumber",
+      "name": "wireplumber",
+      "scope": "required",
+      "version": "0.5.17-2",
+      "description": "Session / policy manager implementation for PipeWire",
+      "purl": "pkg:alpm/arch/wireplumber@0.5.17-2?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://pipewire.pages.freedesktop.org/wireplumber/"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "required"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "wpctl"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:upower",
+      "name": "upower",
+      "scope": "required",
+      "version": "1.91.4-1",
+      "description": "Abstraction for enumerating power devices, listening to device events and querying history and statistics",
+      "purl": "pkg:alpm/arch/upower@1.91.4-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-2.0-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://upower.freedesktop.org"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "required"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "upower"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:bluez-utils",
+      "name": "bluez-utils",
+      "scope": "required",
+      "version": "5.87-2",
+      "description": "Development and debugging utilities for the bluetooth protocol stack",
+      "purl": "pkg:alpm/arch/bluez-utils@5.87-2?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-2.0-only"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "http://www.bluez.org/"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "required"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "bluetoothctl"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:sudo",
+      "name": "sudo",
+      "scope": "required",
+      "version": "1.9.17.p2-6",
+      "description": "Give certain users the ability to run some commands as root",
+      "purl": "pkg:alpm/arch/sudo@1.9.17.p2-6?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "custom"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.sudo.ws/sudo/"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "required"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "sudo"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:pacman",
+      "name": "pacman",
+      "scope": "required",
+      "version": "7.1.0.r9.g54d9411-2",
+      "description": "A library-based package manager with dependency support",
+      "purl": "pkg:alpm/arch/pacman@7.1.0.r9.g54d9411-2?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-2.0-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.archlinux.org/pacman/"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "required"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "pacman"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:flatpak",
+      "name": "flatpak",
+      "scope": "required",
+      "version": "1:1.18.3-1",
+      "description": "Linux application sandboxing and distribution framework (formerly xdg-app)",
+      "purl": "pkg:alpm/arch/flatpak@1:1.18.3-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "LGPL-2.1-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://flatpak.org"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "required"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "flatpak"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:wl-clipboard",
+      "name": "wl-clipboard",
+      "scope": "required",
+      "version": "1:2.3.0-1",
+      "description": "Command-line copy/paste utilities for Wayland",
+      "purl": "pkg:alpm/arch/wl-clipboard@1:2.3.0-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-3.0-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/bugaevc/wl-clipboard"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "required"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "wl-copy"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:cliphist",
+      "name": "cliphist",
+      "scope": "required",
+      "version": "1:0.7.0-2",
+      "description": "wayland clipboard manager",
+      "purl": "pkg:alpm/arch/cliphist@1:0.7.0-2?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL3"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/sentriz/cliphist"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "required"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "cliphist"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:brightnessctl",
+      "name": "brightnessctl",
+      "scope": "required",
+      "version": "0.5.1-3",
+      "description": "Lightweight brightness control tool",
+      "purl": "pkg:alpm/arch/brightnessctl@0.5.1-3?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/Hummer12007/brightnessctl"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "required"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "brightnessctl"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:lua",
+      "name": "lua",
+      "scope": "required",
+      "version": "5.5.1-1",
+      "description": "Powerful lightweight programming language designed for extending applications",
+      "purl": "pkg:alpm/arch/lua@5.5.1-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.lua.org/"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "required"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "lua"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:zsh",
+      "name": "zsh",
+      "scope": "required",
+      "version": "5.9.2-1",
+      "description": "A very advanced and programmable command interpreter (shell) for UNIX",
+      "purl": "pkg:alpm/arch/zsh@5.9.2-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "custom"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.zsh.org/"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "required"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "zsh"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:git",
+      "name": "git",
+      "scope": "required",
+      "version": "2.55.0-1",
+      "description": "the fast distributed version control system",
+      "purl": "pkg:alpm/arch/git@2.55.0-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-2.0-only"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://git-scm.com/"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "rack-own"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "git"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:jq",
+      "name": "jq",
+      "scope": "required",
+      "version": "1.8.2-1",
+      "description": "Command-line JSON processor",
+      "purl": "pkg:alpm/arch/jq@1.8.2-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://jqlang.github.io/jq/"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "rack-own"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "jq"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:util-linux",
+      "name": "util-linux",
+      "scope": "required",
+      "version": "2.42.4-1",
+      "description": "Miscellaneous system utilities for Linux",
+      "purl": "pkg:alpm/arch/util-linux@2.42.4-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-2-Clause"
+          }
+        },
+        {
+          "license": {
+            "name": "BSD-3-Clause"
+          }
+        },
+        {
+          "license": {
+            "name": "BSD-4-Clause-UC"
+          }
+        },
+        {
+          "license": {
+            "name": "GPL-2.0-only"
+          }
+        },
+        {
+          "license": {
+            "name": "GPL-2.0-or-later"
+          }
+        },
+        {
+          "license": {
+            "name": "GPL-3.0-or-later"
+          }
+        },
+        {
+          "license": {
+            "name": "ISC"
+          }
+        },
+        {
+          "license": {
+            "name": "LGPL-2.1-or-later"
+          }
+        },
+        {
+          "license": {
+            "name": "LicenseRef-PublicDomain"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/util-linux/util-linux"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "rack-own"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "flock"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:bash",
+      "name": "bash",
+      "scope": "required",
+      "version": "5.3.20-1",
+      "description": "The GNU Bourne Again shell",
+      "purl": "pkg:alpm/arch/bash@5.3.20-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-3.0-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.gnu.org/software/bash/bash.html"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "rack-own"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "bash"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "rig, rack and relay are bash"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:bluez",
+      "name": "bluez",
+      "scope": "required",
+      "version": "5.87-2",
+      "description": "Daemons for the bluetooth protocol stack",
+      "purl": "pkg:alpm/arch/bluez@5.87-2?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-2.0-only"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "http://www.bluez.org/"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "required"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "bluetoothd, the daemon; rack setup probes bluetoothctl"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:coreutils",
+      "name": "coreutils",
+      "scope": "required",
+      "version": "9.11-2",
+      "description": "The basic file, shell and text manipulation utilities of the GNU operating system",
+      "purl": "pkg:alpm/arch/coreutils@9.11-2?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-3.0-or-later"
+          }
+        },
+        {
+          "license": {
+            "name": "GFDL-1.3-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.gnu.org/software/coreutils/"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "required"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "cat"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "sh/cat/test/printf/mkdir via [\"sh\",\"-c\"] in the shell"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:awww",
+      "name": "awww",
+      "scope": "optional",
+      "version": "0.12.1-1",
+      "description": "An Answer to your Wayland Wallpaper Woes",
+      "purl": "pkg:alpm/arch/awww@0.12.1-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-3.0-only"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://codeberg.org/LGFae/awww"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "default-config"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "awww"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "swappable in config/Theme.qml"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:yay",
+      "name": "yay",
+      "scope": "optional",
+      "version": "13.0.1-1",
+      "description": "Yet another yogurt. Pacman wrapper and AUR helper written in go.",
+      "purl": "pkg:alpm/aur/yay@13.0.1-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-3.0-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/Jguer/yay"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "yay"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:hypridle",
+      "name": "hypridle",
+      "scope": "optional",
+      "version": "0.1.8-2",
+      "description": "hyprland’s idle daemon",
+      "purl": "pkg:alpm/arch/hypridle@0.1.8-2?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-3-Clause"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/hyprwm/hypridle"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "hypridle"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:hyprlock",
+      "name": "hyprlock",
+      "scope": "optional",
+      "version": "0.9.6-3",
+      "description": "hyprland’s GPU-accelerated screen locking utility",
+      "purl": "pkg:alpm/arch/hyprlock@0.9.6-3?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-3-Clause"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/hyprwm/hyprlock"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "hyprlock"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:hyprsunset",
+      "name": "hyprsunset",
+      "scope": "optional",
+      "version": "0.4.0-3",
+      "description": "An application to enable a blue-light filter on Hyprland",
+      "purl": "pkg:alpm/arch/hyprsunset@0.4.0-3?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-3-Clause"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/hyprwm/hyprsunset"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "hyprsunset"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:matugen-bin",
+      "name": "matugen-bin",
+      "scope": "optional",
+      "version": "4.2.0-1",
+      "description": "A material you and base16 color generation tool with templates",
+      "purl": "pkg:alpm/aur/matugen-bin@4.2.0-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-2.0-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/InioX/matugen"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "matugen"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:grim",
+      "name": "grim",
+      "scope": "optional",
+      "version": "1.5.0-2",
+      "description": "Screenshot utility for Wayland",
+      "purl": "pkg:alpm/arch/grim@1.5.0-2?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://gitlab.freedesktop.org/emersion/grim"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "grim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:slurp",
+      "name": "slurp",
+      "scope": "optional",
+      "version": "1.5.0-2",
+      "description": "Select a region in a Wayland compositor",
+      "purl": "pkg:alpm/arch/slurp@1.5.0-2?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/emersion/slurp"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "slurp"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:hyprpicker",
+      "name": "hyprpicker",
+      "scope": "optional",
+      "version": "0.4.7-4",
+      "description": "A wlroots-compatible Wayland color picker that does not suck",
+      "purl": "pkg:alpm/arch/hyprpicker@0.4.7-4?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-3-Clause"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/hyprwm/hyprpicker"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "hyprpicker"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:wf-recorder",
+      "name": "wf-recorder",
+      "scope": "optional",
+      "version": "0.6.0-2",
+      "description": "Screen recorder for wlroots-based compositors such as sway",
+      "purl": "pkg:alpm/arch/wf-recorder@0.6.0-2?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/ammen99/wf-recorder"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "wf-recorder"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:procps-ng",
+      "name": "procps-ng",
+      "scope": "optional",
+      "version": "4.0.7-1",
+      "description": "Utilities for monitoring your system and its processes",
+      "purl": "pkg:alpm/arch/procps-ng@4.0.7-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL"
+          }
+        },
+        {
+          "license": {
+            "name": "LGPL"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://gitlab.com/procps-ng/procps"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "pkill"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:psmisc",
+      "name": "psmisc",
+      "scope": "optional",
+      "version": "23.7-2",
+      "description": "Miscellaneous procfs tools",
+      "purl": "pkg:alpm/arch/psmisc@23.7-2?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://gitlab.com/psmisc/psmisc"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "fuser"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:voxtype-bin",
+      "name": "voxtype-bin",
+      "scope": "optional",
+      "version": "1.1.0-2",
+      "description": "Push-to-talk voice-to-text for Linux (pre-built binaries)",
+      "purl": "pkg:alpm/aur/voxtype-bin@1.1.0-2?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://voxtype.io"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "voxtype"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:group",
+          "value": "feature:dictation"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:wtype",
+      "name": "wtype",
+      "scope": "optional",
+      "version": "0.4-2",
+      "description": "xdotool type for wayland",
+      "purl": "pkg:alpm/arch/wtype@0.4-2?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/atx/wtype"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "wtype"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:group",
+          "value": "feature:dictation"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:fzf",
+      "name": "fzf",
+      "scope": "optional",
+      "version": "0.74.4-1",
+      "description": "Command-line fuzzy finder",
+      "purl": "pkg:alpm/arch/fzf@0.74.4-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/junegunn/fzf"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "fzf"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:zoxide",
+      "name": "zoxide",
+      "scope": "optional",
+      "version": "0.10.0-1",
+      "description": "A smarter cd command for your terminal",
+      "purl": "pkg:alpm/arch/zoxide@0.10.0-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/ajeetdsouza/zoxide"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "zoxide"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:bat",
+      "name": "bat",
+      "scope": "optional",
+      "version": "0.26.1-3",
+      "description": "Cat clone with syntax highlighting and git integration",
+      "purl": "pkg:alpm/arch/bat@0.26.1-3?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0 OR MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/sharkdp/bat"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "bat"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:playerctl",
+      "name": "playerctl",
+      "scope": "optional",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "playerctl"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "false"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:libpulse",
+      "name": "libpulse",
+      "scope": "optional",
+      "version": "17.0+r98+gb096704c0-1",
+      "description": "A featureful, general-purpose sound server (client library)",
+      "purl": "pkg:alpm/arch/libpulse@17.0+r98+gb096704c0-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "LGPL-2.1-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.freedesktop.org/wiki/Software/PulseAudio/"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "pactl"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:man-db",
+      "name": "man-db",
+      "scope": "optional",
+      "version": "2.13.1-2",
+      "description": "A utility for reading man pages",
+      "purl": "pkg:alpm/arch/man-db@2.13.1-2?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-2.0-or-later AND GPL-3.0-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://gitlab.com/man-db/man-db"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "man"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:less",
+      "name": "less",
+      "scope": "optional",
+      "version": "1:710-1",
+      "description": "A terminal based program for viewing text files",
+      "purl": "pkg:alpm/arch/less@1:710-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-3.0-or-later OR LicenseRef-Less"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.greenwoodsoftware.com/less/"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "less"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:uwsm",
+      "name": "uwsm",
+      "scope": "optional",
+      "version": "0.27.0-1",
+      "description": "A standalone Wayland session manager",
+      "purl": "pkg:alpm/arch/uwsm@0.27.0-1?arch=any",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/Vladimir-csp/uwsm"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "uwsm"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:gcc",
+      "name": "gcc",
+      "scope": "optional",
+      "version": "16.2.1+r23+gd564253eb6c8-1",
+      "description": "The GNU Compiler Collection - C and C++ frontends",
+      "purl": "pkg:alpm/arch/gcc@16.2.1+r23+gd564253eb6c8-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-3.0-or-later WITH GCC-exception-3.1"
+          }
+        },
+        {
+          "license": {
+            "name": "GFDL-1.3-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://gcc.gnu.org"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "cc"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:npm",
+      "name": "npm",
+      "scope": "optional",
+      "version": "12.1.0-1",
+      "description": "JavaScript package manager",
+      "purl": "pkg:alpm/arch/npm@12.1.0-1?arch=any",
+      "licenses": [
+        {
+          "license": {
+            "name": "Artistic-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.npmjs.com"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "npm"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:curl",
+      "name": "curl",
+      "scope": "optional",
+      "version": "8.22.0-1",
+      "description": "command line tool and library for transferring data with URLs",
+      "purl": "pkg:alpm/arch/curl@8.22.0-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "curl"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://curl.se/"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "optional"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "curl"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "weather feature; api.open-meteo.com"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:ttf-jetbrains-mono-nerd",
+      "name": "ttf-jetbrains-mono-nerd",
+      "scope": "required",
+      "version": "3.5.1-2",
+      "description": "Patched font JetBrains Mono from nerd fonts library",
+      "purl": "pkg:alpm/arch/ttf-jetbrains-mono-nerd@3.5.1-2?arch=any",
+      "licenses": [
+        {
+          "license": {
+            "name": "OFL-1.1-no-RFN"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/ryanoasis/nerd-fonts"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "font"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "must be the Nerd Font patched build"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:foot",
+      "name": "foot",
+      "scope": "optional",
+      "version": "1.28.0-2",
+      "description": "Fast, lightweight, and minimalistic Wayland terminal emulator",
+      "purl": "pkg:alpm/arch/foot@1.28.0-2?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://codeberg.org/dnkl/foot"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "terminal-candidate"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "foot"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "one terminal candidate is required"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:kitty",
+      "name": "kitty",
+      "scope": "optional",
+      "version": "0.49.1-1",
+      "description": "A modern, hackable, featureful, OpenGL-based terminal emulator",
+      "purl": "pkg:alpm/arch/kitty@0.49.1-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-3.0-only"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/kovidgoyal/kitty"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "terminal-candidate"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "kitty"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "one terminal candidate is required"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:ghostty",
+      "name": "ghostty",
+      "scope": "optional",
+      "version": "1.3.1-2",
+      "description": "Fast, native, feature-rich terminal emulator pushing modern features",
+      "purl": "pkg:alpm/arch/ghostty@1.3.1-2?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/ghostty-org/ghostty"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "terminal-candidate"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "ghostty"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "one terminal candidate is required"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:alacritty",
+      "name": "alacritty",
+      "scope": "optional",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "terminal-candidate"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "alacritty"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "false"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "one terminal candidate is required"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:btop",
+      "name": "btop",
+      "scope": "optional",
+      "version": "1.4.7-1",
+      "description": "A monitor of system resources, bpytop ported to C++",
+      "purl": "pkg:alpm/arch/btop@1.4.7-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/aristocratos/btop"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "configured"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "btop"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:starship",
+      "name": "starship",
+      "scope": "optional",
+      "version": "1.26.0-1",
+      "description": "The cross-shell prompt for astronauts",
+      "purl": "pkg:alpm/arch/starship@1.26.0-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "ISC"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://starship.rs/"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "configured"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "starship"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:qt5ct",
+      "name": "qt5ct",
+      "scope": "optional",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "configured"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "qt5ct"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "false"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:gtk3",
+      "name": "gtk3",
+      "scope": "optional",
+      "version": "1:3.24.52-1",
+      "description": "GObject-based multi-platform GUI toolkit",
+      "purl": "pkg:alpm/arch/gtk3@1:3.24.52-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "LGPL-2.1-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.gtk.org/"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "configured"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:gtk4",
+      "name": "gtk4",
+      "scope": "optional",
+      "version": "1:4.22.5-1",
+      "description": "GObject-based multi-platform GUI toolkit",
+      "purl": "pkg:alpm/arch/gtk4@1:4.22.5-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "LGPL-2.1-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.gtk.org/"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "configured"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:adwaita-icon-theme",
+      "name": "adwaita-icon-theme",
+      "scope": "optional",
+      "version": "50.0-1",
+      "description": "GNOME standard icons",
+      "purl": "pkg:alpm/arch/adwaita-icon-theme@50.0-1?arch=any",
+      "licenses": [
+        {
+          "license": {
+            "name": "CC-BY-SA-3.0 OR LGPL-3.0-only"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://gitlab.gnome.org/GNOME/adwaita-icon-theme"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "configured"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:python-dbus",
+      "name": "python-dbus",
+      "scope": "optional",
+      "version": "1.4.0-2",
+      "description": "Python bindings for D-Bus",
+      "purl": "pkg:alpm/arch/python-dbus@1.4.0-2?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.freedesktop.org/wiki/Software/dbus/"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:earbuds"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:python-gobject",
+      "name": "python-gobject",
+      "scope": "optional",
+      "version": "3.56.3-1",
+      "description": "Python bindings for GLib/GObject/GIO/GTK",
+      "purl": "pkg:alpm/arch/python-gobject@3.56.3-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "LGPL-2.1-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://pygobject.gnome.org/"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:earbuds"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:neovim",
+      "name": "neovim",
+      "scope": "optional",
+      "version": "0.12.5-1",
+      "description": "Fork of Vim aiming to improve user experience, plugins, and GUIs",
+      "purl": "pkg:alpm/arch/neovim@0.12.5-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0"
+          }
+        },
+        {
+          "license": {
+            "name": "LicenseRef-vim"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://neovim.io"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:ripgrep",
+      "name": "ripgrep",
+      "scope": "optional",
+      "version": "15.2.0-1",
+      "description": "A search tool that combines the usability of ag with the raw speed of grep",
+      "purl": "pkg:alpm/arch/ripgrep@15.2.0-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT OR Unlicense"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/BurntSushi/ripgrep"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:fd",
+      "name": "fd",
+      "scope": "optional",
+      "version": "10.5.0-3",
+      "description": "Simple, fast and user-friendly alternative to find",
+      "purl": "pkg:alpm/arch/fd@10.5.0-3?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT OR Apache-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/sharkdp/fd"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:lazygit",
+      "name": "lazygit",
+      "scope": "optional",
+      "version": "0.65.1-1",
+      "description": "Simple terminal UI for git commands",
+      "purl": "pkg:alpm/arch/lazygit@0.65.1-1?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/jesseduffield/lazygit"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:gemini-cli",
+      "name": "gemini-cli",
+      "scope": "optional",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:gemini"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "false"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:ohmyzsh",
+      "name": "ohmyzsh",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/ohmyzsh/ohmyzsh"
+        }
+      ],
+      "version": "74965c960981",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "74965c96098134b192f00084f966b4b02438a739"
+        }
+      ],
+      "purl": "pkg:github/ohmyzsh/ohmyzsh@74965c96098134b192f00084f966b4b02438a739",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:ohmyzsh"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:commit-date",
+          "value": "2026-09-22"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "self-updating; revision is this machine's"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:zsh-autosuggestions",
+      "name": "zsh-autosuggestions",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/zsh-users/zsh-autosuggestions"
+        }
+      ],
+      "version": "85919cd1ffa7",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "85919cd1ffa7d2d5412f6d3fe437ebdbeeec4fc5"
+        }
+      ],
+      "purl": "pkg:github/zsh-users/zsh-autosuggestions@85919cd1ffa7d2d5412f6d3fe437ebdbeeec4fc5",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:ohmyzsh"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:commit-date",
+          "value": "2025-06-24"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:LazyVim-starter",
+      "name": "LazyVim-starter",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/LazyVim/starter"
+        }
+      ],
+      "purl": "pkg:github/LazyVim/starter",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "cloned without .git; no revision recorded"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:LazyVim",
+      "name": "LazyVim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/LazyVim/LazyVim"
+        }
+      ],
+      "version": "999700997f72",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "999700997f72227187d49d8b92667183dc7fc809"
+        }
+      ],
+      "purl": "pkg:github/LazyVim/LazyVim@999700997f72227187d49d8b92667183dc7fc809",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:blink.cmp",
+      "name": "blink.cmp",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/saghen/blink.cmp"
+        }
+      ],
+      "version": "78336bc89ee5",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "78336bc89ee5365633bcf754d93df01678b5c08f"
+        }
+      ],
+      "purl": "pkg:github/saghen/blink@78336bc89ee5365633bcf754d93df01678b5c08f",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:bufferline.nvim",
+      "name": "bufferline.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/akinsho/bufferline.nvim"
+        }
+      ],
+      "version": "655133c3b4c3",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "655133c3b4c3e5e05ec549b9f8cc2894ac6f51b3"
+        }
+      ],
+      "purl": "pkg:github/akinsho/bufferline@655133c3b4c3e5e05ec549b9f8cc2894ac6f51b3",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:catppuccin",
+      "name": "catppuccin",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/catppuccin/nvim"
+        }
+      ],
+      "version": "edefef779ab0",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "edefef779ab08ce1a4a404713e3012b0d202bd35"
+        }
+      ],
+      "purl": "pkg:github/catppuccin/nvim@edefef779ab08ce1a4a404713e3012b0d202bd35",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:conform.nvim",
+      "name": "conform.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/stevearc/conform.nvim"
+        }
+      ],
+      "version": "016802de4025",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "016802de402556da54c36bd7359b441266b01cdd"
+        }
+      ],
+      "purl": "pkg:github/stevearc/conform@016802de402556da54c36bd7359b441266b01cdd",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch master"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:flash.nvim",
+      "name": "flash.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/folke/flash.nvim"
+        }
+      ],
+      "version": "5f0f270fdc7c",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "5f0f270fdc7c5b0c21d903ee85b9cb06f2ac636a"
+        }
+      ],
+      "purl": "pkg:github/folke/flash@5f0f270fdc7c5b0c21d903ee85b9cb06f2ac636a",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:friendly-snippets",
+      "name": "friendly-snippets",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/rafamadriz/friendly-snippets"
+        }
+      ],
+      "version": "b4d01b0fdf3c",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "b4d01b0fdf3c9a549961c2f9ffe8dc09be166219"
+        }
+      ],
+      "purl": "pkg:github/rafamadriz/friendly-snippets@b4d01b0fdf3c9a549961c2f9ffe8dc09be166219",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:fzf-lua",
+      "name": "fzf-lua",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/ibhagwan/fzf-lua"
+        }
+      ],
+      "version": "13bb178a299f",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "13bb178a299f7493dd64427a58e61904c4b58ecb"
+        }
+      ],
+      "purl": "pkg:github/ibhagwan/fzf-lua@13bb178a299f7493dd64427a58e61904c4b58ecb",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:gitsigns.nvim",
+      "name": "gitsigns.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/lewis6991/gitsigns.nvim"
+        }
+      ],
+      "version": "070a5d7b9855",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "070a5d7b985546cc57e1fc61e5bc507fecac6045"
+        }
+      ],
+      "purl": "pkg:github/lewis6991/gitsigns@070a5d7b985546cc57e1fc61e5bc507fecac6045",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:grug-far.nvim",
+      "name": "grug-far.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/MagicDuck/grug-far.nvim"
+        }
+      ],
+      "version": "11595bf747ed",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "11595bf747edc270bce2069d1020502ad4ae56cf"
+        }
+      ],
+      "purl": "pkg:github/MagicDuck/grug-far@11595bf747edc270bce2069d1020502ad4ae56cf",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:lazy.nvim",
+      "name": "lazy.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/folke/lazy.nvim"
+        }
+      ],
+      "version": "85c7ff3711b7",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "85c7ff3711b730b4030d03144f6db6375044ae82"
+        }
+      ],
+      "purl": "pkg:github/folke/lazy@85c7ff3711b730b4030d03144f6db6375044ae82",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:lazydev.nvim",
+      "name": "lazydev.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/folke/lazydev.nvim"
+        }
+      ],
+      "version": "ff2cbcba459b",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "ff2cbcba459b637ec3fd165a2be59b7bbaeedf0d"
+        }
+      ],
+      "purl": "pkg:github/folke/lazydev@ff2cbcba459b637ec3fd165a2be59b7bbaeedf0d",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:lualine.nvim",
+      "name": "lualine.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/nvim-lualine/lualine.nvim"
+        }
+      ],
+      "version": "221ce6b2d999",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "221ce6b2d999187044529f49da6554a92f740a96"
+        }
+      ],
+      "purl": "pkg:github/nvim-lualine/lualine@221ce6b2d999187044529f49da6554a92f740a96",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch master"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:mason-lspconfig.nvim",
+      "name": "mason-lspconfig.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/mason-org/mason-lspconfig.nvim"
+        }
+      ],
+      "version": "137bd0feba2c",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "137bd0feba2c1885545b6934d36f5e5aa6adb486"
+        }
+      ],
+      "purl": "pkg:github/mason-org/mason-lspconfig@137bd0feba2c1885545b6934d36f5e5aa6adb486",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:mason.nvim",
+      "name": "mason.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/mason-org/mason.nvim"
+        }
+      ],
+      "version": "2a6940af8037",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "2a6940af80375532e5e9e7c1f2fc6319a1b7a69d"
+        }
+      ],
+      "purl": "pkg:github/mason-org/mason@2a6940af80375532e5e9e7c1f2fc6319a1b7a69d",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:mini.ai",
+      "name": "mini.ai",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/nvim-mini/mini.ai"
+        }
+      ],
+      "version": "6c39ae7b11ab",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "6c39ae7b11abe479fbe1bc81bf00ac6bca7afa07"
+        }
+      ],
+      "purl": "pkg:github/nvim-mini/mini@6c39ae7b11abe479fbe1bc81bf00ac6bca7afa07",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:mini.icons",
+      "name": "mini.icons",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/nvim-mini/mini.icons"
+        }
+      ],
+      "version": "f642e3ba8c12",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "f642e3ba8c12afbc8f32f6d77ef6597eac56786f"
+        }
+      ],
+      "purl": "pkg:github/nvim-mini/mini@f642e3ba8c12afbc8f32f6d77ef6597eac56786f",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:neo-tree.nvim",
+      "name": "neo-tree.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/nvim-neo-tree/neo-tree.nvim"
+        }
+      ],
+      "version": "162f9b953a69",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "162f9b953a692b559afe43e38d60afee81e8e79b"
+        }
+      ],
+      "purl": "pkg:github/nvim-neo-tree/neo-tree@162f9b953a692b559afe43e38d60afee81e8e79b",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:noice.nvim",
+      "name": "noice.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/folke/noice.nvim"
+        }
+      ],
+      "version": "7bfd942445fb",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "7bfd942445fb63089b59f97ca487d605e715f155"
+        }
+      ],
+      "purl": "pkg:github/folke/noice@7bfd942445fb63089b59f97ca487d605e715f155",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:nui.nvim",
+      "name": "nui.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/MunifTanjim/nui.nvim"
+        }
+      ],
+      "version": "10fc361835c8",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "10fc361835c856ba4233ef5ea135b919bf3dce97"
+        }
+      ],
+      "purl": "pkg:github/MunifTanjim/nui@10fc361835c856ba4233ef5ea135b919bf3dce97",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:nvim-autopairs",
+      "name": "nvim-autopairs",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/windwp/nvim-autopairs"
+        }
+      ],
+      "version": "430522f95fe4",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "430522f95fe4fb7c511ec64f8c1a90cc6a66c05c"
+        }
+      ],
+      "purl": "pkg:github/windwp/nvim-autopairs@430522f95fe4fb7c511ec64f8c1a90cc6a66c05c",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch master"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:nvim-lint",
+      "name": "nvim-lint",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/mfussenegger/nvim-lint"
+        }
+      ],
+      "version": "3d55c8f67c6a",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "3d55c8f67c6ae5c15e1042571e107c7a3d5c5f4e"
+        }
+      ],
+      "purl": "pkg:github/mfussenegger/nvim-lint@3d55c8f67c6ae5c15e1042571e107c7a3d5c5f4e",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch master"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:nvim-lspconfig",
+      "name": "nvim-lspconfig",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/neovim/nvim-lspconfig"
+        }
+      ],
+      "version": "046b1a797af1",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "046b1a797af1effe8e0474b9af9657a3761ec58a"
+        }
+      ],
+      "purl": "pkg:github/neovim/nvim-lspconfig@046b1a797af1effe8e0474b9af9657a3761ec58a",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch master"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:nvim-treesitter",
+      "name": "nvim-treesitter",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/nvim-treesitter/nvim-treesitter"
+        }
+      ],
+      "version": "f603a2f4da48",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "f603a2f4da48728f80257fb5fbb90145fd1dc173"
+        }
+      ],
+      "purl": "pkg:github/nvim-treesitter/nvim-treesitter@f603a2f4da48728f80257fb5fbb90145fd1dc173",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:nvim-treesitter-textobjects",
+      "name": "nvim-treesitter-textobjects",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/nvim-treesitter/nvim-treesitter-textobjects"
+        }
+      ],
+      "version": "5c7b0263797d",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "5c7b0263797dfd1bd6202f2b219f3b53a80b2187"
+        }
+      ],
+      "purl": "pkg:github/nvim-treesitter/nvim-treesitter-textobjects@5c7b0263797dfd1bd6202f2b219f3b53a80b2187",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:nvim-ts-autotag",
+      "name": "nvim-ts-autotag",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/windwp/nvim-ts-autotag"
+        }
+      ],
+      "version": "88c1453db4ba",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "88c1453db4ba7dd24131086fe51fdf74e587d275"
+        }
+      ],
+      "purl": "pkg:github/windwp/nvim-ts-autotag@88c1453db4ba7dd24131086fe51fdf74e587d275",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:persistence.nvim",
+      "name": "persistence.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/folke/persistence.nvim"
+        }
+      ],
+      "version": "b20b2a7887bd",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "b20b2a7887bd39c1a356980b45e03250f3dce49c"
+        }
+      ],
+      "purl": "pkg:github/folke/persistence@b20b2a7887bd39c1a356980b45e03250f3dce49c",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:plenary.nvim",
+      "name": "plenary.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/nvim-lua/plenary.nvim"
+        }
+      ],
+      "version": "74b06c6c75e4",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "74b06c6c75e4eeb3108ec01852001636d85a932b"
+        }
+      ],
+      "purl": "pkg:github/nvim-lua/plenary@74b06c6c75e4eeb3108ec01852001636d85a932b",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch master"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:snacks.nvim",
+      "name": "snacks.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/folke/snacks.nvim"
+        }
+      ],
+      "version": "882c996cf281",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "882c996cf28183f4d63640de0b4c02ec886d01f2"
+        }
+      ],
+      "purl": "pkg:github/folke/snacks@882c996cf28183f4d63640de0b4c02ec886d01f2",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:todo-comments.nvim",
+      "name": "todo-comments.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/folke/todo-comments.nvim"
+        }
+      ],
+      "version": "31e3c38ce9b2",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "31e3c38ce9b29781e4422fc0322eb0a21f4e8668"
+        }
+      ],
+      "purl": "pkg:github/folke/todo-comments@31e3c38ce9b29781e4422fc0322eb0a21f4e8668",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:tokyonight.nvim",
+      "name": "tokyonight.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/folke/tokyonight.nvim"
+        }
+      ],
+      "version": "cdc07ac78467",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "cdc07ac78467a233fd62c493de29a17e0cf2b2b6"
+        }
+      ],
+      "purl": "pkg:github/folke/tokyonight@cdc07ac78467a233fd62c493de29a17e0cf2b2b6",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:trouble.nvim",
+      "name": "trouble.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/folke/trouble.nvim"
+        }
+      ],
+      "version": "bd67efe408d4",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "bd67efe408d4816e25e8491cc5ad4088e708a69a"
+        }
+      ],
+      "purl": "pkg:github/folke/trouble@bd67efe408d4816e25e8491cc5ad4088e708a69a",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:ts-comments.nvim",
+      "name": "ts-comments.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/folke/ts-comments.nvim"
+        }
+      ],
+      "version": "a59d60922134",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "a59d6092213447450191122c9346f309161504cb"
+        }
+      ],
+      "purl": "pkg:github/folke/ts-comments@a59d6092213447450191122c9346f309161504cb",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:twilight.nvim",
+      "name": "twilight.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/folke/twilight.nvim"
+        }
+      ],
+      "version": "664e752f4a21",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "664e752f4a219801265cc3fc18782b457b58c1e1"
+        }
+      ],
+      "purl": "pkg:github/folke/twilight@664e752f4a219801265cc3fc18782b457b58c1e1",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:undotree",
+      "name": "undotree",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/mbbill/undotree"
+        }
+      ],
+      "version": "6fa6b57cda84",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "6fa6b57cda8459e1e4b2ca34df702f55242f4e4d"
+        }
+      ],
+      "purl": "pkg:github/mbbill/undotree@6fa6b57cda8459e1e4b2ca34df702f55242f4e4d",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch master"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:venv-selector.nvim",
+      "name": "venv-selector.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/linux-cultist/venv-selector.nvim"
+        }
+      ],
+      "version": "cc4bb3975de8",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "cc4bb3975de8835291f9bb45889e96c6b2795fc4"
+        }
+      ],
+      "purl": "pkg:github/linux-cultist/venv-selector@cc4bb3975de8835291f9bb45889e96c6b2795fc4",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:vscode.nvim",
+      "name": "vscode.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/Mofiqul/vscode.nvim"
+        }
+      ],
+      "version": "6439ed89d0e1",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "6439ed89d0e10193f07e92268a321d7c6f6e93ee"
+        }
+      ],
+      "purl": "pkg:github/Mofiqul/vscode@6439ed89d0e10193f07e92268a321d7c6f6e93ee",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:which-key.nvim",
+      "name": "which-key.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/folke/which-key.nvim"
+        }
+      ],
+      "version": "3aab2147e748",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "3aab2147e74890957785941f0c1ad87d0a44c15a"
+        }
+      ],
+      "purl": "pkg:github/folke/which-key@3aab2147e74890957785941f0c1ad87d0a44c15a",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "git:zen-mode.nvim",
+      "name": "zen-mode.nvim",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/folke/zen-mode.nvim"
+        }
+      ],
+      "version": "8564ce6d29ec",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "8564ce6d29ec7554eb9df578efa882d33b3c23a7"
+        }
+      ],
+      "purl": "pkg:github/folke/zen-mode@8564ce6d29ec7554eb9df578efa882d33b3c23a7",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:lazyvim"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "lazy-lock.json, branch main"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "installer:claude-code",
+      "name": "claude-code",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://claude.ai/install.sh"
+        }
+      ],
+      "version": "2.1.283",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:claudecode"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "self-updating"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "installer:codex",
+      "name": "codex",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://chatgpt.com/codex/install.sh"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:codex"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "false"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "self-updating"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "installer:opencode",
+      "name": "opencode",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://opencode.ai/install"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:opencode"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "false"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "self-updating (opencode upgrade)"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "installer:hermes-agent",
+      "name": "hermes-agent",
+      "scope": "optional",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://hermes-agent.nousresearch.com/install.sh"
+        }
+      ],
+      "version": "0.21.5",
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:hermes"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "true"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "self-updating (hermes update)"
+        }
+      ]
+    },
+    {
+      "type": "data",
+      "bom-ref": "vendored:nerdfont-glyphs",
+      "name": "nerd-fonts glyphnames",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/ryanoasis/nerd-fonts"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "vendored"
+        },
+        {
+          "name": "dotfiles:path",
+          "value": "bin/lib/nerdfont-glyphs.tsv"
+        },
+        {
+          "name": "dotfiles:note",
+          "value": "one-time trim of upstream glyphnames.json; source revision not recorded"
+        }
+      ]
+    }
+  ],
+  "services": [
+    {
+      "bom-ref": "svc:open-meteo",
+      "name": "Open-Meteo forecast API",
+      "endpoints": [
+        "https://api.open-meteo.com"
+      ],
+      "authenticated": false,
+      "x-trust-boundary": true,
+      "data": [
+        {
+          "flow": "outbound",
+          "classification": "location coordinates"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "feature:weather"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "dotfiles",
+      "dependsOn": [
+        "pkg:quickshell",
+        "pkg:hyprland",
+        "pkg:systemd",
+        "pkg:networkmanager",
+        "pkg:iproute2",
+        "pkg:pipewire",
+        "pkg:wireplumber",
+        "pkg:upower",
+        "pkg:bluez-utils",
+        "pkg:sudo",
+        "pkg:pacman",
+        "pkg:flatpak",
+        "pkg:wl-clipboard",
+        "pkg:cliphist",
+        "pkg:brightnessctl",
+        "pkg:lua",
+        "pkg:zsh",
+        "pkg:git",
+        "pkg:jq",
+        "pkg:util-linux",
+        "pkg:bash",
+        "pkg:bluez",
+        "pkg:coreutils",
+        "pkg:awww",
+        "pkg:yay",
+        "pkg:hypridle",
+        "pkg:hyprlock",
+        "pkg:hyprsunset",
+        "pkg:matugen-bin",
+        "pkg:grim",
+        "pkg:slurp",
+        "pkg:hyprpicker",
+        "pkg:wf-recorder",
+        "pkg:procps-ng",
+        "pkg:psmisc",
+        "pkg:voxtype-bin",
+        "pkg:wtype",
+        "pkg:fzf",
+        "pkg:zoxide",
+        "pkg:bat",
+        "pkg:playerctl",
+        "pkg:libpulse",
+        "pkg:man-db",
+        "pkg:less",
+        "pkg:uwsm",
+        "pkg:gcc",
+        "pkg:npm",
+        "pkg:curl",
+        "pkg:ttf-jetbrains-mono-nerd",
+        "pkg:foot",
+        "pkg:kitty",
+        "pkg:ghostty",
+        "pkg:alacritty",
+        "pkg:btop",
+        "pkg:starship",
+        "pkg:qt5ct",
+        "pkg:gtk3",
+        "pkg:gtk4",
+        "pkg:adwaita-icon-theme",
+        "pkg:python-dbus",
+        "pkg:python-gobject",
+        "pkg:neovim",
+        "pkg:ripgrep",
+        "pkg:fd",
+        "pkg:lazygit",
+        "pkg:gemini-cli",
+        "git:ohmyzsh",
+        "git:zsh-autosuggestions",
+        "git:LazyVim-starter",
+        "git:LazyVim",
+        "git:blink.cmp",
+        "git:bufferline.nvim",
+        "git:catppuccin",
+        "git:conform.nvim",
+        "git:flash.nvim",
+        "git:friendly-snippets",
+        "git:fzf-lua",
+        "git:gitsigns.nvim",
+        "git:grug-far.nvim",
+        "git:lazy.nvim",
+        "git:lazydev.nvim",
+        "git:lualine.nvim",
+        "git:mason-lspconfig.nvim",
+        "git:mason.nvim",
+        "git:mini.ai",
+        "git:mini.icons",
+        "git:neo-tree.nvim",
+        "git:noice.nvim",
+        "git:nui.nvim",
+        "git:nvim-autopairs",
+        "git:nvim-lint",
+        "git:nvim-lspconfig",
+        "git:nvim-treesitter",
+        "git:nvim-treesitter-textobjects",
+        "git:nvim-ts-autotag",
+        "git:persistence.nvim",
+        "git:plenary.nvim",
+        "git:snacks.nvim",
+        "git:todo-comments.nvim",
+        "git:tokyonight.nvim",
+        "git:trouble.nvim",
+        "git:ts-comments.nvim",
+        "git:twilight.nvim",
+        "git:undotree",
+        "git:venv-selector.nvim",
+        "git:vscode.nvim",
+        "git:which-key.nvim",
+        "git:zen-mode.nvim",
+        "installer:claude-code",
+        "installer:codex",
+        "installer:opencode",
+        "installer:hermes-agent",
+        "vendored:nerdfont-glyphs",
+        "svc:open-meteo"
+      ]
+    }
+  ]
+}
