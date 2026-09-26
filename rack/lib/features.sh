@@ -17,7 +17,11 @@
 # means installed — unticking it goes straight to the question remove asks.
 #
 # setup and teardown commands run from the repo root, so a feature can name a
-# script of its own by its path in the repo (nvim/install.sh).
+# script of its own by its path in the repo (nvim/install.sh). So do `before`
+# commands, which run before its packages are installed, and the probes of
+# `variants`: package lists that depend on the machine, the first whose probe
+# exits 0 taking the place of `packages` (fingerprint: which driver depends
+# on the reader).
 #
 # What is on is one small file, features.conf, which the shell
 # (quickshell/main/services/Features.qml) and Hyprland
@@ -135,6 +139,26 @@ rack::features::off_owner() {
     printf '%s\n' "$name"
 }
 
+# The packages a feature installs, one per line: `__packages <name> repo|aur|all`.
+# The first of its `variants` whose probe exits 0 decides them; with none
+# passing, or none at all, its own `packages` do.
+rack::features::__packages() {
+    local name=$1 kind=$2 registry i count
+    local -a probe
+    registry=$(rack::features::__registry)
+    local pick='(if $k == "all" then (.repo // []) + (.aur // []) else .[$k] // [] end) | .[]'
+    count=$(jq -r --arg n "$name" '.features[$n].variants // [] | length' "$registry")
+    for ((i = 0; i < count; i++)); do
+        mapfile -t probe < <(jq -r --arg n "$name" --argjson i "$i" '.features[$n].variants[$i].probe // [] | .[]' "$registry")
+        ((${#probe[@]})) || continue
+        if (cd -- "$RACK_ROOT/.." && "${probe[@]}") >/dev/null 2>&1; then
+            jq -r --arg n "$name" --argjson i "$i" --arg k "$kind" ".features[\$n].variants[\$i].packages | $pick" "$registry"
+            return 0
+        fi
+    done
+    jq -r --arg n "$name" --arg k "$kind" ".features[\$n].packages | $pick" "$registry"
+}
+
 # ------------------------------------------------------------------ steps
 
 # Runs each command in a field holding a list of argv arrays (setup, teardown).
@@ -154,13 +178,14 @@ rack::features::__run_each() {
 rack::features::__install() {
     local name=$1
     local -a repo aur
-    mapfile -t repo < <(jq -r --arg n "$name" '.features[$n].packages.repo // [] | .[]' "$(rack::features::__registry)")
-    mapfile -t aur < <(jq -r --arg n "$name" '.features[$n].packages.aur // [] | .[]' "$(rack::features::__registry)")
+    mapfile -t repo < <(rack::features::__packages "$name" repo)
+    mapfile -t aur < <(rack::features::__packages "$name" aur)
 
     if ((${#aur[@]})) && ! rig::check::has yay; then
         rig::log::error "$name needs ${aur[*]} from the AUR, and yay is not installed"
         return "$RIG_EX_NODEP"
     fi
+    rack::features::__run_each "$name" before || return
     if ((${#repo[@]})); then
         rig::proc::run sudo pacman -S --needed "${repo[@]}" || return "$RIG_EX_FAIL"
     fi
@@ -193,12 +218,10 @@ rack::features::__removable_packages() {
         while read -r other; do
             [[ $other == "$name" ]] && continue
             [[ $(rack::features::__state "$other") == on ]] || continue
-            jq -e --arg n "$other" --arg p "$pkg" \
-                '.features[$n].packages | (.repo // []) + (.aur // []) | index($p)' \
-                "$(rack::features::__registry)" >/dev/null && keep=1
+            rack::features::__packages "$other" all | grep -qxF -- "$pkg" && keep=1
         done < <(rack::features::__names)
         ((keep)) || printf '%s\n' "$pkg"
-    done < <(jq -r --arg n "$name" '.features[$n].packages | (.repo // []) + (.aur // []) | .[]' "$(rack::features::__registry)")
+    done < <(rack::features::__packages "$name" all)
 }
 
 # Data paths that exist, with ~ expanded. Anything that is not strictly inside

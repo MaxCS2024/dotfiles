@@ -510,6 +510,67 @@ test_apply_unswitchable() {
 	ok
 }
 
+# ---- variants and before -------------------------------------------------------
+#
+# reader is fingerprint's shape: the driver depends on the hardware, so a
+# variant whose probe passes swaps in its own packages, and a before step
+# runs ahead of the install. The probe is a file in $STUB standing in for
+# the device, and names a path relative to the repo root the way
+# fingerprint/install.sh --validity does.
+
+reader_registry() {
+	cat >"$RACK_FEATURES" <<-'EOF'
+		{"version": 1, "features": {
+		  "reader": {"label": "Reader", "summary": "x", "recommended": false, "switch": false,
+		    "provides": ["sh"], "probe": ["sh", "-c", "test -e \"$STUB/pkgs/zzdriver\" || test -e \"$STUB/pkgs/zzold-driver\""],
+		    "packages": {"repo": ["zzdriver"], "aur": []},
+		    "variants": [{"probe": ["sh", "-c", "test -e rack/rack && test -e \"$STUB/old-sensor\""],
+		                  "packages": {"repo": [], "aur": ["zzold-driver"]}}],
+		    "before": [["sh", "-c", "echo before >>\"$STUB/calls\""]]}
+		}}
+	EOF
+}
+
+test_variant_none_uses_packages() {
+	it "with no variant's probe passing, a feature installs its own packages"
+	reader_registry
+	run features on reader
+	assert_eq "status" "$STATUS" 0 || return
+	assert_has "own" "$CALLS" "sudo pacman -S --needed zzdriver" || return
+	assert_lacks "not the variant's" "$CALLS" "zzold-driver" || return
+	ok
+}
+
+test_variant_probe_picks_packages() {
+	it "a variant whose probe passes, run from the repo root, installs and removes its packages instead"
+	reader_registry
+	touch "$TMP/old-sensor"
+	run features on reader
+	assert_eq "status" "$STATUS" 0 || return
+	assert_has "variant's" "$CALLS" "yay -S --needed zzold-driver" || return
+	assert_lacks "not its own" "$CALLS" "zzdriver" || return
+	: >"$TMP/calls"
+	RIG_YES=1 run features remove reader
+	assert_eq "remove status" "$STATUS" 0 || return
+	assert_has "removed" "$CALLS" "pacman -Rns -- zzold-driver" || return
+	ok
+}
+
+test_before_runs_ahead_of_install() {
+	it "before commands run ahead of the packages, and not at all when yay is missing"
+	reader_registry
+	run features on reader
+	assert_eq "status" "$STATUS" 0 || return
+	assert_eq "order" "$(grep -m2 -E '^(before|sudo pacman)' "$TMP/calls" | cut -c1-6 | tr '\n' ' ')" "before sudo p " || return
+	touch "$TMP/old-sensor"
+	rm "$TMP/pkgs/zzdriver" "$TMP/bin/yay"
+	: >"$TMP/calls"
+	run features on reader
+	[[ $STATUS -ne 0 ]] || { fail "succeeded without yay"; return; }
+	assert_lacks "no before" "$CALLS" "before" || return
+	ok
+}
+
 # ---- runner ------------------------------------------------------------------
 
 main() {

@@ -71,6 +71,9 @@ touch:
 provides   binaries that mean it is installed
 probe      optional argv that must also exit 0 (for packages with no binary)
 packages   repo (pacman) and aur (yay) package names
+variants   packages that depend on the machine: the first whose probe
+           exits 0 is used instead of packages (fingerprint's driver)
+before     commands run before its packages are installed
 setup      commands run once, after its packages are installed
 units      systemd user units started with it and stopped without it
 teardown   commands run before its packages are uninstalled
