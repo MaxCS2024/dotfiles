@@ -302,6 +302,13 @@ running. Grouped by what breaks if it's missing.
   man pages through (`LESS_TERMCAP_*`, `MANROFFOPT`). Neither comes with
   a bare Arch install; **man-pages** adds the section 2 and 3 pages.
 
+- **hyprpolkitagent** — the polkit agent, started from
+  `hypr/modules/autostart.lua`. It shows the password dialog when an app
+  asks the system for rights over D-Bus: Impression writing a USB stick,
+  a disk tool mounting or formatting an internal drive. Without it those
+  apps fail with `NotAuthorizedCanObtain`. The shell's own admin actions
+  don't need it (`services/PrivilegedExec.qml` uses `sudo -S`).
+
 - **uwsm** — app launches are wrapped in `uwsm-app` when it is
   installed and not otherwise (`hypr/modules/defaults.lua`). Logging
   out doesn't use it: `uwsm stop` only ends a session uwsm started, and

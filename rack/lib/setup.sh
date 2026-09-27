@@ -63,6 +63,7 @@ declare -ga RACK_SETUP_OPTIONAL=(
     "hypridle:hypridle"
     "hyprlock:hyprlock"
     "hyprsunset:hyprsunset"
+    "hyprpolkitagent:/usr/lib/hyprpolkitagent/hyprpolkitagent"
     "matugen:matugen"
     "grim:grim"
     "slurp:slurp"

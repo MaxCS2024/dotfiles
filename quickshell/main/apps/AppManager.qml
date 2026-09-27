@@ -53,7 +53,7 @@ import "search.js" as Search
 //
 // Installing and removing are services/Packages.qml's: pacman and system
 // flatpaks run behind this window with the password its PasswordPrompt
-// collects (`sudo -S`, no polkit agent in this session), and an AUR
+// collects (`sudo -S`, not the polkit agent), and an AUR
 // install goes to a real terminal because `yay` wants to show a PKGBUILD
 // diff and ask about it. services/packages.js has the rules, and
 // tests/packages checks them. Reading what the searches print, and

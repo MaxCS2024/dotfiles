@@ -22,9 +22,8 @@
 //     asks about it, and none of that belongs behind a spinner. Removing
 //     an AUR package is a plain `pacman -Rns`, like any other.
 //   * Anything else that needs root runs behind the window, with a
-//     password the window collects (`withPrompt`), through `sudo -S`. There
-//     is no polkit agent in this session; services/PrivilegedExec.qml's
-//     header has the rest.
+//     password the window collects (`withPrompt`), through `sudo -S`, not the
+//     polkit agent; services/PrivilegedExec.qml's header has why.
 //   * With no window to ask a password in -- the Conf menu, which runs a
 //     row after it has closed -- root means a terminal and sudo in it.
 //   * What needs no root runs behind the window either way.

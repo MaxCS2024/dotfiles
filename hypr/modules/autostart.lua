@@ -38,6 +38,14 @@ hl.on("hyprland.start", function ()
 	hl.exec_cmd("awww-daemon")
 	hl.exec_cmd("wl-paste --watch cliphist store")
 	hl.exec_cmd("hypridle") -- idle/lock daemon, config in hypr/hypridle.conf
+	-- The polkit agent: the password dialog for apps that ask the system
+	-- for rights over D-Bus, such as Impression writing a USB stick or a
+	-- disk tool formatting an internal drive. Without one they fail with
+	-- NotAuthorizedCanObtain (found 2026-09-27). The shell's own admin
+	-- actions don't go through it: services/PrivilegedExec.qml runs them
+	-- with sudo -S and its own password window. A systemd user unit, which
+	-- has this session's WAYLAND_DISPLAY because Hyprland hands it over.
+	hl.exec_cmd("systemctl --user start hyprpolkitagent")
 	-- No color-scheme here: GTK4/libadwaita takes light vs. dark from that
 	-- setting alone, and the shell sets it to match the active palette
 	-- whenever it writes GTK's colours (quickshell/main/theme/AppColors.qml).

@@ -538,8 +538,9 @@ ShellSurface {
     // list of apps and nothing else. A row runs after this slab has
     // closed, so there is no window left to ask a password in: Packages
     // takes that as a terminal, with sudo in it for the repo packages and
-    // the flatpaks (flathub is a system remote here, and there is no
-    // polkit agent), and yay for the AUR ones, which want a PKGBUILD read
+    // the flatpaks (flathub is a system remote here, and the shell asks
+    // for root through sudo, not the polkit agent), and yay for the AUR
+    // ones, which want a PKGBUILD read
     // and a y/n each. It watches for the package to land, and the row's
     // "installed" follows once it has.
     function packageEntry(app) {
