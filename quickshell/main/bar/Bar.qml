@@ -43,7 +43,7 @@ Variants {
         // side of it. Filtering here drops the names nothing can build
         // instead of rendering those gaps.
         function knownModules(names) {
-            return names.filter(n => n in Modules.registry && Features.on(Modules.feature[n] || ""))
+            return names.filter(n => n in Modules.registry && Features.allows(n))
         }
         readonly property var layout: {
             const l = Settings.barLayoutFor(bar.monitorName)

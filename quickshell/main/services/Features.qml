@@ -6,9 +6,9 @@ import QtQuick
 // Which optional features this machine has turned on — dictation, the
 // weather module — as chosen with `rack features` (rack/lib/features.sh,
 // what each one is made of is rack/features.json). Everything that belongs
-// to a feature asks `Features.on("<name>")` before it is built: shell.qml
-// for the dictation pill, bar/Bar.qml for bar modules (via
-// bar/Modules.qml's `feature` map).
+// to a feature asks before it is built: shell.qml `on("dictation")` for
+// the dictation pill, and bar/Bar.qml and shell.qml `allows(name)` for
+// the bar modules and panels listed in `_owners` below.
 //
 // The file is ~/.config/rack/features.conf, one "name on|off" per line;
 // Hyprland reads the same one for its binds (hypr/modules/features.lua).
@@ -26,6 +26,19 @@ Singleton {
     property var _states: ({})
 
     function on(name) { return root._states[name] !== "off" }
+
+    // Bar modules and panels that belong to a feature, by the name both
+    // go by (bar/Modules.qml's registry, services/Panels.qml's surfaces).
+    // It lived in bar/Modules.qml until 2026-09-27, which had shell.qml
+    // reading the bar's module table to decide which panels to build.
+    readonly property var _owners: ({
+        "weather": "weather",
+        "earbuds": "earbuds"
+    })
+
+    // May the bar module or panel of this name be built? Yes, unless it
+    // belongs to a feature that is off.
+    function allows(name) { return root.on(root._owners[name] || "") }
 
     function _parse(text) {
         const states = {}

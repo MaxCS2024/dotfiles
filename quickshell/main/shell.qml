@@ -108,9 +108,9 @@ ShellRoot {
         function onPanelRequested(name, verb, arg) {
             if (verb === "close") return
             // A panel that belongs to a feature that is off stays unbuilt
-            // (bar/Modules.qml's `feature` map, which names the bar module
-            // and its panel alike).
-            if (!Features.on(Modules.feature[name] || "")) return
+            // (services/Features.qml's `_owners`, which names the bar
+            // module and its panel alike).
+            if (!Features.allows(name)) return
             const loader = shell.panelLoaders[name]
             if (loader) loader.active = true
         }

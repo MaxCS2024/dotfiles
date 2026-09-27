@@ -32,14 +32,6 @@ QtObject {
         "earbuds": earbudsComponent
     })
 
-    // Modules that belong to an optional feature (services/Features.qml,
-    // `rack features`): bar/Bar.qml drops one whose feature is off, and
-    // shell.qml will not build the panel of the same name.
-    readonly property var feature: ({
-        "weather": "weather",
-        "earbuds": "earbuds"
-    })
-
     readonly property Component workspacesComponent: Component { Workspaces {} }
     readonly property Component activeWindowComponent: Component { ActiveWindow {} }
     readonly property Component mediaComponent: Component { MediaPlayer {} }
