@@ -16,12 +16,13 @@ Singleton {
 
     // Every role by name, as `relay default list --json` gives it:
     //
-    //   { role, source, name, label, command, installed,
+    //   { role, resolvedBy, name, label, command, installed,
     //     candidates: [{ name, label, installed, via, default }] }
     //
-    // `source` is "set" (a candidate the user picked), "missing" (one they
-    // picked that has since been uninstalled; the first installed
-    // candidate stands in, and `wanted`/`wantedLabel` name the pick),
+    // `resolvedBy` is how the role got its default: "set" (a candidate
+    // the user picked), "missing" (one they picked that has since been
+    // uninstalled; the first installed candidate stands in, and
+    // `wanted`/`wantedLabel` name the pick),
     // "custom" (a command they wrote, with no name or label) or
     // "fallback" (nothing set; the first candidate installed here).
     // Each also carries `path` or `flatpak`, what a package manager
@@ -135,7 +136,7 @@ Singleton {
         const pairs = []
         for (const key of Object.keys(root.roles)) {
             const found = root.roles[key]
-            if (found.source === "custom" || !found.installed) continue
+            if (found.resolvedBy === "custom" || !found.installed) continue
             if (found.flatpak) (direct[found.flatpak] = direct[found.flatpak] || []).push(key)
             else if (found.path) pairs.push(key, found.path)
         }

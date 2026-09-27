@@ -302,7 +302,7 @@ test_set_but_uninstalled_stands_in() {
 	run list
 	assert_has "said why" "$OUT" "Foot is set, not installed" || return
 	run list --json
-	assert_has "source" "$OUT" '"source":"missing"' || return
+	assert_has "resolvedBy" "$OUT" '"resolvedBy":"missing"' || return
 	assert_has "wanted" "$OUT" '"wanted":"foot"' || return
 	ok
 }
@@ -596,9 +596,9 @@ test_list_json() {
 	run list --json
 	assert_eq "status" "$STATUS" 0 || return
 	local shape
-	shape=$(jq -c '[.[] | {role, source, name}]' <<<"$OUT") || { fail "not JSON: [$OUT]"; return; }
+	shape=$(jq -c '[.[] | {role, resolvedBy, name}]' <<<"$OUT") || { fail "not JSON: [$OUT]"; return; }
 	assert_eq "roles" "$shape" \
-		'[{"role":"terminal","source":"fallback","name":"foot"},{"role":"editor","source":"fallback","name":"nvim"},{"role":"browser","source":"custom","name":null},{"role":"file-manager","source":"fallback","name":"nautilus"}]' || return
+		'[{"role":"terminal","resolvedBy":"fallback","name":"foot"},{"role":"editor","resolvedBy":"fallback","name":"nvim"},{"role":"browser","resolvedBy":"custom","name":null},{"role":"file-manager","resolvedBy":"fallback","name":"nautilus"}]' || return
 	assert_eq "installed" "$(jq -c '[.[0].candidates[] | select(.installed) | .name]' <<<"$OUT")" '["foot"]' || return
 	assert_eq "default" "$(jq -c '[.[0].candidates[] | select(.default) | .name]' <<<"$OUT")" '["foot"]' || return
 	ok

@@ -349,7 +349,7 @@ end
 -- not, without writing the file first.
 --
 -- Returns nil for a role that does not exist, else a table:
---   role, source ("set" | "missing" | "custom" | "fallback"), command,
+--   role, resolvedBy ("set" | "missing" | "custom" | "fallback"), command,
 --   and unless custom: name, label, installed, via, desktop, argv, app.
 --
 -- "missing" is a candidate that was set and has since been uninstalled
@@ -376,22 +376,22 @@ function M.describe(roleName, stored)
 	if stored then
 		app = candidateNamed(role, stored)
 		if app == nil then
-			found.source = "custom"
+			found.resolvedBy = "custom"
 			found.command = stored
 			return found
 		end
-		found.source = "set"
+		found.resolvedBy = "set"
 		if installedVia(app) == nil then
 			local standIn = firstInstalled(role)
 			if standIn ~= nil then
-				found.source = "missing"
+				found.resolvedBy = "missing"
 				found.wanted = app.name
 				found.wantedLabel = app.label
 				app = standIn
 			end
 		end
 	else
-		found.source = "fallback"
+		found.resolvedBy = "fallback"
 		app = firstInstalled(role) or role.candidates[1]
 	end
 
@@ -425,7 +425,7 @@ function M.candidates(roleName)
 			via = via,
 			installed = via ~= nil,
 			command = table.concat(argvFor(app, via), " "),
-			default = default.source ~= "custom" and default.name == app.name,
+			default = default.resolvedBy ~= "custom" and default.name == app.name,
 		}
 	end
 
@@ -450,7 +450,7 @@ end
 -- terminals take.
 function M.terminalArgv(command, appId, title)
 	local found = M.describe("terminal")
-	if found.source == "custom" then
+	if found.resolvedBy == "custom" then
 		if command == nil then
 			return customArgv(found.command)
 		end
@@ -480,7 +480,7 @@ end
 -- window, and a page that does not open is worse than both.
 function M.webAppArgv(url)
 	local found = M.describe("browser")
-	if found.source ~= "custom" and found.installed and found.app.appMode then
+	if found.resolvedBy ~= "custom" and found.installed and found.app.appMode then
 		return append(copy(found.argv), "--app=" .. url)
 	end
 
@@ -493,7 +493,7 @@ end
 -- --password-store is the one every window gets.
 function M.preloadArgv()
 	local found = M.describe("browser")
-	if found.source == "custom" or not found.installed or not found.app.preload then
+	if found.resolvedBy == "custom" or not found.installed or not found.app.preload then
 		return nil
 	end
 
@@ -503,7 +503,7 @@ end
 -- Run a role's default as it is.
 function M.argv(roleName)
 	local found = M.describe(roleName)
-	if found.source == "custom" then
+	if found.resolvedBy == "custom" then
 		return customArgv(found.command)
 	end
 
@@ -572,7 +572,7 @@ end
 local function public(found)
 	local out = {
 		role = found.role,
-		source = found.source,
+		resolvedBy = found.resolvedBy,
 		wanted = found.wanted,
 		wantedLabel = found.wantedLabel,
 		command = found.command,
@@ -620,15 +620,15 @@ local function listText()
 	for _, name in ipairs(M.roles()) do
 		local found = M.describe(name)
 		local shown, why
-		if found.source == "custom" then
+		if found.resolvedBy == "custom" then
 			shown, why = found.command, "custom command"
 		else
 			shown = found.label
-			why = found.source == "set" and "set" or "first installed"
-			if found.source == "missing" then
+			why = found.resolvedBy == "set" and "set" or "first installed"
+			if found.resolvedBy == "missing" then
 				why = found.wantedLabel .. " is set, not installed"
 			elseif not found.installed then
-				why = found.source == "set" and "set, not installed" or "nothing installed"
+				why = found.resolvedBy == "set" and "set, not installed" or "nothing installed"
 			end
 		end
 		io.write(string.format("%-13s %-16s %s\n", name, shown, why))
@@ -659,7 +659,7 @@ local function describeText(found)
 	end
 
 	line("role", found.role)
-	line("source", found.source)
+	line("resolvedBy", found.resolvedBy)
 	line("wanted", found.wanted)
 	line("wantedLabel", found.wantedLabel)
 	line("name", found.name)

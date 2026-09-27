@@ -421,9 +421,9 @@ ShellSurface {
     function defaultHint(role) {
         const found = Defaults.roles ? Defaults.roles[role.key] : null
         if (!found) return ""
-        if (found.source === "custom") return found.command.replace(/^uwsm-app -- /, "")
+        if (found.resolvedBy === "custom") return found.command.replace(/^uwsm-app -- /, "")
         // The pick was uninstalled and another stands in: say both.
-        if (found.source === "missing") return found.label + ", " + found.wantedLabel + " gone"
+        if (found.resolvedBy === "missing") return found.label + ", " + found.wantedLabel + " gone"
         return found.installed ? found.label : found.label + ", not installed"
     }
 

@@ -69,7 +69,7 @@ relay::default::__error() {
 }
 
 # describe <array name> <role> [--stored <value> | --unset] — what the role
-# resolves to (or would, with that stored), as role, source, name, label,
+# resolves to (or would, with that stored), as role, resolvedBy, name, label,
 # installed, command, desktop, handler, mimes and candidates.
 relay::default::__describe() {
     local -n __rd_into=$1
@@ -205,7 +205,7 @@ relay::default::__reload() {
 
 relay::default::__say() {
     local -n __rd_said=$1
-    if [[ ${__rd_said[source]} == custom ]]; then
+    if [[ ${__rd_said[resolvedBy]} == custom ]]; then
         rig::log::success "${__rd_said[role]} is now: ${__rd_said[command]}"
     else
         rig::log::success "${__rd_said[role]} is now ${__rd_said[label]}"
@@ -265,15 +265,15 @@ relay::default::set() {
     # A bare word that is no candidate is almost always a typo, not a
     # command: `set browser firefx` should not quietly become a bind that
     # runs "firefx". Custom commands say so with --command.
-    if ((!custom)) && [[ ${found[source]} == custom ]]; then
+    if ((!custom)) && [[ ${found[resolvedBy]} == custom ]]; then
         rig::log::error "no candidate '$value' for $role (candidates: ${found[candidates]}; or use --command)"
         return "$RIG_EX_USAGE"
     fi
     # Not installed: another installed candidate stands in until it is
     # ("missing"), or, with none installed at all, nothing does.
-    if [[ ${found[source]} == missing ]]; then
+    if [[ ${found[resolvedBy]} == missing ]]; then
         rig::log::warn "${found[wantedLabel]} is not installed — set anyway; ${found[label]} opens until it is"
-    elif [[ ${found[source]} == set && ${found[installed]} == 0 ]]; then
+    elif [[ ${found[resolvedBy]} == set && ${found[installed]} == 0 ]]; then
         rig::log::warn "${found[label]} is not installed — set anyway; the $role keybind fails until it is"
     fi
 
