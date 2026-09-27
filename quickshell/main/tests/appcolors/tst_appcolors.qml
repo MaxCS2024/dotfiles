@@ -83,8 +83,19 @@ TestCase {
 
     function test_every_file_says_where_it_comes_from() {
         for (const text of [AppColors.foot(night), AppColors.kitty(night),
-                            AppColors.ghostty(night), AppColors.gtk(night)])
+                            AppColors.ghostty(night), AppColors.gtk(night),
+                            AppColors.hyprlock(night)])
             verify(text.indexOf("theme/AppColors.qml") !== -1, text.substring(0, 40))
+    }
+
+    // ── hyprlock ─────────────────────────────────────────
+
+    function test_hyprlock_variables_are_the_tokens() {
+        for (const palette of [night, latte]) {
+            const vars = pairs(AppColors.hyprlock(palette), /^\$qs_(\w+) = rgb\(([0-9a-f]{6})\)$/)
+            for (const name of AppColors.HYPRLOCK_TOKENS)
+                compare("#" + vars[name], AppColors.hex(palette[name]), name)
+        }
     }
 
     // ── GTK ──────────────────────────────────────────────

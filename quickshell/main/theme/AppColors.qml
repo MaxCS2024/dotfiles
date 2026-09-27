@@ -21,6 +21,7 @@ import "appcolors.js" as Format
 //   ~/.cache/quickshell/foot-colors.ini    included by foot/foot.ini
 //   ~/.cache/quickshell/kitty-colors.conf  included by kitty/kitty.conf
 //   ~/.cache/quickshell/ghostty-colors     included by ghostty/config.ghostty
+//   ~/.cache/quickshell/hyprlock-colors.conf  sourced by hypr/hyprlock.conf
 //   ~/.config/gtk-{3,4}.0/gtk-colors.css   imported by the gtk.css beside it
 //
 // GTK's has to sit beside gtk.css: GTK's CSS @import expands neither ~
@@ -53,6 +54,7 @@ Scope {
             foot: Format.foot(t),
             kitty: Format.kitty(t),
             ghostty: Format.ghostty(t),
+            hyprlock: Format.hyprlock(t),
             gtk: Format.gtk(t),
             scheme: Format.colorScheme(t)
         }
@@ -71,6 +73,7 @@ Scope {
             footFile.setText(texts.foot)
             kittyFile.setText(texts.kitty)
             ghosttyFile.setText(texts.ghostty)
+            hyprlockFile.setText(texts.hyprlock)
             if (gtk3File.path !== "") gtk3File.setText(texts.gtk)
             if (gtk4File.path !== "") gtk4File.setText(texts.gtk)
             tell.command = ["sh", "-c", root._tellScript, "sh", texts.scheme]
@@ -112,6 +115,7 @@ Scope {
                 footFile.path = root._cache + "/foot-colors.ini"
                 kittyFile.path = root._cache + "/kitty-colors.conf"
                 ghosttyFile.path = root._cache + "/ghostty-colors"
+                hyprlockFile.path = root._cache + "/hyprlock-colors.conf"
                 if (gtk.indexOf("gtk-3.0") !== -1)
                     gtk3File.path = root._home + "/.config/gtk-3.0/gtk-colors.css"
                 if (gtk.indexOf("gtk-4.0") !== -1)
@@ -128,6 +132,7 @@ Scope {
     FileView { id: footFile; printErrors: false }
     FileView { id: kittyFile; printErrors: false; blockWrites: true }
     FileView { id: ghosttyFile; printErrors: false; blockWrites: true }
+    FileView { id: hyprlockFile; printErrors: false }
     FileView { id: gtk3File; printErrors: false }
     FileView { id: gtk4File; printErrors: false }
 }

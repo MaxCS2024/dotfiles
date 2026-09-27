@@ -116,6 +116,23 @@ function gtk(t) {
     return out
 }
 
+// hyprlock's colours, as the hyprlang variables hypr/hyprlock.conf reads
+// after sourcing this file: the tokens quickshell's own lock screen design
+// (lockscreen/LockScreen.qml) draws with. Named after the token, with a
+// prefix so none can meet one of hyprlock's own placeholders ($USER,
+// $TIME, …). hyprlock reads them when it starts, so a palette change
+// shows at the next lock.
+var HYPRLOCK_TOKENS = ["bar", "fgStrong", "fgSoft", "fgMuted", "separator", "border", "accent", "red"]
+
+function hyprlock(t) {
+    var out = _head("#", "hyprlock.conf") + "\n"
+    for (var i = 0; i < HYPRLOCK_TOKENS.length; i++) {
+        var name = HYPRLOCK_TOKENS[i]
+        out += "$qs_" + name + " = rgb(" + hex(t[name]).substring(1) + ")\n"
+    }
+    return out
+}
+
 // The value for org.gnome.desktop.interface color-scheme.
 function colorScheme(t) {
     return Palette.isDark(t.bar) ? "prefer-dark" : "prefer-light"
