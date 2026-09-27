@@ -6,6 +6,7 @@ import "../common"
 import "../config"
 import "../services"
 import "../theme"
+import "../services/packages.js" as Pkg
 
 // The app manager: what is installed, and one search over pacman, the AUR
 // and Flathub for what isn't. One window for putting apps on the machine
@@ -81,17 +82,24 @@ ShellSurface {
     // ── State ─────────────────────────────────────────────
     property string query: ""
     property var results: []
-    // "All" | "Pacman" | "AUR" | "Flatpak"
+    // "All", or one of Pkg.SOURCES.
     property string sourceFilter: "All"
+    // The chips, and the order Tab steps through them.
+    readonly property var filters: ["All"].concat(Pkg.SOURCES)
     property int selectedIndex: 0
     // The installed view's toggle: every package rather than apps only.
     property bool allPackages: false
 
-    property bool searchingPacman: false
-    property bool searchingAur: false
-    property bool searchingFlatpak: false
-    readonly property bool searching: manager.searchingPacman
-        || manager.searchingAur || manager.searchingFlatpak
+    // source -> whether its search is still out. Replaced rather than
+    // changed in place, so that every binding reading it hears about it.
+    property var searchingIn: ({})
+    readonly property bool searching: Pkg.SOURCES.some(s => manager.searchingIn[s] === true)
+
+    function setSearching(source, on) {
+        const next = Object.assign({}, manager.searchingIn)
+        next[source] = on
+        manager.searchingIn = next
+    }
 
     // Short queries match thousands of packages and none of them
     // usefully — `-Ss a` is a wall of noise that takes seconds to
@@ -121,16 +129,18 @@ ShellSurface {
 
     function busyFor(source) {
         if (manager.browsing) return !Packages.loadedOnce
-        if (source === "Pacman") return manager.searchingPacman
-        if (source === "AUR") return manager.searchingAur
-        if (source === "Flatpak") return manager.searchingFlatpak
-        return manager.searching
+        if (source === "All") return manager.searching
+        return manager.searchingIn[source] === true
     }
 
-    function badgeFor(source) {
-        if (source === "Pacman") return Appearance.badgePacman
-        if (source === "AUR") return Appearance.badgeAur
-        return Appearance.badgeFlatpak
+    readonly property var badges: ({
+        [Pkg.PACMAN]: Appearance.badgePacman,
+        [Pkg.AUR]: Appearance.badgeAur,
+        [Pkg.FLATHUB]: Appearance.badgeFlatpak
+    })
+
+    function labelFor(filter) {
+        return filter === "All" ? "All" : Pkg.LABELS[filter]
     }
 
     // ── Open/close ────────────────────────────────────────
@@ -159,7 +169,7 @@ ShellSurface {
         const q = manager.query.trim()
         manager.selectedIndex = 0
         // A filter is about the list in front of you, not a standing
-        // preference: carrying "Flatpak" over into the next query is how
+        // preference: carrying "Flathub" over into the next query is how
         // you search for ripgrep and get told there is one result.
         manager.sourceFilter = "All"
         if (q.length < manager.minQueryLength) {
@@ -169,17 +179,19 @@ ShellSurface {
 
         manager.results = []
 
-        manager.searchingPacman = true
+        manager.searchingIn = {}
+
+        manager.setSearching(Pkg.PACMAN, true)
         pacmanSearch.command = ["pacman", "-Ss", q]
         pacmanSearch.running = false
         pacmanSearch.running = true
 
-        manager.searchingAur = true
+        manager.setSearching(Pkg.AUR, true)
         aurSearch.command = ["yay", "-Ss", "--aur", q]
         aurSearch.running = false
         aurSearch.running = true
 
-        manager.searchingFlatpak = true
+        manager.setSearching(Pkg.FLATHUB, true)
         flatpakSearch.command = ["flatpak", "search",
                                  "--columns=name,description,application", q]
         flatpakSearch.running = false
@@ -233,16 +245,13 @@ ShellSurface {
                 i += 1
             }
 
-            out.push({
-                source: source,
-                id: name,
-                name: name,
+            out.push(Pkg.entry(source, name, {
                 repo: m[1],
                 version: m[3],
                 description: description,
                 installed: header.includes("[installed"),
                 rank: manager.rank(name, manager.query.trim())
-            })
+            }))
         }
         return out
     }
@@ -255,12 +264,9 @@ ShellSurface {
             if (parts.length < 3) continue
             if (parts[0] === "Name") continue   // header row
             const appId = parts[2]
-            out.push({
-                source: "Flatpak",
-                id: appId,
+            out.push(Pkg.entry(Pkg.FLATHUB, appId, {
                 name: parts[0],
                 repo: "flathub",
-                version: "",
                 description: parts[1],
                 installed: Packages.hasFlatpak(appId),
                 // Flathub names are titles ("Visual Studio Code"), not
@@ -268,7 +274,7 @@ ShellSurface {
                 // answers better.
                 rank: Math.max(manager.rank(parts[0], manager.query.trim()),
                                manager.rank(appId, manager.query.trim()))
-            })
+            }))
         }
         return out
     }
@@ -291,15 +297,15 @@ ShellSurface {
         id: pacmanSearch
         stdout: StdioCollector {
             onStreamFinished: {
-                manager.mergeIn(manager.parsePacmanish(text, "Pacman"))
-                manager.searchingPacman = false
+                manager.mergeIn(manager.parsePacmanish(text, Pkg.PACMAN))
+                manager.setSearching(Pkg.PACMAN, false)
             }
         }
         onExited: (exitCode, exitStatus) => {
             // pacman exits 1 on "no results", which is an answer, not a
             // failure — the collector has already delivered whatever
             // there was.
-            manager.searchingPacman = false
+            manager.setSearching(Pkg.PACMAN, false)
         }
     }
 
@@ -307,15 +313,15 @@ ShellSurface {
         id: aurSearch
         stdout: StdioCollector {
             onStreamFinished: {
-                manager.mergeIn(manager.parsePacmanish(text, "AUR"))
-                manager.searchingAur = false
+                manager.mergeIn(manager.parsePacmanish(text, Pkg.AUR))
+                manager.setSearching(Pkg.AUR, false)
             }
         }
-        onExited: (exitCode, exitStatus) => manager.searchingAur = false
+        onExited: (exitCode, exitStatus) => manager.setSearching(Pkg.AUR, false)
         // Without yay the Process never starts, and a Process that never
         // started emits neither of the two above — the AUR column would
         // say "searching" forever. Stopping running covers that case too.
-        onRunningChanged: if (!running) manager.searchingAur = false
+        onRunningChanged: if (!running) manager.setSearching(Pkg.AUR, false)
     }
 
     Process {
@@ -323,10 +329,10 @@ ShellSurface {
         stdout: StdioCollector {
             onStreamFinished: {
                 manager.mergeIn(manager.parseFlatpak(text))
-                manager.searchingFlatpak = false
+                manager.setSearching(Pkg.FLATHUB, false)
             }
         }
-        onExited: (exitCode, exitStatus) => manager.searchingFlatpak = false
+        onExited: (exitCode, exitStatus) => manager.setSearching(Pkg.FLATHUB, false)
     }
 
     // Re-mark search results after anything changes what is installed —
@@ -339,7 +345,7 @@ ShellSurface {
             // What is installed decides what each default resolves to.
             Defaults.refresh()
             manager.results = manager.results.map(r => {
-                r.installed = r.source === "Flatpak" ? Packages.hasFlatpak(r.id) : Packages.has(r.id)
+                r.installed = Packages.isInstalled(r)
                 return r
             })
         }
@@ -360,7 +366,7 @@ ShellSurface {
 
     function install(entry) {
         if (!entry || entry.installed || Packages.busy(entry.source, entry.id) !== "") return
-        if (entry.source === "AUR") manager.say("Review " + entry.id + " in the terminal")
+        if (entry.source === Pkg.AUR) manager.say("Review " + entry.id + " in the terminal")
         Packages.install({ source: entry.source, id: entry.id, name: entry.name }, pwPrompt)
     }
 
@@ -424,7 +430,7 @@ ShellSurface {
     }
 
     function cycleFilter(delta) {
-        const order = ["All", "Pacman", "AUR", "Flatpak"]
+        const order = manager.filters
         const at = order.indexOf(manager.sourceFilter)
         manager.sourceFilter = order[(at + delta + order.length) % order.length]
         manager.selectedIndex = 0
@@ -613,7 +619,7 @@ ShellSurface {
                     // carrying the busy flags: the model would then be a
                     // binding on those flags, and every delegate would be
                     // destroyed and rebuilt each time a backend answered.
-                    model: ["All", "Pacman", "AUR", "Flatpak"]
+                    model: manager.filters
 
                     delegate: Rectangle {
                         id: chip
@@ -639,12 +645,12 @@ ShellSurface {
                                 implicitWidth: 8
                                 implicitHeight: 8
                                 radius: 4
-                                color: manager.badgeFor(chip.modelData)
+                                color: manager.badges[chip.modelData] ?? Appearance.clear(Appearance.surface)
                                 visible: chip.modelData !== "All"
                             }
 
                             Text {
-                                text: chip.modelData
+                                text: manager.labelFor(chip.modelData)
                                 color: chip.active ? Appearance.fgStrong : Appearance.fgSoft
                                 font.pixelSize: Theme.fontSmall
                                 font.family: Theme.font
@@ -773,11 +779,11 @@ ShellSurface {
                                     implicitWidth: 56
                                     implicitHeight: 20
                                     radius: Theme.radius
-                                    color: manager.badgeFor(row.modelData.source)
+                                    color: manager.badges[row.modelData.source]
 
                                     Text {
                                         anchors.centerIn: parent
-                                        text: row.modelData.source
+                                        text: manager.labelFor(row.modelData.source)
                                         color: Appearance.fg
                                         font.pixelSize: Theme.fontTiny
                                         font.family: Theme.font
@@ -914,11 +920,11 @@ ShellSurface {
                             ? (!Packages.loadedOnce ? "Reading what is installed…"
                                : manager.sourceFilter === "All"
                                    ? "Nothing installed" + (manager.allPackages ? "" : " with a launcher entry")
-                                   : "No " + manager.sourceFilter
+                                   : "No " + manager.labelFor(manager.sourceFilter)
                                        + (manager.allPackages ? " packages" : " apps") + " installed")
                             : manager.searching ? "Searching…"
                             : manager.results.length > 0
-                                ? "No " + manager.sourceFilter + " packages match"
+                                ? "No " + manager.labelFor(manager.sourceFilter) + " packages match"
                             : "Nothing matched “" + manager.query.trim() + "”"
                         color: Appearance.fgMuted
                         font.pixelSize: Theme.fontNormal

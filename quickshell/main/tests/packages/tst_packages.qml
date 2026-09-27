@@ -9,9 +9,9 @@ import "../../services/packages.js" as Packages
 TestCase {
     name: "Packages"
 
-    readonly property var steam: ({ source: "Pacman", id: "steam", name: "Steam" })
-    readonly property var heroic: ({ source: "AUR", id: "heroic-games-launcher-bin", name: "Heroic" })
-    readonly property var obsidian: ({ source: "Flatpak", id: "md.obsidian.Obsidian", name: "Obsidian" })
+    readonly property var steam: ({ source: "pacman", id: "steam", name: "Steam" })
+    readonly property var heroic: ({ source: "aur", id: "heroic-games-launcher-bin", name: "Heroic" })
+    readonly property var obsidian: ({ source: "flathub", id: "md.obsidian.Obsidian", name: "Obsidian" })
 
     // ── Where it runs ────────────────────────────────────
 
@@ -32,13 +32,13 @@ TestCase {
             { tag: "flatpak install, no window", action: "install", entry: obsidian, prompt: false,
               terminal: true, privileged: false },
             { tag: "system flatpak remove, window", action: "remove",
-              entry: { source: "Flatpak", id: "md.obsidian.Obsidian", scope: "system" }, prompt: true,
+              entry: { source: "flathub", id: "md.obsidian.Obsidian", scope: "system" }, prompt: true,
               terminal: false, privileged: true },
             { tag: "user flatpak remove, window", action: "remove",
-              entry: { source: "Flatpak", id: "md.obsidian.Obsidian", scope: "user" }, prompt: true,
+              entry: { source: "flathub", id: "md.obsidian.Obsidian", scope: "user" }, prompt: true,
               terminal: false, privileged: false },
             { tag: "user flatpak remove, no window", action: "remove",
-              entry: { source: "Flatpak", id: "md.obsidian.Obsidian", scope: "user" }, prompt: false,
+              entry: { source: "flathub", id: "md.obsidian.Obsidian", scope: "user" }, prompt: false,
               terminal: false, privileged: false }
         ]
     }
@@ -77,14 +77,14 @@ TestCase {
     }
 
     function test_flatpak_remove_follows_its_scope() {
-        const user = Packages.plan("remove", { source: "Flatpak", id: "a.b.C", scope: "user" }, true)
+        const user = Packages.plan("remove", { source: "flathub", id: "a.b.C", scope: "user" }, true)
         compare(user.argv, ["flatpak", "uninstall", "-y", "--user", "a.b.C"])
-        const system = Packages.plan("remove", { source: "Flatpak", id: "a.b.C", scope: "system" }, true)
+        const system = Packages.plan("remove", { source: "flathub", id: "a.b.C", scope: "system" }, true)
         compare(system.argv, ["flatpak", "uninstall", "-y", "--system", "a.b.C"])
     }
 
     function test_flatpak_without_a_scope_is_the_system_one() {
-        const p = Packages.plan("remove", { source: "Flatpak", id: "a.b.C" }, true)
+        const p = Packages.plan("remove", { source: "flathub", id: "a.b.C" }, true)
         compare(p.argv, ["flatpak", "uninstall", "-y", "--system", "a.b.C"])
     }
 
@@ -104,7 +104,7 @@ TestCase {
             { tag: "flatpak install", action: "install", entry: obsidian,
               check: ["flatpak", "info", "--system", "md.obsidian.Obsidian"] },
             { tag: "user flatpak remove", action: "remove",
-              entry: { source: "Flatpak", id: "a.b.C", scope: "user" },
+              entry: { source: "flathub", id: "a.b.C", scope: "user" },
               check: ["flatpak", "info", "--user", "a.b.C"] }
         ]
     }
@@ -117,7 +117,7 @@ TestCase {
 
     function test_title_uses_the_name() {
         compare(Packages.plan("install", steam, true).title, "Install Steam")
-        compare(Packages.plan("remove", { source: "Pacman", id: "htop" }, true).title, "Remove htop")
+        compare(Packages.plan("remove", { source: "pacman", id: "htop" }, true).title, "Remove htop")
     }
 
     function test_prompt_names_the_command() {
@@ -132,10 +132,10 @@ TestCase {
             { tag: "unknown action", action: "upgrade", entry: steam },
             { tag: "unknown source", action: "install", entry: { source: "Snap", id: "x" } },
             { tag: "no entry", action: "install", entry: null },
-            { tag: "empty id", action: "install", entry: { source: "Pacman", id: "" } },
-            { tag: "id that is an option", action: "install", entry: { source: "Pacman", id: "-Syu" } },
-            { tag: "id with a space", action: "install", entry: { source: "Pacman", id: "a b" } },
-            { tag: "id with a quote", action: "remove", entry: { source: "AUR", id: "x';rm" } }
+            { tag: "empty id", action: "install", entry: { source: "pacman", id: "" } },
+            { tag: "id that is an option", action: "install", entry: { source: "pacman", id: "-Syu" } },
+            { tag: "id with a space", action: "install", entry: { source: "pacman", id: "a b" } },
+            { tag: "id with a quote", action: "remove", entry: { source: "aur", id: "x';rm" } }
         ]
     }
 
@@ -147,10 +147,35 @@ TestCase {
         // Real names with the characters an over-strict pattern would
         // reject: a plus, an at sign, a dot.
         for (const id of ["gtk+", "libc++", "python-foo@2", "dotnet-runtime-6.0", "0ad"])
-            verify(Packages.plan("install", { source: "Pacman", id: id }, true) !== null, id)
+            verify(Packages.plan("install", { source: "pacman", id: id }, true) !== null, id)
     }
 
     function test_key() {
-        compare(Packages.key(steam), "Pacman:steam")
+        compare(Packages.key(steam), "pacman:steam")
+    }
+
+    // ── Entries ──────────────────────────────────────────
+
+    function test_entry_fills_the_rest() {
+        const e = Packages.entry(Packages.FLATHUB, "md.obsidian.Obsidian", { name: "Obsidian", scope: "user" })
+        compare(e.source, "flathub")
+        compare(e.id, "md.obsidian.Obsidian")
+        compare(e.name, "Obsidian")
+        compare(e.version, "")
+        compare(e.description, "")
+        compare(e.installed, false)
+        compare(e.scope, "user")
+        compare(Packages.entry(Packages.PACMAN, "htop").name, "htop", "name defaults to the id")
+    }
+
+    function test_every_source_is_labelled() {
+        for (const s of Packages.SOURCES)
+            verify((Packages.LABELS[s] || "") !== "", s)
+    }
+
+    // A label is what a window shows, not a source: an entry carrying one
+    // is refused rather than planned as something else.
+    function test_label_is_not_a_source() {
+        compare(Packages.plan("install", { source: "Flathub", id: "a.b.C" }, true), null)
     }
 }

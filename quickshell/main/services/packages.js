@@ -8,8 +8,10 @@
 // tests/packages check every rule without a session; services/Packages.qml
 // is the one caller, and runs what this decides.
 //
-// An entry is { source, id, name, scope }:
-//   source  "Pacman" (the official repositories), "AUR" or "Flatpak"
+// An entry is { source, id, name, scope }, made by entry() below:
+//   source  one of SOURCES: PACMAN (the official repositories), AUR or
+//           FLATHUB — CONTEXT.md's Source. A key, never shown; LABELS
+//           has what a window calls each one
 //   id      the package name, or the flatpak's application id
 //   name    what to call it in a title, when that is not the id
 //   scope   "user" or "system", for a flatpak already installed
@@ -32,7 +34,23 @@
 // follows the scope the flatpak is installed in, and a user one needs no
 // root.
 
-var SOURCES = ["Pacman", "AUR", "Flatpak"]
+var PACMAN = "pacman"
+var AUR = "aur"
+var FLATHUB = "flathub"
+
+// In the order every list shows them.
+var SOURCES = [PACMAN, AUR, FLATHUB]
+var LABELS = { pacman: "Pacman", aur: "AUR", flathub: "Flathub" }
+
+// A package as every list in this shell carries it:
+//   { source, id, name, version, description, installed }
+// plus whatever else `fields` brings (scope, repo, rank). name defaults
+// to the id, and the rest to empty.
+function entry(source, id, fields) {
+    var e = { source: source, id: id, name: id, version: "", description: "", installed: false }
+    for (var k in fields) e[k] = fields[k]
+    return e
+}
 
 // What a package name or application id can look like. Checked because
 // the id ends up in an argv and, on the terminal path, in a command line:
@@ -59,7 +77,7 @@ function command(action, entry) {
     var id = entry.id
     var system = entry.scope !== "user"
 
-    if (entry.source === "Flatpak") {
+    if (entry.source === FLATHUB) {
         if (action === "install")
             return { argv: ["flatpak", "install", "-y", "--system", "flathub", id], privileged: true }
         return { argv: ["flatpak", "uninstall", "-y", system ? "--system" : "--user", id],
@@ -67,7 +85,7 @@ function command(action, entry) {
     }
 
     if (action === "install") {
-        if (entry.source === "AUR")
+        if (entry.source === AUR)
             return { argv: ["yay", "-S", "--needed", id], privileged: false }
         return { argv: ["pacman", "-S", "--needed", "--noconfirm", id], privileged: true }
     }
@@ -79,7 +97,7 @@ function command(action, entry) {
 // Asked of a terminal action, which reports nothing back, until it says
 // what the action was for.
 function check(action, entry) {
-    if (entry.source === "Flatpak") {
+    if (entry.source === FLATHUB) {
         var scope = action === "install" || entry.scope !== "user" ? "--system" : "--user"
         return ["flatpak", "info", scope, entry.id]
     }
@@ -102,7 +120,7 @@ function plan(action, entry, withPrompt) {
     if (!ID.test(entry.id || "")) return null
 
     var cmd = command(action, entry)
-    var terminal = (entry.source === "AUR" && action === "install")
+    var terminal = (entry.source === AUR && action === "install")
         || (cmd.privileged && !withPrompt)
     var title = (action === "install" ? "Install " : "Remove ") + label(entry)
 

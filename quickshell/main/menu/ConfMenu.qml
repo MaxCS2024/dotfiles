@@ -7,6 +7,7 @@ import "../config"
 import "../theme"
 import "../services"
 import "../keybinds"
+import "../services/packages.js" as Pkg
 
 // Conf — one keystroke (SUPER+SPACE) to everything this config can do,
 // in the shape of omarchy's menu: a small centred slab, one level of the
@@ -542,11 +543,8 @@ ShellSurface {
     // and a y/n each. It watches for the package to land, and the row's
     // "installed" follows once it has.
     function packageEntry(app) {
-        return {
-            source: app.flatpak ? "Flatpak" : app.aur ? "AUR" : "Pacman",
-            id: app.pkg || app.flatpak,
-            name: app.label
-        }
+        return Pkg.entry(app.flatpak ? Pkg.FLATHUB : app.aur ? Pkg.AUR : Pkg.PACMAN,
+                         app.pkg || app.flatpak, { name: app.label })
     }
 
     // --needed and -y, so picking a row for something already installed

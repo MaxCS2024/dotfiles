@@ -41,7 +41,7 @@ import "packages.js" as Plan
 //
 //   { source, id, name, version, description, installed }
 //
-// plus `scope` ("user" | "system") on flatpaks, which is what lets an
+// built by packages.js's entry(), plus `scope` ("user" | "system") on flatpaks, which is what lets an
 // uninstall pass the matching flag instead of guessing --user.
 //
 // `-Qe` rather than `-Q`: explicitly-installed packages, not every
@@ -88,7 +88,13 @@ Singleton {
     // .desktop file in /usr/share/applications that isn't NoDisplay or
     // Hidden; every flatpak counts, since `--app` is how they are listed.
     function isApp(entry): bool {
-        return entry.source === "Flatpak" || root._apps[entry.id] === true
+        return entry.source === Plan.FLATHUB || root._apps[entry.id] === true
+    }
+
+    // Is this entry's package here, asked the way its source is: a
+    // flatpak by exact application id, anything else by has() below.
+    function isInstalled(entry): bool {
+        return entry.source === Plan.FLATHUB ? root.hasFlatpak(entry.id) : root.has(entry.id)
     }
 
     // Is this exact flatpak application id installed? Asked by name
@@ -357,20 +363,13 @@ Singleton {
     property bool _loadedOnce: false
     property bool _allLoaded: false
 
-    function _parsePacman(text, sourceLabel) {
+    function _parsePacman(text, source) {
         // "name version" per line.
         return text.split("\n")
             .filter(l => l.trim() !== "")
             .map(l => {
                 const parts = l.trim().split(/\s+/)
-                return {
-                    source: sourceLabel,
-                    id: parts[0],
-                    name: parts[0],
-                    version: parts[1] || "",
-                    description: "",
-                    installed: true
-                }
+                return Plan.entry(source, parts[0], { version: parts[1] || "", installed: true })
             })
     }
 
@@ -380,15 +379,8 @@ Singleton {
             .filter(l => l.trim() !== "")
             .map(l => {
                 const parts = l.split("\t")
-                return {
-                    source: "Flatpak",
-                    id: parts[1] || parts[0],
-                    name: parts[0],
-                    version: "",
-                    description: "",
-                    installed: true,
-                    scope: scope
-                }
+                return Plan.entry(Plan.FLATHUB, parts[1] || parts[0],
+                                  { name: parts[0], installed: true, scope: scope })
             })
     }
 
@@ -397,7 +389,7 @@ Singleton {
         command: ["pacman", "-Qe"]
         stdout: StdioCollector {
             onStreamFinished: {
-                root._pacman = root._parsePacman(text, "Pacman")
+                root._pacman = root._parsePacman(text, Plan.PACMAN)
                     .filter(e => !root._aur.some(a => a.id === e.id))
                 root._loading = false
                 root._loadedOnce = true
@@ -428,7 +420,7 @@ Singleton {
         command: ["pacman", "-Qm"]
         stdout: StdioCollector {
             onStreamFinished: {
-                root._aur = root._parsePacman(text, "AUR")
+                root._aur = root._parsePacman(text, Plan.AUR)
                 // This may finish before or after pacmanProc; whichever
                 // runs second is the one that excludes the foreign
                 // entries from the native list.
