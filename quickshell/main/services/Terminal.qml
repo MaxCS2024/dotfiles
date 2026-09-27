@@ -2,6 +2,7 @@ pragma Singleton
 import Quickshell
 import QtQuick
 import "../config"
+import "../common/localBin.js" as LocalBin
 
 // Runs a command in a terminal window, for the jobs that belong in one
 // rather than behind a spinner in a panel: a package upgrade that wants a
@@ -67,11 +68,9 @@ Singleton {
         return argv.map(a => "'" + String(a).split("'").join("'\\''") + "'").join(" ")
     }
 
-    // ~/.local/bin is exported from .zshrc, which only interactive shells
-    // read, so whether quickshell inherits it depends on how the session
-    // was started. Prepending it here costs nothing and removes that
-    // dependency — hypr/modules/env.lua does the same for keybinds.
+    // `rack <sub>` in a terminal, found in ~/.local/bin however the
+    // session was started (common/localBin.js).
     function rack(sub, opts) {
-        root.run('PATH="$HOME/.local/bin:$PATH" rack ' + sub, opts)
+        root.run(LocalBin.PATH + " rack " + sub, opts)
     }
 }

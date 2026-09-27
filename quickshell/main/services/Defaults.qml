@@ -2,6 +2,8 @@ pragma Singleton
 import Quickshell
 import Quickshell.Io
 import QtQuick
+import "../common/localBin.js" as LocalBin
+import "../common/json.js" as Json
 
 // The default apps — which terminal, editor, browser and file manager
 // each role resolves to — as `relay default` reports them. The answers
@@ -61,13 +63,10 @@ Singleton {
         Quickshell.execDetached(root.relay(["default", "exec", "browser", "--app", url]))
     }
 
-    // An argv that runs relay with these arguments. ~/.local/bin is
-    // exported from .zshrc, which only interactive shells read, so whether
-    // quickshell inherits it depends on how the session was started;
-    // prepending it costs nothing and removes that dependency, as
-    // hypr/modules/env.lua does for keybinds.
+    // An argv that runs relay with these arguments (common/localBin.js
+    // has why it is not just ["relay", …]).
     function relay(args) {
-        return ["sh", "-c", 'PATH="$HOME/.local/bin:$PATH" exec relay "$@"', "sh"].concat(args)
+        return LocalBin.argv("relay", args)
     }
 
     readonly property Process listProc: Process {
@@ -99,7 +98,7 @@ Singleton {
         const byRole = ({})
         for (const role of list) byRole[role.role] = role
         root.error = ""
-        if (JSON.stringify(byRole) !== JSON.stringify(root.roles)) {
+        if (!Json.same(byRole, root.roles)) {
             root.roles = byRole
             root._findOwners()
         }

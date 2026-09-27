@@ -2,6 +2,8 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 import "../services"
+import "../common/localBin.js" as LocalBin
+import "../common/json.js" as Json
 
 // Everything the Conf menu can actually *do*, kept out of ConfMenu.qml so
 // that file stays the view — a filter, a list and a key handler. Nothing
@@ -181,7 +183,7 @@ QtObject {
     property var features: null
 
     readonly property Process featuresProc: Process {
-        command: ["sh", "-c", 'PATH="$HOME/.local/bin:$PATH" exec rack features list']
+        command: LocalBin.argv("rack", ["features", "list"])
         stdout: StdioCollector {
             id: featuresOut
             onStreamFinished: actions._parseFeatures(featuresOut.text)
@@ -197,7 +199,7 @@ QtObject {
         }
         // Only a different answer is published, as with `tools`: the
         // whole tree is bound to this.
-        if (JSON.stringify(found) !== JSON.stringify(actions.features)) actions.features = found
+        if (!Json.same(found, actions.features)) actions.features = found
     }
 
     // ── Hardware patches ─────────────────────────────────
@@ -208,7 +210,7 @@ QtObject {
     property var patches: null
 
     readonly property Process patchesProc: Process {
-        command: ["sh", "-c", 'PATH="$HOME/.local/bin:$PATH" exec rack patches list']
+        command: LocalBin.argv("rack", ["patches", "list"])
         stdout: StdioCollector {
             id: patchesOut
             onStreamFinished: actions._parsePatches(patchesOut.text)
@@ -221,7 +223,7 @@ QtObject {
             const m = line.match(/^\s*(\S+)\s+(installed|out of date|not installed)\s+(.+?)\s*$/)
             if (m) found.push({ name: m[1], state: m[2], label: m[3] })
         }
-        if (JSON.stringify(found) !== JSON.stringify(actions.patches)) actions.patches = found
+        if (!Json.same(found, actions.patches)) actions.patches = found
     }
 
     // `rack features on|off` for a feature that is already installed:
@@ -247,8 +249,7 @@ QtObject {
         actions.featureProc.running = false
         actions.featureProc.label = label
         actions.featureProc.verb = verb
-        actions.featureProc.command = ["sh", "-c",
-            'PATH="$HOME/.local/bin:$PATH" exec rack features "$1" "$2"', "sh", verb, name]
+        actions.featureProc.command = LocalBin.argv("rack", ["features", verb, name])
         actions.featureProc.running = true
     }
 
