@@ -89,6 +89,9 @@ Item {
             Text {
                 text: root.trailingIcon
                 visible: text !== ""
+                // A space's worth more than the row's gap, so it doesn't
+                // crowd what comes before it (the weather's "→").
+                Layout.leftMargin: Theme.space1
                 font.pixelSize: Theme.iconSize
                 font.family: Theme.font
                 color: root.iconColor
