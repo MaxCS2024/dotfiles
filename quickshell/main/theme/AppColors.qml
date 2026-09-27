@@ -122,9 +122,12 @@ Scope {
         }
     }
 
+    // kitty's and ghostty's block: setText() otherwise writes on a thread
+    // and returns at once, and `tell` above would signal them before their
+    // file had landed.
     FileView { id: footFile; printErrors: false }
-    FileView { id: kittyFile; printErrors: false }
-    FileView { id: ghosttyFile; printErrors: false }
+    FileView { id: kittyFile; printErrors: false; blockWrites: true }
+    FileView { id: ghosttyFile; printErrors: false; blockWrites: true }
     FileView { id: gtk3File; printErrors: false }
     FileView { id: gtk4File; printErrors: false }
 }
