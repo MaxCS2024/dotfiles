@@ -74,6 +74,15 @@ PopupWindow {
         menu: root.visible ? root._menu : null
     }
 
+    // Keeps the tray's menu alive while any level of it is shown. The
+    // opener above lets go of its old menu before taking the new one, and
+    // a dbusmenu whose last holder lets go is torn down whole
+    // (DBusMenuHandle::unrefHandle, quickshell 0.3.1) — so drilling into a
+    // submenu deleted the very entry being opened, leaving only Back.
+    QsMenuOpener {
+        menu: root.visible ? root.rootMenu : null
+    }
+
     Rectangle {
         anchors.fill: parent
         radius: Theme.radius
