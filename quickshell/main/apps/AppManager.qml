@@ -184,20 +184,11 @@ ShellSurface {
         manager.searchingIn = {}
 
         manager.setSearching(Pkg.PACMAN, true)
-        pacmanSearch.command = ["pacman", "-Ss", q]
-        pacmanSearch.running = false
-        pacmanSearch.running = true
-
+        pacmanSearch.run(["pacman", "-Ss", q])
         manager.setSearching(Pkg.AUR, true)
-        aurSearch.command = ["yay", "-Ss", "--aur", q]
-        aurSearch.running = false
-        aurSearch.running = true
-
+        aurSearch.run(["yay", "-Ss", "--aur", q])
         manager.setSearching(Pkg.FLATHUB, true)
-        flatpakSearch.command = ["flatpak", "search",
-                                 "--columns=name,description,application", q]
-        flatpakSearch.running = false
-        flatpakSearch.running = true
+        flatpakSearch.run(["flatpak", "search", "--columns=name,description,application", q])
     }
 
     // Merging keeps the list sorted as a whole rather than appending
@@ -214,46 +205,22 @@ ShellSurface {
             manager.selectedIndex = Math.max(0, manager.visibleResults.length - 1)
     }
 
-    Process {
+    SourceSearch {
         id: pacmanSearch
-        stdout: StdioCollector {
-            onStreamFinished: {
-                manager.mergeIn(Search.parsePacmanish(text, Pkg.PACMAN, manager.query.trim()))
-                manager.setSearching(Pkg.PACMAN, false)
-            }
-        }
-        onExited: (exitCode, exitStatus) => {
-            // pacman exits 1 on "no results", which is an answer, not a
-            // failure — the collector has already delivered whatever
-            // there was.
-            manager.setSearching(Pkg.PACMAN, false)
-        }
+        onAnswered: text => manager.mergeIn(Search.parsePacmanish(text, Pkg.PACMAN, manager.query.trim()))
+        onEnded: manager.setSearching(Pkg.PACMAN, false)
     }
 
-    Process {
+    SourceSearch {
         id: aurSearch
-        stdout: StdioCollector {
-            onStreamFinished: {
-                manager.mergeIn(Search.parsePacmanish(text, Pkg.AUR, manager.query.trim()))
-                manager.setSearching(Pkg.AUR, false)
-            }
-        }
-        onExited: (exitCode, exitStatus) => manager.setSearching(Pkg.AUR, false)
-        // Without yay the Process never starts, and a Process that never
-        // started emits neither of the two above — the AUR column would
-        // say "searching" forever. Stopping running covers that case too.
-        onRunningChanged: if (!running) manager.setSearching(Pkg.AUR, false)
+        onAnswered: text => manager.mergeIn(Search.parsePacmanish(text, Pkg.AUR, manager.query.trim()))
+        onEnded: manager.setSearching(Pkg.AUR, false)
     }
 
-    Process {
+    SourceSearch {
         id: flatpakSearch
-        stdout: StdioCollector {
-            onStreamFinished: {
-                manager.mergeIn(Search.parseFlatpak(text, manager.query.trim(), id => Packages.hasFlatpak(id)))
-                manager.setSearching(Pkg.FLATHUB, false)
-            }
-        }
-        onExited: (exitCode, exitStatus) => manager.setSearching(Pkg.FLATHUB, false)
+        onAnswered: text => manager.mergeIn(Search.parseFlatpak(text, manager.query.trim(), id => Packages.hasFlatpak(id)))
+        onEnded: manager.setSearching(Pkg.FLATHUB, false)
     }
 
     // Re-mark search results after anything changes what is installed —
