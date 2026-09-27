@@ -165,3 +165,17 @@ hl.window_rule({
 
 	center = true,
 })
+
+-- GNOME Calculator (flatpak): float at the smallest size it allows.
+-- The size asks for less than the app will take; Hyprland clamps it up
+-- to the app's own minimum rather than ignoring it, so this follows the
+-- app if that minimum changes. Verified on screen: "200 200" opened at
+-- 360x616, the same as "1 1", while "700 800" opened at 700x800.
+hl.window_rule({
+	name = "float-calculator",
+	match = { class = "^org\\.gnome\\.Calculator$" },
+
+	float = true,
+	center = true,
+	size = "1 1",
+})
