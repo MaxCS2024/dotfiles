@@ -7,6 +7,7 @@ import "../config"
 import "../services"
 import "../theme"
 import "../services/packages.js" as Pkg
+import "search.js" as Search
 
 // The app manager: what is installed, and one search over pacman, the AUR
 // and Flathub for what isn't. One window for putting apps on the machine
@@ -55,7 +56,8 @@ import "../services/packages.js" as Pkg
 // collects (`sudo -S`, no polkit agent in this session), and an AUR
 // install goes to a real terminal because `yay` wants to show a PKGBUILD
 // diff and ask about it. services/packages.js has the rules, and
-// tests/packages checks them.
+// tests/packages checks them. Reading what the searches print, and
+// ranking it, is apps/search.js's, which tests/packages checks too.
 ShellSurface {
     id: manager
 
@@ -198,87 +200,6 @@ ShellSurface {
         flatpakSearch.running = true
     }
 
-    // How well a package name answers the query. Name only, on purpose:
-    // descriptions match far too eagerly ("firefox" appears in the
-    // description of every extension and theme for it), and a list
-    // sorted by anything that generous puts the actual package below a
-    // dozen of its accessories.
-    function rank(name, q) {
-        const h = name.toLowerCase()
-        const n = q.toLowerCase()
-        if (h === n) return 1000
-        // firefox-developer-edition ranks above firefoxpwa: a separator
-        // means the query is a whole word here, not a prefix of a
-        // longer one.
-        if (h.startsWith(n + "-") || h.startsWith(n + "_")) return 900 - h.length
-        if (h.startsWith(n)) return 800 - h.length
-        const idx = h.indexOf(n)
-        if (idx !== -1) return 600 - idx * 4 - h.length
-        // Matched the description rather than the name — the backend
-        // thought it was relevant and we have no better opinion.
-        return 200 - h.length
-    }
-
-    // pacman and yay share a two-line format:
-    //   repo/name version [installed]
-    //       Description text
-    function parsePacmanish(text, source) {
-        const lines = text.split("\n")
-        const out = []
-        let i = 0
-        while (i < lines.length) {
-            const header = lines[i]
-            if (header.trim() === "" || header.startsWith(" ") || header.startsWith("\t")) {
-                i++
-                continue
-            }
-            const m = header.match(/^(\S+)\/(\S+)\s+(\S+)/)
-            if (!m) { i++; continue }
-
-            const name = m[2]
-            let description = ""
-            const next = i + 1 < lines.length ? lines[i + 1] : ""
-            if (next.startsWith(" ") || next.startsWith("\t")) {
-                description = lines[i + 1].trim()
-                i += 2
-            } else {
-                i += 1
-            }
-
-            out.push(Pkg.entry(source, name, {
-                repo: m[1],
-                version: m[3],
-                description: description,
-                installed: header.includes("[installed"),
-                rank: manager.rank(name, manager.query.trim())
-            }))
-        }
-        return out
-    }
-
-    function parseFlatpak(text) {
-        const out = []
-        for (const line of text.split("\n")) {
-            if (line.trim() === "") continue
-            const parts = line.split("\t")
-            if (parts.length < 3) continue
-            if (parts[0] === "Name") continue   // header row
-            const appId = parts[2]
-            out.push(Pkg.entry(Pkg.FLATHUB, appId, {
-                name: parts[0],
-                repo: "flathub",
-                description: parts[1],
-                installed: Packages.hasFlatpak(appId),
-                // Flathub names are titles ("Visual Studio Code"), not
-                // package names, so rank the id too and keep whichever
-                // answers better.
-                rank: Math.max(manager.rank(parts[0], manager.query.trim()),
-                               manager.rank(appId, manager.query.trim()))
-            }))
-        }
-        return out
-    }
-
     // Merging keeps the list sorted as a whole rather than appending
     // each source's block, which is what makes the three backends read
     // as one answer instead of three.
@@ -297,7 +218,7 @@ ShellSurface {
         id: pacmanSearch
         stdout: StdioCollector {
             onStreamFinished: {
-                manager.mergeIn(manager.parsePacmanish(text, Pkg.PACMAN))
+                manager.mergeIn(Search.parsePacmanish(text, Pkg.PACMAN, manager.query.trim()))
                 manager.setSearching(Pkg.PACMAN, false)
             }
         }
@@ -313,7 +234,7 @@ ShellSurface {
         id: aurSearch
         stdout: StdioCollector {
             onStreamFinished: {
-                manager.mergeIn(manager.parsePacmanish(text, Pkg.AUR))
+                manager.mergeIn(Search.parsePacmanish(text, Pkg.AUR, manager.query.trim()))
                 manager.setSearching(Pkg.AUR, false)
             }
         }
@@ -328,7 +249,7 @@ ShellSurface {
         id: flatpakSearch
         stdout: StdioCollector {
             onStreamFinished: {
-                manager.mergeIn(manager.parseFlatpak(text))
+                manager.mergeIn(Search.parseFlatpak(text, manager.query.trim(), id => Packages.hasFlatpak(id)))
                 manager.setSearching(Pkg.FLATHUB, false)
             }
         }
