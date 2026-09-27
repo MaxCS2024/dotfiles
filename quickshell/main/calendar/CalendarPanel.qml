@@ -19,6 +19,14 @@
 //   · the days either side of the month are drawn rather than blanked,
 //     and clicking one follows it into its own month
 //
+// With the calendar feature on (services/Events.qml, user request
+// 2026-09-28) it also carries GNOME Calendar's events: a day that has one
+// takes the `surfaceAlt` ground, the picked day's are listed under the
+// line that names it, and a line under those adds one to that day. Typing
+// anywhere on the card lands in that line. An event is deleted with a
+// second click on its ✕, and edited in GNOME Calendar, which a click on
+// the event opens.
+//
 // Weeks start on Monday and carry ISO week numbers, which is both what
 // this machine's country uses and what an ISO week number means at all.
 // Day and month names come from arrays here rather than from
@@ -214,6 +222,22 @@ ShellSurface {
         panel.yearView = false
     }
 
+    // The six weeks the grid can show, days either side included.
+    function loadEvents() {
+        Events.load(panel.cellDate(0), panel.cellDate(42))
+    }
+
+    onViewYearChanged: if (panel.shown) panel.loadEvents()
+    onViewMonthChanged: if (panel.shown) panel.loadEvents()
+
+    // "14:00", or what an event that began on an earlier day shows
+    // instead: when it ends.
+    function eventTime(ev) {
+        if (ev.allDay) return "Heldag"
+        if (ev.start.slice(0, 10) === Events.key(panel.selectedDate)) return ev.start.slice(11)
+        return "–" + ev.end.slice(11)
+    }
+
     // A full-width strip under the bar, not the screen: the card hangs
     // from the top of it, and the height is the card's own plus the room
     // its shadow needs. exclusiveZone 0 reserves nothing and respects
@@ -265,6 +289,8 @@ ShellSurface {
         // is a glance surface, and where you paged to last time is not
         // where you want to land.
         panel.goToToday()
+        addField.text = ""
+        panel.loadEvents()
     }
 
     // Keeps the clock's hover pill lit while its card is up, which is
@@ -330,6 +356,14 @@ ShellSurface {
                 panel.yearView = !panel.yearView
                 break
             default:
+                // Typing starts a new event on the picked day, the key
+                // that started it included.
+                if (!panel.yearView && Events.available && event.text.length === 1
+                    && event.text >= " " && !(event.modifiers & (Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier))) {
+                    addField.forceActiveFocus()
+                    addField.insert(addField.cursorPosition, event.text)
+                    break
+                }
                 return
             }
             event.accepted = true
@@ -563,6 +597,7 @@ ShellSurface {
                                 readonly property bool today: panel.isToday(day.date)
                                 readonly property bool selected: panel.isSelected(day.date)
                                 readonly property bool weekend: day.index >= 5
+                                readonly property bool busy: Events.available && Events.has(day.date)
 
                                 Layout.preferredWidth: panel.dayCell
                                 Layout.preferredHeight: 28
@@ -570,10 +605,14 @@ ShellSurface {
                                 // Today is a filled accent cell; a
                                 // selection that isn't today is the
                                 // `selected` ground every selected
-                                // button in the shell uses.
+                                // button in the shell uses. A day with
+                                // an event is "has content" in
+                                // quickshell/STYLE.md §4: `surfaceAlt`,
+                                // one step up, and hover one more.
                                 color: day.today ? Appearance.accent
                                      : day.selected ? Appearance.selected
                                      : dayHover.hovered ? Appearance.hover
+                                     : day.busy ? Appearance.surfaceAlt
                                      : Appearance.clear(Appearance.hover)
 
                                 Behavior on color {
@@ -722,6 +761,216 @@ ShellSurface {
                         font.family: Theme.font
                         font.bold: true
                     }
+                }
+            }
+
+            // ── The picked day's events ──────────────────
+            ColumnLayout {
+                visible: !panel.yearView && Events.available
+                Layout.fillWidth: true
+                spacing: 0
+
+                Repeater {
+                    model: Events.on(panel.selectedDate)
+
+                    delegate: Rectangle {
+                        id: eventRow
+                        required property var modelData
+
+                        // The first click on ✕ asks, the second deletes;
+                        // leaving the row takes the question back.
+                        property bool arming: false
+
+                        Layout.fillWidth: true
+                        implicitHeight: 28
+                        radius: Theme.radius
+                        color: eventHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover)
+
+                        Behavior on color {
+                            ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
+                        }
+
+                        HoverHandler {
+                            id: eventHover
+                            onHoveredChanged: if (!hovered) eventRow.arming = false
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                Events.openApp()
+                                panel.close()
+                            }
+                        }
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: Theme.space2
+                            anchors.rightMargin: Theme.space1
+                            spacing: Theme.space2
+
+                            Text {
+                                text: panel.eventTime(eventRow.modelData)
+                                color: Appearance.fgMuted
+                                font.pixelSize: Theme.fontTiny
+                                font.family: Theme.font
+                                Layout.preferredWidth: 40
+                            }
+
+                            Text {
+                                text: eventRow.modelData.title
+                                color: Appearance.fg
+                                font.pixelSize: Theme.fontSmall
+                                font.family: Theme.font
+                                Layout.fillWidth: true
+                                Layout.minimumWidth: 0
+                                elide: Text.ElideRight
+                            }
+
+                            Rectangle {
+                                visible: eventHover.hovered
+                                implicitWidth: eventRow.arming ? removeLabel.implicitWidth + Theme.space4 : 24
+                                implicitHeight: 24
+                                radius: Theme.radius
+                                color: removeHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)
+
+                                Behavior on color {
+                                    ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
+                                }
+
+                                Text {
+                                    id: removeLabel
+                                    anchors.centerIn: parent
+                                    // U+F00D is nf-fa-close.
+                                    text: eventRow.arming ? "Ta bort" : String.fromCodePoint(0xF00D)
+                                    color: eventRow.arming ? Appearance.red
+                                         : removeHover.hovered ? Appearance.fgStrong : Appearance.fgSoft
+                                    font.pixelSize: Theme.fontTiny
+                                    font.family: Theme.font
+                                }
+
+                                HoverHandler { id: removeHover }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        if (eventRow.arming) Events.remove(eventRow.modelData)
+                                        else eventRow.arming = true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Text {
+                    visible: Events.on(panel.selectedDate).length === 0
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 28
+                    leftPadding: Theme.space2
+                    verticalAlignment: Text.AlignVCenter
+                    text: "Inga händelser"
+                    color: Appearance.fgMuted
+                    font.pixelSize: Theme.fontSmall
+                    font.family: Theme.font
+                }
+
+                // ── Adding one ───────────────────────────
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.topMargin: Theme.space1
+                    spacing: Theme.space2
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: 28
+                        radius: Theme.radius
+                        color: Appearance.surfaceAlt
+                        border.width: 1
+                        border.color: Appearance.border
+
+                        TextInput {
+                            id: addField
+                            anchors.fill: parent
+                            anchors.leftMargin: Theme.space2
+                            anchors.rightMargin: Theme.space2
+                            verticalAlignment: TextInput.AlignVCenter
+                            color: Appearance.fg
+                            selectionColor: Appearance.selected
+                            selectedTextColor: Appearance.fgStrong
+                            font.pixelSize: Theme.fontSmall
+                            font.family: Theme.font
+                            clip: true
+
+                            onAccepted: {
+                                if (addField.text.trim() === "") return
+                                Events.add(panel.selectedDate, addField.text)
+                                addField.text = ""
+                            }
+
+                            // One layer at a time, as the card's own
+                            // Escape is: first what was typed, then the
+                            // field, then (from the card) the card.
+                            Keys.onEscapePressed: {
+                                if (addField.text !== "") addField.text = ""
+                                else card.forceActiveFocus()
+                            }
+
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                visible: addField.text.length === 0
+                                text: "Ny händelse, t.ex. 14:00 Tandläkare"
+                                color: Appearance.fgDim
+                                font.pixelSize: Theme.fontSmall
+                                font.family: Theme.font
+                            }
+                        }
+                    }
+
+                    // GNOME Calendar, for what the card doesn't do:
+                    // editing, repeating, choosing the calendar.
+                    Rectangle {
+                        implicitWidth: 28
+                        implicitHeight: 28
+                        radius: Theme.radius
+                        color: appHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)
+                        border.width: 1
+                        border.color: Appearance.border
+
+                        Behavior on color {
+                            ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            // U+F03CC is nf-md-open_in_new.
+                            text: String.fromCodePoint(0xF03CC)
+                            color: appHover.hovered ? Appearance.fgStrong : Appearance.fgSoft
+                            font.pixelSize: Theme.fontSmall
+                            font.family: Theme.font
+                        }
+
+                        HoverHandler { id: appHover }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                Events.openApp()
+                                panel.close()
+                            }
+                        }
+                    }
+                }
+
+                Text {
+                    visible: Events.error !== ""
+                    Layout.fillWidth: true
+                    Layout.topMargin: Theme.space1
+                    text: Events.error
+                    color: Appearance.red
+                    font.pixelSize: Theme.fontTiny
+                    font.family: Theme.font
+                    wrapMode: Text.Wrap
                 }
             }
         }
