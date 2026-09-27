@@ -38,8 +38,7 @@ cd ~/.dotfiles
 ./relay/install.sh
 
 rack features         # tick the optional parts you want (dictation, weather,
-                      # Nothing earbuds battery, calendar events,
-                      # fingerprint, Secure Boot,
+                      # Nothing earbuds battery, fingerprint, Secure Boot,
                       # LazyVim, Oh-My-Zsh, Claude Code); it installs and
                       # sets up what you tick
 rack setup            # what is missing, grouped by how much it matters

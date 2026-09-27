@@ -284,17 +284,6 @@ running. Grouped by what breaks if it's missing.
   asking. `rack features on earbuds` installs them; `rack features off
   earbuds` takes the pill and the rail section away and stops the watcher.
 
-- **evolution-data-server**, **gnome-calendar** and **python-gobject** —
-  the calendar feature. `services/Events.qml` runs `relay calendar list`
-  (`relay/lib/calendar.py`) each time `calendar/CalendarPanel.qml` opens
-  or pages, and `relay calendar add` / `delete` from the card. The events
-  are EDS's, the store GNOME Calendar keeps them in, so the app and the
-  card show the same ones, and an online calendar added in the app shows
-  in the card too. EDS's services start on the first ask (D-Bus
-  activation), not at login. Without EDS relay exits 127 and the card
-  draws its grid alone. `rack features on calendar` installs all three;
-  `rack features off calendar` hides the events and stops asking.
-
 - **fzf** and **zoxide** — the Oh-My-Zsh plugins of the same names in
   `zsh/.zshrc` (Ctrl-R history search, `z`), and `tat`, `ff` and `fcd`.
   Oh-My-Zsh itself is a rack feature: `rack features on ohmyzsh`.

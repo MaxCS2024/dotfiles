@@ -38,22 +38,6 @@
 			"teardown": [],
 			"data": []
 		},
-		"calendar": {
-			"label": "Calendar",
-			"summary": "Your events in the bar's calendar card: the days that have one are marked, the picked day's are listed under the grid, and a line there adds one. They are GNOME Calendar's, kept by evolution-data-server, so the app shows and edits the same events, and any online calendar added to it shows up in the card too.",
-			"recommended": false,
-			"size": "about 350 MB: evolution-data-server and GNOME Calendar each bring a WebKitGTK of their own",
-			"provides": ["gnome-calendar"],
-			"probe": ["python3", "-c", "import gi; gi.require_version('ECal', '2.0'); gi.require_version('EDataServer', '1.2')"],
-			"packages": {
-				"repo": ["gnome-calendar", "evolution-data-server", "python-gobject"],
-				"aur": []
-			},
-			"setup": [],
-			"units": [],
-			"teardown": [],
-			"data": []
-		},
 		"fingerprint": {
 			"label": "Fingerprint",
 			"summary": "Unlock the lock screen, and sudo in a terminal, with a finger as well as the password. Installs the reader's driver (fprintd, or python-validity for the older Synaptics readers in ThinkPads like the T480), enrols a finger, and adds it to /etc/pam.d/sudo. Installed or not: there is nothing to switch off. Removing it deletes the enrolled fingers and puts sudo back to the password alone.",
