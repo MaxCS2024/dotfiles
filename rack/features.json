@@ -83,6 +83,24 @@
 			"data": [],
 			"removal": "Uninstalling sbctl with Secure Boot on would leave the next kernel update unsigned, and the machine unable to boot. To stop using Secure Boot, switch it off in the BIOS (Security › Secure Boot on a ThinkPad). The kernel image still boots without it, and sbctl can stay."
 		},
+		"gpg": {
+			"label": "GPG key",
+			"summary": "A GPG key of your own (ed25519, with an encryption subkey), in your name and git's email, or asked for when git has none. No passphrase and no expiry, so there is nothing to type or renew. If you already have a secret key, it is kept and nothing is made. It can't be removed from here: a deleted key can't be brought back.",
+			"recommended": false,
+			"switch": false,
+			"size": "a few KB",
+			"provides": ["gpg"],
+			"probe": ["sh", "-c", "gpg --batch --list-secret-keys --with-colons 2>/dev/null | grep -q '^sec:'"],
+			"packages": {
+				"repo": [],
+				"aur": []
+			},
+			"setup": [["gpg/install.sh"]],
+			"units": [],
+			"teardown": [],
+			"data": [],
+			"removal": "Removing the feature would mean deleting your secret key, and whatever it signed or encrypted could no longer be checked or opened. To delete it anyway: gpg --delete-secret-and-public-key <fingerprint>, which gpg --list-secret-keys shows."
+		},
 		"weather": {
 			"label": "Weather",
 			"summary": "The forecast in the bar, and a rail with the week behind it. Needs your coordinates in quickshell/main/.env (see DEPENDENCIES.md).",
