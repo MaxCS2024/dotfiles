@@ -248,9 +248,9 @@ ShellSurface {
                     implicitWidth: 260
                     implicitHeight: 32
                     radius: Theme.radius
+                    // A fill and no edge: a border beside this fill
+                    // would be two marks for one field (STYLE.md §1).
                     color: Qt.rgba(1, 1, 1, 0.08)
-                    border.width: 1
-                    border.color: Qt.rgba(1, 1, 1, 0.18)
 
                     Text {
                         anchors.left: parent.left
@@ -584,27 +584,11 @@ ShellSurface {
                                 sourceSize.height: Math.round(plate.height)
                             }
 
-                            // The ring is its own item drawn after the
-                            // image: a Rectangle paints its border under
-                            // its own children, so a border set on the
-                            // plate itself would be covered by the
-                            // full-bleed Image above. (That bug was fixed
-                            // here once already, two layouts ago; the
-                            // note survives both.)
-                            Rectangle {
-                                anchors.fill: parent
-                                radius: plate.radius
-                                color: "transparent"
-                                border.color: card.centered ? Appearance.accent : Qt.rgba(1, 1, 1, 0.14)
-                                // Scaled up with the card when it is off
-                                // centre, so a 2px ring on a 38% card
-                                // doesn't vanish.
-                                border.width: card.centered ? 3 : 2
-
-                                Behavior on border.color {
-                                    ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
-                                }
-                            }
+                            // No ring, on the hero or the others: the
+                            // hero is already the one at full size and
+                            // full opacity, and an accent ring on it was
+                            // a border showing state (STYLE.md §1,
+                            // removed 2026-09-27).
 
                             // What is on screen right now. On the image
                             // rather than in the caption below: the
