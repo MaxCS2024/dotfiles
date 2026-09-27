@@ -40,7 +40,13 @@ running. Grouped by what breaks if it's missing.
   moves to a different Hyprland build or a different compositor.
 
 - **systemd** — `loginctl` (lock/session) and `systemctl`
-  (reboot/poweroff) in `powermenu/PowerMenuPopout.qml`.
+  (reboot/poweroff) in `powermenu/PowerMenuPopout.qml`. Also the
+  backlight: `services/Brightness.qml` reads `/sys/class/backlight`
+  directly and writes through logind's `Session.SetBrightness` with
+  `busctl`, which lets the user at the seat set it without the `video`
+  group (the call brightnessctl made; `relay brightness` makes it too).
+  If `Brightness.available` stays false, check that
+  `/sys/class/backlight` has a device in it.
 
 - **NetworkManager** — `services/Network.qml` talks to it natively over
   D-Bus via `Quickshell.Networking` (device status, wifi scan/connect,
@@ -88,11 +94,6 @@ running. Grouped by what breaks if it's missing.
   actively watching the clipboard (usually wired into your Hyprland
   autostart as `wl-paste --watch cliphist store`), the history will
   just stay empty — this config reads history, it doesn't populate it.
-
-- **brightnessctl** — `services/Brightness.qml`, all reads/writes.
-  Needs a backlight device it can actually see; check with
-  `brightnessctl -l -c backlight` if `Brightness.available` stays
-  false.
 
 - **lua** (the standalone interpreter, `pacman -S lua`) — the default
   apps. `hypr/modules/defaults.lua` owns the terminal, editor, browser
@@ -169,7 +170,9 @@ running. Grouped by what breaks if it's missing.
   entirely (`visible: false`) when no player is active/playing, rather
   than showing a placeholder; no specific player required, just
   anything that implements the MPRIS D-Bus interface (which covers
-  essentially every mainstream Linux media app).
+  essentially every mainstream Linux media app). The media keys
+  (`hypr/modules/binds/media.lua`) go to the same player through
+  `services/Media.qml`'s global shortcuts, so no playerctl.
 
 - **StatusNotifierItem-compatible apps** — `bar/SystemTray.qml` simply
   shows nothing if no app registers a tray icon.
@@ -289,9 +292,6 @@ running. Grouped by what breaks if it's missing.
   Oh-My-Zsh itself is a rack feature: `rack features on ohmyzsh`.
   Without them Oh-My-Zsh prints a warning at every shell start. **bat**
   is `ff`'s preview, which falls back to plain `cat` without it.
-
-- **playerctl** — the media keys (`hypr/modules/binds/media.lua`: play,
-  pause, next, previous). Without it they do nothing.
 
 - **libpulse** (`pactl`) — `services/AudioPorts.qml` reads which ports
   have nothing plugged in, so the volume rail can hide an HDMI output

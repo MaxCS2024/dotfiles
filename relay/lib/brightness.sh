@@ -1,4 +1,10 @@
-# brightness — backlight via brightnessctl.
+# brightness — backlight via sysfs and systemd-logind.
+#
+# Reads come straight from /sys/class/backlight. Writes go through logind's
+# Session.SetBrightness: the sysfs file is root's, and logind lets the user at
+# the seat write it without the `video` group. That is the call brightnessctl
+# made, so it is one package fewer for the same write. The shell does the
+# same in quickshell/main/services/Brightness.qml.
 #
 # The floor is 1%, not 0. A screen at zero is a screen you cannot see to fix,
 # and the keybind that got you there is now invisible too.
@@ -13,36 +19,61 @@ RELAY_MODULE_TIER[brightness]="core"
 
 : "${RELAY_BRIGHTNESS_STEP:=5}"
 : "${RELAY_BRIGHTNESS_MIN:=1}"
+: "${RELAY_BRIGHTNESS_SYSFS:=/sys/class/backlight}"
 
-relay::brightness::__require() {
-    rig::check::has brightnessctl || {
-        rig::log::error "brightnessctl is not installed (pacman -S brightnessctl)"
-        return "$RIG_EX_NODEP"
-    }
+# The first backlight device, as brightnessctl picked it: its name.
+relay::brightness::__device() {
+    local d
+    for d in "$RELAY_BRIGHTNESS_SYSFS"/*; do
+        [[ -r $d/brightness && -r $d/max_brightness ]] || continue
+        printf '%s\n' "${d##*/}"
+        return 0
+    done
+    rig::log::error "no backlight device in $RELAY_BRIGHTNESS_SYSFS"
+    return "$RIG_EX_FAIL"
 }
 
-# -m is the machine-readable form: name,class,current,percent,max
+# Prints "current max" for one device, raw.
+relay::brightness::__read() {
+    local dir=$RELAY_BRIGHTNESS_SYSFS/$1 cur max
+    read -r cur <"$dir/brightness" && read -r max <"$dir/max_brightness" || return "$RIG_EX_FAIL"
+    ((max > 0)) || return "$RIG_EX_FAIL"
+    printf '%s %s\n' "$cur" "$max"
+}
+
+# Rounded, the way brightnessctl -m printed it.
 relay::brightness::get() {
-    relay::brightness::__require || return $?
-    local line percent
-    line=$(brightnessctl -m 2>/dev/null | head -n1) || return "$RIG_EX_FAIL"
-    IFS=, read -r _ _ _ percent _ <<<"$line"
-    printf '%s\n' "${percent%\%}"
+    local dev cur max
+    dev=$(relay::brightness::__device) || return $?
+    read -r cur max < <(relay::brightness::__read "$dev") || return "$RIG_EX_FAIL"
+    printf '%s\n' "$(((cur * 100 + max / 2) / max))"
 }
 
+# name,class,current,percent,max — brightnessctl -lm's columns.
 relay::brightness::devices() {
-    relay::brightness::__require || return $?
-    brightnessctl -lm
+    local d cur max
+    for d in "$RELAY_BRIGHTNESS_SYSFS"/*; do
+        [[ -e $d ]] || continue
+        read -r cur max < <(relay::brightness::__read "${d##*/}") || continue
+        printf '%s,backlight,%s,%s%%,%s\n' "${d##*/}" "$cur" "$(((cur * 100 + max / 2) / max))" "$max"
+    done
 }
 
 relay::brightness::__apply() {
-    local want=$1
-    relay::brightness::__require || return $?
+    local want=$1 dev cur max
+    rig::check::has busctl || {
+        rig::log::error "busctl is not installed (it comes with systemd)"
+        return "$RIG_EX_NODEP"
+    }
+    dev=$(relay::brightness::__device) || return $?
+    read -r cur max < <(relay::brightness::__read "$dev") || return "$RIG_EX_FAIL"
 
     ((want < RELAY_BRIGHTNESS_MIN)) && want=$RELAY_BRIGHTNESS_MIN
     ((want > 100)) && want=100
 
-    rig::proc::run brightnessctl -q set "${want}%" || return $?
+    rig::proc::run busctl call org.freedesktop.login1 \
+        /org/freedesktop/login1/session/auto org.freedesktop.login1.Session \
+        SetBrightness ssu backlight "$dev" "$(((max * want + 50) / 100))" || return $?
     relay::osd::show brightness "$want"
 }
 
@@ -84,7 +115,7 @@ relay::brightness::__usage() {
   relay brightness set 60
   relay brightness get                  prints a number, nothing else
   relay brightness status               Waybar JSON
-  relay brightness devices              what brightnessctl can see
+  relay brightness devices              every backlight device, raw and %
 
 env
   RELAY_BRIGHTNESS_STEP   default 5

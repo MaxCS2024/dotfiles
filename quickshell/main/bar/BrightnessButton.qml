@@ -20,8 +20,7 @@ BarButton {
     // already shows the current level, which is all there is to show.
 
     // Mirrors VolumeButton's wheel handling exactly, including the 40ms
-    // throttle — a bare wheel tick can fire faster than adjustBy's own
-    // brightnessctl subprocess can keep up with otherwise.
+    // throttle, so a fast wheel moves both at the same pace.
     property real _lastWheelTime: 0
 
     onScrolled: (delta) => {

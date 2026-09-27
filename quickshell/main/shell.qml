@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Hyprland
 import QtQuick
 import "bar"
 import "launcher"
@@ -50,6 +51,58 @@ ShellRoot {
     // (service singleton, so nothing else names it into existence — same
     // reasoning as nightLight above). See services/MprisWatchdog.qml.
     readonly property var mprisWatchdog: MprisWatchdog
+
+    // The media keys below act on services/Media.qml's player. Named here
+    // so Mpris has its players listed before the first press even with
+    // the bar's media module switched off (same reasoning as nightLight
+    // above).
+    readonly property var media: Media
+
+    // ── Media and brightness keys ───────────────────────
+    // hypr/modules/binds/media.lua binds XF86Audio* and XF86MonBrightness*
+    // to `hl.dsp.global("quickshell:<name>")`. The behaviour is the
+    // services'; these only pass the keys on. They live here and not on
+    // the services because a second client asking Hyprland for a shortcut
+    // someone already holds is a protocol error that drops its connection:
+    // a test suite loading services/Media.qml in its own `qs` would be
+    // thrown off the compositor by the running shell, and no suite loads
+    // this file.
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "media-play-pause"
+        description: "Play or pause the current player"
+        onPressed: Media.playPause()
+    }
+
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "media-next"
+        description: "Next track"
+        onPressed: Media.next()
+    }
+
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "media-previous"
+        description: "Previous track"
+        onPressed: Media.previous()
+    }
+
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "brightness-up"
+        description: "Raise the screen brightness (hold to ramp)"
+        onPressed: Brightness.pressKey(1)
+        onReleased: Brightness.releaseKey(1)
+    }
+
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "brightness-down"
+        description: "Lower the screen brightness (hold to ramp)"
+        onPressed: Brightness.pressKey(-1)
+        onReleased: Brightness.releaseKey(-1)
+    }
 
     // The wallpaper folder, which image each output is showing, and the
     // hourly rotation (wallpaper/Wallpapers.qml). Named here for exactly

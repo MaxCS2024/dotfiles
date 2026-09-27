@@ -1,5 +1,6 @@
 pragma Singleton
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Mpris
 import QtQuick
 
@@ -95,6 +96,35 @@ Singleton {
     readonly property real position: {
         root._tick
         return root.activePlayer ? root.activePlayer.position : 0
+    }
+
+    // ── Media keys ──────────────────────────────────────
+    // XF86AudioPlay/Pause/Next/Prev (hypr/modules/binds/media.lua) land
+    // here through the global shortcuts in shell.qml, in place of the
+    // playerctl calls they used to exec. They act on activePlayer, the
+    // same player the pill and the card show, so a key and a click can't
+    // disagree about which one they meant. The IpcHandler is the same
+    // three for scripts: `qs -c main ipc call player playPause`.
+    function playPause() {
+        const p = root.activePlayer
+        if (p && p.canTogglePlaying) p.togglePlaying()
+    }
+
+    function next() {
+        const p = root.activePlayer
+        if (p && p.canGoNext) p.next()
+    }
+
+    function previous() {
+        const p = root.activePlayer
+        if (p && p.canGoPrevious) p.previous()
+    }
+
+    IpcHandler {
+        target: "player"
+        function playPause(): void { root.playPause() }
+        function next(): void { root.next() }
+        function previous(): void { root.previous() }
     }
 
     function fmtTime(seconds) {

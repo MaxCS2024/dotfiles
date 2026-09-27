@@ -37,7 +37,6 @@ declare -ga RACK_SETUP_REQUIRED=(
     "flatpak:flatpak"
     "wl-clipboard:wl-copy"
     "cliphist:cliphist"
-    "brightnessctl:brightnessctl"
     "lua:lua"
     "zsh:zsh"
 )
@@ -77,7 +76,6 @@ declare -ga RACK_SETUP_OPTIONAL=(
     "fzf:fzf"
     "zoxide:zoxide"
     "bat:bat"
-    "playerctl:playerctl"
     "libpulse:pactl"
     "man-db:man"
     "less:less"

@@ -37,48 +37,20 @@ hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURC
 -- Wifi toggle: nmcli (already used throughout your Network tab)
 hl.bind("XF86RFKill", hl.dsp.exec_cmd("nmcli radio wifi $(test $(nmcli -t -f WIFI radio) = enabled && echo off || echo on)"), { locked = true, repeating = true })
 
--- Brightness: brightnessctl, ramped on our own timer instead of riding
--- Hyprland's raw key-repeat. A repeating bind fires a brand-new
--- brightnessctl process on every OS repeat tick with no back-pressure —
--- fine at a few big steps, but subprocess spawn + sysfs/udev round-trip
--- can't reliably keep up with a fast repeat rate, so a bare "N%+ per
--- tick" bind either has to use big steps (feels steppy) or drops/queues
--- ticks under a fast one (feels janky). Instead: press fires one step
--- immediately, then starts a fixed-cadence timer that keeps firing the
--- same small step until release — one process per tick at a pace we
--- control, giving an evenly-paced fade closer to how a modern laptop's
--- brightness keys ramp on a long hold, decoupled entirely from
--- input.repeat_rate/repeat_delay.
-local function brightnessRamp(step)
-	local timer = hl.timer(function()
-		hl.exec_cmd("brightnessctl -n2 set " .. step)
-	end, { timeout = 35, type = "repeat" })
-	timer:set_enabled(false)
-	return timer
-end
+-- Brightness: services/Brightness.qml in the shell. Hyprland sends a
+-- `global` shortcut both its press and its release, so the shell steps 10%
+-- on the press and ramps 2% every 35ms while the key is held, stopping on
+-- release — the ramp these binds used to run on an hl.timer, spawning
+-- brightnessctl per tick. Writes go to systemd-logind, so there is no
+-- brightnessctl to install. `relay brightness` is the same thing for scripts.
+hl.bind("XF86MonBrightnessUp", hl.dsp.global("quickshell:brightness-up"), { locked = true })
+hl.bind("XF86MonBrightnessDown", hl.dsp.global("quickshell:brightness-down"), { locked = true })
 
-local brightnessUpTimer = brightnessRamp("2%+")
-local brightnessDownTimer = brightnessRamp("2%-")
-
-hl.bind("XF86MonBrightnessUp", function()
-	hl.exec_cmd("brightnessctl -n2 set 10%+")
-	brightnessUpTimer:set_enabled(true)
-end, { locked = true })
-hl.bind("XF86MonBrightnessUp", function()
-	brightnessUpTimer:set_enabled(false)
-end, { locked = true, release = true })
-
-hl.bind("XF86MonBrightnessDown", function()
-	hl.exec_cmd("brightnessctl -n2 set 10%-")
-	brightnessDownTimer:set_enabled(true)
-end, { locked = true })
-hl.bind("XF86MonBrightnessDown", function()
-	brightnessDownTimer:set_enabled(false)
-end, { locked = true, release = true })
-
--- Requires playerctl
-hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), { locked = true })
-hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
-hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
-hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { locked = true })
+-- Media: services/Media.qml, on the same player the bar's media module and
+-- card show (Quickshell's own MPRIS client, so no playerctl). Scripts can
+-- reach the same three with `qs -c main ipc call player playPause|next|previous`.
+hl.bind("XF86AudioNext", hl.dsp.global("quickshell:media-next"), { locked = true })
+hl.bind("XF86AudioPause", hl.dsp.global("quickshell:media-play-pause"), { locked = true })
+hl.bind("XF86AudioPlay", hl.dsp.global("quickshell:media-play-pause"), { locked = true })
+hl.bind("XF86AudioPrev", hl.dsp.global("quickshell:media-previous"), { locked = true })
 
