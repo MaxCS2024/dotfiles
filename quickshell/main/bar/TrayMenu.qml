@@ -34,11 +34,23 @@ PopupWindow {
     // The menu currently shown: rootMenu, or a submenu drilled into.
     property var _menu: null
     property var _parents: []
+    // When the popup last closed; see toggle().
+    property double _closedAt: 0
+    onVisibleChanged: if (!root.visible) root._closedAt = Date.now()
 
     function open() {
         root._parents = []
         root._menu = root.rootMenu
         root.visible = true
+    }
+
+    // Clicking the tray icon again closes the menu. The press lands
+    // outside the popup, so the focus grab may already have closed it by
+    // the time the click reaches the icon; a toggle that soon after a
+    // close is that same click, and must not open it again.
+    function toggle() {
+        if (root.visible) root.visible = false
+        else if (Date.now() - root._closedAt > 400) root.open()
     }
 
     function _enter(entry) {

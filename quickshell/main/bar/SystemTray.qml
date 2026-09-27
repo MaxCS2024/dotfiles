@@ -134,9 +134,7 @@ Item {
                     // Drawn by the shell, not modelData.display() — see
                     // TrayMenu.qml for why the platform menu never opened.
                     function showMenu() {
-                        if (!trayItem.modelData.hasMenu) return
-                        if (trayMenu.visible) trayMenu.visible = false
-                        else trayMenu.open()
+                        if (trayItem.modelData.hasMenu) trayMenu.toggle()
                     }
 
                     onClicked: mouse => {
