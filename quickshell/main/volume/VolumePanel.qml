@@ -502,7 +502,7 @@ ShellSurface {
                 font.letterSpacing: Theme.tracking(Theme.fontSmall, 0.12)
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                Layout.topMargin: 2
+                Layout.topMargin: Theme.space1
                 elide: Text.ElideRight
             }
 
@@ -539,7 +539,7 @@ ShellSurface {
                         width: ListView.view.width
                         height: 32
                         radius: Theme.radius
-                        color: sinkRow.isActive ? SlabStyle.tintSelected
+                        color: sinkRow.isActive ? Appearance.selected
                              : (sinkHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover))
 
                         RowLayout {
@@ -548,22 +548,14 @@ ShellSurface {
                             anchors.rightMargin: Theme.space2
                             spacing: Theme.space2
 
-                            // The tick keeps its column whether or not it
-                            // is drawn, so the device names below it all
-                            // start on the same x.
-                            Text {
-                                text: sinkRow.isActive ? "" : ""
-                                color: Appearance.green
-                                font.pixelSize: Theme.fontSmall
-                                font.family: Theme.font
-                                Layout.preferredWidth: 16
-                            }
-
+                            // A fixed column, so the names beside it start
+                            // on the same x whichever glyph the row has.
                             Text {
                                 text: panel.isBt(sinkRow.modelData) ? "" : ""
-                                color: Appearance.fgFaint
+                                color: Appearance.fgMuted
                                 font.pixelSize: Theme.fontSmall
                                 font.family: Theme.font
+                                Layout.preferredWidth: Theme.space4
                             }
 
                             Text {
@@ -609,7 +601,7 @@ ShellSurface {
                 font.letterSpacing: Theme.tracking(Theme.fontSmall, 0.12)
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                Layout.topMargin: 2
+                Layout.topMargin: Theme.space1
                 elide: Text.ElideRight
             }
 
@@ -707,7 +699,7 @@ ShellSurface {
                         width: ListView.view.width
                         height: 32
                         radius: Theme.radius
-                        color: sourceRow.isActive ? SlabStyle.tintSelected
+                        color: sourceRow.isActive ? Appearance.selected
                              : (sourceHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover))
 
                         RowLayout {
@@ -717,18 +709,11 @@ ShellSurface {
                             spacing: Theme.space2
 
                             Text {
-                                text: sourceRow.isActive ? "" : ""
-                                color: Appearance.green
-                                font.pixelSize: Theme.fontSmall
-                                font.family: Theme.font
-                                Layout.preferredWidth: 16
-                            }
-
-                            Text {
                                 text: panel.isBt(sourceRow.modelData) ? "" : ""
-                                color: Appearance.fgFaint
+                                color: Appearance.fgMuted
                                 font.pixelSize: Theme.fontSmall
                                 font.family: Theme.font
+                                Layout.preferredWidth: Theme.space4
                             }
 
                             Text {
@@ -769,7 +754,7 @@ ShellSurface {
                 font.letterSpacing: Theme.tracking(Theme.fontSmall, 0.12)
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                Layout.topMargin: 2
+                Layout.topMargin: Theme.space1
                 elide: Text.ElideRight
             }
 
