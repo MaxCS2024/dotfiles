@@ -1,5 +1,6 @@
 import QtQuick
 import "../services"
+import "../common/popupAnchor.js" as PopupAnchor
 
 // Nothing earbuds, while they are connected: the earbuds glyph and the
 // charge of whichever bud will run out first. A click opens the earbuds
@@ -24,15 +25,9 @@ BarButton {
 
     onTapped: Panels.toggle("earbuds")
 
-    // Where this module's middle sits across the bar, for the card to
-    // centre on — bar/MediaPlayer.qml has why it is a fraction, and why
-    // the geometry is named in `moved` although nothing reads it.
-    readonly property real anchorFraction: {
-        const bw = root.barWindow
-        if (!bw || bw.width <= 0) return Panels.earbudsAnchor
-        const moved = root.x + root.width + bw.width
-        return root.mapToItem(bw.contentItem, root.width / 2, 0).x / bw.width
-    }
+    // Where this module's middle sits across the bar, as a fraction of
+    // its width, for the earbuds card to centre on (common/popupAnchor.js).
+    readonly property real anchorFraction: PopupAnchor.centreFraction(root, root.barWindow) ?? Panels.earbudsAnchor
 
     Binding {
         target: Panels

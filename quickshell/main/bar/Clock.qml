@@ -3,6 +3,7 @@ import QtQuick
 import "../config"
 import "../theme"
 import "../services"
+import "../common/popupAnchor.js" as PopupAnchor
 
 // The time in the bar, and the thing that opens the calendar.
 //
@@ -41,22 +42,8 @@ Item {
     readonly property string weekdayLabel: root.swedishWeekdays[clock.date.getDay()]
 
     // Where this module's middle sits across the bar, as a fraction of
-    // the bar's width — what the calendar card centres itself on, since
-    // it is a separate layer-shell surface that cannot see this one's
-    // geometry (see Panels.clockAnchor).
-    //
-    // `root.x`, `root.width` and the bar's width are read into `moved`
-    // and otherwise unused on purpose: mapToItem is a function call, not
-    // a tracked binding dependency, so without naming the geometry this
-    // expression depends on it would be evaluated once and then never
-    // again — and a clock moved to the left or right row would open its
-    // card wherever it happened to be at startup.
-    readonly property real anchorFraction: {
-        const bw = root.barWindow
-        if (!bw || bw.width <= 0) return 0.5
-        const moved = root.x + root.width + bw.width
-        return root.mapToItem(bw.contentItem, root.width / 2, 0).x / bw.width
-    }
+    // its width, for the calendar card to centre on (common/popupAnchor.js).
+    readonly property real anchorFraction: PopupAnchor.centreFraction(root, root.barWindow) ?? 0.5
 
     Binding {
         target: Panels

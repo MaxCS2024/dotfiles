@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import "../config"
 import "../services"
 import "../theme"
+import "../common/popupAnchor.js" as PopupAnchor
 
 // The player in the bar, and the thing that opens the media card.
 //
@@ -50,22 +51,8 @@ Item {
     implicitHeight: pill.implicitHeight
 
     // Where this module's middle sits across the bar, as a fraction of
-    // the bar's width — what the card centres itself on, since it is a
-    // separate layer-shell surface that cannot see this one's geometry
-    // (see Panels.mediaAnchor).
-    //
-    // `root.x`, `root.width` and the bar's width are read into `moved`
-    // and otherwise unused on purpose: mapToItem is a function call, not
-    // a tracked binding dependency, so without naming the geometry this
-    // expression depends on it would be evaluated once and never again —
-    // and a module moved to another row would open its card wherever it
-    // happened to be at startup. bar/Clock.qml found that the hard way.
-    readonly property real anchorFraction: {
-        const bw = root.barWindow
-        if (!bw || bw.width <= 0) return Panels.mediaAnchor
-        const moved = root.x + root.width + bw.width
-        return root.mapToItem(bw.contentItem, root.width / 2, 0).x / bw.width
-    }
+    // its width, for the media card to centre on (common/popupAnchor.js).
+    readonly property real anchorFraction: PopupAnchor.centreFraction(root, root.barWindow) ?? Panels.mediaAnchor
 
     Binding {
         target: Panels
