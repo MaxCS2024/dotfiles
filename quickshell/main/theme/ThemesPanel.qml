@@ -343,11 +343,11 @@ ShellSurface {
                         Layout.bottomMargin: row.index === 0 ? 6 : 0
                         implicitHeight: panel.rowHeight
                         radius: Theme.radius
-                        color: row.current ? SlabStyle.tintSelected
+                        color: row.current ? Appearance.selected
                              : (row.active ? Appearance.hover : Appearance.clear(Appearance.hover))
-                        // The current row is the accent-filled, borderless
-                        // "selected" look every selected button in the shell
-                        // shares (SlabStyle.tintSelected), so this and the
+                        // The current row is the borderless "selected" step
+                        // of the ladder every selected button in the shell
+                        // shares (Appearance.selected), so this and the
                         // installer's chips agree on what "showing now"
                         // looks like.
                         border.width: row.current ? 0 : 1

@@ -538,13 +538,13 @@ ShellSurface {
                         width: ListView.view.width
                         height: 32
                         radius: Theme.radius
-                        color: row.current ? SlabStyle.tintSelected
+                        color: row.current ? Appearance.selected
                              : rowHover.hovered ? Appearance.hover
                              : Appearance.clear(Appearance.hover)
 
-                        // The selected row is its ground (the half-accent
-                        // SlabStyle.tintSelected every selected thing in the
-                        // shell uses) and the brighter ink, and nothing else — the accent bar
+                        // The selected row is its ground (Appearance.selected,
+                        // the ladder step every selected thing in the shell
+                        // uses) and the brighter ink, and nothing else — the accent bar
                         // that used to run down its leading edge is gone
                         // (user request 2026-09-21).
 

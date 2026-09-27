@@ -58,7 +58,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 implicitHeight: 32
                 radius: Theme.radius
-                color: dnsBtn.selected ? SlabStyle.tintSelected
+                color: dnsBtn.selected ? Appearance.selected
                      : (dnsHover2.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong))
                 border.width: dnsBtn.selected ? 0 : 1
                 border.color: Appearance.border

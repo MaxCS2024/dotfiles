@@ -177,8 +177,8 @@ Item {
                     implicitWidth: cancelLabel.implicitWidth + 18
                     implicitHeight: 28
                     radius: Theme.radius
-                    // Borderless like Confirm, but a neutral fill so the
-                    // accent one still reads as the primary action.
+                    // Borderless like Confirm, a step lower on the ladder so
+                    // Confirm still reads as the primary action.
                     color: cancelHover.hovered ? Appearance.hoverStrong : Appearance.hover
 
                     Behavior on color {
@@ -206,10 +206,9 @@ Item {
                     implicitWidth: okLabel.implicitWidth + 18
                     implicitHeight: 28
                     radius: Theme.radius
-                    // SlabStyle.tintSelected's half-accent, borderless, spelled
-                    // out on Theme because this file doesn't import theme/;
-                    // a little more accent under the pointer.
-                    color: Qt.rgba(Appearance.accent.r, Appearance.accent.g, Appearance.accent.b, okHover.hovered ? 0.6 : 0.45)
+                    // Borderless, a step up the ladder from Cancel and one
+                    // more under the pointer; the accent is in its label.
+                    color: okHover.hovered ? Appearance.selected : Appearance.hoverStrong
 
                     Behavior on color {
                         ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
@@ -219,7 +218,7 @@ Item {
                         id: okLabel
                         anchors.centerIn: parent
                         text: "Confirm"
-                        color: Appearance.fgStrong
+                        color: Appearance.accent
                         font.pixelSize: Theme.fontSmall
                         font.family: Theme.font
                     }

@@ -43,7 +43,7 @@ BarButton {
             implicitWidth: powerLabel.implicitWidth + 2 * Theme.space2
             implicitHeight: Theme.space6
             radius: Theme.radius
-            color: Bt.powered ? SlabStyle.tintSelected : (powerHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong))
+            color: Bt.powered ? Appearance.selected : (powerHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong))
             border.color: Appearance.border
             border.width: Bt.powered ? 0 : 1
 

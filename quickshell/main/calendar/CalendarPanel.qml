@@ -569,10 +569,10 @@ ShellSurface {
                                 radius: Theme.radius
                                 // Today is a filled accent cell; a
                                 // selection that isn't today is the
-                                // half-accent ground every selected
+                                // `selected` ground every selected
                                 // button in the shell uses.
                                 color: day.today ? Appearance.accent
-                                     : day.selected ? SlabStyle.tintSelected
+                                     : day.selected ? Appearance.selected
                                      : dayHover.hovered ? Appearance.hover
                                      : Appearance.clear(Appearance.hover)
 
@@ -647,7 +647,7 @@ ShellSurface {
                         Layout.preferredHeight: 34
                         radius: Theme.radius
                         color: monthCell.current ? Appearance.accent
-                             : monthCell.showing ? SlabStyle.tintSelected
+                             : monthCell.showing ? Appearance.selected
                              : monthHover.hovered ? Appearance.hover
                              : Appearance.clear(Appearance.hover)
 

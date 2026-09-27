@@ -471,7 +471,7 @@ ShellSurface {
                     implicitWidth: 32
                     implicitHeight: 32
                     radius: width / 2
-                    color: transportPrevTap.containsMouse ? SlabStyle.tintSelected : Appearance.hover
+                    color: transportPrevTap.containsMouse ? Appearance.hoverStrong : Appearance.hover
                     scale: transportPrevTap.pressed ? 0.94 : 1
 
                     Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
@@ -529,7 +529,7 @@ ShellSurface {
                     implicitWidth: 32
                     implicitHeight: 32
                     radius: width / 2
-                    color: transportNextTap.containsMouse ? SlabStyle.tintSelected : Appearance.hover
+                    color: transportNextTap.containsMouse ? Appearance.hoverStrong : Appearance.hover
                     scale: transportNextTap.pressed ? 0.94 : 1
 
                     Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }

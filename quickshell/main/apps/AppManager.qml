@@ -625,7 +625,7 @@ ShellSurface {
                         implicitWidth: chipRow.implicitWidth + Theme.space5
                         implicitHeight: 28
                         radius: Theme.radius
-                        color: chip.active ? SlabStyle.tintSelected
+                        color: chip.active ? Appearance.selected
                              : chipHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover)
                         border.width: chip.active ? 0 : 1
                         border.color: Appearance.border
@@ -683,7 +683,7 @@ ShellSurface {
                     implicitWidth: allRow.implicitWidth + Theme.space5
                     implicitHeight: 28
                     radius: Theme.radius
-                    color: manager.allPackages ? SlabStyle.tintSelected
+                    color: manager.allPackages ? Appearance.selected
                          : allHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover)
                     border.width: manager.allPackages ? 0 : 1
                     border.color: Appearance.border
@@ -756,7 +756,7 @@ ShellSurface {
                             // the whole installed list is just gaps.
                             height: row.modelData.description ? 52 : 40
                             radius: Theme.radius
-                            color: row.index === manager.selectedIndex ? SlabStyle.tintSelected
+                            color: row.index === manager.selectedIndex ? Appearance.selected
                                  : rowHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover)
 
                             RowLayout {

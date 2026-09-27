@@ -220,48 +220,23 @@ ShellSurface {
                             readonly property bool pressed: tileTap.pressed
                             readonly property bool kbFocused: box.kbIndex === tile.index
                             readonly property bool active: tileHover.hovered || tile.kbFocused
-                            // One hue per tile: the accent for the four
-                            // ordinary actions, red for the one that ends
-                            // the session with no way back. Everything
-                            // else on the tile (fill wash, rule,
-                            // keycap) is derived from this, so a tile only
-                            // ever speaks with one color.
-                            readonly property color tone: tile.modelData.danger ? Appearance.red : Appearance.accent
-
                             width: 152
                             height: 152
                             radius: SlabStyle.cardRadius
 
-                            // Mixed channel by channel rather than with
-                            // Qt.tint(): that helper blends alphas too, so
-                            // washing a translucent card with an accent
-                            // would make the *selected* tile the most
-                            // transparent one on the slab. Same reason
-                            // SlabStyle.cardBgTinted spells its mix out.
-                            //
-                            // The alpha bumps clamp to nothing now that
-                            // SlabStyle.cardAlpha is 1.0 (the slab is
-                            // opaque, per user request) — the tint amount
-                            // is what separates the three states. Kept in
-                            // the same shape as that file's own washes so
-                            // both come back to life together if the
-                            // alphas are ever dropped for real glass.
-                            function _wash(amount, alpha) {
-                                return Qt.rgba(Appearance.surface.r * (1 - amount) + tile.tone.r * amount,
-                                               Appearance.surface.g * (1 - amount) + tile.tone.g * amount,
-                                               Appearance.surface.b * (1 - amount) + tile.tone.b * amount,
-                                               Math.min(1, alpha))
-                            }
-
-                            color: tile.pressed ? tile._wash(0.34, SlabStyle.cardAlpha + 0.18)
-                                 : tile.active  ? tile._wash(0.20, SlabStyle.cardAlpha + 0.10)
+                            // State is the fill, a step up the ladder per
+                            // state, and the glyph's colour below; nothing
+                            // else (STYLE.md §2, §8). This was an accent (or
+                            // red) wash mixed into the card, plus a
+                            // coloured rule along the top edge and a 3%
+                            // scale-up, until 2026-09-27.
+                            color: tile.pressed ? Appearance.hoverStrong
+                                 : tile.active  ? Appearance.hover
                                  : SlabStyle.cardBg
                             border.width: 1
                             border.color: SlabStyle.cardBorder
-                            scale: tile.active ? 1.03 : 1.0
 
                             Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
-                            Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
 
                             // ── Reveal ───────────────────────────
                             // The tiles deal themselves onto the slab left
@@ -291,22 +266,6 @@ ShellSurface {
                                     PauseAnimation { duration: panel.shown ? tile.revealDelay : 0 }
                                     NumberAnimation { duration: SlabStyle.revealDuration; easing.type: Theme.easingQuint }
                                 }
-                            }
-
-                            // The selection marker: a short rule that
-                            // grows along the tile's top edge, for pointer
-                            // and keyboard selection alike. Kept well
-                            // inside the corner radius so it reads as a
-                            // tab indicator rather than a broken border.
-                            Rectangle {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.top: parent.top
-                                anchors.topMargin: 1
-                                width: tile.active ? tile.width * 0.42 : 0
-                                height: 2
-                                radius: 1
-                                color: tile.tone
-                                Behavior on width { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easingQuint } }
                             }
 
                             ColumnLayout {

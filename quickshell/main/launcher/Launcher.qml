@@ -369,7 +369,7 @@ ShellSurface {
                         height: 40
                         radius: Theme.radius
                         color: resultRow.index === launcher.selectedIndex
-                            ? SlabStyle.tintSelected : Appearance.clear(SlabStyle.tintSelected)
+                            ? Appearance.selected : Appearance.clear(Appearance.selected)
 
                         Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
 

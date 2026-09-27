@@ -38,7 +38,7 @@ ColumnLayout {
             implicitWidth: btPowerLabel.implicitWidth + 16
             implicitHeight: 24
             radius: Theme.radius
-            color: Bt.powered ? SlabStyle.tintSelected
+            color: Bt.powered ? Appearance.selected
                  : (btPowerHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong))
             border.width: Bt.powered ? 0 : 1
             border.color: Appearance.border

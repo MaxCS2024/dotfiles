@@ -18,8 +18,10 @@ import QtQuick
 // the only surface it described. Anything older than that date in the
 // log calls it DashStyle.
 //
-// Two readers: PowerMenuPopout.qml, which takes nearly all of it, and
-// every selected button in the shell, which takes tintSelected.
+// One reader: PowerMenuPopout.qml. tintSelected, the accent-at-45% fill
+// every selected button used to take, went on 2026-09-27 for the
+// ladder's own `selected` step (STYLE.md §2), along with the two unused
+// accent washes beside it.
 //
 // Everything below still derives from Appearance, so a surface dressed
 // from here follows the wallpaper palette (or a pinned custom one)
@@ -73,31 +75,6 @@ Singleton {
     // now that the card under it is opaque — it composites against the
     // card, so it tracks whatever ground the card is carrying.
     readonly property color cardBorder: Qt.rgba(Appearance.fgStrong.r, Appearance.fgStrong.g, Appearance.fgStrong.b, 0.07)
-
-    // The one place color is allowed to flood a whole surface:
-    // tintStrong, for an *active* control.
-    //
-    // cardBgTinted is a card fill with the accent mixed into it at ~14%,
-    // spelled out channel by channel rather than via Qt.tint()
-    // — that helper blends the alphas too, so tinting a translucent card
-    // with a 0.10-alpha accent made the tinted card *more* transparent
-    // than the cards around it, not warmer. Kept spelled out at
-    // cardAlpha 1.0: it's the mix that makes the card warm, and this way
-    // lowering the alpha again can't quietly reintroduce that bug.
-    readonly property color cardBgTinted: Qt.rgba(
-        Appearance.surface.r * 0.86 + Appearance.accent.r * 0.14,
-        Appearance.surface.g * 0.86 + Appearance.accent.g * 0.14,
-        Appearance.surface.b * 0.86 + Appearance.accent.b * 0.14,
-        Math.min(1, root.cardAlpha + 0.06))
-
-    readonly property color tintStrong: Qt.rgba(Appearance.accent.r, Appearance.accent.g, Appearance.accent.b, 0.22)
-
-    // A *selected* button anywhere in the shell: twice tintStrong, and
-    // drawn without an outline — a full-accent ring round a half-accent
-    // fill reads as a brighter edge on a duller body. The whole button is
-    // this one colour; the neutral border comes back when it is not
-    // selected.
-    readonly property color tintSelected: Qt.rgba(Appearance.accent.r, Appearance.accent.g, Appearance.accent.b, 0.45)
 
     // ── Motion ───────────────────────────────────────────
     // Panes fade and rise in one after another on open. The stagger is

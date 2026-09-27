@@ -34,9 +34,10 @@ This is the most-repeated mistake in this repo, so it comes first.
   `Qt.darker` of your own when a token exists. A colour the palette lacks is
   added as a token in `palette.js` (with a test), not derived at the call
   site.
-- **Don't hand-mix accent into a surface** (e.g. 40% accent + 60% surface).
-  It turns muddy on warm accents. To show a secondary state, move one step up
-  the elevation ladder instead.
+- **Don't hand-mix accent into a surface** (e.g. 40% accent + 60% surface),
+  and don't lay a translucent accent over one either. It turns muddy on warm
+  accents. To show a secondary state, move one step up the elevation ladder
+  instead. A selected row, chip or button is `Appearance.selected`.
 - Elevation ladder, lowest to highest:
   `sunken` → `bar` → `surface` → `surfaceAlt` → `hover` → `hoverStrong` →
   `selected`. `sunken` is for a track set into the bar (the workspace strip).
@@ -166,3 +167,8 @@ Add to this list whenever the user rejects a visual pattern.
 - 2026-09-24: accent border on "on" quick-settings tiles and a tone-coloured
   border on hovered/selected power menu tiles; both now keep their neutral
   edge and show state with fill and text colour only (see §1).
+- 2026-09-27: `SlabStyle.tintSelected` (accent at 45% over the surface) was
+  the shell's selected fill in ~20 places, and the power menu tiles mixed
+  accent/red into theirs plus a coloured rule and a scale-up. All replaced
+  by ladder steps (`selected`, `hover`, `hoverStrong`); the accent stays in
+  text and glyphs (see §2, §8).

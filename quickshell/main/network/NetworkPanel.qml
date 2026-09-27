@@ -552,7 +552,7 @@ ShellSurface {
                     width: tabHighlight.slot
                     height: tabRow.height
                     radius: Theme.radius
-                    color: SlabStyle.tintSelected
+                    color: Appearance.selected
 
                     Behavior on x {
                         NumberAnimation { duration: Theme.animNormal; easing.type: Theme.easingDecel }

@@ -24,8 +24,8 @@ Rectangle {
     border.width: 1
     border.color: Appearance.border
     color: tap.pressed ? Appearance.hoverStrong
-         : root.on ? Qt.rgba(Appearance.accent.r, Appearance.accent.g, Appearance.accent.b, 0.09)
-                   : (hover.hovered ? Appearance.hover : Qt.rgba(Appearance.hover.r, Appearance.hover.g, Appearance.hover.b, 0))
+         : root.on ? Appearance.selected
+                   : (hover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover))
 
     activeFocusOnTab: true
     Keys.onPressed: (event) => {

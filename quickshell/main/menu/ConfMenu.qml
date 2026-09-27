@@ -1006,9 +1006,9 @@ ShellSurface {
                                 // 2026-09-11. Hover and the keyboard share
                                 // this one state — pointing at a row *is*
                                 // selecting it here — so there is nothing
-                                // the rule was distinguishing that the wash
+                                // the rule was distinguishing that the fill
                                 // doesn't.
-                                color: menuRow.selected ? SlabStyle.tintSelected : Appearance.clear(SlabStyle.tintSelected)
+                                color: menuRow.selected ? Appearance.selected : Appearance.clear(Appearance.selected)
 
                                 Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
 
