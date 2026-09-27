@@ -5,6 +5,12 @@
 # future-default). Nothing else is set up with it; git, mail and pass can be
 # pointed at it later.
 #
+# It is a quick start, not the last key anyone needs. Someone who wants more
+# (a passphrase, an offline primary key, subkeys on a YubiKey) makes a new
+# key whenever they like. gpg signs with the first secret key in the keyring
+# unless told otherwise, so that key then goes in ~/.gnupg/gpg.conf as
+# `default-key <fingerprint>`, or this one is deleted.
+#
 # It has no passphrase and never expires, so it is there without a dialog at
 # every use or a renewal to remember. Anyone who gets a copy of ~/.gnupg can
 # sign as you with it. gpg --change-passphrase <fingerprint> adds a

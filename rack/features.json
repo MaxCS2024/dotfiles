@@ -85,7 +85,7 @@
 		},
 		"gpg": {
 			"label": "GPG key",
-			"summary": "A GPG key of your own (ed25519, with an encryption subkey), in your name and git's email, or asked for when git has none. No passphrase and no expiry, so there is nothing to type or renew. If you already have a secret key, it is kept and nothing is made. It can't be removed from here: a deleted key can't be brought back.",
+			"summary": "A quick start: a GPG key of your own (ed25519, with an encryption subkey), in your name and git's email, or asked for when git has none. No passphrase and no expiry, so there is nothing to type or renew. Make a stronger key whenever you like, and put default-key <fingerprint> in ~/.gnupg/gpg.conf so gpg uses it. If you already have a secret key, it is kept and nothing is made. It can't be removed from here: a deleted key can't be brought back.",
 			"recommended": false,
 			"switch": false,
 			"size": "a few KB",
