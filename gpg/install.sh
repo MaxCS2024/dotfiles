@@ -20,6 +20,11 @@
 # has none, the terminal the Conf menu opens asks. With no terminal to ask in
 # it exits 75, which rack reads as "not finished" (rack/lib/features.sh).
 #
+# --login never asks: it is what rollout's first-login service runs, where
+# there is no terminal. The installer has put the username in git's
+# user.name, and the email in user.email if one was given; without an email
+# the key carries the name alone, and gpg --quick-add-uid adds one later.
+#
 # A user who already has a secret key keeps it, and nothing is made. gnupg
 # itself is always there: pacman depends on it. rack/features.json runs this
 # as setup and refuses to remove the feature, because a deleted secret key
@@ -28,6 +33,7 @@
 set -euo pipefail
 
 PENDING=75
+LOGIN=0
 ALGO=future-default
 EXPIRE=never
 
@@ -57,7 +63,9 @@ identity() {
     local name email answer
     name=$(git config --global user.name 2>/dev/null) || true
     email=$(git config --global user.email 2>/dev/null) || true
-    if [[ -z $name || -z $email ]]; then
+    if ((LOGIN)); then
+        name=${name:-$(account_name)}
+    elif [[ -z $name || -z $email ]]; then
         if ! [[ -t 0 && -t 1 ]]; then
             printf 'gpg: needs a name and email for the key. Set git config --global user.name and\n' >&2
             printf 'user.email, or run rack features on gpg in a terminal to be asked.\n' >&2
@@ -97,4 +105,12 @@ main() {
         "${GNUPGHOME:-$HOME/.gnupg}" "$fpr"
 }
 
-main "$@"
+case ${1-} in
+    '') ;;
+    --login) LOGIN=1 ;;
+    *)
+        printf 'usage: gpg/install.sh [--login]\n' >&2
+        exit 2
+        ;;
+esac
+main
