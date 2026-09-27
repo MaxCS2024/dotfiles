@@ -23,7 +23,7 @@
 //     explains why the dropdown's did not)
 //
 // The layout (2026-09-28, from a reference the user sent) is a terminal-
-// style "media link": a spaced caps header, the art square and full width,
+// style "media link" with no header: the art square and full width,
 // title and artist under it, a flat seek bar with a block handle, a row
 // of five equal square buttons (shuffle, prev, play, next, repeat) and
 // the player's own volume. Shuffle, repeat and volume had been dropped on
@@ -333,22 +333,14 @@ ShellSurface {
             anchors.margins: Theme.cardPadding
             spacing: Theme.space2
 
-            // ── Header ───────────────────────────────────
-            // A spaced caps label, and the player switch at the other end
-            // when there is more than one player to switch between. The
-            // reference ends the label on 音; no CJK font is installed,
-            // so it's a Nerd Font note (nf-md-music_note) instead.
+            // ── Player switch ────────────────────────────
+            // Only takes up space when there is something to switch to.
+            // The reference's "MEDIA.LINK" label used to share this line
+            // and was dropped by user request (2026-09-28).
             RowLayout {
+                visible: Media.players.length > 1
                 Layout.fillWidth: true
                 spacing: Theme.space2
-
-                Text {
-                    text: "MEDIA.LINK // \u{f075a}"
-                    color: Appearance.fgMuted
-                    font.pixelSize: Theme.fontSmall
-                    font.family: Theme.font
-                    font.letterSpacing: 2
-                }
 
                 Item { Layout.fillWidth: true }
 
