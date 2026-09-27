@@ -121,12 +121,6 @@ ShellSurface {
     PwObjectTracker { objects: panel.audioSources }
     PwObjectTracker { objects: panel.streams }
 
-    function isBt(node) { return (node.name || "").startsWith("bluez_") }
-
-    function labelFor(node) {
-        return node.description || node.nickname || node.name || "Unknown"
-    }
-
     function propOf(node, key) {
         return (node.properties && node.properties[key]) || ""
     }
@@ -506,84 +500,10 @@ ShellSurface {
                 elide: Text.ElideRight
             }
 
-            // Height is the content's, capped at four rows — past that the
-            // list scrolls, hence the bar beside it. Same arrangement as
-            // the network rail's known-networks block, including the
-            // explicit `Layout.fillHeight: false`: it defaults to true for
-            // an item that is itself a layout, and a filling row inside a
-            // card that sizes to its content is a card with no height of
-            // its own.
-            RowLayout {
-                visible: panel.audioSinks.length > 1
-                Layout.fillWidth: true
-                Layout.fillHeight: false
-                Layout.preferredHeight: Math.min(panel.audioSinks.length, 4) * 32
-                Layout.maximumHeight: Layout.preferredHeight
-                spacing: Theme.space1
-
-                ListView {
-                    id: sinkList
-
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    clip: true
-                    model: panel.audioSinks
-                    boundsBehavior: Flickable.StopAtBounds
-
-                    delegate: Rectangle {
-                        id: sinkRow
-                        required property var modelData
-
-                        readonly property bool isActive: sinkRow.modelData === Volume.sink
-
-                        width: ListView.view.width
-                        height: 32
-                        radius: Theme.radius
-                        color: sinkRow.isActive ? Appearance.selected
-                             : (sinkHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover))
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: Theme.space2
-                            anchors.rightMargin: Theme.space2
-                            spacing: Theme.space2
-
-                            // A fixed column, so the names beside it start
-                            // on the same x whichever glyph the row has.
-                            Text {
-                                text: panel.isBt(sinkRow.modelData) ? "" : ""
-                                color: Appearance.fgMuted
-                                font.pixelSize: Theme.fontSmall
-                                font.family: Theme.font
-                                Layout.preferredWidth: Theme.space4
-                            }
-
-                            Text {
-                                text: panel.labelFor(sinkRow.modelData)
-                                color: Appearance.fg
-                                font.pixelSize: Theme.fontNormal
-                                font.family: Theme.font
-                                Layout.fillWidth: true
-                                Layout.minimumWidth: 0
-                                elide: Text.ElideRight
-                            }
-                        }
-
-                        HoverHandler { id: sinkHover }
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: Pipewire.preferredDefaultAudioSink = sinkRow.modelData
-                        }
-                    }
-                }
-
-                ListScrollBar {
-                    view: sinkList
-                    Layout.fillHeight: true
-                    trackColor: Appearance.scrollTrack
-                    thumbColor: Appearance.scrollThumb
-                }
+            DevicePicker {
+                devices: panel.audioSinks
+                current: Volume.sink
+                onPicked: node => Pipewire.preferredDefaultAudioSink = node
             }
 
             // ── Input ────────────────────────────────────
@@ -671,77 +591,11 @@ ShellSurface {
                 elide: Text.ElideRight
             }
 
-            // The input devices, when there is more than one — the output
-            // picker's rows and cap, pointed at the default source.
-            RowLayout {
-                visible: panel.audioSources.length > 1
-                Layout.fillWidth: true
-                Layout.fillHeight: false
-                Layout.preferredHeight: Math.min(panel.audioSources.length, 4) * 32
-                Layout.maximumHeight: Layout.preferredHeight
-                spacing: Theme.space1
-
-                ListView {
-                    id: sourceList
-
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    clip: true
-                    model: panel.audioSources
-                    boundsBehavior: Flickable.StopAtBounds
-
-                    delegate: Rectangle {
-                        id: sourceRow
-                        required property var modelData
-
-                        readonly property bool isActive: sourceRow.modelData === Mic.source
-
-                        width: ListView.view.width
-                        height: 32
-                        radius: Theme.radius
-                        color: sourceRow.isActive ? Appearance.selected
-                             : (sourceHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover))
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: Theme.space2
-                            anchors.rightMargin: Theme.space2
-                            spacing: Theme.space2
-
-                            Text {
-                                text: panel.isBt(sourceRow.modelData) ? "" : ""
-                                color: Appearance.fgMuted
-                                font.pixelSize: Theme.fontSmall
-                                font.family: Theme.font
-                                Layout.preferredWidth: Theme.space4
-                            }
-
-                            Text {
-                                text: panel.labelFor(sourceRow.modelData)
-                                color: Appearance.fg
-                                font.pixelSize: Theme.fontNormal
-                                font.family: Theme.font
-                                Layout.fillWidth: true
-                                Layout.minimumWidth: 0
-                                elide: Text.ElideRight
-                            }
-                        }
-
-                        HoverHandler { id: sourceHover }
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: Pipewire.preferredDefaultAudioSource = sourceRow.modelData
-                        }
-                    }
-                }
-
-                ListScrollBar {
-                    view: sourceList
-                    Layout.fillHeight: true
-                    trackColor: Appearance.scrollTrack
-                    thumbColor: Appearance.scrollThumb
-                }
+            // The input devices, when there is more than one.
+            DevicePicker {
+                devices: panel.audioSources
+                current: Mic.source
+                onPicked: node => Pipewire.preferredDefaultAudioSource = node
             }
 
             // ── App mixer ────────────────────────────────
