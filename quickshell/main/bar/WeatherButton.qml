@@ -1,9 +1,9 @@
 import QtQuick
 import "../services"
 
-// The weather now and four hours from now: the current sky as the icon,
-// then "14° → 16°" — today's only, so late in the evening the arrow goes
-// away. Nothing to show until the first forecast arrives
+// The weather now and four hours from now, each temp after its sky:
+// "󰖙 14° → 󰖐 16°" — today's only, so late in the evening the arrow and
+// the second half go away. Nothing to show until the first forecast arrives
 // (services/Weather.qml).
 BarButton {
     id: root
@@ -19,8 +19,10 @@ BarButton {
     label: {
         if (!Weather.now) return ""
         const now = Weather.now.temp + "°"
-        return Weather.later ? now + " → " + Weather.later.temp + "°" : now
+        return Weather.later ? now + " →" : now
     }
+    trailingIcon: Weather.later ? Weather.later.icon : ""
+    trailingLabel: Weather.later ? Weather.later.temp + "°" : ""
 
     // Left click opens the right-edge rail (weather/WeatherPanel.qml),
     // which also fetches again as it opens.

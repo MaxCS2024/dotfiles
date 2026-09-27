@@ -4,7 +4,8 @@ import "../config"
 import "../theme"
 
 // The shared shape of every right-side bar item: hover pill, optional
-// icon + label, and a dropdown that children are declared into.
+// icon + label (and a second icon + label after them), and a dropdown
+// that children are declared into.
 Item {
     id: root
 
@@ -14,6 +15,10 @@ Item {
     property string label: ""
     property color iconColor: Appearance.icon
     property color labelColor: Appearance.icon
+    // A second icon + label after the first, drawn the same way — the
+    // weather in four hours (bar/WeatherButton.qml).
+    property string trailingIcon: ""
+    property string trailingLabel: ""
     property int maxLabelWidth: 0        // 0 = unconstrained
     property int minWidth: 280
     property bool dropdownEnabled: true
@@ -79,6 +84,23 @@ Item {
                 Layout.maximumWidth: root.maxLabelWidth > 0
                     ? root.maxLabelWidth
                     : Number.POSITIVE_INFINITY
+            }
+
+            Text {
+                text: root.trailingIcon
+                visible: text !== ""
+                font.pixelSize: Theme.iconSize
+                font.family: Theme.font
+                color: root.iconColor
+                Behavior on color { ColorAnimation { duration: Theme.animNormal; easing.type: Theme.easingStandard } }
+            }
+
+            Text {
+                text: root.trailingLabel
+                visible: text !== ""
+                font.pixelSize: Theme.fontNormal
+                font.family: Theme.font
+                color: root.labelColor
             }
         }
     }
