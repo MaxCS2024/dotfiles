@@ -1,5 +1,8 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
+# Home has many entries; the 30ms default times out on a cold cache
+scan_timeout = 100
+
 [aws]
 symbol = " "
 
@@ -123,6 +126,10 @@ symbol = " "
 
 [kubernetes]
 symbol = "󱃾 "
+
+[line_break]
+# Keep the directory and ❯ on the same line as the input
+disabled = true
 
 [lua]
 symbol = " "
