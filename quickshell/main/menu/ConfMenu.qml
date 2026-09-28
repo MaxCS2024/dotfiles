@@ -162,8 +162,9 @@ ShellSurface {
     readonly property var tree: panel._markInstalled(
         panel._markAvailability(panel.buildTree(), actions.tools), actions.packages)
 
-    // Seven sections, one per job: Capture, Style, Apps, Install,
-    // Features, System, Learn. Six until 2026-09-28, when Install took
+    // Seven sections, one per job: Triggers, Style, Apps, Install,
+    // Features, System, Learn. Triggers replaced Capture on 2026-09-29
+    // and holds it as a branch. Six until 2026-09-28, when Install took
     // over from Apps › Browse (user request: categories after omarchy's
     // Install menu, each with its own icon). The six were a regroup at
     // the user's request, 2026-09-24. Before
@@ -173,24 +174,29 @@ ShellSurface {
     // optional features at all.
     function buildTree() {
         return [
-            // Screenshots go through the shell's own capture path (see
-            // Panels.capture) so they land in the same folder, on the
-            // same clipboard and in the same notification history as the
-            // Print key — the menu is a third way in, not a second
-            // implementation.
-            { label: "Capture", icon: "", children: [
-                { label: "Screenshot (region)", icon: "",
-                  requires: "slurp", run: () => Panels.capture("region") },
-                { label: "Screenshot (window)", icon: "",
-                  requires: "grim", run: () => Panels.capture("window") },
-                { label: "Screenshot (screen)", icon: "",
-                  requires: "grim", run: () => Panels.capture("screen") },
-                { label: actions.recording ? "Stop recording" : "Record screen",
-                  icon: "", requires: "wf-recorder",
-                  hint: actions.recording ? "recording…" : "",
-                  run: () => actions.record() },
-                { label: "Colour picker", icon: "",
-                  requires: "hyprpicker", run: () => actions.pickColor() }
+            // Things you set off, as opposed to things you configure.
+            // Capture was a top-level section of its own until
+            // 2026-09-29, when it moved in here at the user's request.
+            { label: "Triggers", icon: "\u{F0E7}", children: [
+                // Screenshots go through the shell's own capture path (see
+                // Panels.capture) so they land in the same folder, on the
+                // same clipboard and in the same notification history as the
+                // Print key — the menu is a third way in, not a second
+                // implementation.
+                { label: "Capture", icon: "", children: [
+                    { label: "Screenshot (region)", icon: "",
+                      requires: "slurp", run: () => Panels.capture("region") },
+                    { label: "Screenshot (window)", icon: "",
+                      requires: "grim", run: () => Panels.capture("window") },
+                    { label: "Screenshot (screen)", icon: "",
+                      requires: "grim", run: () => Panels.capture("screen") },
+                    { label: actions.recording ? "Stop recording" : "Record screen",
+                      icon: "", requires: "wf-recorder",
+                      hint: actions.recording ? "recording…" : "",
+                      run: () => actions.record() },
+                    { label: "Colour picker", icon: "",
+                      requires: "hyprpicker", run: () => actions.pickColor() }
+                ]}
             ]},
 
             { label: "Style", icon: "", children: [
