@@ -71,6 +71,12 @@ running. Grouped by what breaks if it's missing.
   list enumerates over D-Bus a moment *after* first access, which is why
   the service names it at startup rather than leaving the panel to ask.
 
+- **power-profiles-daemon** — the battery rail's power profile switch
+  (`battery/PowerProfileSwitch.qml`) reads and sets the profile through
+  Quickshell's `PowerProfiles`, the same D-Bus service `powerprofilesctl`
+  and `relay power` use. `services/Battery.qml` runs `powerprofilesctl
+  get` once at startup and hides the switch if the daemon isn't there.
+
 - **BlueZ** (`bluetoothd`) — `services/Bt.qml` uses
   `Quickshell.Bluetooth`, which talks to BlueZ over D-Bus. No adapter
   will be found without it.

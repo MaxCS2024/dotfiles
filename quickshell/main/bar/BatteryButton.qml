@@ -22,6 +22,7 @@ BarButton {
     // No right click: it opened a quick settings tab that was deleted on
     // 2026-09-21 and that the rail already said everything of. (The
     // volume module spends its right click on mute instead — there is no
-    // equivalent here, a battery being a thing you read rather than set.)
+    // equivalent here; the one thing to set, the power profile, is on
+    // the rail.)
     onTapped: Panels.toggle("battery")
 }

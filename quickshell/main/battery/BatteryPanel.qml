@@ -4,8 +4,9 @@
 // network rail's: a card held 8px off the screen edges it touches, the
 // toasts' material and curves, and — like the volume rail, and unlike the
 // two list rails — only as tall as what is in it. That fit matters more
-// here than anywhere else, because what is in it is four readings on a
-// machine with one pack and a second section on a machine with two.
+// here than anywhere else, because what is in it is four readings and
+// the power profile switch on a machine with one pack, and a further
+// section on a machine with two.
 //
 // What it says that the bar and quicksettings/BatteryTab.qml cannot: the
 // packs. UPower.displayDevice is an aggregate, and on this ThinkPad it
@@ -289,6 +290,32 @@ ShellSurface {
                 value: UPower.onBattery ? "Battery" : "AC adapter"
                 labelColor: Appearance.fgMuted
                 valueColor: UPower.onBattery ? Appearance.fg : Appearance.green
+            }
+
+            // ── Power profile ────────────────────────────
+            // The rail's one control, and the first thing on it you set
+            // rather than read — which is why it comes after the
+            // readings and not in the header. Hidden where
+            // power-profiles-daemon isn't running (Battery.
+            // profilesAvailable), like every other section here that
+            // would otherwise be empty.
+            Text {
+                visible: Battery.profilesAvailable
+                text: "Power profile"
+                color: Appearance.fg
+                font.pixelSize: Theme.fontSmall
+                font.family: Theme.font
+                font.capitalization: Font.AllUppercase
+                font.letterSpacing: Theme.tracking(Theme.fontSmall, 0.12)
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.topMargin: 2
+                elide: Text.ElideRight
+            }
+
+            PowerProfileSwitch {
+                visible: Battery.profilesAvailable
+                Layout.fillWidth: true
             }
 
             // ── Packs ────────────────────────────────────

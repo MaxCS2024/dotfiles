@@ -1,5 +1,6 @@
 pragma Singleton
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.UPower
 import QtQuick
 import "../config"
@@ -57,6 +58,23 @@ Singleton {
     // the honest answer to a number that isn't there; per-pack health is
     // in `deviceHealth` below, which is where the real figures live.
     readonly property string healthText: health > 0 ? Math.round(health) + "%" : "—"
+
+    // ── Power profile ────────────────────────────────────
+    // Whether power-profiles-daemon is there to ask. Quickshell's
+    // PowerProfiles has no "not running" state of its own — without the
+    // daemon it just reads a default profile, and setting one goes
+    // nowhere — so battery/PowerProfileSwitch.qml would sit on the rail
+    // looking live and doing nothing. `powerprofilesctl get` is the check
+    // relay/lib/power.sh makes for the same question: installed is not
+    // running, and this is the cheapest call that talks to the daemon.
+    // Once at startup; ppd isn't something that comes and goes.
+    property bool profilesAvailable: false
+
+    Process {
+        running: true
+        command: ["powerprofilesctl", "get"]
+        onExited: (code) => root.profilesAvailable = code === 0
+    }
 
     function fmtTime(seconds) {
         if (!seconds || seconds <= 0) return "—"
