@@ -204,18 +204,12 @@ ColumnLayout {
         DnsProviders {}
     }
 
-    // The rule that used to run here is gone at the user's
-    // asking (2026-09-18), and this is the 1px it occupied,
-    // kept so the gap either side of it doesn't close up. The
-    // section headers below are already in caps and already
-    // sit in their own whitespace, so they were doing the
-    // dividing twice over.
-    //
-    // An Item and not `Divider { visible: false }`: a Layout
-    // skips an invisible child entirely, taking its row and
-    // one of the two 12px gaps around it with it, which is
-    // the spacing this is here to preserve.
-    Item { Layout.fillWidth: true; implicitHeight: 1 }
+    // A rule went from here on 2026-09-18 (the section headers
+    // below were thought to do the dividing on their own), and
+    // an empty 1px Item held its place so the gaps either side
+    // kept their size. It is back at the user's asking
+    // (2026-09-29), to match the one above the DNS provider.
+    Divider {}
 
     // ── Known networks ───────────────────────────
     // The ones in range that this machine already has a
