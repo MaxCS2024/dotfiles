@@ -57,6 +57,11 @@ ColumnLayout {
     // still a defensible choice here and gives a little more
     // separation; this follows the convention instead.
     //
+    // And fgFaint it is since 2026-09-28 (user request): the
+    // labels take the tone of the unconnected networks' wifi
+    // glyphs below, so the values stand out further. An
+    // exception to STYLE.md §3, asked for by name.
+    //
     // The DNS row moves with it: it sits directly under this
     // grid, and two label tones a line apart read as two
     // different kinds of row.
@@ -89,7 +94,7 @@ ColumnLayout {
         // or the right edge — the same shape as the DNS and
         // Speed test rows below, run twice across.
         component StatLabel: Text {
-            color: Appearance.fgMuted
+            color: Appearance.fgFaint
             font.pixelSize: Theme.fontNormal
             font.family: Theme.font
             elide: Text.ElideRight
@@ -189,12 +194,12 @@ ColumnLayout {
 
         Text {
             text: "DNS"
-            // fgMuted, with the grid's labels above it — see
+            // fgFaint, with the grid's labels above it — see
             // the section comment. This row is lifted from
             // quicksettings/NetworkTab.qml, which still sets
             // its own labels to fg; that surface has no grid
             // over it to agree with.
-            color: Appearance.fgMuted
+            color: Appearance.fgFaint
             font.pixelSize: Theme.fontNormal
             font.family: Theme.font
             Layout.fillWidth: true
