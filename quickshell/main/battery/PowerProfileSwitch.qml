@@ -43,10 +43,27 @@ ColumnLayout {
         return PowerProfile.toString(p)
     }
 
+    // The marks GNOME's own profile picker settled on: a leaf, a
+    // balance, a speedometer (Nerd Font md-leaf, md-scale-balance,
+    // md-speedometer).
+    function icon(p) {
+        switch (p) {
+        case PowerProfile.PowerSaver: return "󰌪"
+        case PowerProfile.Balanced: return "󰗑"
+        case PowerProfile.Performance: return "󰓅"
+        }
+        return ""
+    }
+
+    // Taller than the network rail's tabs (user request 2026-09-28): this
+    // is the rail's one control, and each segment now carries an icon
+    // beside its label.
+    readonly property int segmentHeight: 40
+
     Rectangle {
         id: track
         Layout.fillWidth: true
-        implicitHeight: 24 + 2 * track.pad
+        implicitHeight: root.segmentHeight + 2 * track.pad
         radius: Theme.radius
         color: Appearance.trackBg
         border.width: 1
@@ -90,21 +107,39 @@ ColumnLayout {
                     readonly property bool active: root.current === segment.index
 
                     Layout.fillWidth: true
-                    implicitHeight: 24
+                    implicitHeight: root.segmentHeight
                     radius: Theme.radius
                     color: !segment.active && hover.hovered
                         ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)
+
+                    readonly property color ink: segment.active ? Appearance.fgStrong : Appearance.fgSoft
 
                     Behavior on color {
                         ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
                     }
 
-                    Text {
+                    // Icon and label in the label's colour: the plate is
+                    // the one signal for "current" (STYLE §8), so the
+                    // glyph doesn't turn accent on top of it.
+                    Row {
                         anchors.centerIn: parent
-                        text: root.label(segment.modelData)
-                        color: segment.active ? Appearance.fgStrong : Appearance.fgSoft
-                        font.pixelSize: Theme.fontSmall
-                        font.family: Theme.font
+                        spacing: Theme.space2
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.icon(segment.modelData)
+                            color: segment.ink
+                            font.pixelSize: Theme.iconSize
+                            font.family: Theme.font
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.label(segment.modelData)
+                            color: segment.ink
+                            font.pixelSize: Theme.fontNormal
+                            font.family: Theme.font
+                        }
                     }
 
                     HoverHandler { id: hover }
