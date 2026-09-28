@@ -196,6 +196,26 @@ ShellSurface {
                       run: () => actions.record() },
                     { label: "Colour picker", icon: "",
                       requires: "hyprpicker", run: () => actions.pickColor() }
+                ]},
+
+                // Modes the machine is put into and left in. They were
+                // switches at the foot of the network rail from
+                // 2026-09-21 (network/ModesRow.qml, now gone) until
+                // 2026-09-29, when they moved here at the user's request.
+                // Shown like a switchable feature: "on"/"off" in the
+                // hint, green while on. NightLight.toggle() writes
+                // Settings.nightLight, which services/NightLight.qml turns
+                // into a hyprsunset temperature; Settings.stayAwake is read
+                // by the IdleInhibitors in bar/Bar.qml.
+                { label: "Toggles", icon: "\u{F0521}", children: [
+                    { label: "Night light", icon: "\u{F0594}",
+                      hint: NightLight.enabled ? "on" : "off",
+                      current: NightLight.enabled,
+                      run: () => NightLight.toggle() },
+                    { label: "Stay awake", icon: "\u{F0176}",
+                      hint: Settings.stayAwake ? "on" : "off",
+                      current: Settings.stayAwake,
+                      run: () => { Settings.stayAwake = !Settings.stayAwake } }
                 ]}
             ]},
 

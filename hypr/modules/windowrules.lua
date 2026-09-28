@@ -61,7 +61,8 @@ hl.layer_rule({
 -- A second rule sat here for the dashboard (SUPER+Q), a translucent slab
 -- that wanted blur behind it. Both the panel and its keybind were
 -- deleted on 2026-09-21 -- every card in it had a surface of its own
--- elsewhere, bar the two toggles that moved to the network rail.
+-- elsewhere, bar the two toggles that moved to the network rail (and on
+-- 2026-09-29 to Conf › Triggers › Toggles).
 
 -- The terminal (the default one, see defaults.lua) isn't a quickshell
 -- layer surface — it's a normal toplevel, so it gets blur "for free" from

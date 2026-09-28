@@ -609,7 +609,7 @@ ShellSurface {
             }
 
             // ── Wi-Fi tab ────────────────────────────────
-            // The tabs and the Modes row below are siblings in
+            // The two tabs are siblings in
             // network/, each taking nothing but its visibility. They were
             // 1,000 lines inside this file until 2026-09-21, and every
             // commit that touched one of them had to be made in a
@@ -628,13 +628,9 @@ ShellSurface {
                 Layout.fillHeight: true
             }
 
-            // ── Modes ────────────────────────────────────
-            // network/ModesRow.qml — outside both tabs, so it stays
-            // reachable whichever one is open.
-            ModesRow {
-                Layout.fillWidth: true
-            }
-
+            // A Modes section (night light, stay awake) sat here, under
+            // both tabs, from 2026-09-21 until 2026-09-29. It is now
+            // Conf › Triggers › Toggles (menu/ConfMenu.qml).
         }
 
         // Inside the card rather than the window so it is covered by the

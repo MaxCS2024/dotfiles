@@ -31,20 +31,21 @@ ShellRoot {
     // and GTK's.
     AppColors {}
 
-    // Not dead code — deleting this turns the Night light switch on the
-    // network rail back into a no-op. NightLight is a Singleton, so it is
+    // Not dead code — deleting this turns Conf › Triggers › Toggles ›
+    // Night light back into a no-op. NightLight is a Singleton, so it is
     // built the first time something names it. Every other service is
     // named by a bar module or a panel that displays it; this one only
     // ever acts (it pushes a temperature at hyprsunset when
     // Settings.nightLight changes), so nothing would otherwise build it
     // and its Connections to Settings would never exist.
     //
-    // Naming it here rather than letting that switch be the first
+    // Naming it here rather than letting that row be the first
     // reference is also what gets a saved setting to hyprsunset at
-    // login: network/NetworkPanel.qml is behind a LazyLoader like every
-    // other panel, so its reference wouldn't happen until the rail was
-    // first opened. This mattered the same way when the switch was a
-    // dashboard tile, which is what it was until 2026-09-21.
+    // login: the Conf menu is behind a LazyLoader like every panel, so
+    // its reference wouldn't happen until it was first opened. This
+    // mattered the same way when the switch was a dashboard tile (until
+    // 2026-09-21) and then a switch on the network rail (until
+    // 2026-09-29).
     readonly property var nightLight: NightLight
 
     // Self-heals the Mpris staleness bug bar/MediaPlayer.qml can hit
