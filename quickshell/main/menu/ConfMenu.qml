@@ -235,8 +235,8 @@ ShellSurface {
                 // isn't (apps/AppManager.qml), where Install and Remove
                 // were two until 2026-09-24. `search` keeps both words
                 // finding it from the top of this menu. "All" because
-                // Install › Packages and AUR open the same window on one
-                // source, and this row shouldn't inherit that.
+                // Install › Packages opens the same window on one source,
+                // and this row shouldn't inherit that.
                 { label: "Manage apps", icon: "\u{F019}", hint: "install · remove",
                   search: "install remove uninstall packages",
                   run: () => Panels.open("apps", { source: "All" }) },
@@ -265,9 +265,10 @@ ShellSurface {
             ]},
 
             // Putting things on the machine, by kind (user request
-            // 2026-09-28, after omarchy's Install menu). Packages and AUR
-            // are the App manager opened on that one source; the rest are
-            // short picked lists, a row per app. Replaces Apps › Browse,
+            // 2026-09-28, after omarchy's Install menu). Packages is the
+            // App manager opened on that one source, AUR an fzf picker in
+            // a terminal (bin/aur-install); the rest are short picked
+            // lists, a row per app. Replaces Apps › Browse,
             // whose categories (Browsers, AI, Communications, Gaming) and
             // loose apps moved here as they were.
             //
@@ -281,8 +282,14 @@ ShellSurface {
                 { label: "Packages", icon: "\u{F0BAF}", hint: "pacman",
                   search: "pacman repo official",
                   run: () => Panels.open("apps", { source: Pkg.PACMAN }) },
+                // A repo script, not installed anywhere (zsh finds it
+                // through ZDOTDIR), so readlink follows main/'s link back
+                // into the repo. Not held: the script pauses itself after
+                // an install, and Esc out of the picker just closes.
                 { label: "AUR", icon: "\u{F0849}", hint: "yay", requires: "yay",
-                  run: () => Panels.open("apps", { source: Pkg.AUR }) },
+                  run: () => Terminal.run('"$(readlink -f '
+                      + Terminal.quote([Quickshell.shellPath("../../bin/aur-install")])
+                      + ')"', { title: "AUR", hold: false }) },
                 { label: "Web apps", icon: "\u{F0F94}", hint: "sites as apps",
                   children: panel.launcherRows("web") },
                 { label: "TUI", icon: "\u{F0C8B}", hint: "terminal apps",
