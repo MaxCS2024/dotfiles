@@ -172,6 +172,13 @@ ColumnLayout {
     // provider section below already says which is in use.
     // Its Network.currentDns has no other reader in the UI.
 
+    // A rule between the stat grid and the DNS provider section
+    // (user request 2026-09-29). The provider section is the
+    // first thing below the grid that you act on rather than
+    // read, and without a rule it ran straight on from the
+    // readings above it.
+    Divider {}
+
     // ── DNS provider ─────────────────────────────
     // network/DnsProviders.qml, under the stat grid (user
     // request 2026-09-28): it replaced the DNS tab, so
