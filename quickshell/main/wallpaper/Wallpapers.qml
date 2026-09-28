@@ -111,9 +111,28 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: {
                 root.currentPaths = text.split("\n").filter(l => l.trim() !== "")
+                root.linkLockWallpaper()
             }
         }
     }
+
+    // hyprlock's background (hypr/hyprlock.conf) is this link, blurred
+    // and dimmed. hyprlock reads its image path once, at launch, and has
+    // no way to ask awww, so the shell keeps the link pointing at what is
+    // on screen: at startup and after every apply, which is every time
+    // currentPaths is read. The first output's image; the lock screen
+    // draws one background on every monitor. With no link yet (a machine
+    // where the shell has never run) hyprlock falls back to its colour.
+    function linkLockWallpaper() {
+        if (root.currentPaths.length === 0) return
+        lockLinkProc.running = false
+        lockLinkProc.command = ["sh", "-c",
+            "mkdir -p \"$HOME/.cache/quickshell\" && ln -sfn \"$1\" \"$HOME/.cache/quickshell/lock-wallpaper\"",
+            "sh", root.currentPaths[0]]
+        lockLinkProc.running = true
+    }
+
+    Process { id: lockLinkProc }
 
     Process {
         id: applyProc
