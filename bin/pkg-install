@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# fzf picker over every package in the repos or the AUR: fuzzy-search by
+# name, `pacman -Sii` / `yay -Sii` in the pane below, <tab> to pick
+# several, <enter> installs the picks. Conf › Install › Packages and AUR
+# open this in a terminal (after omarchy's pkg-install and
+# pkg-aur-install); the App manager is still there for searching by
+# description.
+set -euo pipefail
+
+usage() {
+	cat <<-EOF
+		usage: pkg-install pacman|aur
+
+		Fuzzy-search the official repos (pacman) or the AUR (aur) by
+		package name and install what you pick.
+	EOF
+}
+
+case "${1:-}" in
+	pacman)
+		list=(pacman -Slq)
+		info='pacman -Sii {1} 2>/dev/null'
+		fetch='yay -Gp --repo'
+		install=(sudo pacman -S --needed)
+		;;
+	aur)
+		list=(yay -Slqa)
+		info='yay -Siia {1} 2>/dev/null'
+		fetch='yay -Gpa'
+		install=(yay -S --needed)
+		;;
+	--help | -h)
+		usage
+		exit 0
+		;;
+	*)
+		usage >&2
+		exit 1
+		;;
+esac
+
+# PKGBUILD view: `yay -Gp` prints two blank lines and a "# pkgname" header
+# before the file itself, hence the tail. It fetches repo packages'
+# PKGBUILDs from Arch's GitLab too, split packages included; --repo / -a pin
+# it to the source being browsed, for a name that is in both. Plain text
+# without bat.
+pkgbuild="$fetch {1} 2>/dev/null | tail -n +5"
+command -v bat >/dev/null && pkgbuild+=' | bat -l bash -p --color=always'
+
+picks=$(
+	"${list[@]}" | fzf \
+		--multi \
+		--prompt '> ' \
+		--pointer '▌' --gutter ' ' \
+		--color 'pointer:green,marker:green,prompt:blue,label:dim' \
+		--preview "$info" \
+		--preview-window 'down:65%:wrap:border-rounded' \
+		--preview-label 'alt-p: toggle description, alt-b/B: toggle PKGBUILD, alt-j/k: scroll, tab: multi-select' \
+		--preview-label-pos bottom \
+		--bind 'alt-p:toggle-preview' \
+		--bind "alt-b:change-preview($pkgbuild)" \
+		--bind "alt-B:change-preview($info)" \
+		--bind 'alt-j:preview-down,alt-k:preview-up' \
+		--bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up'
+) || exit 0
+
+# One package per line from fzf; pacman's and yay's own confirm prompts
+# stay on.
+mapfile -t pkgs <<<"$picks"
+status=0
+"${install[@]}" "${pkgs[@]}" || status=$?
+
+# Held here rather than by the terminal (Terminal.run's `hold`), so that
+# Esc out of the picker closes the window without a "press Enter".
+printf '\n\033[2m— finished (exit %s) · press Enter to close —\033[0m\n' "$status"
+read -r _
+exit "$status"

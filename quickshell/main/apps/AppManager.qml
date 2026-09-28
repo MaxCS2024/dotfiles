@@ -67,10 +67,11 @@ ShellSurface {
     // A query opens straight on its search (the Conf menu's search, `qs
     // ipc call apps find <text>`). A bare open keeps whatever was showing.
     //
-    // `{ source }` opens on one chip instead: Conf › Install › Packages
-    // is this window showing pacman only, Install › AUR the AUR only, and
-    // Apps › Manage apps asks for "All" so it never opens stuck on the
-    // chip one of those left behind. A query can come with it.
+    // `{ source }` opens on one chip instead, and keeps it through
+    // searches. Conf › Install › Packages and AUR used it until
+    // 2026-09-29 (they are fzf pickers in a terminal now, bin/pkg-install);
+    // only Apps › Manage apps passes one today, "All". A query can come
+    // with it.
     onSurfaceOpened: (arg) => {
         if (arg && typeof arg === "object") {
             if (manager.filters.indexOf(arg.source) !== -1) {
