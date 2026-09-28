@@ -8,6 +8,7 @@ import "../theme"
 import "../services"
 import "../keybinds"
 import "../services/packages.js" as Pkg
+import "../common/localBin.js" as LocalBin
 
 // Conf — one keystroke (SUPER+SPACE) to everything this config can do,
 // in the shape of omarchy's menu: a small centred slab, one level of the
@@ -47,6 +48,9 @@ import "../services/packages.js" as Pkg
 //   * A Features row flips its feature. That runs headless and answers
 //     with a notification, unless turning it on has packages to
 //     install, which is the terminal case above. See featureRows().
+//   * A leaf with `ask` (Install › Web apps › New web app…) turns the
+//     filter field into a short form, one field per Enter, and runs its
+//     `done` with the answers. See startAsk().
 //
 // Learn › Keybindings was a fourth kind for a while: a level of rows
 // that were each only a fact, answering the question the old Settings
@@ -102,6 +106,11 @@ ShellSurface {
     // Non-empty while an info leaf is showing in place of the list.
     property string infoKind: ""
 
+    // Non-null while an `ask` leaf is filling in its fields:
+    // { fields, done, values, step }. Replaced, never changed in place,
+    // so `rows` hears about every step. See startAsk().
+    property var asking: null
+
     // The row height and the type scale are theme/ConfStyle.qml's, not
     // this file's: keybinds/KeybindsPanel.qml is a page this menu opens
     // and has to be the same size as it, and two copies of four numbers
@@ -153,8 +162,11 @@ ShellSurface {
     readonly property var tree: panel._markInstalled(
         panel._markAvailability(panel.buildTree(), actions.tools), actions.packages)
 
-    // Six sections, one per job (regrouped at the user's request,
-    // 2026-09-24): Capture, Style, Apps, Features, System, Learn. Before
+    // Seven sections, one per job: Capture, Style, Apps, Install,
+    // Features, System, Learn. Six until 2026-09-28, when Install took
+    // over from Apps › Browse (user request: categories after omarchy's
+    // Install menu, each with its own icon). The six were a regroup at
+    // the user's request, 2026-09-24. Before
     // that, apps were spread over four top-level entries — a catalogue
     // under Setup beside Install, Remove and Update — Remove and About
     // were branches holding one row each, and nothing reached the
@@ -190,35 +202,18 @@ ShellSurface {
                   run: () => Panels.open("themes", undefined) }
             ]},
 
-            // Putting apps on the machine, taking them off, keeping them
-            // current, and saying which of them opens what.
+            // What is on the machine, keeping it current, and saying which
+            // of it opens what. Putting new things on is Install, below.
             { label: "Apps", icon: "\u{F003B}", children: [
                 // One window for what is installed and for finding what
                 // isn't (apps/AppManager.qml), where Install and Remove
                 // were two until 2026-09-24. `search` keeps both words
-                // finding it from the top of this menu.
-                { label: "Manage apps", icon: "", hint: "install · remove",
+                // finding it from the top of this menu. "All" because
+                // Install › Packages and AUR open the same window on one
+                // source, and this row shouldn't inherit that.
+                { label: "Manage apps", icon: "\u{F019}", hint: "install · remove",
                   search: "install remove uninstall packages",
-                  run: () => Panels.open("apps", "") },
-                // The same install rows, picked from a short list by
-                // category rather than searched for.
-                { label: "Browse", icon: "\u{F009}", hint: "by category", children: [
-                    // Coding agents for the terminal. These are rack
-                    // features rather than install rows (see aiFeatures),
-                    // so a row here installs one and, once installed,
-                    // removes it, as it did under Features.
-                    { label: "AI", icon: "\u{F0674}", hint: "coding agents",
-                      children: panel.featureRows(panel.aiFeatures) },
-                    { label: "Browsers", icon: "", hint: "web",
-                      children: panel.browserApps.map(app => panel.installRow(app)) },
-                    { label: "Communications", icon: "", hint: "chat",
-                      children: panel.communicationApps.map(app => panel.installRow(app)) },
-                    { label: "Gaming", icon: "", hint: "launchers",
-                      children: panel.gamingApps.map(app => panel.installRow(app)) }
-                // The apps that fit no category sit here as rows of their
-                // own, after the three that do (user request 2026-09-24:
-                // they were a fourth category, General).
-                ].concat(panel.generalApps.map(app => panel.installRow(app))) },
+                  run: () => Panels.open("apps", { source: "All" }) },
                 // "Update all" is rack's own three-stage update (repo,
                 // then AUR, then flatpak, each gated on the one before
                 // it); the three rows under it are the single stages, for
@@ -243,10 +238,64 @@ ShellSurface {
                   })) }
             ]},
 
+            // Putting things on the machine, by kind (user request
+            // 2026-09-28, after omarchy's Install menu). Packages and AUR
+            // are the App manager opened on that one source; the rest are
+            // short picked lists, a row per app. Replaces Apps › Browse,
+            // whose categories (Browsers, AI, Communications, Gaming) and
+            // loose apps moved here as they were.
+            //
+            // Every category has a glyph of its own: pac-man for pacman,
+            // a group of people for the user-run AUR, a boxed globe for
+            // web apps (the bare globe is Browsers'), an app in brackets
+            // for terminal apps, a palette, a server, code tags, and the
+            // editor and terminal glyphs Apps › Defaults already uses for
+            // those roles.
+            { label: "Install", icon: "\u{F0120}", children: [
+                { label: "Packages", icon: "\u{F0BAF}", hint: "pacman",
+                  search: "pacman repo official",
+                  run: () => Panels.open("apps", { source: Pkg.PACMAN }) },
+                { label: "AUR", icon: "\u{F0849}", hint: "yay", requires: "yay",
+                  run: () => Panels.open("apps", { source: Pkg.AUR }) },
+                { label: "Web apps", icon: "\u{F0F94}", hint: "sites as apps",
+                  children: panel.launcherRows("web") },
+                { label: "TUI", icon: "\u{F0C8B}", hint: "terminal apps",
+                  children: panel.launcherRows("tui") },
+                { label: "Style", icon: "\u{F03D8}", hint: "fonts · icons",
+                  children: panel.styleApps.map(app => panel.installRow(app)) },
+                { label: "Services", icon: "\u{F048B}", hint: "background",
+                  children: panel.serviceApps.map(app => panel.installRow(app)) },
+                { label: "Development", icon: "\u{F0174}", hint: "languages",
+                  children: panel.developmentApps.map(app => panel.installRow(app)) },
+                // Neovim is the lazyvim feature rather than a bare
+                // neovim row: the user wants Neovim to come with the
+                // latest LazyVim (see editorFeatures).
+                { label: "Editors", icon: "\u{F0DC8}", hint: "code",
+                  children: panel.featureRows(panel.editorFeatures)
+                      .concat(panel.editorApps.map(app => panel.installRow(app))) },
+                { label: "Terminals", icon: "\u{F018D}",
+                  children: panel.terminalApps.map(app => panel.installRow(app)) },
+                { label: "Browsers", icon: "\u{F0AC}", hint: "web",
+                  children: panel.browserApps.map(app => panel.installRow(app)) },
+                // Coding agents for the terminal. These are rack
+                // features rather than install rows (see aiFeatures),
+                // so a row here installs one and, once installed,
+                // removes it, as it did under Features.
+                { label: "AI", icon: "\u{F0674}", hint: "coding agents",
+                  children: panel.featureRows(panel.aiFeatures) },
+                { label: "Communications", icon: "\u{F086}", hint: "chat",
+                  children: panel.communicationApps.map(app => panel.installRow(app)) },
+                { label: "Gaming", icon: "\u{F11B}", hint: "launchers",
+                  children: panel.gamingApps.map(app => panel.installRow(app)) }
+            // The apps that fit no category sit here as rows of their
+            // own, after the ones that do (user request 2026-09-24:
+            // they were a category of their own, General).
+            ].concat(panel.generalApps.map(app => panel.installRow(app))) },
+
             // The parts of the desktop `rack features` can turn on and
-            // off — see featureRows() below. The coding agents are
-            // features too, but they are apps you pick, so they live in
-            // Apps › Browse › AI instead.
+            // off — see featureRows() below. The coding agents and LazyVim
+            // are features too, but they are apps you pick, so they live
+            // in Install › AI and Install › Editors instead.
             { label: "Features", icon: "\u{F0431}", hint: "optional parts",
               children: panel.featureRows(null) },
 
@@ -327,20 +376,23 @@ ShellSurface {
         hermes: "\u{F06D3}"
     })
 
-    // The features Apps › Browse › AI shows, and Features leaves out.
-    // A new agent in features.json turns up under Features until its
-    // name is added here.
+    // The features Install › AI shows, and Features leaves out. A new
+    // agent in features.json turns up under Features until its name is
+    // added here.
     readonly property var aiFeatures: ["claudecode", "codex", "gemini", "opencode", "hermes"]
 
+    // The same for Install › Editors.
+    readonly property var editorFeatures: ["lazyvim"]
+
     // `only` is the names to list, in features.json's order; null is
-    // every feature that isn't one of aiFeatures.
+    // every feature that isn't one of those two lists.
     function featureRows(only) {
         if (actions.features === null) return [{ label: "Reading…", icon: "" }]
         if (actions.features.length === 0)
             return [{ label: "No features found", icon: "", hint: "rack features list" }]
         return actions.features.filter(f => only
             ? only.indexOf(f.name) !== -1
-            : panel.aiFeatures.indexOf(f.name) === -1).map(f => {
+            : panel.aiFeatures.concat(panel.editorFeatures).indexOf(f.name) === -1).map(f => {
             if (!f.switchable) return {
                 label: f.label, icon: panel.featureIcons[f.name] || "\u{F0431}",
                 hint: f.installed ? "installed" : "not installed",
@@ -445,7 +497,7 @@ ShellSurface {
         }))
     }
 
-    // Apps › Browse › Gaming. Five launchers because that is how many places a
+    // Install › Gaming. Five launchers because that is how many places a
     // game actually comes from here: Steam's own library, anything Wine
     // or an emulator can be talked into running (Lutris), the Epic and
     // GOG stores (Heroic), a Wine prefix you keep by hand (Bottles), and
@@ -464,7 +516,7 @@ ShellSurface {
         { label: "Prism Launcher", icon: "\u{F0373}", pkg: "prismlauncher" }
     ]
 
-    // Apps › Browse › Browsers. All of them native, per the user's choice
+    // Install › Browsers. All of them native, per the user's choice
     // (2026-09-25), after the flatpak brave was timed: 3.7s to a window
     // warm and slower still on the first launch after login, much of it
     // spent building the sandbox and then a zypak helper sandbox for
@@ -485,7 +537,7 @@ ShellSurface {
         { label: "Zen",           icon: "\u{F0B21}", pkg: "zen-browser-bin", aur: true }
     ]
 
-    // Apps › Browse › Communications. Discord from flathub, per the user's
+    // Install › Communications. Discord from flathub, per the user's
     // choice, not extra/discord: the two package the same client
     // (1.0.157 either way today), so what the choice actually picks is
     // which updater it rides — flatpak, where the build is the vendor's
@@ -502,7 +554,7 @@ ShellSurface {
         { label: "Zoom",     icon: "\u{F0567}", flatpak: "us.zoom.Zoom" }
     ]
 
-    // Apps › Browse, as rows beside the categories. What doesn't group
+    // Install, as rows beside the categories. What doesn't group
     // with anything else: LocalSend for pushing a file at a phone on the
     // same network, Bitwarden for passwords, Obsidian for notes, Spotify
     // for music. Flatpaks per the
@@ -527,12 +579,198 @@ ShellSurface {
         { label: "Spotify",   icon: "\u{F04C7}", flatpak: "com.spotify.Client" }
     ]
 
+    // Install › Style. Fonts, an icon theme, a cursor and a GTK theme:
+    // what a look is made of beyond the palette, which Style › Themes
+    // already does. Installing one doesn't switch to it. The nerd fonts
+    // are the ones with the glyphs this shell draws its icons in, so any
+    // of them can stand in for JetBrains Mono in Theme.font.
+    readonly property var styleApps: [
+        { label: "JetBrains Mono Nerd", icon: "\u{F06D6}", pkg: "ttf-jetbrains-mono-nerd" },
+        { label: "Cascadia Code Nerd", icon: "\u{F06D6}", pkg: "ttf-cascadia-code-nerd" },
+        { label: "Fira Code Nerd",     icon: "\u{F06D6}", pkg: "ttf-firacode-nerd" },
+        { label: "Iosevka Nerd",       icon: "\u{F06D6}", pkg: "ttf-iosevka-nerd" },
+        { label: "Noto Emoji",         icon: "\u{F0C68}", pkg: "noto-fonts-emoji" },
+        { label: "Papirus icons",      icon: "\u{F0831}", pkg: "papirus-icon-theme" },
+        { label: "Bibata cursors",     icon: "\u{F01C0}", pkg: "bibata-cursor-theme-bin", aur: true },
+        { label: "adw-gtk3",           icon: "\u{F0E0C}", pkg: "adw-gtk-theme" }
+    ]
+
+    // Install › Services. Things that run in the background once they
+    // are started, so a row installs the package and then, in the same
+    // terminal, starts it for good (`then`). Pressed again, the install
+    // is a no-op and the enable is one too, so nothing needs guarding.
+    //
+    // Docker is started but the user isn't added to the docker group:
+    // that group is root by another name, so it is left as a choice
+    // made by hand (`sudo usermod -aG docker $USER`). Tailscale's `up`
+    // prints the login link and waits for it. Dropbox starts itself the
+    // first time it is opened.
+    readonly property var serviceApps: [
+        { label: "Tailscale", icon: "\u{F0582}", pkg: "tailscale",
+          then: "sudo systemctl enable --now tailscaled.service && sudo tailscale up" },
+        { label: "Docker",    icon: "\u{F0868}", pkg: "docker",
+          then: "sudo systemctl enable --now docker.socket" },
+        { label: "Syncthing", icon: "\u{F04E6}", pkg: "syncthing",
+          then: "systemctl --user enable --now syncthing.service" },
+        { label: "Printing",  icon: "\u{F042A}", pkg: "cups",
+          then: "sudo systemctl enable --now cups.socket" },
+        { label: "Dropbox",   icon: "\u{F01E3}", pkg: "dropbox", aur: true }
+    ]
+
+    // Install › Development. A language each, from extra. Node.js is its
+    // npm, which pulls nodejs in with it; Python is uv, which fetches
+    // and manages Python versions itself, as rustup does Rust's (its
+    // `then` picks the stable toolchain, without which rustup installs
+    // nothing).
+    readonly property var developmentApps: [
+        { label: "Node.js", icon: "\u{F0399}", pkg: "npm" },
+        { label: "Bun",     icon: "\u{E76F}",  pkg: "bun" },
+        { label: "Go",      icon: "\u{F07D3}", pkg: "go" },
+        { label: "Rust",    icon: "\u{F1617}", pkg: "rustup", then: "rustup default stable" },
+        { label: "Python (uv)", icon: "\u{F0320}", pkg: "uv" },
+        { label: "Ruby",    icon: "\u{F0D2D}", pkg: "ruby" },
+        { label: "Java",    icon: "\u{F0B37}", pkg: "jdk-openjdk" },
+        { label: "Zig",     icon: "\u{E8EF}",  pkg: "zig" }
+    ]
+
+    // Install › Editors, after the LazyVim row. VS Code is extra's
+    // Code - OSS: the same `code` binary Apps › Defaults offers, without
+    // Microsoft's marketplace; visual-studio-code-bin is the AUR's copy
+    // of theirs, for anyone who needs it, from Packages or AUR.
+    readonly property var editorApps: [
+        { label: "VS Code",      icon: "\u{F0A1E}", pkg: "code" },
+        { label: "Zed",          icon: "\u{F140B}", pkg: "zed" },
+        { label: "Helix",        icon: "\u{F0684}", pkg: "helix" },
+        { label: "Vim",          icon: "\u{E7C5}",  pkg: "vim" },
+        { label: "Emacs",        icon: "\u{E632}",  pkg: "emacs" },
+        { label: "Sublime Text", icon: "\u{F0B1A}", pkg: "sublime-text-4", aur: true },
+        { label: "Cursor",       icon: "\u{F01A7}", pkg: "cursor-bin", aur: true }
+    ]
+
+    // Install › Terminals: the four Apps › Defaults can pick between
+    // (hypr/modules/defaults.lua), so one installed here can be made the
+    // default straight after. Glyphs for what each is named after, the
+    // font having no logos: a ghost, a cat, a footprint, an A.
+    readonly property var terminalApps: [
+        { label: "Ghostty",   icon: "\u{F02A0}", pkg: "ghostty" },
+        { label: "Kitty",     icon: "\u{F011B}", pkg: "kitty" },
+        { label: "Foot",      icon: "\u{F0F52}", pkg: "foot" },
+        { label: "Alacritty", icon: "\u{F0B08}", pkg: "alacritty" }
+    ]
+
+    // Install › TUI. Terminal apps, installed from extra. btop and yazi
+    // ship a launcher entry of their own; the rest name a `command`,
+    // and `relay launcher tui` makes one for them, so they show up in the
+    // app launcher like any other app. See launcherRows().
+    readonly property var tuiApps: [
+        { label: "btop",       icon: "\u{F0A07}", pkg: "btop" },
+        { label: "Yazi",       icon: "\u{F024B}", pkg: "yazi" },
+        { label: "Lazygit",    icon: "\u{F02A2}", pkg: "lazygit",    command: "lazygit" },
+        { label: "Lazydocker", icon: "\u{F0868}", pkg: "lazydocker", command: "lazydocker" },
+        { label: "Disk usage", icon: "\u{F02CA}", pkg: "ncdu",       command: "ncdu ~" },
+        { label: "Bluetooth",  icon: "\u{F00AF}", pkg: "bluetui",    command: "bluetui" },
+        { label: "Audio mixer", icon: "\u{F066A}", pkg: "wiremix",   command: "wiremix" }
+    ]
+
+    // Install › Web apps. Sites that open as a window of their own, in
+    // the default browser's app mode, with a launcher entry `relay
+    // launcher web` writes (and the site's own icon, when it hands one
+    // over). Nothing to install, so these rows are the only list here
+    // that isn't in installApps.
+    readonly property var webApps: [
+        { label: "Claude",      icon: "\u{F06A9}", url: "https://claude.ai/" },
+        { label: "ChatGPT",     icon: "\u{F0B79}", url: "https://chatgpt.com/" },
+        { label: "GitHub",      icon: "\u{F02A4}", url: "https://github.com/" },
+        { label: "Google Maps", icon: "\u{F05F5}", url: "https://maps.google.com/" },
+        { label: "Proton Mail", icon: "\u{F01EE}", url: "https://mail.proton.me/" },
+        { label: "WhatsApp",    icon: "\u{F05A3}", url: "https://web.whatsapp.com/" },
+        { label: "YouTube",     icon: "\u{F05C3}", url: "https://www.youtube.com/" }
+    ]
+
     // Every app the sections name, which is what the probes ask about.
     // Another section joins this concat: that one line is what makes its
     // rows able to say "installed", and the only place outside its own
     // list that has to know it exists.
     readonly property var installApps: panel.gamingApps
-        .concat(panel.browserApps, panel.communicationApps, panel.generalApps)
+        .concat(panel.browserApps, panel.communicationApps, panel.generalApps,
+                panel.styleApps, panel.serviceApps, panel.developmentApps,
+                panel.editorApps, panel.terminalApps, panel.tuiApps)
+
+    // ── Install › Web apps and TUI ───────────────────────
+    // One row per picked app, then one per launcher the user made
+    // themselves, then a row to make another. The launchers are `relay
+    // launcher list`'s (MenuActions), so one made at a terminal shows up
+    // here too.
+    //
+    // A web app row makes its launcher, and once made, removes it:
+    // there is nothing else to it, and making it again is one press. A
+    // TUI row installs the package and makes the launcher, in one
+    // terminal when the package is missing and headless when only the
+    // launcher is; it reads "installed" once both are there, and a
+    // second press is a harmless reinstall, like every install row.
+    // Removing the package is the App manager's. A TUI the user made has
+    // no package, so its row removes it, like a web app's.
+    function launcherRows(kind) {
+        const made = actions.launchers || []
+        const picked = kind === "web" ? panel.webApps : panel.tuiApps
+        const pickedSlugs = picked.map(app => actions.slug(app.label))
+
+        const rows = picked.map(app => kind === "web" ? panel.webAppRow(app) : panel.tuiRow(app))
+        for (const l of made) {
+            if (l.kind !== kind || pickedSlugs.indexOf(l.slug) !== -1) continue
+            rows.push({
+                label: l.label, icon: kind === "web" ? "\u{F0F94}" : "\u{F0C8B}",
+                hint: "installed", installed: true, search: l.target.toLowerCase(),
+                run: () => actions.removeLauncher(l.label)
+            })
+        }
+
+        // Typed in the filter field, one after the other; see startAsk().
+        rows.push(kind === "web"
+            ? { label: "New web app…", icon: "\u{F0415}", hint: "name, address",
+                ask: { fields: [
+                          { label: "Name", icon: "\u{F0F94}", placeholder: "Web app name…" },
+                          { label: "Address", icon: "\u{F059F}", placeholder: "https://…" }],
+                       done: v => actions.addWebApp(v[0], /^[a-z]+:\/\//i.test(v[1]) ? v[1] : "https://" + v[1]) } }
+            : { label: "New TUI…", icon: "\u{F0415}", hint: "name, command",
+                ask: { fields: [
+                          { label: "Name", icon: "\u{F0C8B}", placeholder: "Launcher name…" },
+                          { label: "Command", icon: "\u{F018D}", placeholder: "Command to run…" }],
+                       done: v => actions.addTui(v[0], v[1]) } })
+        return rows
+    }
+
+    function webAppRow(app) {
+        const made = actions.hasLauncher(app.label)
+        return {
+            label: app.label, icon: app.icon,
+            hint: made ? "installed" : app.url.replace(/^https:\/\/(www\.)?/, "").replace(/\/$/, ""),
+            installed: made,
+            run: () => made ? actions.removeLauncher(app.label) : actions.addWebApp(app.label, app.url)
+        }
+    }
+
+    function tuiRow(app) {
+        const row = panel.installRow(app)
+        if (!app.command || actions.hasLauncher(app.label)) return row
+
+        // Not "installed" until the launcher is there too.
+        delete row.installs
+        const launcher = Terminal.quote(LocalBin.argv("relay",
+            ["launcher", "tui", app.label, "--", app.command]))
+        row.run = actions.packages !== null && actions.packages[app.pkg] === true
+            ? () => actions.addTui(app.label, app.command)
+            : () => Terminal.run(panel.installLine(app) + " && " + launcher,
+                                 { title: "Install " + app.label })
+        return row
+    }
+
+    // An app's install as one sh line for a terminal, sudo or yay
+    // included: what Packages would run there itself, for the rows that
+    // run more after it.
+    function installLine(app) {
+        return Pkg.plan("install", panel.packageEntry(app), false).commandLine
+    }
 
     // What a row runs is services/Packages.qml's, so that a section is a
     // list of apps and nothing else. A row runs after this slab has
@@ -567,7 +805,15 @@ ShellSurface {
                 ? "installing…" : app.pkg || "flatpak",
             requires: app.aur ? "yay" : app.pkg ? "sudo" : "flatpak",
             installs: [app.pkg || app.flatpak],
-            run: () => Packages.install(panel.packageEntry(app))
+            // `then` is a Services or Development row's next step (start
+            // the service, pick a toolchain), which Packages has no way
+            // to run, so those go to a terminal of their own. They lose
+            // "installing…" while it runs; "installed" still follows,
+            // from the probe, the next time the menu opens.
+            run: app.then
+                ? () => Terminal.run(panel.installLine(app) + " && " + app.then,
+                                     { title: "Install " + app.label })
+                : () => Packages.install(panel.packageEntry(app))
         }
     }
 
@@ -632,7 +878,9 @@ ShellSurface {
         return items
     }
 
-    readonly property var rows: panel.filterRows(panel.levelItems, panel.filter)
+    readonly property var rows: panel.asking
+        ? panel.askRows(panel.asking)
+        : panel.filterRows(panel.levelItems, panel.filter)
     readonly property var current: panel.selectedIndex >= 0 && panel.selectedIndex < panel.rows.length
         ? panel.rows[panel.selectedIndex] : null
 
@@ -699,10 +947,47 @@ ShellSurface {
     // ── Navigation ───────────────────────────────────────
     function enter(labels) {
         panel.path = labels
+        panel.asking = null
         panel.clearFilter()
         panel.selectedIndex = 0
         panel.infoKind = ""
         levelSlide.restart()
+    }
+
+    // ── Asking ───────────────────────────────────────────
+    // A leaf with `ask: { fields, done }` makes the filter field an input:
+    // each field is a row, the one being typed is the selected one, its
+    // placeholder says what goes in it, and Enter moves on to the next.
+    // Enter on the last runs `done(values)` the way any leaf runs, after
+    // the menu has closed. Escape, or Backspace in an empty field, drops
+    // the lot and goes back to the level. No new controls: the same
+    // field, the same rows, the same keys.
+    function startAsk(ask) {
+        panel.asking = { fields: ask.fields, done: ask.done, values: [], step: 0 }
+        panel.clearFilter()
+        panel.selectedIndex = 0
+        levelSlide.restart()
+    }
+
+    function askRows(asking) {
+        return asking.fields.map((field, i) => ({
+            label: field.label, icon: field.icon,
+            hint: i < asking.values.length ? asking.values[i] : ""
+        }))
+    }
+
+    function askNext() {
+        const value = panel.filter.trim()
+        if (value === "") return
+        const a = panel.asking
+        const values = a.values.concat([value])
+        if (values.length === a.fields.length) {
+            panel.runRow({ run: () => a.done(values) })
+            return
+        }
+        panel.asking = { fields: a.fields, done: a.done, values: values, step: a.step + 1 }
+        panel.clearFilter()
+        panel.selectedIndex = a.step + 1
     }
 
     function clearFilter() { filterInput.text = "" }
@@ -712,6 +997,7 @@ ShellSurface {
     // which is what makes Escape at the root close the menu.
     function back() {
         if (panel.filter !== "") { panel.clearFilter(); return true }
+        if (panel.asking) { panel.asking = null; panel.selectedIndex = 0; levelSlide.restart(); return true }
         if (panel.infoKind !== "") { panel.infoKind = ""; return true }
         if (panel.path.length > 0) { panel.enter(panel.path.slice(0, -1)); return true }
         return false
@@ -727,6 +1013,11 @@ ShellSurface {
 
         if (row.children) {
             panel.enter((row.trail || panel.path).concat([row.label]))
+            return
+        }
+
+        if (row.ask) {
+            panel.startAsk(row.ask)
             return
         }
 
@@ -874,12 +1165,26 @@ ShellSurface {
                         clip: true
                         cursorVisible: true
 
-                        onTextChanged: panel.selectedIndex = 0
+                        onTextChanged: panel.selectedIndex = panel.asking ? panel.asking.step : 0
 
                         Keys.onPressed: (event) => {
                             if (event.key === Qt.Key_Escape) {
                                 if (!panel.back()) panel.close()
                                 event.accepted = true
+                                return
+                            }
+                            // While asking, Enter takes the field and the
+                            // arrows have no rows to move between.
+                            if (panel.asking) {
+                                if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                                    panel.askNext()
+                                    event.accepted = true
+                                } else if (event.key === Qt.Key_Up || event.key === Qt.Key_Down) {
+                                    event.accepted = true
+                                } else if (event.key === Qt.Key_Backspace && filterInput.text.length === 0) {
+                                    panel.back()
+                                    event.accepted = true
+                                }
                                 return
                             }
                             if (event.key === Qt.Key_Down
@@ -930,7 +1235,9 @@ ShellSurface {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         visible: filterInput.text.length === 0
-                        text: panel.path.length === 0 ? "Type to search…" : "Filter " + panel.path[panel.path.length - 1] + "…"
+                        text: panel.asking ? panel.asking.fields[panel.asking.step].placeholder
+                            : panel.path.length === 0 ? "Type to search…"
+                            : "Filter " + panel.path[panel.path.length - 1] + "…"
                         color: Appearance.placeholder
                         font.family: Theme.font
                         font.pixelSize: ConfStyle.fontRow
@@ -1074,7 +1381,7 @@ ShellSurface {
 
                                 HoverHandler {
                                     cursorShape: Qt.PointingHandCursor
-                                    onHoveredChanged: if (hovered) panel.selectedIndex = menuRow.index
+                                    onHoveredChanged: if (hovered && !panel.asking) panel.selectedIndex = menuRow.index
                                 }
 
                                 TapHandler {

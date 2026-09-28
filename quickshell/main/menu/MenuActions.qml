@@ -153,7 +153,8 @@ QtObject {
     // until both moved behind relay (docs/adr/0001).
     //
     // Features › is the fourth: `rack features list`, below. System ›
-    // Patches is the fifth: `rack patches list`.
+    // Patches is the fifth: `rack patches list`. Install › Web apps and
+    // TUI are the sixth: `relay launcher list`.
     function refresh() {
         if (actions.probeNames.length > 0) {
             actions.probeProc.running = false
@@ -166,6 +167,8 @@ QtObject {
         actions.featuresProc.running = true
         actions.patchesProc.running = false
         actions.patchesProc.running = true
+        actions.launchersProc.running = false
+        actions.launchersProc.running = true
     }
 
     // ── Optional features ────────────────────────────────
@@ -224,6 +227,84 @@ QtObject {
             if (m) found.push({ name: m[1], state: m[2], label: m[3] })
         }
         if (!Json.same(found, actions.patches)) actions.patches = found
+    }
+
+    // ── Launchers ────────────────────────────────────────
+    // The web apps and TUIs `relay launcher` has made, as its `list`
+    // prints them: kind ("web" or "tui"), the slug the file is named
+    // after, the label, and the URL or command, tab separated. Null until
+    // answered, empty for none or relay failing, like `patches`.
+    property var launchers: null
+
+    readonly property Process launchersProc: Process {
+        command: LocalBin.argv("relay", ["launcher", "list"])
+        stdout: StdioCollector {
+            id: launchersOut
+            onStreamFinished: actions._parseLaunchers(launchersOut.text)
+        }
+    }
+
+    function _parseLaunchers(text) {
+        const found = []
+        for (const line of text.split("\n")) {
+            const f = line.split("\t")
+            if (f.length === 4 && (f[0] === "web" || f[0] === "tui"))
+                found.push({ kind: f[0], slug: f[1], label: f[2], target: f[3] })
+        }
+        if (!Json.same(found, actions.launchers)) actions.launchers = found
+    }
+
+    // Whether a launcher with this label exists, by the slug relay would
+    // name its file: "Proton Mail" and "proton mail" are the same one.
+    function hasLauncher(label) {
+        const slug = actions.slug(label)
+        return actions.launchers !== null && actions.launchers.some(l => l.slug === slug)
+    }
+
+    // relay/lib/launcher.sh's __slug, for the check above.
+    function slug(label) {
+        return label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
+    }
+
+    // Making or removing one is a file in ~/.local/share/applications
+    // and nothing to prompt for, so it runs headless and the notification
+    // is the answer. A web app waits on the site for its icon (five
+    // seconds at most), so the notification can come a moment late.
+    readonly property Process launcherProc: Process {
+        property string done: ""
+        property string failed: ""
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode === 0)
+                Notifications.post(launcherProc.done, "", "normal", "Conf", "")
+            else
+                Notifications.post(launcherProc.failed,
+                    "relay launcher exited " + exitCode, "critical", "Conf", "")
+            actions.launchersProc.running = false
+            actions.launchersProc.running = true
+        }
+    }
+
+    function _launcher(args, done, failed) {
+        actions.launcherProc.running = false
+        actions.launcherProc.done = done
+        actions.launcherProc.failed = failed
+        actions.launcherProc.command = LocalBin.argv("relay", ["launcher"].concat(args))
+        actions.launcherProc.running = true
+    }
+
+    function addWebApp(label, url) {
+        actions._launcher(["web", label, url],
+            label + " is in the launcher", "Couldn't make the " + label + " web app")
+    }
+
+    function addTui(label, command) {
+        actions._launcher(["tui", label, "--", command],
+            label + " is in the launcher", "Couldn't make the " + label + " launcher")
+    }
+
+    function removeLauncher(label) {
+        actions._launcher(["remove", label],
+            label + " removed from the launcher", "Couldn't remove " + label)
     }
 
     // `rack features on|off` for a feature that is already installed:
