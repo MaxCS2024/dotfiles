@@ -83,14 +83,12 @@ Singleton {
         return h + "h " + m + "m"
     }
 
-    // ── The packs behind that one number ─────────────────
-    // UPower.displayDevice, which everything above reads, is an
-    // aggregate. On this ThinkPad it averages two packs — BAT0 internal,
-    // BAT1 in the bay — into the single percentage the bar draws, and
-    // that average can be a long way from either: 48% while BAT0 sat at
-    // 16% and BAT1 at 80%. battery/BatteryPanel.qml breaks it back apart,
-    // and the list belongs here, beside everything else this singleton
-    // knows about the battery.
+    // ── Peripherals ──────────────────────────────────────
+    // Everything UPower knows a charge for besides the machine's own
+    // packs: a mouse, a keyboard, a headset. The packs themselves are
+    // only ever read through displayDevice above — the rail listed them
+    // separately until 2026-09-28, when the user dropped that list as
+    // redundant with the combined charge.
     //
     // `powerSupply` is the split between a pack that runs the machine and
     // a device that merely has a battery in it. It is the flag and not
@@ -111,15 +109,8 @@ Singleton {
     // by the time a rail is opened. A panel that asked first would open
     // on an empty list and grow rows a beat later, which on a card that
     // sizes to its content means the card itself jumping.
-    readonly property var packs: {
-        const out = []
-        for (const d of UPower.devices.values)
-            if (d.type === UPowerDeviceType.Battery && d.powerSupply) out.push(d)
-        return out
-    }
-
-    // Everything else UPower knows a charge for: a mouse, a keyboard, a
-    // headset. Empty on this machine, which is why the panel hides the
+    //
+    // Empty on this machine, which is why the panel hides the
     // section rather than drawing an empty one — and why the filter is
     // kept to the one rule that is certainly right rather than a list of
     // types guessed at from the enum.

@@ -64,8 +64,8 @@ running. Grouped by what breaks if it's missing.
   means no volume control, no OSD, no device list.
 
 - **UPower** — `services/Battery.qml` reads `UPower.displayDevice`
-  directly, and `UPower.devices` for the per-pack and peripheral lists
-  the battery rail draws (`battery/BatteryPanel.qml`). On a desktop with
+  directly, and `UPower.devices` for the peripheral list the battery
+  rail draws (`battery/BatteryPanel.qml`). On a desktop with
   no battery this just reports `available: false` gracefully; on a
   laptop, UPower not running means no battery readout at all. The device
   list enumerates over D-Bus a moment *after* first access, which is why

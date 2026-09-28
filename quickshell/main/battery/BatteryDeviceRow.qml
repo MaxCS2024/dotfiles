@@ -20,8 +20,7 @@ import "../theme"
 Rectangle {
     id: root
 
-    // A UPowerDevice, from services/Battery.qml's `packs` or
-    // `peripherals`.
+    // A UPowerDevice, from services/Battery.qml's `peripherals`.
     property var device: null
 
     readonly property real pct: root.device ? root.device.percentage * 100 : 0

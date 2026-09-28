@@ -285,8 +285,8 @@ ShellRoot {
         MediaPanel {}
     }
     // The right-edge battery rail (battery/BatteryPanel.qml, user request
-    // 2026-09-21) — the charge, what it is doing, and the packs behind
-    // the one number the bar averages. Lazy and self-opening on the same
+    // 2026-09-21) — the charge, what it is doing, and the power
+    // profile. Lazy and self-opening on the same
     // contract as the three rails above, and content-sized like the
     // volume one.
     LazyLoader {

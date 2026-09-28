@@ -4,23 +4,17 @@
 // network rail's: a card held 8px off the screen edges it touches, the
 // toasts' material and curves, and — like the volume rail, and unlike the
 // two list rails — only as tall as what is in it. That fit matters more
-// here than anywhere else, because what is in it is four readings and
-// the power profile switch on a machine with one pack, and a further
-// section on a machine with two.
+// here than anywhere else, because what is in it is a few readings and
+// the power profile switch.
 //
-// What it says that the bar and quicksettings/BatteryTab.qml cannot: the
-// packs. UPower.displayDevice is an aggregate, and on this ThinkPad it
-// averages BAT0 and BAT1 into one percentage that can be a long way from
-// either of them — 48% while one sat at 16% and the other at 80%. The
-// number at the top of this card is still that average, because it is the
-// one that answers "how long have I got"; the section under it is where
-// the average comes from. See services/Battery.qml's `packs`, which is
-// also why the list is populated before this window is ever built.
+// The charge is UPower.displayDevice, the aggregate: on this ThinkPad it
+// combines BAT0 and BAT1 into one number, which is the one that answers
+// "how long have I got". The two packs used to be listed under it; the
+// user had that removed on 2026-09-28 as redundant with the header.
 //
-// The mixer in the volume rail is the model for those rows, deliberately:
-// a name, a faint line of detail, a bar. A pack and a playback stream are
-// nothing alike, but "one of several things, each with a level" is the
-// same row, and this shell should draw it the same way twice.
+// Peripherals, when UPower has any, are rows in the volume rail's mixer
+// shape (battery/BatteryDeviceRow.qml): a name, a faint line of detail,
+// a bar.
 //
 // Colours come from theme/Appearance.qml rather than config/Theme.qml,
 // like every surface written since the bento dashboard. Geometry, motion
@@ -273,9 +267,9 @@ ShellSurface {
             }
             // Hidden rather than dashed when the aggregate device has no
             // wear data — which is this machine, where the composite
-            // carries none and each pack carries its own. A row reading
-            // "Health —" over a list that says 80% and 88% is worse than
-            // no row, and on a single-pack laptop, where the display
+            // carries none and each pack carries its own. A dash reads as
+            // a fault rather than as "not reported", and on a single-pack
+            // laptop, where the display
             // device *is* the battery, the figure is real and the row is
             // here.
             InfoRow {
@@ -318,48 +312,12 @@ ShellSurface {
                 Layout.fillWidth: true
             }
 
-            // ── Packs ────────────────────────────────────
-            // Only when there are two or more. One pack is what the
-            // header already is, drawn a second time in a smaller font —
-            // and this card is meant to stop where its content stops.
-            //
-            // Capitals and tracking, the section-label shape the network
-            // rail settled on (2026-09-18).
-            Text {
-                visible: Battery.packs.length > 1
-                text: "Batteries"
-                color: Appearance.fg
-                font.pixelSize: Theme.fontSmall
-                font.family: Theme.font
-                font.capitalization: Font.AllUppercase
-                font.letterSpacing: Theme.tracking(Theme.fontSmall, 0.12)
-                Layout.fillWidth: true
-                Layout.minimumWidth: 0
-                Layout.topMargin: 2
-                elide: Text.ElideRight
-            }
-
-            // A Repeater and not a ListView, unlike the volume rail's two
-            // lists: a machine has two battery bays, or one, and never so
-            // many that a row cap and a scrollbar would earn their
-            // complication. The rows are the mixer's shape all the same.
-            ColumnLayout {
-                visible: Battery.packs.length > 1
-                Layout.fillWidth: true
-                spacing: Theme.space1
-
-                Repeater {
-                    model: Battery.packs
-
-                    delegate: BatteryDeviceRow {
-                        required property var modelData
-                        Layout.fillWidth: true
-                        device: modelData
-                    }
-                }
-            }
-
             // ── Peripherals ──────────────────────────────
+            // No per-pack list above this (removed 2026-09-28, user
+            // request): the combined charge in the header is the one the
+            // user reads, and BAT0/BAT1 drawn again underneath it was
+            // clutter.
+            //
             // A mouse, a keyboard, a headset — whatever else UPower knows
             // a charge for. Nothing on this machine has ever appeared
             // here; the section is hidden rather than empty, which is
