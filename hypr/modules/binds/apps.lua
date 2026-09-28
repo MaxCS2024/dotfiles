@@ -47,15 +47,11 @@ hl.bind(mainMod .. " + SPACE", hl.dsp.global("quickshell:menu-toggle"))
 hl.bind(mainMod .. " + P", hl.dsp.global("quickshell:launcher-toggle"))
 hl.bind(mainMod .. " + ESCAPE", hl.dsp.global("quickshell:powermenu-toggle"))
 
--- The two right-edge rails are siblings in every sense -- same corner,
--- same geometry, same motion -- so notifications take the network rail's
--- letter with SHIFT on it rather than a free letter of its own. N is
--- where a rail lives here. Both are still a left click on the bar's own
--- module, and a right click there is still DND.
-hl.bind(mainMod .. " + N", hl.dsp.global("quickshell:network-toggle"))
+-- The two right-edge rails: notifications on N, network on W for wifi.
+-- CTRL keeps the network rail off SUPER+W and SUPER+SHIFT+W, which close
+-- and kill the focused window. Both are still a left click on the bar's
+-- own module, and a right click there is still DND.
 hl.bind(mainMod .. " + SHIFT + N", hl.dsp.global("quickshell:notifications-toggle"))
--- A second key for the network rail, W for wifi. CTRL keeps it off
--- SUPER+W and SUPER+SHIFT+W, which close and kill the focused window.
 hl.bind(mainMod .. " + CTRL + W", hl.dsp.global("quickshell:network-toggle"))
 
 -- cliphist's history with a search field over it. C is the letter every
