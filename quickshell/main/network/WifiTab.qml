@@ -35,8 +35,8 @@ ColumnLayout {
     // be crossing it.
 
     // ── Detail ───────────────────────────────────
-    // Labels are fgMuted and values are fg, here and in the
-    // DNS row below (user request 2026-09-18). Both halves
+    // Labels are fgMuted and values are fg (user request
+    // 2026-09-18). Both halves
     // used to be fg: the grid's two label columns and its two
     // value columns were the same tone, so "Ping 4 ms Packet
     // Loss 0%" read as one run of text and you had to parse
@@ -59,10 +59,6 @@ ColumnLayout {
     // labels take the tone of the unconnected networks' wifi
     // glyphs below, so the values stand out further. An
     // exception to STYLE.md §3, asked for by name.
-    //
-    // The DNS row moves with it: it sits directly under this
-    // grid, and two label tones a line apart read as two
-    // different kinds of row.
     //
     // The interface name was a row here until 2026-09-17
     // (user request). Network.iface is still what the IP
@@ -89,8 +85,8 @@ ColumnLayout {
         rowSpacing: Theme.space1
 
         // Label, then value right-aligned against the middle
-        // or the right edge — the same shape as the DNS and
-        // Speed test rows below, run twice across.
+        // or the right edge — the shape of an InfoRow, run
+        // twice across.
         component StatLabel: Text {
             color: Appearance.fgFaint
             font.pixelSize: Theme.fontNormal
@@ -186,40 +182,13 @@ ColumnLayout {
         }
     }
 
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: Theme.space2
-
-        Text {
-            text: "DNS"
-            // fgFaint, with the grid's labels above it — see
-            // the section comment. This row is lifted from
-            // quicksettings/NetworkTab.qml, which still sets
-            // its own labels to fg; that surface has no grid
-            // over it to agree with.
-            color: Appearance.fgFaint
-            font.pixelSize: Theme.fontNormal
-            font.family: Theme.font
-            Layout.fillWidth: true
-            Layout.minimumWidth: 0
-            elide: Text.ElideRight
-        }
-        Text {
-            text: Network.currentDns
-            color: Appearance.fg
-            font.pixelSize: Theme.fontNormal
-            font.family: Theme.font
-            elide: Text.ElideRight
-            Layout.maximumWidth: 120
-        }
-        // The arrow that sat here opened the DNS tab. The tab
-        // went on 2026-09-28 and its providers are the section
-        // directly under this row, so there is nowhere left for
-        // it to point.
-    }
+    // A "DNS" row with the resolver's address sat here until
+    // 2026-09-28, when it went at the user's asking: the
+    // provider section below already says which is in use.
+    // Its Network.currentDns has no other reader in the UI.
 
     // ── DNS provider ─────────────────────────────
-    // network/DnsProviders.qml, under the DNS row (user
+    // network/DnsProviders.qml, under the stat grid (user
     // request 2026-09-28): it replaced the DNS tab, so
     // changing resolver no longer takes a tab switch. Header
     // in the caps and tracking of Known networks below.

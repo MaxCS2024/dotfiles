@@ -5,7 +5,7 @@ import "../services"
 import "../theme"
 
 // The four DNS providers and the field Custom opens, under the Wi-Fi
-// tab's DNS row. They were the DNS tab until 2026-09-28, when the tab
+// tab's stat grid. They were the DNS tab until 2026-09-28, when the tab
 // went and they moved here (user request).
 ColumnLayout {
     id: root
