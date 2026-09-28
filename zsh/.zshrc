@@ -43,7 +43,7 @@ alias nv="nvim"
 
 # Files. Guarded so a machine without eza keeps a working ls.
 if command -v eza >/dev/null 2>&1; then
-    alias ls="eza --color=always --icons always"
+    alias ls="eza -l --color=always --icons always"
     alias ll="eza -lah --color=always --icons always"
     alias la="eza -a --color=always --icons always"
     alias lt="eza --tree --icons always"
