@@ -63,11 +63,14 @@ Singleton {
     //
     // "earbuds" (2026-09-24) sits beside the battery it opens the rail
     // of, and takes no room until Nothing earbuds connect.
+    //
+    // "volume" before "network" since 2026-09-29 (user request); they
+    // were the other way round until then.
     property var barLayout: ({
         default: {
             left: ["workspaces", "media"],
             center: ["clock"],
-            right: ["tray", "weather", "network", "volume", "earbuds", "battery"]
+            right: ["tray", "weather", "volume", "network", "earbuds", "battery"]
         }
     })
 
