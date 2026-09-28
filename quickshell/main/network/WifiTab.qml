@@ -305,7 +305,13 @@ ColumnLayout {
                 // are all on hoverStrong already, so the rows
                 // now answer at the volume the rest of the
                 // surface does.
-                color: knownRow.lit ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)
+                //
+                // The connected row sits on `selected` (user
+                // request 2026-09-29), the step above the hover
+                // and the fill of the chosen DNS chip above. It
+                // never lights, so the two can't meet.
+                color: knownRow.modelData.active ? Appearance.selected
+                    : knownRow.lit ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)
 
                 Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
 
@@ -371,8 +377,9 @@ ColumnLayout {
         }
     }
 
-    // As above — the rule is gone, its 1px stays. Still
-    // bound to knownCount, so with no known networks the gap
+    // The 1px of a rule removed on 2026-09-18, kept so the
+    // gaps either side keep their size. Bound to
+    // knownCount, so with no known networks the gap
     // collapses along with the list and its header rather
     // than leaving a hole above "Other networks".
     Item {
