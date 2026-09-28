@@ -1,43 +1,25 @@
 import QtQuick
 import QtQuick.Layouts
-import "../common"
 import "../config"
 import "../services"
 import "../theme"
 
-// Four buttons and a field, so it sits at the top of the card
-// with a spacer under it rather than being stretched down the
-// column the way the two list-bearing tabs are.
-// The DNS tab: which resolver this machine is using, four providers to
-// pick from, and a field for anything else.
-//
-// `customShown` lived on network/NetworkPanel.qml until 2026-09-21 even
-// though nothing outside this tab ever read it, which is what happens
-// when a tab has no file to keep its own state in.
+// The four DNS providers and the field Custom opens, under the Wi-Fi
+// tab's DNS row. They were the DNS tab until 2026-09-28, when the tab
+// went and they moved here (user request).
 ColumnLayout {
     id: root
 
     // Whether the custom-resolver field is showing.
     property bool customShown: false
     Layout.fillWidth: true
-    Layout.fillHeight: true
     spacing: Theme.space2
 
-    InfoRow {
-        label: "Current"
-        value: Network.currentDns
-        valueMaxWidth: 170
-        labelColor: Appearance.fg
-    }
-
-    // One provider per row (user request 2026-09-16). The
-    // two-by-two grid existed because four labels across
-    // 292px clips "Cloudflare"; now that DNS has a tab to
-    // itself there is height to spend instead. Labels only,
-    // left-aligned: a short word centred in a full-width row
-    // reads as a stretched button rather than a list of
-    // choices.
-    ColumnLayout {
+    // Four across: the Wi-Fi tab's height belongs to the
+    // network lists. The DNS tab stacked them one to a row
+    // (2026-09-16) because four labels across the old 292px
+    // card clipped "Cloudflare"; the card is wider now.
+    RowLayout {
         Layout.fillWidth: true
         spacing: Theme.space2
 
@@ -56,10 +38,13 @@ ColumnLayout {
                 readonly property bool selected: Network.dnsProvider === dnsBtn.modelData.key
 
                 Layout.fillWidth: true
-                implicitHeight: 32
+                // Equal columns rather than word-width ones.
+                Layout.preferredWidth: 1
+                Layout.minimumWidth: 0
+                implicitHeight: 28
                 radius: Theme.radius
                 color: dnsBtn.selected ? Appearance.selected
-                     : (dnsHover2.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong))
+                     : (dnsHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong))
                 border.width: dnsBtn.selected ? 0 : 1
                 border.color: Appearance.border
 
@@ -71,8 +56,9 @@ ColumnLayout {
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    anchors.leftMargin: Theme.space3
-                    anchors.rightMargin: Theme.space3
+                    anchors.leftMargin: Theme.space1
+                    anchors.rightMargin: Theme.space1
+                    horizontalAlignment: Text.AlignHCenter
                     text: dnsBtn.modelData.label
                     color: dnsBtn.selected ? Appearance.fgStrong : Appearance.fgSoft
                     font.pixelSize: Theme.fontSmall
@@ -80,7 +66,7 @@ ColumnLayout {
                     elide: Text.ElideRight
                 }
 
-                HoverHandler { id: dnsHover2 }
+                HoverHandler { id: dnsHover }
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
@@ -161,6 +147,4 @@ ColumnLayout {
             }
         }
     }
-
-    Item { Layout.fillHeight: true }
 }

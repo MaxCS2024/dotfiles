@@ -11,17 +11,15 @@ import "../theme"
 //
 // 550 lines that reached out of the rail exactly twice, which is why this
 // is a file of its own since 2026-09-21: to put an address on the
-// clipboard, and to send the reader to the DNS tab. Both are signals now,
-// so this knows nothing about the panel that shows it.
+// clipboard, and to send the reader to the DNS tab. Both were signals, so
+// this knows nothing about the panel that shows it; the second went with
+// the DNS tab on 2026-09-28.
 ColumnLayout {
     id: root
 
     // The address cells in the stat grid copy on click; the rail owns the
     // clipboard, because wl-copy is not this tab's business.
     signal copyRequested(string value)
-
-    // The DNS row under the grid is a way in to the DNS tab.
-    signal dnsRequested()
     Layout.fillWidth: true
     Layout.fillHeight: true
     spacing: Theme.space3
@@ -214,24 +212,35 @@ ColumnLayout {
             elide: Text.ElideRight
             Layout.maximumWidth: 120
         }
-        Text {
-            text: "\uf061"
-            color: dnsHover.hovered ? Appearance.fgStrong : Appearance.fgDim
-            font.pixelSize: Theme.fontTiny
-            font.family: Theme.font
+        // The arrow that sat here opened the DNS tab. The tab
+        // went on 2026-09-28 and its providers are the section
+        // directly under this row, so there is nowhere left for
+        // it to point.
+    }
 
-            HoverHandler { id: dnsHover }
-            MouseArea {
-                anchors.fill: parent
-                anchors.margins: -6
-                cursorShape: Qt.PointingHandCursor
-                // Was a deep link out to the settings
-                // window's "dns" section, which meant closing
-                // this window to go and change a value this
-                // card now owns. It is a tab switch instead.
-                onClicked: root.dnsRequested()
-            }
+    // ── DNS provider ─────────────────────────────
+    // network/DnsProviders.qml, under the DNS row (user
+    // request 2026-09-28): it replaced the DNS tab, so
+    // changing resolver no longer takes a tab switch. Header
+    // in the caps and tracking of Known networks below.
+    ColumnLayout {
+        Layout.fillWidth: true
+        spacing: Theme.space2
+
+        Text {
+            text: "DNS provider"
+            color: Appearance.fg
+            font.pixelSize: Theme.fontSmall
+            font.family: Theme.font
+            font.capitalization: Font.AllUppercase
+            font.letterSpacing: Theme.tracking(Theme.fontSmall, 0.12)
+            Layout.fillWidth: true
+            Layout.minimumWidth: 0
+            Layout.topMargin: 2
+            elide: Text.ElideRight
         }
+
+        DnsProviders {}
     }
 
     // The rule that used to run here is gone at the user's

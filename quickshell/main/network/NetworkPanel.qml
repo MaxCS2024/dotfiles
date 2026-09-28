@@ -520,7 +520,7 @@ ShellSurface {
             // neither fills one on its own and both are "set it and
             // forget it" — see the sections themselves.
             //
-            // A segmented control: one track holds all three, and the
+            // A segmented control: one track holds both, and the
             // selected tab is marked by a plate that slides behind it
             // rather than by each button drawing its own box.
             Rectangle {
@@ -567,7 +567,10 @@ ShellSurface {
 
                     Repeater {
                         id: tabRepeater
-                        model: ["Wi-Fi", "Bluetooth", "DNS"]
+                        // DNS was a third tab until 2026-09-28; its
+                        // providers are a section of the Wi-Fi tab now
+                        // (user request).
+                        model: ["Wi-Fi", "Bluetooth"]
 
                         delegate: Rectangle {
                             id: tabBtn
@@ -606,7 +609,7 @@ ShellSurface {
             }
 
             // ── Wi-Fi tab ────────────────────────────────
-            // The three tabs and the Modes row below are siblings in
+            // The tabs and the Modes row below are siblings in
             // network/, each taking nothing but its visibility. They were
             // 1,000 lines inside this file until 2026-09-21, and every
             // commit that touched one of them had to be made in a
@@ -616,7 +619,6 @@ ShellSurface {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 onCopyRequested: (value) => panel.copyValue(value)
-                onDnsRequested: panel.tab = 2
             }
 
             // ── Bluetooth tab ────────────────────────────
@@ -626,15 +628,8 @@ ShellSurface {
                 Layout.fillHeight: true
             }
 
-            // ── DNS tab ──────────────────────────────────
-            DnsTab {
-                visible: panel.tab === 2
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-            }
-
             // ── Modes ────────────────────────────────────
-            // network/ModesRow.qml — outside all three tabs, so it stays
+            // network/ModesRow.qml — outside both tabs, so it stays
             // reachable whichever one is open.
             ModesRow {
                 Layout.fillWidth: true
