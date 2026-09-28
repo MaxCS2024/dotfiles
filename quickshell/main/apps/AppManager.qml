@@ -66,23 +66,10 @@ ShellSurface {
 
     // A query opens straight on its search (the Conf menu's search, `qs
     // ipc call apps find <text>`). A bare open keeps whatever was showing.
-    //
-    // `{ source }` opens on one chip instead, and keeps it through
-    // searches. Conf › Install › Packages and AUR used it until
-    // 2026-09-29 (they are fzf pickers in a terminal now, bin/pkg-install);
-    // only Apps › Manage apps passes one today, "All". A query can come
-    // with it.
-    onSurfaceOpened: (arg) => {
-        if (arg && typeof arg === "object") {
-            if (manager.filters.indexOf(arg.source) !== -1) {
-                manager.pinnedSource = arg.source === "All" ? "" : arg.source
-                manager.sourceFilter = arg.source
-            }
-            arg = arg.query
-        }
-        if (!arg) return
-        searchInput.text = arg
-        manager.query = arg
+    onSurfaceOpened: (query) => {
+        if (!query) return
+        searchInput.text = query
+        manager.query = query
         manager.runSearch()
     }
     focusTarget: searchInput
@@ -99,9 +86,6 @@ ShellSurface {
     property var results: []
     // "All", or one of Pkg.SOURCES.
     property string sourceFilter: "All"
-    // The chip a Conf menu row opened this on, kept through every search
-    // until a chip is picked by hand; "" is none. See onSurfaceOpened.
-    property string pinnedSource: ""
     // The chips, and the order Tab steps through them.
     readonly property var filters: ["All"].concat(Pkg.SOURCES)
     property int selectedIndex: 0
@@ -188,9 +172,8 @@ ShellSurface {
         manager.selectedIndex = 0
         // A filter is about the list in front of you, not a standing
         // preference: carrying "Flathub" over into the next query is how
-        // you search for ripgrep and get told there is one result. A
-        // pinned source is the exception: it was asked for by name.
-        manager.sourceFilter = manager.pinnedSource || "All"
+        // you search for ripgrep and get told there is one result.
+        manager.sourceFilter = "All"
         if (q.length < manager.minQueryLength) {
             manager.results = []
             return
@@ -337,7 +320,6 @@ ShellSurface {
     function cycleFilter(delta) {
         const order = manager.filters
         const at = order.indexOf(manager.sourceFilter)
-        manager.pinnedSource = ""
         manager.sourceFilter = order[(at + delta + order.length) % order.length]
         manager.selectedIndex = 0
         resultList.positionViewAtBeginning()
@@ -575,7 +557,6 @@ ShellSurface {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                manager.pinnedSource = ""
                                 manager.sourceFilter = chip.modelData
                                 manager.selectedIndex = 0
                                 resultList.positionViewAtBeginning()

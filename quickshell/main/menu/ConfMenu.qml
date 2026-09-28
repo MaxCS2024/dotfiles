@@ -234,11 +234,10 @@ ShellSurface {
                 // One window for what is installed and for finding what
                 // isn't (apps/AppManager.qml), where Install and Remove
                 // were two until 2026-09-24. `search` keeps both words
-                // finding it from the top of this menu. "All" so it never
-                // opens stuck on a chip an earlier `{ source }` pinned.
+                // finding it from the top of this menu.
                 { label: "Manage apps", icon: "\u{F019}", hint: "install · remove",
                   search: "install remove uninstall packages",
-                  run: () => Panels.open("apps", { source: "All" }) },
+                  run: () => Panels.open("apps", "") },
                 // "Update all" is rack's own three-stage update (repo,
                 // then AUR, then flatpak, each gated on the one before
                 // it); the three rows under it are the single stages, for
