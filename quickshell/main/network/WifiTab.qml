@@ -86,23 +86,8 @@ ColumnLayout {
 
         // Label, then value right-aligned against the middle
         // or the right edge — the shape of an InfoRow, run
-        // twice across.
-        component StatLabel: Text {
-            color: Appearance.fgFaint
-            font.pixelSize: Theme.fontNormal
-            font.family: Theme.font
-            elide: Text.ElideRight
-        }
-
-        component StatValue: Text {
-            color: Appearance.fg
-            font.pixelSize: Theme.fontNormal
-            font.family: Theme.font
-            horizontalAlignment: Text.AlignRight
-            elide: Text.ElideRight
-            Layout.fillWidth: true
-            Layout.minimumWidth: 0
-        }
+        // twice across. common/StatLabel.qml and StatValue.qml
+        // since 2026-09-28, shared with the battery rail's grid.
 
         // A StatValue that puts itself on the clipboard. The
         // only cue is the cell brightening under the pointer,

@@ -21,7 +21,6 @@
 // and the Hyprland frame still come from Theme/common so the card
 // material is the toasts'.
 import Quickshell
-import Quickshell.Services.UPower
 import QtQuick
 import QtQuick.Layouts
 import "../common"
@@ -95,7 +94,11 @@ ShellSurface {
     // Claim the corner. Why these four are exclusive, and why the rail
     // that loses the claim closes itself rather than being closed, is
     // Panels.claimRightRail's to explain.
-    onSurfaceOpened: Panels.claimRightRail("battery")
+    // Also re-reads the charge limit — see Battery.maxChargeText.
+    onSurfaceOpened: {
+        Panels.claimRightRail("battery")
+        Battery.refreshMaxCharge()
+    }
 
     Connections {
         target: Panels
@@ -250,40 +253,56 @@ ShellSurface {
             }
 
             // ── Readings ─────────────────────────────────
-            // BatteryTab's four rows, in its order. Status is dropped —
-            // it is in the caption above, where the tab has no caption to
-            // put it in.
-            InfoRow {
-                label: Battery.remainingLabel
-                value: Battery.remainingText
-                labelColor: Appearance.fgMuted
-                valueColor: Appearance.fg
-            }
-            InfoRow {
-                label: Battery.charging ? "Charge rate" : "Draw"
-                value: Battery.rateText
-                labelColor: Appearance.fgMuted
-                valueColor: Appearance.fg
-            }
-            // Hidden rather than dashed when the aggregate device has no
-            // wear data — which is this machine, where the composite
-            // carries none and each pack carries its own. A dash reads as
-            // a fault rather than as "not reported", and on a single-pack
-            // laptop, where the display
-            // device *is* the battery, the figure is real and the row is
-            // here.
-            InfoRow {
-                visible: Battery.health > 0
-                label: "Health"
-                value: Battery.healthText
-                labelColor: Appearance.fgMuted
-                valueColor: Appearance.fg
-            }
-            InfoRow {
-                label: "Power source"
-                value: UPower.onBattery ? "Battery" : "AC adapter"
-                labelColor: Appearance.fgMuted
-                valueColor: UPower.onBattery ? Appearance.fg : Appearance.green
+            // The network rail's stat grid (network/WifiTab.qml), in its
+            // colours and spacing since 2026-09-28 (user request): two
+            // label/value pairs to a line instead of one InfoRow each.
+            // A hidden pair drops out of the grid whole, so the rest
+            // close up without leaving a gap.
+            GridLayout {
+                Layout.fillWidth: true
+                columns: 4
+                columnSpacing: Theme.space3
+                rowSpacing: Theme.space1
+
+                StatLabel { text: Battery.remainingLabel }
+                StatValue { text: Battery.remainingText }
+                StatLabel { text: Battery.charging ? "Charge rate" : "Draw" }
+                StatValue { text: Battery.rateText }
+
+                // Was "Power source", Battery or AC adapter; the state
+                // says the same and more — "Not charging" is on AC too.
+                // Green while taking or holding charge, as the power
+                // source was on AC.
+                StatLabel { text: "Battery State" }
+                StatValue {
+                    text: Battery.statusText
+                    color: (Battery.charging || Battery.full) ? Appearance.green : Appearance.fg
+                }
+                // Where charging stops, if the kernel exposes it: a
+                // charge limit is why "Not charging" can mean 80% on AC.
+                StatLabel {
+                    visible: Battery.maxChargeText !== ""
+                    text: "Max Charge"
+                }
+                StatValue {
+                    visible: Battery.maxChargeText !== ""
+                    text: Battery.maxChargeText
+                }
+
+                // Hidden rather than dashed when the aggregate device has
+                // no wear data — which is this machine, where the
+                // composite carries none and each pack carries its own. A
+                // dash reads as a fault rather than as "not reported", and
+                // on a single-pack laptop, where the display device *is*
+                // the battery, the figure is real and the pair is here.
+                StatLabel {
+                    visible: Battery.health > 0
+                    text: "Health"
+                }
+                StatValue {
+                    visible: Battery.health > 0
+                    text: Battery.healthText
+                }
             }
 
             // ── Power profile ────────────────────────────

@@ -22,9 +22,14 @@ Singleton {
     readonly property real changeRate: (device && device.changeRate !== undefined) ? device.changeRate : 0
     readonly property real health: (device && device.healthPercentage !== undefined) ? device.healthPercentage : -1
 
+    // PendingCharge is a pack on AC that is holding rather than charging —
+    // what a charge limit below 100% leaves you with — and read "Unknown"
+    // until the battery rail showed this as a reading of its own.
     readonly property string statusText: full ? "Full"
                                         : charging ? "Charging"
                                         : discharging ? "Discharging"
+                                        : (device && device.state === UPowerDeviceState.PendingCharge) ? "Not charging"
+                                        : (device && device.state === UPowerDeviceState.Empty) ? "Empty"
                                         : "Unknown"
 
     readonly property color fillColor: (charging || full) ? Appearance.green
@@ -74,6 +79,34 @@ Singleton {
         running: true
         command: ["powerprofilesctl", "get"]
         onExited: (code) => root.profilesAvailable = code === 0
+    }
+
+    // ── Charge limit ─────────────────────────────────────
+    // The percentage each pack stops charging at, from the kernel's
+    // charge_control_end_threshold (thinkpad_acpi and most other laptop
+    // drivers). One figure when the packs agree, "80% / 100%" when they
+    // don't; "" where no pack has the file, and the battery rail hides
+    // the reading. Read at startup and again on every rail open, since
+    // TLP or a vendor tool can change it underneath the shell.
+    property string maxChargeText: ""
+
+    function refreshMaxCharge() {
+        maxChargeProc.running = true
+    }
+
+    Process {
+        id: maxChargeProc
+        running: true
+        command: ["sh", "-c", "cat /sys/class/power_supply/BAT*/charge_control_end_threshold 2>/dev/null"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const vals = text.split("\n").map(v => v.trim()).filter(v => v !== "")
+                const uniq = [...new Set(vals)]
+                root.maxChargeText = uniq.length === 0 ? ""
+                    : uniq.length === 1 ? uniq[0] + "%"
+                    : vals.map(v => v + "%").join(" / ")
+            }
+        }
     }
 
     function fmtTime(seconds) {
