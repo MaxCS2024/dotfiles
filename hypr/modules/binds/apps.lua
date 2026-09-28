@@ -54,6 +54,9 @@ hl.bind(mainMod .. " + ESCAPE", hl.dsp.global("quickshell:powermenu-toggle"))
 -- module, and a right click there is still DND.
 hl.bind(mainMod .. " + N", hl.dsp.global("quickshell:network-toggle"))
 hl.bind(mainMod .. " + SHIFT + N", hl.dsp.global("quickshell:notifications-toggle"))
+-- A second key for the network rail, W for wifi. CTRL keeps it off
+-- SUPER+W and SUPER+SHIFT+W, which close and kill the focused window.
+hl.bind(mainMod .. " + CTRL + W", hl.dsp.global("quickshell:network-toggle"))
 
 -- cliphist's history with a search field over it. C is the letter every
 -- other desktop spends on copy, which is the one thing this window is
