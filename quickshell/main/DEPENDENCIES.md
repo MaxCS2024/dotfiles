@@ -95,11 +95,10 @@ running. Grouped by what breaks if it's missing.
   autostart as `wl-paste --watch cliphist store`), the history will
   just stay empty — this config reads history, it doesn't populate it.
 
-- **brightnessctl** — `services/Brightness.qml`, all reads/writes,
-  and the brightness keys (`hypr/modules/binds/media.lua`). Needs a
-  backlight device it can actually see; check with
-  `brightnessctl -l -c backlight` if `Brightness.available` stays
-  false.
+- **brightnessctl** — the writes in `services/Brightness.qml` and the
+  brightness keys (`hypr/modules/binds/media.lua`). Reads, and finding
+  the device, go straight to `/sys/class/backlight`; if
+  `Brightness.available` stays false, check that it has a device in it.
 
 - **lua** (the standalone interpreter, `pacman -S lua`) — the default
   apps. `hypr/modules/defaults.lua` owns the terminal, editor, browser

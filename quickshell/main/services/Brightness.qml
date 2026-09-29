@@ -19,13 +19,16 @@ Singleton {
 
     Component.onCompleted: detectProc.running = true
 
-    // -c backlight filters out unrelated brightness-capable devices
-    // (e.g. keyboard backlight LEDs) that brightnessctl -l also lists.
+    // The first device under /sys/class/backlight — what `brightnessctl
+    // -l -c backlight` lists first; keyboard LEDs live under
+    // /sys/class/leds, so they were never candidates. Found without
+    // brightnessctl so a shell that started before it was installed
+    // still has a device: asking brightnessctl here left `available`
+    // false, and the OSD silent, until the next reload.
     Process {
         id: detectProc
         command: ["sh", "-c",
-            "brightnessctl -l -c backlight 2>/dev/null | " +
-            "awk -F\"'\" '/Device/ {print $2; exit}'"]
+            "for d in /sys/class/backlight/*; do [ -e \"$d\" ] && { basename \"$d\"; break; }; done"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const name = text.trim()
