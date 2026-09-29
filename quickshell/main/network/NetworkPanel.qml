@@ -159,8 +159,13 @@ ShellSurface {
     }
 
     // The share sheet is a second surface over this one and does not
-    // survive the rail going away underneath it.
-    onSurfaceClosed: panel.closeShare()
+    // survive the rail going away underneath it. Nor does a Bluetooth
+    // scan: the rail may close with the Bluetooth tab still selected, and
+    // nothing else there would notice.
+    onSurfaceClosed: {
+        panel.closeShare()
+        Bt.setDiscovering(false)
+    }
 
     // Clipboard for the two address cells in the stat grid. `sh -c` with
     // the value passed as $1 rather than spliced into the string: an SSID
