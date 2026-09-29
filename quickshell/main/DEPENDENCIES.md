@@ -293,6 +293,16 @@ running. Grouped by what breaks if it's missing.
   asking. `rack features on earbuds` installs them; `rack features off
   earbuds` takes the pill and the rail section away and stops the watcher.
 
+  The Bluetooth pairing agent needs the same two. `services/BtAgent.qml`
+  runs `relay bluetooth agent` (`relay/lib/bluetooth-agent.py`) for as
+  long as the shell is up, and `network/BluetoothPrompt.qml` shows what it
+  asks: six digits to compare with a phone, a passkey to type on a
+  keyboard, a PIN for an old device. Without the libraries it exits 127
+  and BlueZ pairs only devices that need no code (headphones, earbuds,
+  most mice). Turning the earbuds feature off doesn't uninstall them if
+  something else still depends on them, but on a machine that never had
+  the feature on, `sudo pacman -S python-dbus python-gobject`.
+
 - **fzf** and **zoxide** — the Oh-My-Zsh plugins of the same names in
   `zsh/.zshrc` (Ctrl-R history search, `z`), and `tat`, `ff` and `fcd`.
   Oh-My-Zsh itself is a rack feature: `rack features on ohmyzsh`.

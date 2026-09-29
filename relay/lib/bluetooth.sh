@@ -12,7 +12,7 @@
 rig::load log check proc diag
 
 RELAY_MODULE_SUMMARY[bluetooth]="adapter state, diagnosis, repairs, and devices"
-RELAY_MODULE_ACTIONS[bluetooth]="status doctor fix devices"
+RELAY_MODULE_ACTIONS[bluetooth]="status doctor fix devices agent"
 RELAY_MODULE_STATUS[bluetooth]="ready"
 RELAY_MODULE_TIER[bluetooth]="general"
 
@@ -251,12 +251,24 @@ relay::bluetooth::devices() {
     done
 }
 
+# The pairing agent. The work is bluetooth-agent.py next door; this is the
+# name services/BtAgent.qml runs it by, for as long as the shell is up. Its
+# questions go out as JSON lines and the answers come back on stdin, so run
+# by hand it is a pairing agent you answer by typing JSON.
+relay::bluetooth::agent() {
+    rig::check::require python3 || return "$RIG_EX_NODEP"
+    exec python3 "$RELAY_LIB_DIR/bluetooth-agent.py"
+}
+
 relay::bluetooth::__usage() {
     cat <<'EOF'
   relay bluetooth status     what bluetooth is doing right now
   relay bluetooth doctor     walk the failure chain and report what is broken
   relay bluetooth fix        apply the repairs doctor found
   relay bluetooth devices    list known and connected devices
+  relay bluetooth agent      pairing agent: questions out, answers in, as
+                             JSON lines (what the shell runs; needs
+                             python-dbus and python-gobject)
 
 fix only ever performs actions doctor flagged — it takes no independent
 action, so doctor is always an accurate preview of it.

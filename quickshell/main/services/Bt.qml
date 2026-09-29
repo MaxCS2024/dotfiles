@@ -60,9 +60,10 @@ Singleton {
     }
 
     // ── Pairing ──────────────────────────────────────────
-    // No pairing agent is registered (Quickshell has none), so BlueZ pairs
-    // as NoInputNoOutput: "Just Works" devices — headphones, earbuds, most
-    // mice — pair; a keyboard that wants a passkey typed will be refused.
+    // Any code the pairing needs — a passkey to type on a keyboard, six
+    // digits to compare with a phone — is asked for by the agent
+    // (services/BtAgent.qml) in network/BluetoothPrompt.qml, not here.
+    // Without the agent BlueZ pairs "Just Works" devices only.
     //
     // Trusted first so the device may reconnect on its own later, discovery
     // off because BlueZ pairs more reliably without an inquiry running

@@ -59,6 +59,11 @@ ShellRoot {
     // above).
     readonly property var media: Media
 
+    // The Bluetooth pairing agent has to be registered before anything
+    // asks to pair, panel open or not (same reasoning as nightLight
+    // above). See services/BtAgent.qml.
+    readonly property var btAgent: BtAgent
+
     // ── Media and brightness keys ───────────────────────
     // hypr/modules/binds/media.lua binds XF86Audio* and XF86MonBrightness*
     // to `hl.dsp.global("quickshell:<name>")`. The behaviour is the
@@ -247,6 +252,20 @@ ShellRoot {
         id: networkLoader
         active: false
         NetworkPanel {}
+    }
+    // The pairing agent's questions (network/BluetoothPrompt.qml). Built
+    // on the first one and kept, so later ones fade in and out rather
+    // than popping; the surface opens and closes itself on BtAgent.current.
+    LazyLoader {
+        id: btPromptLoader
+        active: false
+        BluetoothPrompt {}
+    }
+    Connections {
+        target: BtAgent
+        function onCurrentChanged() {
+            if (BtAgent.current) btPromptLoader.active = true
+        }
     }
     // The right-edge notification rail (notifications/
     // NotificationHistoryPanel.qml, user request 2026-09-18) — the

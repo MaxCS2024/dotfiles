@@ -6,6 +6,7 @@ singleton Mic 1.0 Mic.qml
 singleton Brightness 1.0 Brightness.qml
 singleton Notifications 1.0 Notifications.qml
 singleton Bt 1.0 Bt.qml
+singleton BtAgent 1.0 BtAgent.qml
 singleton PrivilegedExec 1.0 PrivilegedExec.qml
 singleton SystemMonitor 1.0 SystemMonitor.qml
 singleton Settings 1.0 Settings.qml
