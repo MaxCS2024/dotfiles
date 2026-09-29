@@ -6,39 +6,31 @@ import QtQuick
 Singleton {
     id: root
 
-    // Resolved once at startup: the backlight device, e.g.
-    // intel_backlight. Reads go straight through FileView against its
-    // sysfs files (no subprocess per read). Writes go through
-    // systemd-logind's Session.SetBrightness over busctl: the sysfs
-    // brightness file is root's, and logind is what lets the user at the
-    // seat write it without being in the `video` group. It is also what
-    // brightnessctl called on this machine before this file stopped
-    // needing it — the same write, one package fewer.
-    property string device: ""
-    readonly property string devicePath: device !== "" ? "/sys/class/backlight/" + device : ""
+    // Resolved once at startup: the backlight device's sysfs path, e.g.
+    // /sys/class/backlight/intel_backlight. Reads go straight through
+    // FileView against that path (no subprocess per read); writes go
+    // through brightnessctl itself, since sysfs brightness is not
+    // directly writable without root — brightnessctl relies on udev
+    // rules (typically the `video` group) to get write access safely.
+    property string devicePath: ""
     property int maxBrightness: 0
-    property int raw: 0
     property real percent: 0        // 0-100
-    readonly property bool available: device !== ""
-
-    // Never below 1%: a screen at zero is a screen you cannot see to fix,
-    // and the key that got you there is invisible too. The same floor as
-    // `relay brightness`.
-    readonly property int floorPercent: 1
+    readonly property bool available: devicePath !== ""
 
     Component.onCompleted: detectProc.running = true
 
-    // The first device under /sys/class/backlight — what `brightnessctl
-    // -l -c backlight` listed first. Keyboard LEDs live under
-    // /sys/class/leds, so they were never candidates here.
+    // -c backlight filters out unrelated brightness-capable devices
+    // (e.g. keyboard backlight LEDs) that brightnessctl -l also lists.
     Process {
         id: detectProc
         command: ["sh", "-c",
-            "for d in /sys/class/backlight/*; do [ -e \"$d\" ] && { basename \"$d\"; break; }; done"]
+            "brightnessctl -l -c backlight 2>/dev/null | " +
+            "awk -F\"'\" '/Device/ {print $2; exit}'"]
         stdout: StdioCollector {
             onStreamFinished: {
-                root.device = text.trim()
-                if (root.device === "") return
+                const name = text.trim()
+                if (name === "") { root.devicePath = ""; return }
+                root.devicePath = "/sys/class/backlight/" + name
                 maxFile.reload()
                 curFile.reload()
             }
@@ -74,7 +66,6 @@ Singleton {
         onLoaded: {
             const v = parseInt(text().trim())
             if (!isNaN(v) && root.maxBrightness > 0) {
-                root.raw = v
                 const p = Math.min(100, (v / root.maxBrightness) * 100)
                 if (p !== root.percent) root._burst()
                 root.percent = p
@@ -82,17 +73,19 @@ Singleton {
         }
     }
 
-    // Not every change comes through this file: `relay brightness` writes
-    // through logind on its own, so this shell can't assume it always
-    // knows a change is coming. Instead, burst fast polling whenever a
-    // reload — from inotify or from the slow poll itself — actually
-    // reveals a changed value, and again right when this shell issues its
-    // own write. That keeps an outside change to at worst one slow-poll
-    // interval, while a held key or a dragged slider stays snappy
-    // throughout, and idle time (the overwhelming common case) polls
-    // slowly. FileView.reload() on a sysfs file is a cheap direct read, no
-    // subprocess spawn, so the fast phase costs nothing meaningful even
-    // though it's frequent — it just isn't run forever.
+    // The Hyprland keybinds call brightnessctl directly (see
+    // hypr/modules/binds/media.lua), not through setPercent()/adjustBy()
+    // below, so this shell can't assume it always knows a change is
+    // coming. Instead, burst fast polling whenever a reload — from
+    // inotify or from the slow poll itself — actually reveals a changed
+    // value, and again right when this shell issues its own write. That
+    // keeps a single key press to at worst one slow-poll interval (down
+    // from unconditional 30ms, but bounded), while a burst of repeated
+    // presses or a dragged slider stays snappy throughout, and idle time
+    // (the overwhelming common case) polls slowly. FileView.reload() on
+    // a sysfs file is a cheap direct read, no subprocess spawn, so the
+    // fast phase costs nothing meaningful even though it's frequent —
+    // it just isn't run forever.
     property bool _fastPoll: false
 
     Timer {
@@ -113,86 +106,30 @@ Singleton {
         onTriggered: curFile.reload()
     }
 
-    // ── Writes (everything goes through logind) ─────────
-    // The last value asked for. A relative step counts from here rather
-    // than from `raw` while `wantFresh` runs: during a held key the sysfs
-    // read trails the writes by a poll or two, and stepping from it would
-    // repeat a step instead of taking the next one.
-    property int _wantRaw: -1
-    property bool _writePending: false
+    // ── Writes (everything goes through brightnessctl) ───
+    Process { id: setProc }
 
-    Timer {
-        id: wantFresh
-        interval: 500
-    }
-
-    // One busctl at a time. A request that arrives while one is still
-    // running only moves _wantRaw, and the run that follows sends
-    // whatever it is by then, so a fast ramp can never queue up behind a
-    // slow write.
-    Process {
-        id: setProc
-        onExited: {
-            if (!root._writePending) return
-            root._writePending = false
-            root._send()
-        }
-    }
-
-    function _send() {
-        setProc.command = ["busctl", "call", "org.freedesktop.login1",
-            "/org/freedesktop/login1/session/auto", "org.freedesktop.login1.Session",
-            "SetBrightness", "ssu", "backlight", root.device, String(root._wantRaw)]
-        setProc.running = true
-    }
-
-    function _write(rawValue) {
-        if (!root.available || root.maxBrightness <= 0) return
-        const floor = Math.ceil(root.maxBrightness * root.floorPercent / 100)
-        root._wantRaw = Math.max(floor, Math.min(root.maxBrightness, Math.round(rawValue)))
-        wantFresh.restart()
-        root._burst()
-        if (setProc.running) root._writePending = true
-        else root._send()
-    }
-
-    // Linear in the raw value, the same scale `percent` reads back in.
+    // No -e (exponent) — see prior note: brightnessctl's -e applies a
+    // perceptual curve that doesn't match the plain linear (raw/max)
+    // percentage read above, causing uneven step sizes. -n2 is kept as
+    // a floor so brightness never drops to a fully black/unreadable
+    // screen.
     function setPercent(p) {
-        root._write(root.maxBrightness * Math.max(0, Math.min(100, p)) / 100)
+        if (!root.available) return
+        p = Math.max(0, Math.min(100, Math.round(p)))
+        setProc.command = ["brightnessctl", "-n2", "set", p + "%"]
+        setProc.running = false
+        setProc.running = true
+        root._burst()
     }
 
     function adjustBy(deltaPercent) {
-        const base = wantFresh.running && root._wantRaw >= 0 ? root._wantRaw : root.raw
-        root._write(base + root.maxBrightness * deltaPercent / 100)
-    }
-
-    // ── Brightness keys ─────────────────────────────────
-    // XF86MonBrightnessUp/Down (hypr/modules/binds/media.lua) are `global`
-    // binds, and Hyprland sends a global shortcut both its press and its
-    // release; shell.qml passes them on here with a direction, 1 or -1. A
-    // press steps 10% at once; holding on ramps 2% every 35ms until
-    // release — an evenly paced fade on a timer of our own rather than the
-    // keyboard's repeat rate, which a process per repeat tick couldn't keep
-    // up with. The ramp used to be a timer in the Lua bind spawning
-    // brightnessctl per tick; here each tick is only a request to _write()
-    // above.
-    property int _rampStep: 0
-
-    function pressKey(dir) {
-        root.adjustBy(10 * dir)
-        root._rampStep = 2 * dir
-    }
-
-    // Only the key that started the ramp ends it: letting go of Up while
-    // Down is held leaves Down's ramp running.
-    function releaseKey(dir) {
-        if (Math.sign(root._rampStep) === dir) root._rampStep = 0
-    }
-
-    Timer {
-        interval: 35
-        repeat: true
-        running: root._rampStep !== 0
-        onTriggered: root.adjustBy(root._rampStep)
+        if (!root.available) return
+        const mag = Math.abs(Math.round(deltaPercent))
+        const dir = deltaPercent >= 0 ? "+" : "-"
+        setProc.command = ["brightnessctl", "-n2", "set", mag + "%" + dir]
+        setProc.running = false
+        setProc.running = true
+        root._burst()
     }
 }

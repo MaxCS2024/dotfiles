@@ -110,7 +110,7 @@ preflight() {
     # missing tool when you actually use it — but naming them now saves a
     # confusing failure at 2am from a keybind with no terminal.
     local opt
-    for opt in hyprctl wpctl busctl grim slurp wl-copy notify-send jq socat; do
+    for opt in hyprctl wpctl brightnessctl grim slurp wl-copy notify-send jq socat; do
         rig::check::has "$opt" || rig::log::warn "not installed: $opt"
     done
 

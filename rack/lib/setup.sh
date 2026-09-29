@@ -37,6 +37,7 @@ declare -ga RACK_SETUP_REQUIRED=(
     "flatpak:flatpak"
     "wl-clipboard:wl-copy"
     "cliphist:cliphist"
+    "brightnessctl:brightnessctl"
     "lua:lua"
     "zsh:zsh"
 )

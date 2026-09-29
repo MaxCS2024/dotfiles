@@ -585,6 +585,42 @@
     },
     {
       "type": "application",
+      "bom-ref": "pkg:brightnessctl",
+      "name": "brightnessctl",
+      "scope": "required",
+      "version": "0.5.1-3",
+      "description": "Lightweight brightness control tool",
+      "purl": "pkg:alpm/arch/brightnessctl@0.5.1-3?arch=x86_64",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/Hummer12007/brightnessctl"
+        }
+      ],
+      "properties": [
+        {
+          "name": "dotfiles:group",
+          "value": "required"
+        },
+        {
+          "name": "dotfiles:probe",
+          "value": "brightnessctl"
+        },
+        {
+          "name": "dotfiles:installed",
+          "value": "false"
+        }
+      ]
+    },
+    {
+      "type": "application",
       "bom-ref": "pkg:lua",
       "name": "lua",
       "scope": "required",
@@ -4025,6 +4061,7 @@
         "pkg:flatpak",
         "pkg:wl-clipboard",
         "pkg:cliphist",
+        "pkg:brightnessctl",
         "pkg:lua",
         "pkg:zsh",
         "pkg:git",

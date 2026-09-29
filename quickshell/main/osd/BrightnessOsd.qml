@@ -36,8 +36,8 @@ OsdWindow {
         }
     }
 
-    // Lets a script force the OSD to show even when the change it made
-    // didn't come through services/Brightness.qml. Named `popup` rather than `show`
+    // Lets an external keybind force the OSD to show even if it also
+    // calls brightnessctl separately. Named `popup` rather than `show`
     // because `qs ipc call` reads a bare `show` as its own sibling
     // subcommand, printing this target's interface instead of calling
     // anything — and still exiting 0. Same trap for `wait`, `listen`

@@ -40,13 +40,7 @@ running. Grouped by what breaks if it's missing.
   moves to a different Hyprland build or a different compositor.
 
 - **systemd** — `loginctl` (lock/session) and `systemctl`
-  (reboot/poweroff) in `powermenu/PowerMenuPopout.qml`. Also the
-  backlight: `services/Brightness.qml` reads `/sys/class/backlight`
-  directly and writes through logind's `Session.SetBrightness` with
-  `busctl`, which lets the user at the seat set it without the `video`
-  group (the call brightnessctl made; `relay brightness` makes it too).
-  If `Brightness.available` stays false, check that
-  `/sys/class/backlight` has a device in it.
+  (reboot/poweroff) in `powermenu/PowerMenuPopout.qml`.
 
 - **NetworkManager** — `services/Network.qml` talks to it natively over
   D-Bus via `Quickshell.Networking` (device status, wifi scan/connect,
@@ -100,6 +94,12 @@ running. Grouped by what breaks if it's missing.
   actively watching the clipboard (usually wired into your Hyprland
   autostart as `wl-paste --watch cliphist store`), the history will
   just stay empty — this config reads history, it doesn't populate it.
+
+- **brightnessctl** — `services/Brightness.qml`, all reads/writes,
+  and the brightness keys (`hypr/modules/binds/media.lua`). Needs a
+  backlight device it can actually see; check with
+  `brightnessctl -l -c backlight` if `Brightness.available` stays
+  false.
 
 - **lua** (the standalone interpreter, `pacman -S lua`) — the default
   apps. `hypr/modules/defaults.lua` owns the terminal, editor, browser

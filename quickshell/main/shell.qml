@@ -64,9 +64,8 @@ ShellRoot {
     // above). See services/BtAgent.qml.
     readonly property var btAgent: BtAgent
 
-    // ── Media and brightness keys ───────────────────────
-    // hypr/modules/binds/media.lua binds XF86Audio* and XF86MonBrightness*
-    // to `hl.dsp.global("quickshell:<name>")`. The behaviour is the
+    // ── Media keys ──────────────────────────────────────
+    // hypr/modules/binds/media.lua binds XF86Audio* to `hl.dsp.global("quickshell:<name>")`. The behaviour is the
     // services'; these only pass the keys on. They live here and not on
     // the services because a second client asking Hyprland for a shortcut
     // someone already holds is a protocol error that drops its connection:
@@ -92,22 +91,6 @@ ShellRoot {
         name: "media-previous"
         description: "Previous track"
         onPressed: Media.previous()
-    }
-
-    GlobalShortcut {
-        appid: "quickshell"
-        name: "brightness-up"
-        description: "Raise the screen brightness (hold to ramp)"
-        onPressed: Brightness.pressKey(1)
-        onReleased: Brightness.releaseKey(1)
-    }
-
-    GlobalShortcut {
-        appid: "quickshell"
-        name: "brightness-down"
-        description: "Lower the screen brightness (hold to ramp)"
-        onPressed: Brightness.pressKey(-1)
-        onReleased: Brightness.releaseKey(-1)
     }
 
     // The wallpaper folder, which image each output is showing, and the
