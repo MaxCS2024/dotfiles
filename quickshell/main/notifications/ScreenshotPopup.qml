@@ -64,6 +64,11 @@ PanelWindow {
     // command substitution is three levels of escaping deep, and this is
     // the same information.
     //
+    // slurp gets /dev/null for stdin. Given a pipe, it reads predefined
+    // boxes from it and draws nothing until the pipe closes, and the one
+    // Quickshell hands a Process stays open: slurp sat there invisible
+    // and every later press found a capture already running.
+    //
     // Exit 3 means "the user cancelled" (Escape out of slurp) and is
     // deliberately silent; exit 4 means the compositor had nothing to
     // point at — no focused window, no focused monitor — and reports.
@@ -93,8 +98,7 @@ PanelWindow {
                 return 'out="$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name")"; ' +
                     '[ -n "$out" ] || exit 4; ' +
                     'grim -o "$out" "$f"'
-            return 'pgrep -x slurp >/dev/null && exit 3; ' +
-                'sel="$(slurp)"; ' +
+            return 'sel="$(slurp </dev/null)"; ' +
                 'if [ -z "$sel" ]; then exit 3; fi; ' +
                 'grim -g "$sel" "$f"'
         }
@@ -158,11 +162,29 @@ PanelWindow {
     // One capture at a time. Restarting the process mid-capture used to
     // kill the sh around slurp but not slurp itself, which stayed up
     // under the new one — a held Print key stacked an overlay per repeat.
-    // A slurp from SHIFT+Print (hypr/modules/binds/media.lua) counts too,
-    // so the region grab bows out if one is already open.
+    // Instead a press while a selection is open cancels it, whether it
+    // is this one or SHIFT+Print's (hypr/modules/binds/media.lua): Print
+    // again is as good as Escape, and nothing can wedge the next press.
+    // pkill exits 0 when it closed a selection, and that press was the
+    // cancel; only a press that found none (and no capture mid-grab)
+    // starts one.
+    Process {
+        id: cancelProc
+        property string pendingMode: "region"
+        command: ["pkill", "-x", "slurp"]
+        onExited: (exitCode) => {
+            if (exitCode !== 0 && !captureProc.running) osd._start(cancelProc.pendingMode)
+        }
+    }
+
     function capture(mode) {
-        if (captureProc.running) return
-        captureProc.mode = mode || "region"
+        if (cancelProc.running) return
+        cancelProc.pendingMode = mode || "region"
+        cancelProc.running = true
+    }
+
+    function _start(mode) {
+        captureProc.mode = mode
         captureProc._exited = false
         captureProc._collected = false
         captureProc.running = false

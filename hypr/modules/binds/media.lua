@@ -20,13 +20,13 @@ hl.bind("Print", hl.dsp.exec_cmd("qs -c main ipc call screenshot capture"), { lo
 -- One line, not a multi-line string: this is handed straight to `sh -c`, and
 -- keeping it flat avoids depending on how the dispatcher treats newlines.
 -- Cancelling slurp (Esc) exits before grim runs, so a cancelled capture
--- notifies nothing rather than claiming an empty clipboard. A slurp that is
--- already up (from either Print bind) means a capture is in progress, so a
--- second press leaves it be instead of opening another overlay over it.
+-- notifies nothing rather than claiming an empty clipboard. A press while a
+-- selection is already open (from either Print bind) cancels it instead of
+-- opening another overlay over it, the same as the popup does.
 hl.bind("SHIFT + Print", hl.dsp.exec_cmd(
-	'pgrep -x slurp >/dev/null && exit 0; ' ..
+	'pkill -x slurp && exit 0; ' ..
 		'dir="$HOME/Pictures/Screenshots"; mkdir -p "$dir"; ' ..
-		'sel="$(slurp)" || exit 0; [ -n "$sel" ] || exit 0; ' ..
+		'sel="$(slurp </dev/null)" || exit 0; [ -n "$sel" ] || exit 0; ' ..
 		'f="$dir/$(date +%Y-%m-%d_%H-%M-%S).png"; ' ..
 		'grim -g "$sel" "$f" && wl-copy --type image/png < "$f" && ' ..
 		'relay notif send "Screenshot copied" ' ..

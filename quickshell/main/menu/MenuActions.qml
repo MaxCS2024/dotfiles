@@ -407,7 +407,7 @@ QtObject {
         const script = [
             'dir="$HOME/Videos/Recordings"',
             'mkdir -p "$dir"',
-            'sel="$(slurp)" || exit 3',
+            'sel="$(slurp </dev/null)" || exit 3',
             '[ -n "$sel" ] || exit 3',
             'f="$dir/$(date +%Y-%m-%d_%H-%M-%S).mp4"',
             'wf-recorder -g "$sel" -f "$f" >/dev/null 2>&1 || exit 1',
