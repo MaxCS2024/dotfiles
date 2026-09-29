@@ -93,7 +93,8 @@ PanelWindow {
                 return 'out="$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name")"; ' +
                     '[ -n "$out" ] || exit 4; ' +
                     'grim -o "$out" "$f"'
-            return 'sel="$(slurp)"; ' +
+            return 'pgrep -x slurp >/dev/null && exit 3; ' +
+                'sel="$(slurp)"; ' +
                 'if [ -z "$sel" ]; then exit 3; fi; ' +
                 'grim -g "$sel" "$f"'
         }
@@ -154,7 +155,13 @@ PanelWindow {
         }
     }
 
+    // One capture at a time. Restarting the process mid-capture used to
+    // kill the sh around slurp but not slurp itself, which stayed up
+    // under the new one — a held Print key stacked an overlay per repeat.
+    // A slurp from SHIFT+Print (hypr/modules/binds/media.lua) counts too,
+    // so the region grab bows out if one is already open.
     function capture(mode) {
+        if (captureProc.running) return
         captureProc.mode = mode || "region"
         captureProc._exited = false
         captureProc._collected = false

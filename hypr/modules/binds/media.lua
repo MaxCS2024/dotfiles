@@ -1,7 +1,10 @@
 -- Screenshot: routed through Quickshell's screenshot popup, which runs
 -- grim + slurp + wl-copy itself and shows a thumbnail/notification —
 -- see notifications/ScreenshotPopup.qml in the quickshell dotfiles.
-hl.bind("Print", hl.dsp.exec_cmd("qs -c main ipc call screenshot capture"), { locked = true, repeating = true })
+--
+-- Not `repeating`: holding the key would start a capture per repeat tick,
+-- each with its own slurp overlay stacked on the last.
+hl.bind("Print", hl.dsp.exec_cmd("qs -c main ipc call screenshot capture"), { locked = true })
 
 -- Screenshot to file: same region select, saved to disk and copied to the
 -- clipboard, then a notification confirming the copy. The copy is what the
@@ -17,15 +20,18 @@ hl.bind("Print", hl.dsp.exec_cmd("qs -c main ipc call screenshot capture"), { lo
 -- One line, not a multi-line string: this is handed straight to `sh -c`, and
 -- keeping it flat avoids depending on how the dispatcher treats newlines.
 -- Cancelling slurp (Esc) exits before grim runs, so a cancelled capture
--- notifies nothing rather than claiming an empty clipboard.
+-- notifies nothing rather than claiming an empty clipboard. A slurp that is
+-- already up (from either Print bind) means a capture is in progress, so a
+-- second press leaves it be instead of opening another overlay over it.
 hl.bind("SHIFT + Print", hl.dsp.exec_cmd(
-	'dir="$HOME/Pictures/Screenshots"; mkdir -p "$dir"; ' ..
+	'pgrep -x slurp >/dev/null && exit 0; ' ..
+		'dir="$HOME/Pictures/Screenshots"; mkdir -p "$dir"; ' ..
 		'sel="$(slurp)" || exit 0; [ -n "$sel" ] || exit 0; ' ..
 		'f="$dir/$(date +%Y-%m-%d_%H-%M-%S).png"; ' ..
 		'grim -g "$sel" "$f" && wl-copy --type image/png < "$f" && ' ..
 		'relay notif send "Screenshot copied" ' ..
 		'"The image is in the clipboard" -a Screenshot --image "$f"'
-), { locked = true, repeating = true })
+), { locked = true })
 
 -- Volume: wpctl (WirePlumber CLI — matches the Pipewire backend your Volume tab already uses)
 hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })
