@@ -25,7 +25,13 @@ Singleton {
     // The two halves network/BluetoothTab.qml lists. `bonded` counts as
     // paired: a device paired from another OS install and carried over in
     // /var/lib/bluetooth can report bonded without paired.
-    readonly property var pairedDevices: root.devices.filter(d => d.paired || d.bonded)
+    //
+    // Connected ones first, as the Wi-Fi tab puts the network you're on at
+    // the top of Known networks (user request 2026-09-29). sort() is
+    // stable, so the rest keep BlueZ's order.
+    readonly property var pairedDevices: root.devices
+        .filter(d => d.paired || d.bonded)
+        .sort((a, b) => (b.connected ? 1 : 0) - (a.connected ? 1 : 0))
 
     // Everything else the adapter has heard, minus devices with no name.
     // `deviceName` is BlueZ's Name, empty until the device says what it is;
@@ -85,7 +91,10 @@ Singleton {
 
         function onPairedChanged() {
             if (!root.pairingDevice.paired) return
-            root.pairingDevice.connect()
+            // A keyboard is already connected by the time the bond lands
+            // (the pairing ran over its connection); asking again only
+            // earns an "already connected" error in the log.
+            if (!root.pairingDevice.connected) root.pairingDevice.connect()
             root.pairingDevice = null
         }
 

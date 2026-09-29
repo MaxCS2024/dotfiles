@@ -197,7 +197,14 @@ ColumnLayout {
                 width: pairedList.width
                 height: 44
                 radius: Theme.radius
-                color: btRowHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover)
+                // The connected row sits on `selected`, the fill of the
+                // connected network in the Wi-Fi tab (user request
+                // 2026-09-29), and doesn't light under the pointer, so
+                // the two can't meet. The rest light on hoverStrong, as
+                // the Wi-Fi rows do — `hover` is one step over the card
+                // and hard to see.
+                color: btRow.modelData.connected ? Appearance.selected
+                    : btRowHover.hovered ? Appearance.hoverStrong : Appearance.clear(Appearance.hoverStrong)
 
                 Behavior on color {
                     ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
@@ -243,7 +250,11 @@ ColumnLayout {
                                     return state + " · " + Math.round(btRow.modelData.battery * 100) + "%"
                                 return state
                             }
-                            color: Appearance.fgFaint
+                            // Green while connected, as the Wi-Fi tab's
+                            // "Connected"; fgFaint was also too dim to
+                            // read on the `selected` fill.
+                            color: btRow.modelData.connected && !btRow.forgetArmed
+                                ? Appearance.green : Appearance.fgFaint
                             font.pixelSize: Theme.fontMicro
                             font.family: Theme.font
                             Layout.fillWidth: true
