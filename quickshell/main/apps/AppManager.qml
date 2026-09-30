@@ -126,7 +126,12 @@ ShellSurface {
         .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
 
     // Whichever of the two lists the field is showing, before the source.
-    readonly property var listed: manager.browsing ? manager.installedList : manager.results
+    // A search puts what is already installed first (user request
+    // 2026-09-30, as the Conf menu's Install categories do), each half
+    // still ranked by how well the name matches.
+    readonly property var listed: manager.browsing ? manager.installedList
+        : manager.results.filter(r => r.installed === true)
+            .concat(manager.results.filter(r => r.installed !== true))
 
     function bySource(list) {
         return manager.sourceFilter === "All" ? list
@@ -207,14 +212,28 @@ ShellSurface {
     // each source's block, which is what makes the three backends read
     // as one answer instead of three.
     function mergeIn(entries) {
-        const merged = manager.results.concat(entries)
-        merged.sort((a, b) => b.rank - a.rank || a.name.localeCompare(b.name))
-        manager.results = merged
+        manager.keepSelection(() => {
+            const merged = manager.results.concat(entries)
+            merged.sort((a, b) => b.rank - a.rank || a.name.localeCompare(b.name))
+            manager.results = merged
+        })
+    }
 
-        // A result landing under the cursor must not move what pressing
-        // Enter would install, so the selection is clamped, never reset.
-        if (manager.selectedIndex >= manager.visibleResults.length)
-            manager.selectedIndex = Math.max(0, manager.visibleResults.length - 1)
+    // A result landing above the cursor must not change what pressing
+    // Enter would do to, so the selection follows the row it was on
+    // rather than staying at its index. Installed rows sort first, and a
+    // late Flathub answer can put one exactly where a not-installed row
+    // was selected: without this, Enter meant for "install" would land
+    // on "remove". Clamped when the row is gone.
+    function keepSelection(change) {
+        const was = manager.visibleResults[manager.selectedIndex]
+        change()
+        const n = manager.visibleResults.length
+        const at = was && !was.toggle
+            ? manager.visibleResults.findIndex(r => r.source === was.source && r.id === was.id)
+            : -1
+        manager.selectedIndex = at !== -1 ? at : Math.max(0, Math.min(manager.selectedIndex, n - 1))
+        if (at !== -1) resultList.positionViewAtIndex(at, ListView.Contain)
     }
 
     SourceSearch {
@@ -244,9 +263,13 @@ ShellSurface {
         function onRefreshed() {
             // What is installed decides what each default resolves to.
             Defaults.refresh()
-            manager.results = manager.results.map(r => {
-                r.installed = Packages.isInstalled(r)
-                return r
+            // An install or removal moves its row between the two
+            // halves of the list; the selection goes with it.
+            manager.keepSelection(() => {
+                manager.results = manager.results.map(r => {
+                    r.installed = Packages.isInstalled(r)
+                    return r
+                })
             })
         }
     }
