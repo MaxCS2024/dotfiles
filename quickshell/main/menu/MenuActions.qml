@@ -230,9 +230,9 @@ QtObject {
     }
 
     // ── Launchers ────────────────────────────────────────
-    // The web apps and TUIs `relay launcher` has made, as its `list`
-    // prints them: kind ("web" or "tui"), the slug the file is named
-    // after, the label, and the URL or command, tab separated. Null until
+    // The web apps `relay launcher` has made, as its `list` prints them:
+    // kind ("web"), the slug the file is named after, the label, and the
+    // URL, tab separated. Null until
     // answered, empty for none or relay failing, like `patches`.
     property var launchers: null
 
@@ -248,7 +248,7 @@ QtObject {
         const found = []
         for (const line of text.split("\n")) {
             const f = line.split("\t")
-            if (f.length === 4 && (f[0] === "web" || f[0] === "tui"))
+            if (f.length === 4 && f[0] === "web")
                 found.push({ kind: f[0], slug: f[1], label: f[2], target: f[3] })
         }
         if (!Json.same(found, actions.launchers)) actions.launchers = found

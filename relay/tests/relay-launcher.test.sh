@@ -7,7 +7,7 @@
 # icon fetch off the network.
 #
 #   ./tests/relay-launcher.test.sh          # all tests
-#   ./tests/relay-launcher.test.sh tui      # only tests whose name matches "tui"
+#   ./tests/relay-launcher.test.sh backslash # only tests whose name matches "backslash"
 set -uo pipefail
 
 ROOT=$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)
@@ -112,31 +112,13 @@ test_web_same_name_replaces() {
 	ok
 }
 
-# ---- tui ---------------------------------------------------------------------
-
-test_tui_joins_words() {
-	it "tui joins the command words into one line"
-	run tui "Disk usage" -- ncdu /
+test_web_backslash_round_trips() {
+	it "a backslash in an address is escaped in the file and read back as one"
+	run web Slash 'https://example.com/a\b'
 	assert_eq "status" "$STATUS" 0 || return
-	assert_eq "kind" "$(key disk-usage X-Relay-Kind)" tui || return
-	assert_eq "target" "$(key disk-usage X-Relay-Target)" "ncdu /" || return
-	ok
-}
-
-test_tui_backslash_round_trips() {
-	it "a backslash in a command is escaped in the file and read back as one"
-	run tui Grep 'grep -r foo\ bar .'
-	assert_eq "status" "$STATUS" 0 || return
-	assert_eq "raw" "$(key grep X-Relay-Target)" 'grep -r foo\\ bar .' || return
+	assert_eq "raw" "$(key slash X-Relay-Target)" 'https://example.com/a\\b' || return
 	run list
-	assert_eq "list" "$OUT" $'tui\tgrep\tGrep\tgrep -r foo\\ bar .' || return
-	ok
-}
-
-test_tui_needs_a_command() {
-	it "tui with no command is a usage error"
-	run tui Lazygit
-	assert_eq "status" "$STATUS" 2 || return
+	assert_eq "list" "$OUT" $'web\tslash\tSlash\thttps://example.com/a\\b' || return
 	ok
 }
 
@@ -145,10 +127,10 @@ test_tui_needs_a_command() {
 test_list_prints_tab_rows() {
 	it "list prints kind, slug, name, target"
 	run web GitHub https://github.com/
-	run tui Lazygit lazygit
+	run web YouTube https://www.youtube.com/
 	run list
 	assert_eq "status" "$STATUS" 0 || return
-	assert_eq "list" "$OUT" $'web\tgithub\tGitHub\thttps://github.com/\ntui\tlazygit\tLazygit\tlazygit' || return
+	assert_eq "list" "$OUT" $'web\tgithub\tGitHub\thttps://github.com/\nweb\tyoutube\tYouTube\thttps://www.youtube.com/' || return
 	ok
 }
 

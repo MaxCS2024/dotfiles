@@ -1,10 +1,10 @@
-# launcher — app-launcher entries for web apps and terminal (TUI) apps.
+# launcher — app-launcher entries for web apps.
 #
 # A web app is a page that opens as a window of its own, in the default
-# browser's app mode; a TUI is a command that opens in the default
-# terminal. Neither ships a desktop entry, so neither shows up in the app
-# launcher until something writes one. This is that something, and the
-# Conf menu's Install › Web apps and Install › TUI rows call it.
+# browser's app mode. It ships no desktop entry, so it doesn't show up in
+# the app launcher until something writes one. This is that something,
+# and the Conf menu's Install › Web apps rows call it. (Terminal apps had
+# a `tui` kind here until 2026-09-30.)
 #
 # One file per launcher, relay-launcher-<slug>.desktop in the user's
 # applications directory. The file is the whole record: its X-Relay-Kind
@@ -14,17 +14,17 @@
 # Exec is `relay launcher run <slug>`, not the browser or the command
 # itself, for two reasons:
 #
-#   * the default browser and terminal are looked up when the launcher
-#     is opened, not baked in when it was made, so changing the default
-#     under Apps › Defaults carries every launcher with it;
+#   * the default browser is looked up when the launcher is opened, not
+#     baked in when it was made, so changing the default under
+#     System › Defaults carries every launcher with it;
 #   * a slug is [a-z0-9-] and needs no quoting, where a URL or a command
 #     line in Exec needs the desktop spec's two layers of escaping, which
 #     not every launcher reads the same way.
 
 rig::load log check
 
-RELAY_MODULE_SUMMARY[launcher]="launcher entries for web apps and terminal apps"
-RELAY_MODULE_ACTIONS[launcher]="web tui list remove run"
+RELAY_MODULE_SUMMARY[launcher]="launcher entries for web apps"
+RELAY_MODULE_ACTIONS[launcher]="web list remove run"
 RELAY_MODULE_STATUS[launcher]="ready"
 RELAY_MODULE_TIER[launcher]="general"
 
@@ -138,7 +138,6 @@ relay::launcher::__write() {
     }
     case $kind in
         web) categories="Network;WebBrowser;" ;;
-        tui) categories="Utility;ConsoleOnly;" ;;
     esac
 
     dir=$(relay::launcher::__dir)
@@ -187,23 +186,6 @@ relay::launcher::web() {
     relay::launcher::__write web "$name" "$url" "${icon:-web-browser}"
 }
 
-# relay launcher tui <name> [--] <command...>
-relay::launcher::tui() {
-    (($# >= 2)) || {
-        rig::log::error "usage: relay launcher tui <name> <command...>"
-        return "$RIG_EX_USAGE"
-    }
-    local name=$1
-    shift
-    [[ ${1-} != -- ]] || shift
-    # Joined the way `relay default exec terminal -- ...` joins them: one
-    # sh command line, so `-- ncdu /` and `-- 'ncdu /'` are the same.
-    local command="$*"
-    relay::launcher::__plain name "$name" || return $?
-    relay::launcher::__plain command "$command" || return $?
-    relay::launcher::__write tui "$name" "$command" utilities-terminal
-}
-
 # One tab-separated line per launcher: kind, slug, name, target. Tabs
 # can't be in a name or a target (control characters are refused), so the
 # columns are unambiguous.
@@ -250,14 +232,13 @@ relay::launcher::run() {
         rig::log::error "usage: relay launcher run <slug>"
         return "$RIG_EX_USAGE"
     }
-    local file kind name target
+    local file kind target
     file=$(relay::launcher::__file "$(relay::launcher::__slug "$1")")
     [[ -f $file ]] || {
         rig::log::error "no launcher called '$1' (see: relay launcher list)"
         return "$RIG_EX_FAIL"
     }
     kind=$(relay::launcher::__key "$file" X-Relay-Kind) || kind=""
-    name=$(relay::launcher::__key "$file" Name) || name=$1
     target=$(relay::launcher::__key "$file" X-Relay-Target) || target=""
     [[ -n $target ]] || {
         rig::log::error "$file says nothing to open (no X-Relay-Target)"
@@ -267,7 +248,6 @@ relay::launcher::run() {
     relay::load default
     case $kind in
         web) relay::default::exec browser --app "$target" ;;
-        tui) relay::default::exec terminal --title "$name" -- "$target" ;;
         *)
             rig::log::error "$file is of a kind this doesn't know: '$kind'"
             return "$RIG_EX_FAIL"
@@ -278,7 +258,6 @@ relay::launcher::run() {
 relay::launcher::__usage() {
     cat <<'EOF'
   relay launcher web <name> <url>
-  relay launcher tui <name> <command...>
   relay launcher list
   relay launcher remove <name>
   relay launcher run <name>
@@ -287,18 +266,15 @@ web makes a launcher entry that opens <url> as a window of its own, in the
 default browser's app mode (a tab, when the browser has no app mode). It
 fetches the site's icon if it can.
 
-tui makes one that runs <command> in the default terminal.
-
-Both write ~/.local/share/applications/relay-launcher-<name>.desktop, with
+It writes ~/.local/share/applications/relay-launcher-<name>.desktop, with
 the name lowercased and dashed. The same name again replaces the entry.
-The default browser and terminal are looked up each time a launcher opens.
+The default browser is looked up each time a launcher opens.
 
 list prints kind, name, label and target, one launcher per line, tab
 separated. run is what the entries themselves call.
 
 examples
   relay launcher web "Proton Mail" https://mail.proton.me/
-  relay launcher tui Lazygit lazygit
   relay launcher remove "Proton Mail"
 EOF
 }
