@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # fzf picker over every package in the repos or the AUR: fuzzy-search by
 # name, `pacman -Sii` / `yay -Sii` in the pane below, <tab> to pick
-# several, <enter> installs the picks. Conf › Install › Packages and AUR
+# several, <enter> installs the picks. Conf › Packages › Pacman and AUR
 # open this in a terminal (after omarchy's pkg-install and
 # pkg-aur-install); the App manager is still there for searching by
 # description.
