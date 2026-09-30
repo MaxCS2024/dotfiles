@@ -260,32 +260,32 @@ ShellSurface {
                 // to see them.
                 { label: "Basics", icon: "\u{F02DC}", children: [
                     { label: "Everyday", icon: "\u{F005}", hint: "notes · music",
-                      children: panel.everydayApps.map(app => panel.installRow(app)) },
+                      children: panel.installedFirst(panel.everydayApps.map(app => panel.installRow(app))) },
                     { label: "Terminals", icon: "\u{F018D}",
-                      children: panel.terminalApps.map(app => panel.installRow(app)) },
+                      children: panel.installedFirst(panel.terminalApps.map(app => panel.installRow(app))) },
                     { label: "Browsers", icon: "\u{F0AC}", hint: "web",
-                      children: panel.browserApps.map(app => panel.installRow(app)) },
+                      children: panel.installedFirst(panel.browserApps.map(app => panel.installRow(app))) },
                     // Neovim is the lazyvim feature rather than a bare
                     // neovim row: the user wants Neovim to come with the
                     // latest LazyVim (see editorFeatures).
                     { label: "Editors", icon: "\u{F0DC8}", hint: "code",
-                      children: panel.featureRows(panel.editorFeatures)
-                          .concat(panel.editorApps.map(app => panel.installRow(app))) }
+                      children: panel.installedFirst(panel.featureRows(panel.editorFeatures)
+                          .concat(panel.editorApps.map(app => panel.installRow(app)))) }
                 ]},
 
                 { label: "Extras", icon: "\u{F0416}", children: [
                     { label: "Services", icon: "\u{F048B}", hint: "background",
-                      children: panel.serviceApps.map(app => panel.installRow(app)) },
+                      children: panel.installedFirst(panel.serviceApps.map(app => panel.installRow(app))) },
                     // Coding agents for the terminal. These are rack
                     // features rather than install rows (see aiFeatures),
                     // so a row here installs one and, once installed,
                     // removes it, as it did under Features.
                     { label: "AI", icon: "\u{F0674}", hint: "coding agents",
-                      children: panel.featureRows(panel.aiFeatures) },
+                      children: panel.installedFirst(panel.featureRows(panel.aiFeatures)) },
                     { label: "Communications", icon: "\u{F086}", hint: "chat",
-                      children: panel.communicationApps.map(app => panel.installRow(app)) },
+                      children: panel.installedFirst(panel.communicationApps.map(app => panel.installRow(app))) },
                     { label: "Gaming", icon: "\u{F11B}", hint: "launchers",
-                      children: panel.gamingApps.map(app => panel.installRow(app)) }
+                      children: panel.installedFirst(panel.gamingApps.map(app => panel.installRow(app))) }
                 ]}
             ]},
 
@@ -718,6 +718,19 @@ ShellSurface {
             },
             run: have ? () => panel.removeApp(app) : () => panel.installApp(app)
         }
+    }
+
+    // The rows of an Install category with what is already on the
+    // machine first (user request 2026-09-30), each half in the order
+    // its list gives it. A feature row says so itself (`installed`); an
+    // install row is asked of the package probe, which is also what
+    // _markInstalled answers from, so the order and the green hints
+    // agree. Nothing moves until the probe has answered.
+    function installedFirst(rows) {
+        const have = r => r.installed === true
+            || (r.installs !== undefined && actions.packages !== null
+                && r.installs.every(n => actions.packages[n] === true))
+        return rows.filter(have).concat(rows.filter(r => !have(r)))
     }
 
     // --needed and -y, so a row pressed before the probe has answered is
