@@ -636,8 +636,7 @@ ShellSurface {
     // of theirs, for anyone who needs it, from Install › AUR.
     readonly property var editorApps: [
         { label: "VS Code",      icon: "\u{F0A1E}", pkg: "code" },
-        { label: "Zed",          icon: "\u{F140B}", pkg: "zed" },
-        { label: "Vim",          icon: "\u{E7C5}",  pkg: "vim" }
+        { label: "Zed",          icon: "\u{F140B}", pkg: "zed" }
     ]
 
     // Install › Basics › Terminals: the four System › Defaults can pick between
