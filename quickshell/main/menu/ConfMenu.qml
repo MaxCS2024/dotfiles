@@ -154,7 +154,7 @@ ShellSurface {
         panel._markAvailability(panel.buildTree(), actions.tools), actions.packages)
 
     // Six sections, one per job: Triggers, Style, Install, Features,
-    // System, Learn. Install was split into three sections (Packages,
+    // Learn, System. Install was split into three sections (Packages,
     // Basics, Extras) for part of 2026-09-30, then put back as one with
     // Basics and Extras as branches, at the user's request. Apps
     // was a section too until earlier that day, when its Manage apps
@@ -298,26 +298,6 @@ ShellSurface {
             { label: "Features", icon: "\u{F0431}", hint: "optional parts",
               children: panel.featureRows(null) },
 
-            { label: "System", icon: "", children: [
-                { label: "About", icon: "", hint: SystemInfo.kernel,
-                  info: "system" },
-                // `rack setup` is the one command that answers "is this
-                // machine set up": every dependency the shell and the
-                // tooling need, and which of them are missing.
-                { label: "Check setup", icon: "", hint: "rack setup",
-                  run: () => Terminal.rack("setup", { title: "Setup check" }) },
-                // Fixes for one piece of hardware each (udev/), which a
-                // machine without the device doesn't need — see
-                // patchRows() below.
-                { label: "Patches", icon: "\u{F05B7}", hint: "hardware fixes",
-                  children: panel.patchRows() },
-                // What keeps the machine and its keys yours (user
-                // request 2026-09-30): three rack features that were
-                // under Features until then. See securityFeatures.
-                { label: "Security", icon: "\u{F0498}", hint: "keys · boot",
-                  children: panel.featureRows(panel.securityFeatures) }
-            ]},
-
             // The two wikis beside the keys: nearly everything this
             // desktop does, it does because Hyprland or Arch documents
             // it that way, and looking one of those up is the same kind
@@ -341,6 +321,27 @@ ShellSurface {
                   run: () => Defaults.openWebApp("https://wiki.archlinux.org/") },
                 { label: "LazyVim", icon: "\u{F04B2}", hint: "lazyvim.org",
                   run: () => Defaults.openWebApp("https://lazyvim.org/") }
+            ]},
+
+            // Last, at the user's request (2026-09-30).
+            { label: "System", icon: "", children: [
+                { label: "About", icon: "", hint: SystemInfo.kernel,
+                  info: "system" },
+                // `rack setup` is the one command that answers "is this
+                // machine set up": every dependency the shell and the
+                // tooling need, and which of them are missing.
+                { label: "Check setup", icon: "", hint: "rack setup",
+                  run: () => Terminal.rack("setup", { title: "Setup check" }) },
+                // Fixes for one piece of hardware each (udev/), which a
+                // machine without the device doesn't need — see
+                // patchRows() below.
+                { label: "Patches", icon: "\u{F05B7}", hint: "hardware fixes",
+                  children: panel.patchRows() },
+                // What keeps the machine and its keys yours (user
+                // request 2026-09-30): three rack features that were
+                // under Features until then. See securityFeatures.
+                { label: "Security", icon: "\u{F0498}", hint: "keys · boot",
+                  children: panel.featureRows(panel.securityFeatures) }
             ]}
         ]
     }
