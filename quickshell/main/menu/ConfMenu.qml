@@ -32,7 +32,7 @@ import "../services/packages.js" as Pkg
 // Where the leaves go, and why they're not all the same kind of thing:
 //
 //   * A leaf that has a panel already — Wallpaper, Themes, and
-//     Packages › Manage apps — calls Panels and lets the window
+//     Install › Manage apps — calls Panels and lets the window
 //     this shell already built do the work. The menu is a way *in* to
 //     those, not a second copy of them.
 //   * A leaf whose job is a long, interactive, privileged command —
@@ -153,9 +153,10 @@ ShellSurface {
     readonly property var tree: panel._markInstalled(
         panel._markAvailability(panel.buildTree(), actions.tools), actions.packages)
 
-    // Eight sections, one per job: Triggers, Style, Packages, Basics,
-    // Extras, Features, System, Learn. Packages, Basics and Extras were
-    // one section, Install, until later on 2026-09-30 (see below). Apps
+    // Six sections, one per job: Triggers, Style, Install, Features,
+    // System, Learn. Install was split into three sections (Packages,
+    // Basics, Extras) for part of 2026-09-30, then put back as one with
+    // Basics and Extras as branches, at the user's request. Apps
     // was a section too until earlier that day, when its Manage apps
     // went to Install and its Update and Defaults to System (user
     // request: it had no purpose of its own and split app installing
@@ -223,21 +224,20 @@ ShellSurface {
                   run: () => Panels.open("themes", undefined) }
             ]},
 
-            // Putting things on the machine, in three sections (user
-            // request 2026-09-30), where one Install section held them
-            // all from 2026-09-28 (after omarchy's Install menu):
+            // Putting things on the machine (user request 2026-09-30, in
+            // this shape after a few in one day). The tools come first, as
+            // rows of their own, since they are what every user needs
+            // whatever they install: the App manager and the two fzf
+            // pickers. Then two branches of picked apps: Basics, the apps
+            // every desktop has one of, and Extras, the rest by kind.
             //
-            //   * Packages — the tools every user needs whatever they
-            //     install: the App manager and the two fzf pickers.
-            //   * Basics — the apps every desktop has one of.
-            //   * Extras — the rest, by kind.
-            //
-            // Before Install there was Apps › Browse; before these three,
-            // Install also held Web apps, TUI, Style and Development,
-            // removed 2026-09-30 at the user's request. Every category has
-            // a glyph of its own; Terminals and Editors take the ones
-            // System › Defaults uses for those roles.
-            { label: "Packages", icon: "\u{F0120}", children: [
+            // Install arrived 2026-09-28 after omarchy's Install menu,
+            // replacing Apps › Browse. Web apps, TUI, Style and
+            // Development were categories of it until 2026-09-30, removed
+            // at the user's request. Every category has a glyph of its
+            // own; Terminals and Editors take the ones System › Defaults
+            // uses for those roles.
+            { label: "Install", icon: "\u{F0120}", children: [
                 // One window for what is installed and for finding what
                 // isn't (apps/AppManager.qml), where Install and Remove
                 // were two until 2026-09-24. `search` keeps both words
@@ -252,47 +252,47 @@ ShellSurface {
                   search: "packages repo official", requires: "sudo",
                   run: () => panel.pkgPicker("pacman", "Packages") },
                 { label: "AUR", icon: "\u{F0849}", hint: "yay", requires: "yay",
-                  run: () => panel.pkgPicker("aur", "AUR") }
-            ]},
+                  run: () => panel.pkgPicker("aur", "AUR") },
 
-            // In the order the user asked for. Everyday is what fits no
-            // other category: these were loose rows after the last
-            // category from 2026-09-24, where nobody scrolled far enough
-            // to see them.
-            { label: "Basics", icon: "\u{F02DC}", children: [
-                { label: "Everyday", icon: "\u{F005}", hint: "notes · music",
-                  children: panel.everydayApps.map(app => panel.installRow(app)) },
-                { label: "Terminals", icon: "\u{F018D}",
-                  children: panel.terminalApps.map(app => panel.installRow(app)) },
-                { label: "Browsers", icon: "\u{F0AC}", hint: "web",
-                  children: panel.browserApps.map(app => panel.installRow(app)) },
-                // Neovim is the lazyvim feature rather than a bare
-                // neovim row: the user wants Neovim to come with the
-                // latest LazyVim (see editorFeatures).
-                { label: "Editors", icon: "\u{F0DC8}", hint: "code",
-                  children: panel.featureRows(panel.editorFeatures)
-                      .concat(panel.editorApps.map(app => panel.installRow(app))) }
-            ]},
+                // In the order the user asked for. Everyday is what fits no
+                // other category: these were loose rows after the last
+                // category from 2026-09-24, where nobody scrolled far enough
+                // to see them.
+                { label: "Basics", icon: "\u{F02DC}", children: [
+                    { label: "Everyday", icon: "\u{F005}", hint: "notes · music",
+                      children: panel.everydayApps.map(app => panel.installRow(app)) },
+                    { label: "Terminals", icon: "\u{F018D}",
+                      children: panel.terminalApps.map(app => panel.installRow(app)) },
+                    { label: "Browsers", icon: "\u{F0AC}", hint: "web",
+                      children: panel.browserApps.map(app => panel.installRow(app)) },
+                    // Neovim is the lazyvim feature rather than a bare
+                    // neovim row: the user wants Neovim to come with the
+                    // latest LazyVim (see editorFeatures).
+                    { label: "Editors", icon: "\u{F0DC8}", hint: "code",
+                      children: panel.featureRows(panel.editorFeatures)
+                          .concat(panel.editorApps.map(app => panel.installRow(app))) }
+                ]},
 
-            { label: "Extras", icon: "\u{F0416}", children: [
-                { label: "Services", icon: "\u{F048B}", hint: "background",
-                  children: panel.serviceApps.map(app => panel.installRow(app)) },
-                // Coding agents for the terminal. These are rack
-                // features rather than install rows (see aiFeatures),
-                // so a row here installs one and, once installed,
-                // removes it, as it did under Features.
-                { label: "AI", icon: "\u{F0674}", hint: "coding agents",
-                  children: panel.featureRows(panel.aiFeatures) },
-                { label: "Communications", icon: "\u{F086}", hint: "chat",
-                  children: panel.communicationApps.map(app => panel.installRow(app)) },
-                { label: "Gaming", icon: "\u{F11B}", hint: "launchers",
-                  children: panel.gamingApps.map(app => panel.installRow(app)) }
+                { label: "Extras", icon: "\u{F0416}", children: [
+                    { label: "Services", icon: "\u{F048B}", hint: "background",
+                      children: panel.serviceApps.map(app => panel.installRow(app)) },
+                    // Coding agents for the terminal. These are rack
+                    // features rather than install rows (see aiFeatures),
+                    // so a row here installs one and, once installed,
+                    // removes it, as it did under Features.
+                    { label: "AI", icon: "\u{F0674}", hint: "coding agents",
+                      children: panel.featureRows(panel.aiFeatures) },
+                    { label: "Communications", icon: "\u{F086}", hint: "chat",
+                      children: panel.communicationApps.map(app => panel.installRow(app)) },
+                    { label: "Gaming", icon: "\u{F11B}", hint: "launchers",
+                      children: panel.gamingApps.map(app => panel.installRow(app)) }
+                ]}
             ]},
 
             // The parts of the desktop `rack features` can turn on and
             // off — see featureRows() below. The coding agents and LazyVim
             // are features too, but they are apps you pick, so they live
-            // in Extras › AI and Basics › Editors instead.
+            // in Install › Extras › AI and Install › Basics › Editors instead.
             { label: "Features", icon: "\u{F0431}", hint: "optional parts",
               children: panel.featureRows(null) },
 
@@ -360,7 +360,7 @@ ShellSurface {
     // picking it once it is installed is the removal — in a terminal,
     // where `rack features remove` lists what it would delete and asks
     // before it does.
-    // Packages › Pacman and AUR: bin/pkg-install over one source. A repo
+    // Install › Pacman and AUR: bin/pkg-install over one source. A repo
     // script, not installed anywhere (zsh finds it through ZDOTDIR), so
     // readlink follows main/'s link back into the repo. Not held: the
     // script pauses itself after an install, and Esc out of the picker
@@ -384,12 +384,12 @@ ShellSurface {
         hermes: "\u{F06D3}"
     })
 
-    // The features Extras › AI shows, and Features leaves out. A new
+    // The features Install › Extras › AI shows, and Features leaves out. A new
     // agent in features.json turns up under Features until its name is
     // added here.
     readonly property var aiFeatures: ["claudecode", "codex", "gemini", "opencode", "hermes"]
 
-    // The same for Basics › Editors.
+    // The same for Install › Basics › Editors.
     readonly property var editorFeatures: ["lazyvim"]
 
     // `only` is the names to list, in features.json's order; null is
@@ -505,7 +505,7 @@ ShellSurface {
         }))
     }
 
-    // Extras › Gaming. Five launchers because that is how many places a
+    // Install › Extras › Gaming. Five launchers because that is how many places a
     // game actually comes from here: Steam's own library, anything Wine
     // or an emulator can be talked into running (Lutris), the Epic and
     // GOG stores (Heroic), a Wine prefix you keep by hand (Bottles), and
@@ -524,7 +524,7 @@ ShellSurface {
         { label: "Prism Launcher", icon: "\u{F0373}", pkg: "prismlauncher" }
     ]
 
-    // Basics › Browsers. All of them native, per the user's choice
+    // Install › Basics › Browsers. All of them native, per the user's choice
     // (2026-09-25), after the flatpak brave was timed: 3.7s to a window
     // warm and slower still on the first launch after login, much of it
     // spent building the sandbox and then a zypak helper sandbox for
@@ -545,7 +545,7 @@ ShellSurface {
         { label: "Zen",           icon: "\u{F0B21}", pkg: "zen-browser-bin", aur: true }
     ]
 
-    // Extras › Communications. Discord from flathub, per the user's
+    // Install › Extras › Communications. Discord from flathub, per the user's
     // choice, not extra/discord: the two package the same client
     // (1.0.157 either way today), so what the choice actually picks is
     // which updater it rides — flatpak, where the build is the vendor's
@@ -562,7 +562,7 @@ ShellSurface {
         { label: "Zoom",     icon: "\u{F0567}", flatpak: "us.zoom.Zoom" }
     ]
 
-    // Basics › Everyday. What doesn't group
+    // Install › Basics › Everyday. What doesn't group
     // with anything else: LocalSend for pushing a file at a phone on the
     // same network, Bitwarden for passwords, Obsidian for notes, Spotify
     // for music. Flatpaks per the
@@ -587,7 +587,7 @@ ShellSurface {
         { label: "Spotify",   icon: "\u{F04C7}", flatpak: "com.spotify.Client" }
     ]
 
-    // Extras › Services. Things that run in the background once they
+    // Install › Extras › Services. Things that run in the background once they
     // are started, so a row installs the package and then, in the same
     // terminal, starts it for good (`then`). Pressed again, the install
     // is a no-op and the enable is one too, so nothing needs guarding.
@@ -617,7 +617,7 @@ ShellSurface {
         { label: "Dropbox",   icon: "\u{F01E3}", pkg: "dropbox", aur: true }
     ]
 
-    // Basics › Editors, after the LazyVim row. VS Code is extra's
+    // Install › Basics › Editors, after the LazyVim row. VS Code is extra's
     // Code - OSS: the same `code` binary System › Defaults offers, without
     // Microsoft's marketplace; visual-studio-code-bin is the AUR's copy
     // of theirs, for anyone who needs it, from Packages or AUR.
@@ -631,7 +631,7 @@ ShellSurface {
         { label: "Cursor",       icon: "\u{F01A7}", pkg: "cursor-bin", aur: true }
     ]
 
-    // Basics › Terminals: the four System › Defaults can pick between
+    // Install › Basics › Terminals: the four System › Defaults can pick between
     // (hypr/modules/defaults.lua), so one installed here can be made the
     // default straight after. Glyphs for what each is named after, the
     // font having no logos: a ghost, a cat, a footprint, an A.
@@ -1032,7 +1032,7 @@ ShellSurface {
                 // ── Filter ───────────────────────────────
                 // The first thing on the slab, per user request
                 // 2026-09-11: the breadcrumb row that used to head it
-                // (level icon, "Conf › Basics › …", match count) is gone,
+                // (level icon, "Conf › Install › …", match count) is gone,
                 // and so is the rule that used to divide this from the
                 // list below. There are no rules left anywhere on the slab
                 // — the frame is the only line on it — so the layout's own

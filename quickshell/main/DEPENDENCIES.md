@@ -157,7 +157,7 @@ running. Grouped by what breaks if it's missing.
 
 - **yay** — the AUR. Without it the app manager (`apps/AppManager.qml`)
   shows pacman and Flathub results only, the Conf menu's System › Update › Yay
-  row, Packages › AUR and the rows for AUR packages (Heroic, Bottles) are
+  row, Install › AUR and the rows for AUR packages (Heroic, Bottles) are
   dimmed, and
   `rack update` skips its AUR stage. Flatpak is the install source that is
   required. A different helper (`paru`) means swapping the literal `"yay"`
