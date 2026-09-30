@@ -48,10 +48,6 @@ import "../common/localBin.js" as LocalBin
 //   * A Features row flips its feature. That runs headless and answers
 //     with a notification, unless turning it on has packages to
 //     install, which is the terminal case above. See featureRows().
-//   * A leaf with `ask` turns the filter field into a short form, one
-//     field per Enter, and runs its `done` with the answers. See
-//     startAsk(). No row uses it since Install › Web apps went
-//     (2026-09-30); the mechanism is left in place.
 //
 // Learn › Keybindings was a fourth kind for a while: a level of rows
 // that were each only a fact, answering the question the old Settings
@@ -106,11 +102,6 @@ ShellSurface {
 
     // Non-empty while an info leaf is showing in place of the list.
     property string infoKind: ""
-
-    // Non-null while an `ask` leaf is filling in its fields:
-    // { fields, done, values, step }. Replaced, never changed in place,
-    // so `rows` hears about every step. See startAsk().
-    property var asking: null
 
     // The row height and the type scale are theme/ConfStyle.qml's, not
     // this file's: keybinds/KeybindsPanel.qml is a page this menu opens
@@ -755,9 +746,7 @@ ShellSurface {
         return items
     }
 
-    readonly property var rows: panel.asking
-        ? panel.askRows(panel.asking)
-        : panel.filterRows(panel.levelItems, panel.filter)
+    readonly property var rows: panel.filterRows(panel.levelItems, panel.filter)
     readonly property var current: panel.selectedIndex >= 0 && panel.selectedIndex < panel.rows.length
         ? panel.rows[panel.selectedIndex] : null
 
@@ -824,47 +813,10 @@ ShellSurface {
     // ── Navigation ───────────────────────────────────────
     function enter(labels) {
         panel.path = labels
-        panel.asking = null
         panel.clearFilter()
         panel.selectedIndex = 0
         panel.infoKind = ""
         levelSlide.restart()
-    }
-
-    // ── Asking ───────────────────────────────────────────
-    // A leaf with `ask: { fields, done }` makes the filter field an input:
-    // each field is a row, the one being typed is the selected one, its
-    // placeholder says what goes in it, and Enter moves on to the next.
-    // Enter on the last runs `done(values)` the way any leaf runs, after
-    // the menu has closed. Escape, or Backspace in an empty field, drops
-    // the lot and goes back to the level. No new controls: the same
-    // field, the same rows, the same keys.
-    function startAsk(ask) {
-        panel.asking = { fields: ask.fields, done: ask.done, values: [], step: 0 }
-        panel.clearFilter()
-        panel.selectedIndex = 0
-        levelSlide.restart()
-    }
-
-    function askRows(asking) {
-        return asking.fields.map((field, i) => ({
-            label: field.label, icon: field.icon,
-            hint: i < asking.values.length ? asking.values[i] : ""
-        }))
-    }
-
-    function askNext() {
-        const value = panel.filter.trim()
-        if (value === "") return
-        const a = panel.asking
-        const values = a.values.concat([value])
-        if (values.length === a.fields.length) {
-            panel.runRow({ run: () => a.done(values) })
-            return
-        }
-        panel.asking = { fields: a.fields, done: a.done, values: values, step: a.step + 1 }
-        panel.clearFilter()
-        panel.selectedIndex = a.step + 1
     }
 
     function clearFilter() { filterInput.text = "" }
@@ -874,7 +826,6 @@ ShellSurface {
     // which is what makes Escape at the root close the menu.
     function back() {
         if (panel.filter !== "") { panel.clearFilter(); return true }
-        if (panel.asking) { panel.asking = null; panel.selectedIndex = 0; levelSlide.restart(); return true }
         if (panel.infoKind !== "") { panel.infoKind = ""; return true }
         if (panel.path.length > 0) { panel.enter(panel.path.slice(0, -1)); return true }
         return false
@@ -890,11 +841,6 @@ ShellSurface {
 
         if (row.children) {
             panel.enter((row.trail || panel.path).concat([row.label]))
-            return
-        }
-
-        if (row.ask) {
-            panel.startAsk(row.ask)
             return
         }
 
@@ -1042,26 +988,12 @@ ShellSurface {
                         clip: true
                         cursorVisible: true
 
-                        onTextChanged: panel.selectedIndex = panel.asking ? panel.asking.step : 0
+                        onTextChanged: panel.selectedIndex = 0
 
                         Keys.onPressed: (event) => {
                             if (event.key === Qt.Key_Escape) {
                                 if (!panel.back()) panel.close()
                                 event.accepted = true
-                                return
-                            }
-                            // While asking, Enter takes the field and the
-                            // arrows have no rows to move between.
-                            if (panel.asking) {
-                                if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                    panel.askNext()
-                                    event.accepted = true
-                                } else if (event.key === Qt.Key_Up || event.key === Qt.Key_Down) {
-                                    event.accepted = true
-                                } else if (event.key === Qt.Key_Backspace && filterInput.text.length === 0) {
-                                    panel.back()
-                                    event.accepted = true
-                                }
                                 return
                             }
                             if (event.key === Qt.Key_Down
@@ -1112,8 +1044,7 @@ ShellSurface {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         visible: filterInput.text.length === 0
-                        text: panel.asking ? panel.asking.fields[panel.asking.step].placeholder
-                            : panel.path.length === 0 ? "Type to search…"
+                        text: panel.path.length === 0 ? "Type to search…"
                             : "Filter " + panel.path[panel.path.length - 1] + "…"
                         color: Appearance.placeholder
                         font.family: Theme.font
@@ -1258,7 +1189,7 @@ ShellSurface {
 
                                 HoverHandler {
                                     cursorShape: Qt.PointingHandCursor
-                                    onHoveredChanged: if (hovered && !panel.asking) panel.selectedIndex = menuRow.index
+                                    onHoveredChanged: if (hovered) panel.selectedIndex = menuRow.index
                                 }
 
                                 TapHandler {
