@@ -544,7 +544,7 @@ ShellSurface {
     // spent building the sandbox and then a zypak helper sandbox for
     // every child process. Native, the browser also gets its own sandbox back
     // instead of handing it to flatpak's. Chromium and Firefox come from
-    // extra, Brave, Chrome and Zen from the AUR, so the rows ride two
+    // extra, Brave and Zen from the AUR, so the rows ride two
     // updaters rather than one. defaults.lua already prefers a native
     // binary over the flatpak, so an installed one is picked up as is.
     //
@@ -555,7 +555,6 @@ ShellSurface {
         { label: "Brave",         icon: "",          pkg: "brave-bin", aur: true },
         { label: "Chromium",      icon: "\u{F059F}", pkg: "chromium" },
         { label: "Firefox",       icon: "",          pkg: "firefox" },
-        { label: "Google Chrome", icon: "",          pkg: "google-chrome", aur: true },
         { label: "Zen",           icon: "\u{F0B21}", pkg: "zen-browser-bin", aur: true }
     ]
 
@@ -634,15 +633,11 @@ ShellSurface {
     // Install › Basics › Editors, after the LazyVim row. VS Code is extra's
     // Code - OSS: the same `code` binary System › Defaults offers, without
     // Microsoft's marketplace; visual-studio-code-bin is the AUR's copy
-    // of theirs, for anyone who needs it, from Packages or AUR.
+    // of theirs, for anyone who needs it, from Install › AUR.
     readonly property var editorApps: [
         { label: "VS Code",      icon: "\u{F0A1E}", pkg: "code" },
         { label: "Zed",          icon: "\u{F140B}", pkg: "zed" },
-        { label: "Helix",        icon: "\u{F0684}", pkg: "helix" },
-        { label: "Vim",          icon: "\u{E7C5}",  pkg: "vim" },
-        { label: "Emacs",        icon: "\u{E632}",  pkg: "emacs" },
-        { label: "Sublime Text", icon: "\u{F0B1A}", pkg: "sublime-text-4", aur: true },
-        { label: "Cursor",       icon: "\u{F01A7}", pkg: "cursor-bin", aur: true }
+        { label: "Vim",          icon: "\u{E7C5}",  pkg: "vim" }
     ]
 
     // Install › Basics › Terminals: the four System › Defaults can pick between
