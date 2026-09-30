@@ -252,7 +252,7 @@ main() {
 		  2. Under Security › Secure Boot, set Secure Boot to Enabled. Save.
 		  3. The laptop starts the "Arch Linux (UKI linux)" entry. If it doesn't
 		     start, switch Secure Boot off again: nothing else has to be undone.
-		Conf › Features shows Secure Boot as installed once it's on.
+		Conf › System › Security shows Secure Boot as installed once it's on.
 	EOF
     exit "$PENDING"
 }

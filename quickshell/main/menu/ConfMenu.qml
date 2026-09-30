@@ -292,7 +292,9 @@ ShellSurface {
             // The parts of the desktop `rack features` can turn on and
             // off — see featureRows() below. The coding agents and LazyVim
             // are features too, but they are apps you pick, so they live
-            // in Install › Extras › AI and Install › Basics › Editors instead.
+            // in Install › Extras › AI and Install › Basics › Editors
+            // instead; fingerprint, Secure Boot and the GPG key live in
+            // System › Security.
             { label: "Features", icon: "\u{F0431}", hint: "optional parts",
               children: panel.featureRows(null) },
 
@@ -308,7 +310,12 @@ ShellSurface {
                 // machine without the device doesn't need — see
                 // patchRows() below.
                 { label: "Patches", icon: "\u{F05B7}", hint: "hardware fixes",
-                  children: panel.patchRows() }
+                  children: panel.patchRows() },
+                // What keeps the machine and its keys yours (user
+                // request 2026-09-30): three rack features that were
+                // under Features until then. See securityFeatures.
+                { label: "Security", icon: "\u{F0498}", hint: "keys · boot",
+                  children: panel.featureRows(panel.securityFeatures) }
             ]},
 
             // The two wikis beside the keys: nearly everything this
@@ -381,7 +388,10 @@ ShellSurface {
         codex: "\u{F0169}",
         gemini: "\u{F0AE2}",
         opencode: "\u{F10D6}",
-        hermes: "\u{F06D3}"
+        hermes: "\u{F06D3}",
+        fingerprint: "\u{F0237}",
+        secureboot: "\u{F099D}",
+        gpg: "\u{F0306}"
     })
 
     // The features Install › Extras › AI shows, and Features leaves out. A new
@@ -392,15 +402,18 @@ ShellSurface {
     // The same for Install › Basics › Editors.
     readonly property var editorFeatures: ["lazyvim"]
 
+    // And for System › Security.
+    readonly property var securityFeatures: ["fingerprint", "secureboot", "gpg"]
+
     // `only` is the names to list, in features.json's order; null is
-    // every feature that isn't one of those two lists.
+    // every feature that isn't in one of those lists.
     function featureRows(only) {
         if (actions.features === null) return [{ label: "Reading…", icon: "" }]
         if (actions.features.length === 0)
             return [{ label: "No features found", icon: "", hint: "rack features list" }]
         return actions.features.filter(f => only
             ? only.indexOf(f.name) !== -1
-            : panel.aiFeatures.concat(panel.editorFeatures).indexOf(f.name) === -1).map(f => {
+            : panel.aiFeatures.concat(panel.editorFeatures, panel.securityFeatures).indexOf(f.name) === -1).map(f => {
             if (!f.switchable) return {
                 label: f.label, icon: panel.featureIcons[f.name] || "\u{F0431}",
                 hint: f.installed ? "installed" : "not installed",
