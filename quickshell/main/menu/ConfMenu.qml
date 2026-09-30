@@ -252,6 +252,23 @@ ShellSurface {
                 { label: "Manage apps", icon: "\u{F019}", hint: "installed · remove",
                   search: "install remove uninstall packages",
                   run: () => Panels.open("apps", "") },
+                // Everyday, Terminals, Browsers and Editors lead, in that
+                // order (user request 2026-09-30). Everyday is what fits
+                // no other category: these were loose rows after the last
+                // category from 2026-09-24, where nobody scrolled far
+                // enough to see them.
+                { label: "Everyday", icon: "\u{F005}", hint: "notes · music · files",
+                  children: panel.everydayApps.map(app => panel.installRow(app)) },
+                { label: "Terminals", icon: "\u{F018D}",
+                  children: panel.terminalApps.map(app => panel.installRow(app)) },
+                { label: "Browsers", icon: "\u{F0AC}", hint: "web",
+                  children: panel.browserApps.map(app => panel.installRow(app)) },
+                // Neovim is the lazyvim feature rather than a bare
+                // neovim row: the user wants Neovim to come with the
+                // latest LazyVim (see editorFeatures).
+                { label: "Editors", icon: "\u{F0DC8}", hint: "code",
+                  children: panel.featureRows(panel.editorFeatures)
+                      .concat(panel.editorApps.map(app => panel.installRow(app))) },
                 { label: "Packages", icon: "\u{F0BAF}", hint: "pacman",
                   search: "pacman repo official", requires: "sudo",
                   run: () => panel.pkgPicker("pacman", "Packages") },
@@ -267,16 +284,6 @@ ShellSurface {
                   children: panel.serviceApps.map(app => panel.installRow(app)) },
                 { label: "Development", icon: "\u{F0174}", hint: "languages",
                   children: panel.developmentApps.map(app => panel.installRow(app)) },
-                // Neovim is the lazyvim feature rather than a bare
-                // neovim row: the user wants Neovim to come with the
-                // latest LazyVim (see editorFeatures).
-                { label: "Editors", icon: "\u{F0DC8}", hint: "code",
-                  children: panel.featureRows(panel.editorFeatures)
-                      .concat(panel.editorApps.map(app => panel.installRow(app))) },
-                { label: "Terminals", icon: "\u{F018D}",
-                  children: panel.terminalApps.map(app => panel.installRow(app)) },
-                { label: "Browsers", icon: "\u{F0AC}", hint: "web",
-                  children: panel.browserApps.map(app => panel.installRow(app)) },
                 // Coding agents for the terminal. These are rack
                 // features rather than install rows (see aiFeatures),
                 // so a row here installs one and, once installed,
@@ -286,14 +293,7 @@ ShellSurface {
                 { label: "Communications", icon: "\u{F086}", hint: "chat",
                   children: panel.communicationApps.map(app => panel.installRow(app)) },
                 { label: "Gaming", icon: "\u{F11B}", hint: "launchers",
-                  children: panel.gamingApps.map(app => panel.installRow(app)) },
-                // What fits no other category. These were loose rows
-                // after the last category from 2026-09-24, where nobody
-                // scrolled far enough to see them; a category of their
-                // own puts them in the list with the rest (user request
-                // 2026-09-30).
-                { label: "Everyday", icon: "\u{F005}", hint: "notes · music · files",
-                  children: panel.everydayApps.map(app => panel.installRow(app)) }
+                  children: panel.gamingApps.map(app => panel.installRow(app)) }
             ]},
 
             // The parts of the desktop `rack features` can turn on and
