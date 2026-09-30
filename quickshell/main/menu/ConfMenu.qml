@@ -33,7 +33,7 @@ import "../common/localBin.js" as LocalBin
 // Where the leaves go, and why they're not all the same kind of thing:
 //
 //   * A leaf that has a panel already — Wallpaper, Themes, and
-//     Apps › Manage apps — calls Panels and lets the window
+//     Install › Manage apps — calls Panels and lets the window
 //     this shell already built do the work. The menu is a way *in* to
 //     those, not a second copy of them.
 //   * A leaf whose job is a long, interactive, privileged command —
@@ -42,7 +42,7 @@ import "../common/localBin.js" as LocalBin
 //     Those need a password prompt, a y/n per PKGBUILD and a wall of
 //     output that deserves a scrollback, none of which belongs behind a
 //     spinner in a popup.
-//   * A leaf that just answers a question — System › About, Apps ›
+//   * A leaf that just answers a question — System › About, System ›
 //     Defaults — renders inline (menu/MenuInfoView.qml) rather than
 //     opening anything at all.
 //   * A Features row flips its feature. That runs headless and answers
@@ -162,12 +162,14 @@ ShellSurface {
     readonly property var tree: panel._markInstalled(
         panel._markAvailability(panel.buildTree(), actions.tools), actions.packages)
 
-    // Seven sections, one per job: Triggers, Style, Apps, Install,
-    // Features, System, Learn. Triggers replaced Capture on 2026-09-29
-    // and holds it as a branch. Six until 2026-09-28, when Install took
-    // over from Apps › Browse (user request: categories after omarchy's
-    // Install menu, each with its own icon). The six were a regroup at
-    // the user's request, 2026-09-24. Before
+    // Six sections, one per job: Triggers, Style, Install, Features,
+    // System, Learn. Apps was a seventh until 2026-09-30, when its Manage
+    // apps went to the top of Install and its Update and Defaults to
+    // System (user request: it had no purpose of its own and split app
+    // installing in two). Triggers replaced Capture on 2026-09-29 and
+    // holds it as a branch. Install arrived 2026-09-28 (user request:
+    // categories after omarchy's Install menu, each with its own icon).
+    // The regroup into sections was the user's, 2026-09-24. Before
     // that, apps were spread over four top-level entries — a catalogue
     // under Setup beside Install, Remove and Update — Remove and About
     // were branches holding one row each, and nothing reached the
@@ -228,55 +230,28 @@ ShellSurface {
                   run: () => Panels.open("themes", undefined) }
             ]},
 
-            // What is on the machine, keeping it current, and saying which
-            // of it opens what. Putting new things on is Install, below.
-            { label: "Apps", icon: "\u{F003B}", children: [
-                // One window for what is installed and for finding what
-                // isn't (apps/AppManager.qml), where Install and Remove
-                // were two until 2026-09-24. `search` keeps both words
-                // finding it from the top of this menu.
-                { label: "Manage apps", icon: "\u{F019}", hint: "install · remove",
-                  search: "install remove uninstall packages",
-                  run: () => Panels.open("apps", "") },
-                // "Update all" is rack's own three-stage update (repo,
-                // then AUR, then flatpak, each gated on the one before
-                // it); the three rows under it are the single stages, for
-                // when only one of them is what you meant.
-                { label: "Update", icon: "", children: [
-                    { label: "Update all", icon: "", hint: "rack update",
-                      run: () => Terminal.rack("update", { title: "System update" }) },
-                    { label: "Pacman", icon: "", hint: "pacman -Syu",
-                      requires: "sudo",
-                      run: () => Terminal.run("sudo pacman -Syu") },
-                    { label: "Yay", icon: "", hint: "yay -Sua", requires: "yay",
-                      run: () => Terminal.run("yay -Sua") },
-                    { label: "Flatpak", icon: "", hint: "flatpak update",
-                      requires: "flatpak",
-                      run: () => Terminal.run("flatpak update") }
-                ]},
-                { label: "Defaults", icon: "", hint: "what opens what",
-                  children: panel.defaultRoles.map(role => ({
-                      label: role.label, icon: role.icon,
-                      hint: panel.defaultHint(role),
-                      children: panel.defaultRows(role)
-                  })) }
-            ]},
-
             // Putting things on the machine, by kind (user request
             // 2026-09-28, after omarchy's Install menu). Packages and AUR
             // are an fzf picker over that one source in a terminal
             // (pkgPicker, below); the rest are short picked lists, a row
-            // per app. Replaces Apps › Browse,
-            // whose categories (Browsers, AI, Communications, Gaming) and
+            // per app. Replaces the old Apps ›
+            // Browse, whose categories (Browsers, AI, Communications, Gaming) and
             // loose apps moved here as they were.
             //
             // Every category has a glyph of its own: pac-man for pacman,
             // a group of people for the user-run AUR, a boxed globe for
             // web apps (the bare globe is Browsers'), an app in brackets
             // for terminal apps, a palette, a server, code tags, and the
-            // editor and terminal glyphs Apps › Defaults already uses for
+            // editor and terminal glyphs System › Defaults already uses for
             // those roles.
             { label: "Install", icon: "\u{F0120}", children: [
+                // One window for what is installed and for finding what
+                // isn't (apps/AppManager.qml), where Install and Remove
+                // were two until 2026-09-24. `search` keeps both words
+                // finding it from the top of this menu.
+                { label: "Manage apps", icon: "\u{F019}", hint: "installed · remove",
+                  search: "install remove uninstall packages",
+                  run: () => Panels.open("apps", "") },
                 { label: "Packages", icon: "\u{F0BAF}", hint: "pacman",
                   search: "pacman repo official", requires: "sudo",
                   run: () => panel.pkgPicker("pacman", "Packages") },
@@ -311,11 +286,15 @@ ShellSurface {
                 { label: "Communications", icon: "\u{F086}", hint: "chat",
                   children: panel.communicationApps.map(app => panel.installRow(app)) },
                 { label: "Gaming", icon: "\u{F11B}", hint: "launchers",
-                  children: panel.gamingApps.map(app => panel.installRow(app)) }
-            // The apps that fit no category sit here as rows of their
-            // own, after the ones that do (user request 2026-09-24:
-            // they were a category of their own, General).
-            ].concat(panel.generalApps.map(app => panel.installRow(app))) },
+                  children: panel.gamingApps.map(app => panel.installRow(app)) },
+                // What fits no other category. These were loose rows
+                // after the last category from 2026-09-24, where nobody
+                // scrolled far enough to see them; a category of their
+                // own puts them in the list with the rest (user request
+                // 2026-09-30).
+                { label: "Everyday", icon: "\u{F005}", hint: "notes · music · files",
+                  children: panel.everydayApps.map(app => panel.installRow(app)) }
+            ]},
 
             // The parts of the desktop `rack features` can turn on and
             // off — see featureRows() below. The coding agents and LazyVim
@@ -483,7 +462,7 @@ ShellSurface {
     // The window shows every key at once; this menu keeps the thing it
     // was always better at, which is being the place you type a word.
 
-    // ── Apps › Defaults ──────────────────────────────────
+    // ── System › Defaults ──────────────────────────────────
     // What opens what, and a way to change it: one row per role, each
     // offering the candidates this machine actually has. The roles, their
     // candidates, which of those are installed and what picking one does
@@ -590,7 +569,7 @@ ShellSurface {
         { label: "Zoom",     icon: "\u{F0567}", flatpak: "us.zoom.Zoom" }
     ]
 
-    // Install, as rows beside the categories. What doesn't group
+    // Install › Everyday. What doesn't group
     // with anything else: LocalSend for pushing a file at a phone on the
     // same network, Bitwarden for passwords, Obsidian for notes, Spotify
     // for music. Flatpaks per the
@@ -608,7 +587,7 @@ ShellSurface {
     // probe asks about is the ref that line names. Deliberate -- the
     // section is flatpaks throughout, so a pacman entry would be the odd
     // one out and would ride a different updater.
-    readonly property var generalApps: [
+    readonly property var everydayApps: [
         { label: "Bitwarden", icon: "\u{F0BC4}", flatpak: "com.bitwarden.desktop" },
         { label: "LocalSend", icon: "\u{F022A}", flatpak: "org.localsend.localsend_app" },
         { label: "Obsidian",  icon: "\u{E6BB}",  flatpak: "md.obsidian.Obsidian" },
@@ -670,7 +649,7 @@ ShellSurface {
     ]
 
     // Install › Editors, after the LazyVim row. VS Code is extra's
-    // Code - OSS: the same `code` binary Apps › Defaults offers, without
+    // Code - OSS: the same `code` binary System › Defaults offers, without
     // Microsoft's marketplace; visual-studio-code-bin is the AUR's copy
     // of theirs, for anyone who needs it, from Packages or AUR.
     readonly property var editorApps: [
@@ -683,7 +662,7 @@ ShellSurface {
         { label: "Cursor",       icon: "\u{F01A7}", pkg: "cursor-bin", aur: true }
     ]
 
-    // Install › Terminals: the four Apps › Defaults can pick between
+    // Install › Terminals: the four System › Defaults can pick between
     // (hypr/modules/defaults.lua), so one installed here can be made the
     // default straight after. Glyphs for what each is named after, the
     // font having no logos: a ghost, a cat, a footprint, an A.
@@ -728,7 +707,7 @@ ShellSurface {
     // rows able to say "installed", and the only place outside its own
     // list that has to know it exists.
     readonly property var installApps: panel.gamingApps
-        .concat(panel.browserApps, panel.communicationApps, panel.generalApps,
+        .concat(panel.browserApps, panel.communicationApps, panel.everydayApps,
                 panel.styleApps, panel.serviceApps, panel.developmentApps,
                 panel.editorApps, panel.terminalApps, panel.tuiApps)
 
@@ -1139,7 +1118,7 @@ ShellSurface {
             // long line, and eliding the answer is the one thing that
             // view must not do. So the slab widens for it, on the same
             // easing its height already animates with. (Two other views
-            // used to need it and neither does now: Apps › Defaults is
+            // used to need it and neither does now: System › Defaults is
             // a branch of ordinary rows, and Learn › Keybindings is a
             // single row that opens keybinds/KeybindsPanel.qml.)
             implicitWidth: panel.infoKind !== "" ? 430 : 340
