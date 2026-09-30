@@ -48,9 +48,10 @@ import "../common/localBin.js" as LocalBin
 //   * A Features row flips its feature. That runs headless and answers
 //     with a notification, unless turning it on has packages to
 //     install, which is the terminal case above. See featureRows().
-//   * A leaf with `ask` (Install › Web apps › New web app…) turns the
-//     filter field into a short form, one field per Enter, and runs its
-//     `done` with the answers. See startAsk().
+//   * A leaf with `ask` turns the filter field into a short form, one
+//     field per Enter, and runs its `done` with the answers. See
+//     startAsk(). No row uses it since Install › Web apps went
+//     (2026-09-30); the mechanism is left in place.
 //
 // Learn › Keybindings was a fourth kind for a while: a level of rows
 // that were each only a fact, answering the question the old Settings
@@ -274,8 +275,6 @@ ShellSurface {
                   run: () => panel.pkgPicker("pacman", "Packages") },
                 { label: "AUR", icon: "\u{F0849}", hint: "yay", requires: "yay",
                   run: () => panel.pkgPicker("aur", "AUR") },
-                { label: "Web apps", icon: "\u{F0F94}", hint: "sites as apps",
-                  children: panel.launcherRows() },
                 { label: "Services", icon: "\u{F048B}", hint: "background",
                   children: panel.serviceApps.map(app => panel.installRow(app)) },
                 // Coding agents for the terminal. These are rack
@@ -635,21 +634,6 @@ ShellSurface {
         { label: "Alacritty", icon: "\u{F0B08}", pkg: "alacritty" }
     ]
 
-    // Install › Web apps. Sites that open as a window of their own, in
-    // the default browser's app mode, with a launcher entry `relay
-    // launcher web` writes (and the site's own icon, when it hands one
-    // over). Nothing to install, so these rows are the only list here
-    // that isn't in installApps.
-    readonly property var webApps: [
-        { label: "Claude",      icon: "\u{F06A9}", url: "https://claude.ai/" },
-        { label: "ChatGPT",     icon: "\u{F0B79}", url: "https://chatgpt.com/" },
-        { label: "GitHub",      icon: "\u{F02A4}", url: "https://github.com/" },
-        { label: "Google Maps", icon: "\u{F05F5}", url: "https://maps.google.com/" },
-        { label: "Proton Mail", icon: "\u{F01EE}", url: "https://mail.proton.me/" },
-        { label: "WhatsApp",    icon: "\u{F05A3}", url: "https://web.whatsapp.com/" },
-        { label: "YouTube",     icon: "\u{F05C3}", url: "https://www.youtube.com/" }
-    ]
-
     // Every app the sections name, which is what the probes ask about.
     // Another section joins this concat: that one line is what makes its
     // rows able to say "installed", and the only place outside its own
@@ -657,46 +641,6 @@ ShellSurface {
     readonly property var installApps: panel.gamingApps
         .concat(panel.browserApps, panel.communicationApps, panel.everydayApps,
                 panel.serviceApps, panel.editorApps, panel.terminalApps)
-
-    // ── Install › Web apps ───────────────────────────────
-    // One row per picked site, then one per launcher the user made
-    // themselves, then a row to make another. The launchers are `relay
-    // launcher list`'s (MenuActions), so one made at a terminal shows up
-    // here too. A row makes its launcher and, once made, removes it:
-    // there is nothing else to it, and making it again is one press.
-    // (Install › TUI, a sibling of this, was removed 2026-09-30.)
-    function launcherRows() {
-        const made = actions.launchers || []
-        const pickedSlugs = panel.webApps.map(app => actions.slug(app.label))
-
-        const rows = panel.webApps.map(app => panel.webAppRow(app))
-        for (const l of made) {
-            if (l.kind !== "web" || pickedSlugs.indexOf(l.slug) !== -1) continue
-            rows.push({
-                label: l.label, icon: "\u{F0F94}",
-                hint: "installed", installed: true, search: l.target.toLowerCase(),
-                run: () => actions.removeLauncher(l.label)
-            })
-        }
-
-        // Typed in the filter field, one after the other; see startAsk().
-        rows.push({ label: "New web app…", icon: "\u{F0415}", hint: "name, address",
-            ask: { fields: [
-                      { label: "Name", icon: "\u{F0F94}", placeholder: "Web app name…" },
-                      { label: "Address", icon: "\u{F059F}", placeholder: "https://…" }],
-                   done: v => actions.addWebApp(v[0], /^[a-z]+:\/\//i.test(v[1]) ? v[1] : "https://" + v[1]) } })
-        return rows
-    }
-
-    function webAppRow(app) {
-        const made = actions.hasLauncher(app.label)
-        return {
-            label: app.label, icon: app.icon,
-            hint: made ? "installed" : app.url.replace(/^https:\/\/(www\.)?/, "").replace(/\/$/, ""),
-            installed: made,
-            run: () => made ? actions.removeLauncher(app.label) : actions.addWebApp(app.label, app.url)
-        }
-    }
 
     // An app's install as one sh line for a terminal, sudo or yay
     // included: what Packages would run there itself, for the rows that
