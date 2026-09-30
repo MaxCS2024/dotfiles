@@ -297,11 +297,6 @@ QtObject {
             label + " is in the launcher", "Couldn't make the " + label + " web app")
     }
 
-    function addTui(label, command) {
-        actions._launcher(["tui", label, "--", command],
-            label + " is in the launcher", "Couldn't make the " + label + " launcher")
-    }
-
     function removeLauncher(label) {
         actions._launcher(["remove", label],
             label + " removed from the launcher", "Couldn't remove " + label)
