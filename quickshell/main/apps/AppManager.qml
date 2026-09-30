@@ -22,34 +22,38 @@ import "search.js" as Search
 //
 //   * Empty field: what is installed. Apps by default — the packages that
 //     put a launcher entry in /usr/share/applications, and every flatpak
-//     (Packages.isApp) — with a toggle for all of it. The whole `pacman
-//     -Qe` list is two hundred lines of base, bc and bluez-utils, and a
-//     red button beside `base` is one careless click from a broken system.
-//   * Two letters or more: the search. One ranked list, three badges —
+//     (Packages.isApp) — and a last row that shows all of it. The whole
+//     `pacman -Qe` list is two hundred lines of base, bc and bluez-utils.
+//   * Two letters or more: the search. One ranked list —
 //
 //       - ranked by how well the *name* matches, not grouped by where it
 //         came from, so `firefox` puts the repo package on top however
 //         long yay took to answer;
-//       - each source reports separately while it works: pacman answers
-//         in a few hundred ms, `yay -Ss` takes seconds against the AUR
-//         RPC, and one shared spinner makes the fast answer feel as slow
-//         as the slow one. The chips fill in as each lands;
+//       - each source merges in as it answers: pacman in a few hundred
+//         ms, `yay -Ss` in seconds against the AUR RPC;
 //       - `flatpak search` does not say what is installed, so rows are
 //         marked from Packages' inventory.
 //
-// Either way a row offers what can be done to it: Install, or Remove once
-// it is here. Enter installs; removing is a click or Delete, never Enter,
-// because a flatpak installed for the user alone comes off with no
-// password to stop a stray keypress.
+// It looks and works like the Conf menu it is opened from (user request
+// 2026-09-30): the same slab, field and rows, and nothing else on it. It
+// had a title and status line, source chips with counts, an "All
+// packages" checkbox, coloured source badges, an Install or Remove button
+// on every row and a key legend until then. Where each of those went:
 //
-// A row that is the default terminal, editor, browser or file manager
-// says so, and removing it takes a second press, with the status line
-// naming what opens instead (user request 2026-09-24). Removing it is
-// still allowed: hypr/modules/defaults.lua hands the role to the next
-// installed candidate, and the keybinds ask it on each press.
-//
-// The filter chips narrow a list that is already there instead of choosing
-// what to fetch, so switching is instant and reversible, in both views.
+//   * The source is the row's glyph: pac-man for pacman, a group of
+//     people for the AUR, a box for Flathub — the Conf menu's own glyphs
+//     for Install › Pacman and AUR.
+//   * Tab and Shift+Tab step through All, Pacman, AUR and Flathub; the
+//     placeholder names the one you are on, and while there is text in
+//     the field a dim word at its right end does (see `fieldNote`).
+//   * "Show all packages" is the installed list's last row.
+//   * A row is a toggle, like Conf's install rows: Enter or a click
+//     installs it, or removes it once it is here. A row that is the
+//     default terminal, editor, browser or file manager reads "default",
+//     and pressing it only says why not — pick another in System ›
+//     Defaults first. (Until 2026-09-30 Enter only installed, removing
+//     was Delete or the button, and a default went after a second press.)
+//   * What happened is a notification, as it is for everything Conf runs.
 //
 // Installing and removing are services/Packages.qml's: pacman and system
 // flatpaks run behind this window with the password its PasswordPrompt
@@ -86,11 +90,15 @@ ShellSurface {
     property var results: []
     // "All", or one of Pkg.SOURCES.
     property string sourceFilter: "All"
-    // The chips, and the order Tab steps through them.
+    // The order Tab steps through them.
     readonly property var filters: ["All"].concat(Pkg.SOURCES)
     property int selectedIndex: 0
-    // The installed view's toggle: every package rather than apps only.
+    // The installed view's last row: every package rather than apps only.
     property bool allPackages: false
+
+    // How many rows the slab shows before it scrolls. The Conf menu's is
+    // ten; a search here answers with dozens, so a few more are worth it.
+    readonly property int maxVisibleRows: 12
 
     // source -> whether its search is still out. Replaced rather than
     // changed in place, so that every binding reading it hears about it.
@@ -111,34 +119,38 @@ ShellSurface {
     readonly property bool browsing: manager.query.trim().length < manager.minQueryLength
 
     // What is installed, as the installed view lists it: apps unless the
-    // toggle says otherwise, by name.
+    // last row says otherwise, by name.
     readonly property var installedList: Packages.installed
         .filter(e => manager.allPackages || Packages.isApp(e))
         .slice()
         .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
 
-    // Whichever of the two lists the field is showing, before the chips.
+    // Whichever of the two lists the field is showing, before the source.
     readonly property var listed: manager.browsing ? manager.installedList : manager.results
 
-    readonly property var visibleResults: manager.sourceFilter === "All"
-        ? manager.listed
-        : manager.listed.filter(r => r.source === manager.sourceFilter)
-
-    function countFor(source) {
-        return source === "All" ? manager.listed.length
-            : manager.listed.filter(r => r.source === source).length
+    function bySource(list) {
+        return manager.sourceFilter === "All" ? list
+            : list.filter(r => r.source === manager.sourceFilter)
     }
 
-    function busyFor(source) {
-        if (manager.browsing) return !Packages.loadedOnce
-        if (source === "All") return manager.searching
-        return manager.searchingIn[source] === true
+    // The toggle row, at the foot of the installed list once there is
+    // one. Its hint is how many rows pressing it would list.
+    readonly property var allRow: ({
+        toggle: true,
+        name: manager.allPackages ? "Show apps only" : "Show all packages",
+        count: manager.bySource(Packages.installed
+            .filter(e => !manager.allPackages || Packages.isApp(e))).length
+    })
+
+    readonly property var visibleResults: {
+        const rows = manager.bySource(manager.listed)
+        return manager.browsing && Packages.loadedOnce ? rows.concat([manager.allRow]) : rows
     }
 
-    readonly property var badges: ({
-        [Pkg.PACMAN]: Appearance.badgePacman,
-        [Pkg.AUR]: Appearance.badgeAur,
-        [Pkg.FLATHUB]: Appearance.badgeFlatpak
+    readonly property var sourceIcons: ({
+        [Pkg.PACMAN]: "\u{F0BAF}",
+        [Pkg.AUR]: "\u{F0849}",
+        [Pkg.FLATHUB]: "\u{F03D7}"
     })
 
     function labelFor(filter) {
@@ -226,7 +238,7 @@ ShellSurface {
     // Re-mark search results after anything changes what is installed —
     // an install or removal from here, the Conf menu or a terminal all
     // end in a Packages refresh. Both ways: a removed package's row goes
-    // back to Install.
+    // back to installable.
     Connections {
         target: Packages
         function onRefreshed() {
@@ -244,33 +256,31 @@ ShellSurface {
     // password below or a terminal, and when it has landed. This window
     // hands it the row and its prompt, and reads whether a row is busy
     // from it as well.
-    property string status: ""
-    property bool statusIsError: false
+    function say(title, body, isError) {
+        Notifications.post(title, body || "", isError ? "critical" : "normal", "Apps", "")
+    }
 
-    function say(message, isError) {
-        manager.status = message
-        manager.statusIsError = isError === true
+    // Enter or a click on a row.
+    function activate(entry) {
+        if (!entry) return
+        if (entry.toggle) {
+            manager.allPackages = !manager.allPackages
+            manager.selectedIndex = 0
+            resultList.positionViewAtBeginning()
+            return
+        }
+        if (entry.installed) manager.remove(entry)
+        else manager.install(entry)
     }
 
     function install(entry) {
         if (!entry || entry.installed || Packages.busy(entry.source, entry.id) !== "") return
-        if (entry.source === Pkg.AUR) manager.say("Review " + entry.id + " in the terminal")
         Packages.install({ source: entry.source, id: entry.id, name: entry.name }, pwPrompt)
     }
 
-    // The row a Remove is waiting to be pressed again on, as source:id,
-    // or "". Anything else you do — another row, another search — lets it
-    // go, so a second press only ever confirms the warning just read.
-    property string confirmKey: ""
-    onSelectedIndexChanged: manager.confirmKey = ""
-    onQueryChanged: manager.confirmKey = ""
-
-    function roleName(role) { return role.replace("-", " ") }
-
-    // "default terminal", "default editor and browser", or "".
-    function defaultTag(entry) {
-        const roles = Defaults.rolesFor(entry.id).map(r => manager.roleName(r))
-        return roles.length === 0 ? "" : "default " + roles.join(" and ")
+    // "terminal", "editor and browser", or "".
+    function defaultRoles(entry) {
+        return Defaults.rolesFor(entry.id).map(r => r.replace("-", " ")).join(" and ")
     }
 
     // A search result carries no scope, and a flatpak has to be removed
@@ -279,41 +289,34 @@ ShellSurface {
     function remove(entry) {
         if (!entry || !entry.installed || Packages.busy(entry.source, entry.id) !== "") return
 
-        const key = entry.source + ":" + entry.id
-        const roles = Defaults.rolesFor(entry.id)
-        if (roles.length > 0 && manager.confirmKey !== key) {
-            manager.confirmKey = key
-            const after = roles.map(r => {
-                const next = Defaults.standIn(r)
-                const what = roles.length > 1 ? " as " + manager.roleName(r) : ""
-                return next ? next + " takes over" + what
-                            : "no " + manager.roleName(r) + " is left"
-            })
-            manager.say(entry.name + " is your " + manager.defaultTag(entry)
-                + ". Remove again to go ahead: " + after.join(", ") + ".", true)
+        const roles = manager.defaultRoles(entry)
+        if (roles !== "") {
+            manager.say(entry.name + " is your default " + roles,
+                "Pick another in System › Defaults before removing it.", true)
             return
         }
 
-        manager.confirmKey = ""
         const own = Packages.installed.find(e => e.source === entry.source && e.id === entry.id)
         Packages.remove(own || { source: entry.source, id: entry.id, name: entry.name }, pwPrompt)
     }
 
     // A failure that needed the password is already on the prompt, which
-    // stays up to be tried again; anything else is said here.
+    // stays up to be tried again; anything else is said here. Packages
+    // posts its own notification only for a job with no prompt, so this
+    // is the one for everything started from this window.
     Connections {
         target: Packages
         function onFinished(action, entry, ok, message) {
             if (ok) manager.say(message)
-            else if (!pwPrompt.shown) manager.say(message, true)
+            else if (!pwPrompt.shown) manager.say(message, "", true)
         }
     }
 
     // ── Keyboard ──────────────────────────────────────────
-    function move(delta) {
+    function select(index) {
         const n = manager.visibleResults.length
         if (n === 0) return
-        manager.selectedIndex = Math.max(0, Math.min(n - 1, manager.selectedIndex + delta))
+        manager.selectedIndex = Math.max(0, Math.min(n - 1, index))
         resultList.positionViewAtIndex(manager.selectedIndex, ListView.Contain)
     }
 
@@ -325,133 +328,113 @@ ShellSurface {
         resultList.positionViewAtBeginning()
     }
 
+    // The dim word at the right end of the field, for what the
+    // placeholder can't say once there is text in the way.
+    readonly property string fieldNote: !manager.browsing && manager.searching ? "searching…"
+        : manager.sourceFilter !== "All" && searchInput.text !== "" ? manager.labelFor(manager.sourceFilter)
+        : ""
+
+    // Only the slab takes clicks — a near-miss on the backdrop does
+    // nothing rather than dismissing it, same as the Conf menu.
     mask: Region { item: box }
 
-    // ── The window ────────────────────────────────────────
     Rectangle {
-        id: box
-
-        anchors.horizontalCenter: parent.horizontalCenter
-        // Sized off the surface with a ceiling, not fixed at 720x560.
-        // Rows on screen at once is the whole benefit of a bigger
-        // window here — a `-Ss` against three backends routinely
-        // answers with dozens, and scrolling past them is the tax the
-        // small box charged. The ceiling is because none of that is
-        // true of the search field, which on a 4K monitor would
-        // otherwise be a metre of empty box with six words in it.
-        width: Math.min(1040, Math.round(parent.width * 0.6))
-        height: Math.min(820, Math.round(parent.height * 0.76))
-        // Slightly above centre: the window grows downward from where
-        // the eye already is after a keybind, and a list that starts
-        // higher has further to run before it needs scrolling.
-        y: Math.round((parent.height - box.height) / 2.6)
-        radius: Theme.radius
-        color: Appearance.surface
-        border.width: 1
-        border.color: Appearance.border
-
-        opacity: manager.shown ? 1 : 0
-        scale: manager.shown ? 1 : 0.97
+        anchors.fill: parent
+        color: "black"
+        opacity: manager.shown ? 0.5 : 0
         Behavior on opacity {
             NumberAnimation { duration: Theme.animPanel; easing.type: Theme.easingStandard }
         }
-        Behavior on scale {
-            NumberAnimation { duration: Theme.animPanel; easing.type: Theme.easingDecel }
-        }
+    }
 
-        layer.enabled: true
-        layer.effect: PopupShadow {}
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: Theme.space4
-            spacing: Theme.space3
+    // ── The slab ──────────────────────────────────────────
+    // The Conf menu's (menu/ConfMenu.qml), wider: a package name and its
+    // version want more than the menu's 340px.
+    Item {
+        id: box
 
-            // ── Title ─────────────────────────────────────
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Theme.space2
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: Math.round(parent.height * 0.18)
+        implicitWidth: slab.implicitWidth
+        implicitHeight: slab.implicitHeight
 
-                Text {
-                    text: "Apps"
-                    color: Appearance.fgStrong
-                    font.bold: true
-                    font.pixelSize: Theme.fontLarge
-                    font.family: Theme.font
-                }
+        opacity: manager.shown ? 1 : 0
+        scale: manager.shown ? 1 : 0.98
 
-                Text {
-                    text: manager.browsing ? "installed" : "search results"
-                    color: Appearance.fgMuted
-                    font.pixelSize: Theme.fontSmall
-                    font.family: Theme.font
-                }
+        Behavior on opacity { NumberAnimation { duration: Theme.animPanel; easing.type: Theme.easingStandard } }
+        Behavior on scale { NumberAnimation { duration: Theme.animPanel; easing.type: Theme.easingQuint } }
 
-                // The rest of the row: a warning about removing a default
-                // is the one message here that has to be read whole.
-                Text {
-                    text: manager.status
-                    color: manager.statusIsError ? Appearance.red : Appearance.green
-                    font.pixelSize: Theme.fontSmall
-                    font.family: Theme.font
-                    horizontalAlignment: Text.AlignRight
-                    elide: Text.ElideLeft
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: 0
-                }
+        Rectangle {
+            id: slab
+
+            readonly property int pad: 18
+
+            implicitWidth: Math.min(560, Math.round(manager.width * 0.6))
+            implicitHeight: content.implicitHeight + slab.pad * 2
+            Behavior on implicitHeight {
+                NumberAnimation { duration: Theme.animFast; easing.type: Theme.easingDecel }
             }
 
-            // ── Search field ──────────────────────────────
-            // Focus shows as the caret, not an accent ring (STYLE.md §1).
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: 40
-                radius: Theme.radius
-                color: Appearance.surfaceAlt
-                border.width: 1
-                border.color: Appearance.border
+            color: Appearance.bar
+            // Square, like every window on this desktop.
+            radius: 0
+            border.width: Theme.hyprBorderWidth
+            border.color: Appearance.border
 
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: Theme.space3
-                    anchors.rightMargin: Theme.space3
-                    spacing: Theme.space2
+            layer.enabled: true
+            layer.effect: PopupShadow {}
+            HyprFrame {}
 
-                    Text {
-                        text: ""
-                        color: Appearance.fgMuted
-                        font.pixelSize: Theme.fontNormal
-                        font.family: Theme.font
-                    }
+            ColumnLayout {
+                id: content
+                anchors.fill: parent
+                anchors.margins: slab.pad
+                spacing: Theme.space4
+
+                // ── Field ─────────────────────────────────
+                Item {
+                    Layout.fillWidth: true
+                    implicitHeight: 28
 
                     TextInput {
                         id: searchInput
-                        Layout.fillWidth: true
-                        Layout.minimumWidth: 0
-                        color: Appearance.fg
-                        font.pixelSize: Theme.fontBig
+                        anchors.left: parent.left
+                        anchors.right: note.left
+                        anchors.rightMargin: Theme.space2
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: Appearance.fgStrong
                         font.family: Theme.font
+                        font.pixelSize: ConfStyle.fontRow
                         clip: true
+                        cursorVisible: true
                         selectByMouse: true
                         selectionColor: Appearance.selected
-                        verticalAlignment: TextInput.AlignVCenter
 
                         onTextChanged: {
                             manager.query = text
+                            manager.selectedIndex = 0
                             debounce.restart()
                         }
 
                         Keys.onPressed: (event) => {
+                            const ctrl = event.modifiers & Qt.ControlModifier
                             if (event.key === Qt.Key_Escape) {
                                 // Out of a search first, then out of the
                                 // window, the way the Conf menu backs out.
                                 if (searchInput.text !== "") searchInput.text = ""
                                 else manager.close()
                                 event.accepted = true
-                            } else if (event.key === Qt.Key_Down) {
-                                manager.move(1)
+                            } else if (event.key === Qt.Key_Down || (event.key === Qt.Key_N && ctrl)) {
+                                manager.select(manager.selectedIndex + 1)
                                 event.accepted = true
-                            } else if (event.key === Qt.Key_Up) {
-                                manager.move(-1)
+                            } else if (event.key === Qt.Key_Up || (event.key === Qt.Key_P && ctrl)) {
+                                manager.select(manager.selectedIndex - 1)
+                                event.accepted = true
+                            } else if (event.key === Qt.Key_Home) {
+                                manager.select(0)
+                                event.accepted = true
+                            } else if (event.key === Qt.Key_End) {
+                                manager.select(manager.visibleResults.length - 1)
                                 event.accepted = true
                             } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                                 // Enter with the debounce still pending
@@ -462,18 +445,9 @@ ShellSurface {
                                     debounce.stop()
                                     manager.runSearch()
                                 } else {
-                                    manager.install(manager.visibleResults[manager.selectedIndex])
+                                    manager.activate(manager.visibleResults[manager.selectedIndex])
                                 }
                                 event.accepted = true
-                            } else if (event.key === Qt.Key_Delete) {
-                                // Delete edits the text while there is
-                                // text after the caret; at the end of the
-                                // field there is nothing for it to do
-                                // there, so it removes the row instead.
-                                if (searchInput.cursorPosition === searchInput.text.length) {
-                                    manager.remove(manager.visibleResults[manager.selectedIndex])
-                                    event.accepted = true
-                                }
                             } else if (event.key === Qt.Key_Tab) {
                                 manager.cycleFilter(1)
                                 event.accepted = true
@@ -482,320 +456,35 @@ ShellSurface {
                                 event.accepted = true
                             }
                         }
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "Search pacman, the AUR and Flathub to install…"
-                            color: Appearance.placeholder
-                            font.pixelSize: Theme.fontBig
-                            font.family: Theme.font
-                            visible: searchInput.text.length === 0
-                        }
                     }
-                }
-            }
 
-            // ── Source chips ──────────────────────────────
-            // Each one says what its backend is doing: a count once it
-            // has answered, "…" while it is still out.
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Theme.space2
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: searchInput.text.length === 0
+                        text: manager.sourceFilter === "All" ? "Search to install…"
+                            : "Filter " + manager.labelFor(manager.sourceFilter) + "…"
+                        color: Appearance.placeholder
+                        font.family: Theme.font
+                        font.pixelSize: ConfStyle.fontRow
+                    }
 
-                Repeater {
-                    // A plain list of names, not a list of objects
-                    // carrying the busy flags: the model would then be a
-                    // binding on those flags, and every delegate would be
-                    // destroyed and rebuilt each time a backend answered.
-                    model: manager.filters
-
-                    delegate: Rectangle {
-                        id: chip
-                        required property string modelData
-
-                        readonly property bool active: manager.sourceFilter === chip.modelData
-                        readonly property bool busy: manager.busyFor(chip.modelData)
-
-                        implicitWidth: chipRow.implicitWidth + Theme.space5
-                        implicitHeight: 28
-                        radius: Theme.radius
-                        color: chip.active ? Appearance.selected
-                             : chipHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover)
-                        border.width: chip.active ? 0 : 1
-                        border.color: Appearance.border
-
-                        RowLayout {
-                            id: chipRow
-                            anchors.centerIn: parent
-                            spacing: Theme.space2
-
-                            Rectangle {
-                                implicitWidth: 8
-                                implicitHeight: 8
-                                radius: 4
-                                color: manager.badges[chip.modelData] ?? Appearance.clear(Appearance.surface)
-                                visible: chip.modelData !== "All"
-                            }
-
-                            Text {
-                                text: manager.labelFor(chip.modelData)
-                                color: chip.active ? Appearance.fgStrong : Appearance.fgSoft
-                                font.pixelSize: Theme.fontSmall
-                                font.family: Theme.font
-                            }
-
-                            Text {
-                                text: chip.busy ? "…" : manager.countFor(chip.modelData)
-                                color: Appearance.fgMuted
-                                font.pixelSize: Theme.fontSmall
-                                font.family: Theme.font
-                            }
-                        }
-
-                        HoverHandler { id: chipHover }
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                manager.sourceFilter = chip.modelData
-                                manager.selectedIndex = 0
-                                resultList.positionViewAtBeginning()
-                                searchInput.forceActiveFocus()
-                            }
-                        }
+                    Text {
+                        id: note
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: manager.fieldNote
+                        color: Appearance.fgMuted
+                        font.family: Theme.font
+                        font.pixelSize: ConfStyle.fontHint
                     }
                 }
 
-                Item { Layout.fillWidth: true }
-
-                // Apps only, or everything pacman and flatpak know about.
-                // The installed view's alone: a search already lists
-                // whatever matched.
-                Rectangle {
-                    id: allToggle
-                    visible: manager.browsing
-                    implicitWidth: allRow.implicitWidth + Theme.space5
-                    implicitHeight: 28
-                    radius: Theme.radius
-                    color: manager.allPackages ? Appearance.selected
-                         : allHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover)
-                    border.width: manager.allPackages ? 0 : 1
-                    border.color: Appearance.border
-
-                    RowLayout {
-                        id: allRow
-                        anchors.centerIn: parent
-                        spacing: Theme.space2
-
-                        Text {
-                            text: manager.allPackages ? "\u{F0132}" : "\u{F0131}"   // nf-md-checkbox_marked / _blank_outline
-                            color: manager.allPackages ? Appearance.fgStrong : Appearance.fgSoft
-                            font.pixelSize: Theme.fontSmall
-                            font.family: Theme.font
-                        }
-
-                        Text {
-                            text: "All packages"
-                            color: manager.allPackages ? Appearance.fgStrong : Appearance.fgSoft
-                            font.pixelSize: Theme.fontSmall
-                            font.family: Theme.font
-                        }
-                    }
-
-                    HoverHandler { id: allHover }
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            manager.allPackages = !manager.allPackages
-                            manager.selectedIndex = 0
-                            resultList.positionViewAtBeginning()
-                            searchInput.forceActiveFocus()
-                        }
-                    }
-                }
-            }
-
-            Divider {}
-
-            // ── The list ──────────────────────────────────
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                spacing: Theme.space2
-
+                // ── The list ──────────────────────────────
                 Item {
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
-
-                    ListView {
-                        id: resultList
-                        anchors.fill: parent
-                        clip: true
-                        model: manager.visibleResults
-                        boundsBehavior: Flickable.StopAtBounds
-                        spacing: 2
-
-                        delegate: Rectangle {
-                            id: row
-                            required property var modelData
-                            required property int index
-
-                            width: ListView.view.width
-                            // Two lines where there is a description to
-                            // show — search results — and one otherwise:
-                            // pacman's inventory has no descriptions
-                            // (one `pacman -Qi` each would be hundreds of
-                            // processes), and a blank second line down
-                            // the whole installed list is just gaps.
-                            height: row.modelData.description ? 52 : 40
-                            radius: Theme.radius
-                            color: row.index === manager.selectedIndex ? Appearance.selected
-                                 : rowHover.hovered ? Appearance.hover : Appearance.clear(Appearance.hover)
-
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: Theme.space3
-                                anchors.rightMargin: Theme.space3
-                                spacing: Theme.space2
-
-                                // Fixed width so the names line up down the
-                                // list: three sources means three badge
-                                // widths, and ragged left edges on a list
-                                // you read by scanning is a tax for nothing.
-                                Rectangle {
-                                    implicitWidth: 56
-                                    implicitHeight: 20
-                                    radius: Theme.radius
-                                    color: manager.badges[row.modelData.source]
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: manager.labelFor(row.modelData.source)
-                                        color: Appearance.fg
-                                        font.pixelSize: Theme.fontTiny
-                                        font.family: Theme.font
-                                    }
-                                }
-
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    Layout.minimumWidth: 0
-                                    spacing: 2
-
-                                    RowLayout {
-                                        Layout.fillWidth: true
-                                        spacing: Theme.space2
-
-                                        Text {
-                                            text: row.modelData.name
-                                            color: Appearance.fgStrong
-                                            font.pixelSize: Theme.fontNormal
-                                            font.family: Theme.font
-                                            Layout.maximumWidth: 420
-                                            elide: Text.ElideRight
-                                        }
-
-                                        Text {
-                                            text: row.modelData.version !== ""
-                                                ? row.modelData.version : row.modelData.id
-                                            color: Appearance.fgMuted
-                                            font.pixelSize: Theme.fontTiny
-                                            font.family: Theme.font
-                                            Layout.fillWidth: true
-                                            Layout.minimumWidth: 0
-                                            elide: Text.ElideRight
-                                        }
-                                    }
-
-                                    Text {
-                                        visible: text !== ""
-                                        text: row.modelData.description || ""
-                                        color: Appearance.fgMuted
-                                        font.pixelSize: Theme.fontTiny
-                                        font.family: Theme.font
-                                        Layout.fillWidth: true
-                                        Layout.minimumWidth: 0
-                                        elide: Text.ElideRight
-                                    }
-                                }
-
-                                // Which default this is, if any — the
-                                // reason its Remove asks twice.
-                                Text {
-                                    readonly property string tag: manager.defaultTag(row.modelData)
-                                    visible: tag !== ""
-                                    text: tag
-                                    color: Appearance.fgSoft
-                                    font.pixelSize: Theme.fontTiny
-                                    font.family: Theme.font
-                                }
-
-                                // A flatpak installed for every user needs
-                                // the password to come off; one installed
-                                // for you alone does not.
-                                Text {
-                                    visible: row.modelData.scope === "system"
-                                    text: "system"
-                                    color: Appearance.fgMuted
-                                    font.pixelSize: Theme.fontTiny
-                                    font.family: Theme.font
-                                }
-
-                                // Install, or Remove once it is here. The
-                                // two differ by their text colour alone —
-                                // one neutral edge on both, no coloured
-                                // ring (STYLE.md §1). Filled rather than
-                                // see-through: on the selected row's tint
-                                // a bare red label all but disappears.
-                                Rectangle {
-                                    id: actionButton
-                                    readonly property bool installed: row.modelData.installed === true
-                                    // Packages' answer, so a row being
-                                    // changed from anywhere reads as busy.
-                                    readonly property bool busy:
-                                        Packages.busy(row.modelData.source, row.modelData.id) !== ""
-                                    readonly property color hoverFill: actionButton.installed
-                                        ? Appearance.dangerBg : Appearance.hoverStrong
-                                    implicitWidth: actionLabel.implicitWidth + Theme.space5
-                                    implicitHeight: 28
-                                    radius: Theme.radius
-                                    color: actionHover.hovered && !actionButton.busy
-                                        ? actionButton.hoverFill : Appearance.surfaceAlt
-                                    border.width: 1
-                                    border.color: Appearance.border
-                                    opacity: actionButton.busy ? 0.6 : 1
-
-                                    Text {
-                                        id: actionLabel
-                                        anchors.centerIn: parent
-                                        text: actionButton.busy ? "Working…"
-                                            : !actionButton.installed ? "Install"
-                                            : manager.confirmKey === row.modelData.source + ":" + row.modelData.id
-                                                ? "Remove anyway" : "Remove"
-                                        color: actionButton.installed && !actionButton.busy
-                                            ? Appearance.red : Appearance.fgSoft
-                                        font.pixelSize: Theme.fontTiny
-                                        font.family: Theme.font
-                                    }
-
-                                    HoverHandler { id: actionHover }
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        cursorShape: Qt.PointingHandCursor
-                                        enabled: !actionButton.busy
-                                        onClicked: actionButton.installed
-                                            ? manager.remove(row.modelData) : manager.install(row.modelData)
-                                    }
-                                }
-                            }
-
-                            HoverHandler {
-                                id: rowHover
-                                onHoveredChanged: if (hovered) manager.selectedIndex = row.index
-                            }
-                        }
-                    }
+                    implicitHeight: manager.visibleResults.length > 0
+                        ? Math.min(manager.visibleResults.length, manager.maxVisibleRows) * ConfStyle.rowHeight
+                        : 52
 
                     // What the empty space means, in the space the rows
                     // would have filled.
@@ -806,51 +495,120 @@ ShellSurface {
                         visible: manager.visibleResults.length === 0
                         text: manager.browsing
                             ? (!Packages.loadedOnce ? "Reading what is installed…"
-                               : manager.sourceFilter === "All"
-                                   ? "Nothing installed" + (manager.allPackages ? "" : " with a launcher entry")
-                                   : "No " + manager.labelFor(manager.sourceFilter)
-                                       + (manager.allPackages ? " packages" : " apps") + " installed")
+                               : "No " + manager.labelFor(manager.sourceFilter) + " apps installed")
                             : manager.searching ? "Searching…"
                             : manager.results.length > 0
                                 ? "No " + manager.labelFor(manager.sourceFilter) + " packages match"
                             : "Nothing matched “" + manager.query.trim() + "”"
                         color: Appearance.fgMuted
-                        font.pixelSize: Theme.fontNormal
                         font.family: Theme.font
+                        font.pixelSize: ConfStyle.fontRow
+                        elide: Text.ElideRight
                     }
-                }
 
-                ListScrollBar {
-                    Layout.fillHeight: true
-                    view: resultList
-                    trackColor: Appearance.scrollTrack
-                    thumbColor: Appearance.scrollThumb
-                }
-            }
+                    RowLayout {
+                        anchors.fill: parent
+                        spacing: Theme.space2
+                        visible: manager.visibleResults.length > 0
 
-            // ── Footer ────────────────────────────────────
-            RowLayout {
-                Layout.fillWidth: true
+                        ListView {
+                            id: resultList
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            clip: true
+                            model: manager.visibleResults
+                            boundsBehavior: Flickable.StopAtBounds
 
-                Text {
-                    text: "↑↓ select · Enter install · Del remove · Tab source · Esc "
-                        + (manager.browsing ? "close" : "back to installed")
-                    color: Appearance.fgMuted
-                    font.pixelSize: Theme.fontTiny
-                    font.family: Theme.font
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: 0
-                    elide: Text.ElideRight
-                }
+                            delegate: Rectangle {
+                                id: row
+                                required property var modelData
+                                required property int index
 
-                Text {
-                    text: manager.browsing
-                        ? manager.installedList.length + (manager.allPackages ? " packages" : " apps")
-                        : manager.searching ? "searching…"
-                        : manager.results.length + " results"
-                    color: Appearance.fgMuted
-                    font.pixelSize: Theme.fontTiny
-                    font.family: Theme.font
+                                readonly property bool selected: row.index === manager.selectedIndex
+                                readonly property string busy: row.modelData.toggle ? ""
+                                    : Packages.busy(row.modelData.source, row.modelData.id)
+                                readonly property bool isDefault: row.modelData.installed === true
+                                    && !row.modelData.toggle && manager.defaultRoles(row.modelData) !== ""
+                                // Green for what you have or chose, like
+                                // Conf's install rows. The installed list
+                                // is all installed, so there it is only
+                                // the defaults that stand out.
+                                readonly property bool green: row.busy === "" && (row.isDefault
+                                    || (!manager.browsing && row.modelData.installed === true))
+
+                                width: resultList.width
+                                height: ConfStyle.rowHeight
+                                radius: 0
+                                color: row.selected ? Appearance.selected : Appearance.clear(Appearance.selected)
+                                Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: Theme.space3
+                                    anchors.rightMargin: Theme.space3
+                                    spacing: Theme.space2
+
+                                    Text {
+                                        Layout.preferredWidth: 20
+                                        text: row.modelData.toggle ? "\u{F0279}"
+                                            : manager.sourceIcons[row.modelData.source] || ""
+                                        color: row.selected ? Appearance.fgStrong : Appearance.fgSoft
+                                        font.family: Theme.font
+                                        font.pixelSize: ConfStyle.fontIcon
+                                        horizontalAlignment: Text.AlignHCenter
+                                    }
+
+                                    Text {
+                                        Layout.fillWidth: true
+                                        Layout.minimumWidth: 0
+                                        text: row.modelData.name
+                                        color: row.selected ? Appearance.fgStrong : Appearance.fg
+                                        font.family: Theme.font
+                                        font.pixelSize: ConfStyle.fontRow
+                                        elide: Text.ElideRight
+                                    }
+
+                                    Text {
+                                        text: row.modelData.toggle ? String(row.modelData.count)
+                                            : row.busy === "install" ? "installing…"
+                                            : row.busy === "remove" ? "removing…"
+                                            : row.isDefault ? "default"
+                                            : !manager.browsing && row.modelData.installed ? "installed"
+                                            : row.modelData.version || ""
+                                        visible: text !== ""
+                                        color: row.green ? Appearance.green : Appearance.fgDim
+                                        font.family: Theme.font
+                                        font.pixelSize: ConfStyle.fontHint
+                                        elide: Text.ElideRight
+                                        Layout.maximumWidth: 124
+                                    }
+                                }
+
+                                HoverHandler {
+                                    cursorShape: Qt.PointingHandCursor
+                                    onHoveredChanged: if (hovered) manager.selectedIndex = row.index
+                                }
+
+                                TapHandler {
+                                    onTapped: {
+                                        manager.selectedIndex = row.index
+                                        manager.activate(row.modelData)
+                                        searchInput.forceActiveFocus()
+                                    }
+                                }
+                            }
+                        }
+
+                        // Thin and square, as on the Conf slab.
+                        ListScrollBar {
+                            Layout.fillHeight: true
+                            view: resultList
+                            barWidth: 3
+                            barRadius: 0
+                            trackColor: Appearance.scrollTrack
+                            thumbColor: Appearance.scrollThumb
+                        }
+                    }
                 }
             }
         }
