@@ -275,15 +275,9 @@ ShellSurface {
                 { label: "AUR", icon: "\u{F0849}", hint: "yay", requires: "yay",
                   run: () => panel.pkgPicker("aur", "AUR") },
                 { label: "Web apps", icon: "\u{F0F94}", hint: "sites as apps",
-                  children: panel.launcherRows("web") },
-                { label: "TUI", icon: "\u{F0C8B}", hint: "terminal apps",
-                  children: panel.launcherRows("tui") },
-                { label: "Style", icon: "\u{F03D8}", hint: "fonts · icons",
-                  children: panel.styleApps.map(app => panel.installRow(app)) },
+                  children: panel.launcherRows() },
                 { label: "Services", icon: "\u{F048B}", hint: "background",
                   children: panel.serviceApps.map(app => panel.installRow(app)) },
-                { label: "Development", icon: "\u{F0174}", hint: "languages",
-                  children: panel.developmentApps.map(app => panel.installRow(app)) },
                 // Coding agents for the terminal. These are rack
                 // features rather than install rows (see aiFeatures),
                 // so a row here installs one and, once installed,
@@ -594,22 +588,6 @@ ShellSurface {
         { label: "Spotify",   icon: "\u{F04C7}", flatpak: "com.spotify.Client" }
     ]
 
-    // Install › Style. Fonts, an icon theme, a cursor and a GTK theme:
-    // what a look is made of beyond the palette, which Style › Themes
-    // already does. Installing one doesn't switch to it. The nerd fonts
-    // are the ones with the glyphs this shell draws its icons in, so any
-    // of them can stand in for JetBrains Mono in Theme.font.
-    readonly property var styleApps: [
-        { label: "JetBrains Mono Nerd", icon: "\u{F06D6}", pkg: "ttf-jetbrains-mono-nerd" },
-        { label: "Cascadia Code Nerd", icon: "\u{F06D6}", pkg: "ttf-cascadia-code-nerd" },
-        { label: "Fira Code Nerd",     icon: "\u{F06D6}", pkg: "ttf-firacode-nerd" },
-        { label: "Iosevka Nerd",       icon: "\u{F06D6}", pkg: "ttf-iosevka-nerd" },
-        { label: "Noto Emoji",         icon: "\u{F0C68}", pkg: "noto-fonts-emoji" },
-        { label: "Papirus icons",      icon: "\u{F0831}", pkg: "papirus-icon-theme" },
-        { label: "Bibata cursors",     icon: "\u{F01C0}", pkg: "bibata-cursor-theme-bin", aur: true },
-        { label: "adw-gtk3",           icon: "\u{F0E0C}", pkg: "adw-gtk-theme" }
-    ]
-
     // Install › Services. Things that run in the background once they
     // are started, so a row installs the package and then, in the same
     // terminal, starts it for good (`then`). Pressed again, the install
@@ -630,22 +608,6 @@ ShellSurface {
         { label: "Printing",  icon: "\u{F042A}", pkg: "cups",
           then: "sudo systemctl enable --now cups.socket" },
         { label: "Dropbox",   icon: "\u{F01E3}", pkg: "dropbox", aur: true }
-    ]
-
-    // Install › Development. A language each, from extra. Node.js is its
-    // npm, which pulls nodejs in with it; Python is uv, which fetches
-    // and manages Python versions itself, as rustup does Rust's (its
-    // `then` picks the stable toolchain, without which rustup installs
-    // nothing).
-    readonly property var developmentApps: [
-        { label: "Node.js", icon: "\u{F0399}", pkg: "npm" },
-        { label: "Bun",     icon: "\u{E76F}",  pkg: "bun" },
-        { label: "Go",      icon: "\u{F07D3}", pkg: "go" },
-        { label: "Rust",    icon: "\u{F1617}", pkg: "rustup", then: "rustup default stable" },
-        { label: "Python (uv)", icon: "\u{F0320}", pkg: "uv" },
-        { label: "Ruby",    icon: "\u{F0D2D}", pkg: "ruby" },
-        { label: "Java",    icon: "\u{F0B37}", pkg: "jdk-openjdk" },
-        { label: "Zig",     icon: "\u{E8EF}",  pkg: "zig" }
     ]
 
     // Install › Editors, after the LazyVim row. VS Code is extra's
@@ -673,20 +635,6 @@ ShellSurface {
         { label: "Alacritty", icon: "\u{F0B08}", pkg: "alacritty" }
     ]
 
-    // Install › TUI. Terminal apps, installed from extra. btop and yazi
-    // ship a launcher entry of their own; the rest name a `command`,
-    // and `relay launcher tui` makes one for them, so they show up in the
-    // app launcher like any other app. See launcherRows().
-    readonly property var tuiApps: [
-        { label: "btop",       icon: "\u{F0A07}", pkg: "btop" },
-        { label: "Yazi",       icon: "\u{F024B}", pkg: "yazi" },
-        { label: "Lazygit",    icon: "\u{F02A2}", pkg: "lazygit",    command: "lazygit" },
-        { label: "Lazydocker", icon: "\u{F0868}", pkg: "lazydocker", command: "lazydocker" },
-        { label: "Disk usage", icon: "\u{F02CA}", pkg: "ncdu",       command: "ncdu ~" },
-        { label: "Bluetooth",  icon: "\u{F00AF}", pkg: "bluetui",    command: "bluetui" },
-        { label: "Audio mixer", icon: "\u{F066A}", pkg: "wiremix",   command: "wiremix" }
-    ]
-
     // Install › Web apps. Sites that open as a window of their own, in
     // the default browser's app mode, with a launcher entry `relay
     // launcher web` writes (and the site's own icon, when it hands one
@@ -708,50 +656,35 @@ ShellSurface {
     // list that has to know it exists.
     readonly property var installApps: panel.gamingApps
         .concat(panel.browserApps, panel.communicationApps, panel.everydayApps,
-                panel.styleApps, panel.serviceApps, panel.developmentApps,
-                panel.editorApps, panel.terminalApps, panel.tuiApps)
+                panel.serviceApps, panel.editorApps, panel.terminalApps)
 
-    // ── Install › Web apps and TUI ───────────────────────
-    // One row per picked app, then one per launcher the user made
+    // ── Install › Web apps ───────────────────────────────
+    // One row per picked site, then one per launcher the user made
     // themselves, then a row to make another. The launchers are `relay
     // launcher list`'s (MenuActions), so one made at a terminal shows up
-    // here too.
-    //
-    // A web app row makes its launcher, and once made, removes it:
-    // there is nothing else to it, and making it again is one press. A
-    // TUI row installs the package and makes the launcher, in one
-    // terminal when the package is missing and headless when only the
-    // launcher is; it reads "installed" once both are there, and a
-    // second press is a harmless reinstall, like every install row.
-    // Removing the package is the App manager's. A TUI the user made has
-    // no package, so its row removes it, like a web app's.
-    function launcherRows(kind) {
+    // here too. A row makes its launcher and, once made, removes it:
+    // there is nothing else to it, and making it again is one press.
+    // (Install › TUI, a sibling of this, was removed 2026-09-30.)
+    function launcherRows() {
         const made = actions.launchers || []
-        const picked = kind === "web" ? panel.webApps : panel.tuiApps
-        const pickedSlugs = picked.map(app => actions.slug(app.label))
+        const pickedSlugs = panel.webApps.map(app => actions.slug(app.label))
 
-        const rows = picked.map(app => kind === "web" ? panel.webAppRow(app) : panel.tuiRow(app))
+        const rows = panel.webApps.map(app => panel.webAppRow(app))
         for (const l of made) {
-            if (l.kind !== kind || pickedSlugs.indexOf(l.slug) !== -1) continue
+            if (l.kind !== "web" || pickedSlugs.indexOf(l.slug) !== -1) continue
             rows.push({
-                label: l.label, icon: kind === "web" ? "\u{F0F94}" : "\u{F0C8B}",
+                label: l.label, icon: "\u{F0F94}",
                 hint: "installed", installed: true, search: l.target.toLowerCase(),
                 run: () => actions.removeLauncher(l.label)
             })
         }
 
         // Typed in the filter field, one after the other; see startAsk().
-        rows.push(kind === "web"
-            ? { label: "New web app…", icon: "\u{F0415}", hint: "name, address",
-                ask: { fields: [
-                          { label: "Name", icon: "\u{F0F94}", placeholder: "Web app name…" },
-                          { label: "Address", icon: "\u{F059F}", placeholder: "https://…" }],
-                       done: v => actions.addWebApp(v[0], /^[a-z]+:\/\//i.test(v[1]) ? v[1] : "https://" + v[1]) } }
-            : { label: "New TUI…", icon: "\u{F0415}", hint: "name, command",
-                ask: { fields: [
-                          { label: "Name", icon: "\u{F0C8B}", placeholder: "Launcher name…" },
-                          { label: "Command", icon: "\u{F018D}", placeholder: "Command to run…" }],
-                       done: v => actions.addTui(v[0], v[1]) } })
+        rows.push({ label: "New web app…", icon: "\u{F0415}", hint: "name, address",
+            ask: { fields: [
+                      { label: "Name", icon: "\u{F0F94}", placeholder: "Web app name…" },
+                      { label: "Address", icon: "\u{F059F}", placeholder: "https://…" }],
+                   done: v => actions.addWebApp(v[0], /^[a-z]+:\/\//i.test(v[1]) ? v[1] : "https://" + v[1]) } })
         return rows
     }
 
@@ -763,21 +696,6 @@ ShellSurface {
             installed: made,
             run: () => made ? actions.removeLauncher(app.label) : actions.addWebApp(app.label, app.url)
         }
-    }
-
-    function tuiRow(app) {
-        const row = panel.installRow(app)
-        if (!app.command || actions.hasLauncher(app.label)) return row
-
-        // Not "installed" until the launcher is there too.
-        delete row.installs
-        const launcher = Terminal.quote(LocalBin.argv("relay",
-            ["launcher", "tui", app.label, "--", app.command]))
-        row.run = actions.packages !== null && actions.packages[app.pkg] === true
-            ? () => actions.addTui(app.label, app.command)
-            : () => Terminal.run(panel.installLine(app) + " && " + launcher,
-                                 { title: "Install " + app.label })
-        return row
     }
 
     // An app's install as one sh line for a terminal, sudo or yay
