@@ -8,7 +8,6 @@ import "../theme"
 import "../services"
 import "../keybinds"
 import "../services/packages.js" as Pkg
-import "../common/localBin.js" as LocalBin
 
 // Conf — one keystroke (SUPER+SPACE) to everything this config can do,
 // in the shape of omarchy's menu: a small centred slab, one level of the
@@ -226,16 +225,15 @@ ShellSurface {
             // 2026-09-28, after omarchy's Install menu). Packages and AUR
             // are an fzf picker over that one source in a terminal
             // (pkgPicker, below); the rest are short picked lists, a row
-            // per app. Replaces the old Apps ›
-            // Browse, whose categories (Browsers, AI, Communications, Gaming) and
-            // loose apps moved here as they were.
+            // per app. Replaces the old Apps › Browse, whose categories
+            // (Browsers, AI, Communications, Gaming) and loose apps moved
+            // here as they were. Web apps, TUI, Style and Development were
+            // categories here too until 2026-09-30 (user request).
             //
             // Every category has a glyph of its own: pac-man for pacman,
-            // a group of people for the user-run AUR, a boxed globe for
-            // web apps (the bare globe is Browsers'), an app in brackets
-            // for terminal apps, a palette, a server, code tags, and the
-            // editor and terminal glyphs System › Defaults already uses for
-            // those roles.
+            // a group of people for the user-run AUR, a server for
+            // services, and the editor and terminal glyphs System ›
+            // Defaults already uses for those roles.
             { label: "Install", icon: "\u{F0120}", children: [
                 // One window for what is installed and for finding what
                 // isn't (apps/AppManager.qml), where Install and Remove
@@ -673,8 +671,8 @@ ShellSurface {
                 ? "installing…" : app.pkg || "flatpak",
             requires: app.aur ? "yay" : app.pkg ? "sudo" : "flatpak",
             installs: [app.pkg || app.flatpak],
-            // `then` is a Services or Development row's next step (start
-            // the service, pick a toolchain), which Packages has no way
+            // `then` is a Services row's next step (start the
+            // service), which Packages has no way
             // to run, so those go to a terminal of their own. They lose
             // "installing…" while it runs; "installed" still follows,
             // from the probe, the next time the menu opens.

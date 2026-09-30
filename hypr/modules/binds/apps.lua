@@ -16,7 +16,7 @@ local features = require("modules.features")
 local mainMod = vars.mainMod
 
 -- Apps. What each one runs is the role's default (modules/defaults.lua):
--- the one set from Conf > Apps > Defaults or `relay default set`, else
+-- the one set from Conf > System > Defaults or `relay default set`, else
 -- the first candidate this machine has installed.
 --
 -- Asked on each press rather than captured at config load, so a default

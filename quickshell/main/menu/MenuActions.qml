@@ -146,7 +146,7 @@ QtObject {
     // -Qq` print every package on the machine, and there is no point
     // spawning flatpak for a tree that names none.
     //
-    // Apps › Defaults is the third: services/Defaults.qml, which asks
+    // System › Defaults is the third: services/Defaults.qml, which asks
     // `relay default` what each role is set to and which candidates are
     // installed. It had a probe of its own here, a generated script that
     // resolved the options a second time beside hypr/modules/vars.lua,
