@@ -343,4 +343,11 @@ QtObject {
         Notifications.post(label + " needs " + tool,
             tool + " isn't installed", "critical", "Conf", "")
     }
+
+    // A row that could run but won't, with its own reason: an installed
+    // default under Basics, which removing would leave the role without
+    // the app it names.
+    function forbid(title, body) {
+        Notifications.post(title, body, "critical", "Conf", "")
+    }
 }

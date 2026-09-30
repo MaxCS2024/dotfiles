@@ -597,15 +597,23 @@ ShellSurface {
     // made by hand (`sudo usermod -aG docker $USER`). Tailscale's `up`
     // prints the login link and waits for it. Dropbox starts itself the
     // first time it is opened.
+    //
+    // `stop` is `then` undone, run before the package comes off when an
+    // installed row is pressed again, so nothing is left running from a
+    // binary that is gone or enabled with no unit behind it.
     readonly property var serviceApps: [
         { label: "Tailscale", icon: "\u{F0582}", pkg: "tailscale",
-          then: "sudo systemctl enable --now tailscaled.service && sudo tailscale up" },
+          then: "sudo systemctl enable --now tailscaled.service && sudo tailscale up",
+          stop: "sudo systemctl disable --now tailscaled.service" },
         { label: "Docker",    icon: "\u{F0868}", pkg: "docker",
-          then: "sudo systemctl enable --now docker.socket" },
+          then: "sudo systemctl enable --now docker.socket",
+          stop: "sudo systemctl disable --now docker.socket docker.service" },
         { label: "Syncthing", icon: "\u{F04E6}", pkg: "syncthing",
-          then: "systemctl --user enable --now syncthing.service" },
+          then: "systemctl --user enable --now syncthing.service",
+          stop: "systemctl --user disable --now syncthing.service" },
         { label: "Printing",  icon: "\u{F042A}", pkg: "cups",
-          then: "sudo systemctl enable --now cups.socket" },
+          then: "sudo systemctl enable --now cups.socket",
+          stop: "sudo systemctl disable --now cups.socket cups.service" },
         { label: "Dropbox",   icon: "\u{F01E3}", pkg: "dropbox", aur: true }
     ]
 
@@ -663,35 +671,75 @@ ShellSurface {
                          app.pkg || app.flatpak, { name: app.label })
     }
 
-    // --needed and -y, so picking a row for something already installed
-    // is a no-op that says so rather than a reinstall — which is also why
-    // an installed row stays put and stays runnable instead of being
-    // hidden or dimmed. It says so itself instead: `installs` is what
-    // _markInstalled answers for, so a row tells you what pressing it
-    // would actually do before you press it.
+    // A row is a toggle (user request 2026-09-30): pressed while the
+    // app is missing it installs it, pressed once it is installed it
+    // removes it. The one exception is an app that is the default
+    // terminal, editor or browser right now: that row reads "default"
+    // and pressing it only says why not (`blocked`, see activate()), so
+    // the way to remove one is to pick another in System › Defaults
+    // first. The App manager lets a default go after a second press; this
+    // menu, where Enter is all there is, doesn't let it go at all.
+    //
+    // `installs` is what _markInstalled answers for, so a row tells you
+    // what pressing it would do before you press it. Whether it is
+    // installed is also read here, for `run`: the tree is rebuilt when
+    // the probe answers, so the two never disagree for long.
     function installRow(app) {
+        const entry = panel.packageEntry(app)
+        const id = app.pkg || app.flatpak
+        const busy = Packages.busy(entry.source, id)
+        const have = actions.packages !== null && actions.packages[id] === true
+        const roles = have ? Defaults.rolesFor(id).map(r => r.replace("-", " ")) : []
         return {
             label: app.label, icon: app.icon,
             // A pacman name is worth showing — it is what you would type
             // yourself. A reverse-DNS ref is not: com.discordapp.Disc…
             // is all this column would fit, and which manager it comes
             // from is the more useful thing to say in the space. While
-            // Packages is installing it, from here or anywhere, that is
-            // what it says instead.
-            hint: Packages.busy(panel.packageEntry(app).source, app.pkg || app.flatpak) !== ""
-                ? "installing…" : app.pkg || "flatpak",
+            // Packages is installing or removing it, from here or
+            // anywhere, that is what it says instead.
+            hint: busy === "install" ? "installing…"
+                : busy === "remove" ? "removing…"
+                : app.pkg || "flatpak",
+            busy: busy !== "",
             requires: app.aur ? "yay" : app.pkg ? "sudo" : "flatpak",
-            installs: [app.pkg || app.flatpak],
-            // `then` is a Services row's next step (start the
-            // service), which Packages has no way
-            // to run, so those go to a terminal of their own. They lose
-            // "installing…" while it runs; "installed" still follows,
-            // from the probe, the next time the menu opens.
-            run: app.then
-                ? () => Terminal.run(panel.installLine(app) + " && " + app.then,
-                                     { title: "Install " + app.label })
-                : () => Packages.install(panel.packageEntry(app))
+            installs: [id],
+            blocked: roles.length === 0 ? null : {
+                title: app.label + " is your default " + roles.join(" and "),
+                body: "Pick another in System › Defaults before removing it."
+            },
+            run: have ? () => panel.removeApp(app) : () => panel.installApp(app)
         }
+    }
+
+    // --needed and -y, so a row pressed before the probe has answered is
+    // a no-op that says so rather than a reinstall. `then` is a Services
+    // row's next step (start the service), which Packages has no way to
+    // run, so those go to a terminal of their own. They lose
+    // "installing…" while it runs; "installed" still follows, from the
+    // probe, the next time the menu opens.
+    function installApp(app) {
+        if (app.then)
+            Terminal.run(panel.installLine(app) + " && " + app.then,
+                         { title: "Install " + app.label })
+        else
+            Packages.install(panel.packageEntry(app))
+    }
+
+    // A flatpak has to come off the installation it is in (--user or
+    // --system), which only the inventory's own entry knows, so that is
+    // what goes to Packages when there is one — as the App manager does.
+    // A Services row stops its service first, in the same terminal.
+    function removeApp(app) {
+        const entry = panel.packageEntry(app)
+        if (app.stop) {
+            Terminal.run(app.stop + " && "
+                + Pkg.plan("remove", entry, false).commandLine,
+                { title: "Remove " + app.label })
+            return
+        }
+        const own = Packages.installed.find(e => e.id === entry.id)
+        Packages.remove(own || entry)
     }
 
     // A row naming a binary in `requires` is dimmed and inert when that
@@ -728,11 +776,13 @@ ShellSurface {
         if (packages === null) return items
         for (let i = 0; i < items.length; i++) {
             const item = items[i]
-            if (item.installs) {
+            // A busy row keeps its "installing…" / "removing…".
+            if (item.installs && !item.busy) {
                 const have = item.installs.filter(name => packages[name] === true).length
                 if (have === item.installs.length) {
                     item.installed = true
-                    item.hint = item.installs.length === 1 ? "installed" : "all installed"
+                    item.hint = item.blocked ? "default"
+                        : item.installs.length === 1 ? "installed" : "all installed"
                 } else if (have > 0) {
                     item.hint = have + " of " + item.installs.length + " installed"
                 }
@@ -845,6 +895,13 @@ ShellSurface {
 
         if (row.unavailable) {
             actions.refuse(row.label, row.requires)
+            return
+        }
+
+        // An installed default: the menu stays open, as it does for an
+        // unavailable row, and says why nothing happened.
+        if (row.blocked) {
+            actions.forbid(row.blocked.title, row.blocked.body)
             return
         }
 
