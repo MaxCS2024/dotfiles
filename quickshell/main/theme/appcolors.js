@@ -59,6 +59,21 @@ function foot(t) {
     return out
 }
 
+// The same palette as escape sequences, for a terminal already open that
+// can't re-read its config: OSC 4 for the sixteen slots, 10 and 11 for
+// foreground and background, each in XParseColor's rgb:rr/gg/bb form.
+// Written to the terminal's pty, they recolour it in place. foot is the
+// one that needs it; it keeps them until something sends a reset (OSC
+// 104/110/111), which falls back to the colours it started with.
+function osc(t) {
+    var p = ansi(t)
+    function rgb(c) { return "rgb:" + c.substring(1, 3) + "/" + c.substring(3, 5) + "/" + c.substring(5, 7) }
+    function seq(body) { return "\x1b]" + body + "\x1b\\" }
+    var out = ""
+    for (var i = 0; i < 16; i++) out += seq("4;" + i + ";" + rgb(p.slots[i]))
+    return out + seq("10;" + rgb(p.fg)) + seq("11;" + rgb(p.bg))
+}
+
 function kitty(t) {
     var p = ansi(t)
     var out = _head("#", "kitty.conf") + "\nforeground " + p.fg + "\nbackground " + p.bg + "\n\n"

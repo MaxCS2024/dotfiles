@@ -75,6 +75,20 @@ TestCase {
         compare(kitty.background, p.bg)
     }
 
+    function test_escape_sequences_are_the_same_palette() {
+        // OSC <code>;rgb:rr/gg/bb ST, one per colour, nothing in between.
+        const text = AppColors.osc(night)
+        const re = /\x1b\](4;\d+|10|11);rgb:([0-9a-f]{2})\/([0-9a-f]{2})\/([0-9a-f]{2})\x1b\\/g
+        verify(text.replace(re, "") === "", "only OSC colour sequences")
+        const set = ({})
+        let m
+        while ((m = re.exec(text)) !== null) set[m[1]] = "#" + m[2] + m[3] + m[4]
+        const p = AppColors.ansi(night)
+        for (let i = 0; i < 16; i++) compare(set["4;" + i], p.slots[i], "slot " + i)
+        compare(set["10"], p.fg)
+        compare(set["11"], p.bg)
+    }
+
     function test_foot_is_colors_dark_even_when_light() {
         // foot only reads [colors-dark]; see appcolors.js.
         verify(AppColors.foot(latte).indexOf("\n[colors-dark]\n") !== -1)

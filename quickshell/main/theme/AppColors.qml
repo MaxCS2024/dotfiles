@@ -32,7 +32,9 @@ import "appcolors.js" as Format
 //
 // After a write, kitty (SIGUSR1) and ghostty (SIGUSR2) re-read their
 // config, so open windows change with the shell. foot reads its config
-// once at startup, so a change lands in the next foot opened. GTK apps
+// once at startup and has no reload, so each open foot is sent the
+// palette as escape sequences on its shell's pty instead (appcolors.js
+// osc()) — the way pywal recolours terminals. GTK apps
 // pick up their colours as they open windows, and the portal's
 // color-scheme is set to match the palette's lightness, so libadwaita
 // loads the stylesheet the rest of the colours come from.
@@ -54,6 +56,7 @@ Scope {
             foot: Format.foot(t),
             kitty: Format.kitty(t),
             ghostty: Format.ghostty(t),
+            osc: Format.osc(t),
             hyprlock: Format.hyprlock(t),
             gtk: Format.gtk(t),
             scheme: Format.colorScheme(t)
@@ -76,7 +79,7 @@ Scope {
             hyprlockFile.setText(texts.hyprlock)
             if (gtk3File.path !== "") gtk3File.setText(texts.gtk)
             if (gtk4File.path !== "") gtk4File.setText(texts.gtk)
-            tell.command = ["sh", "-c", root._tellScript, "sh", texts.scheme]
+            tell.command = ["sh", "-c", root._tellScript, "sh", texts.scheme, texts.osc]
             tell.running = false
             tell.running = true
         }
@@ -87,9 +90,19 @@ Scope {
     // or ghostty running, and gsettings may not be here at all; neither
     // says anything worth hearing. color-scheme is only set when it
     // differs, since every set wakes each GTK app listening for it.
+    //
+    // foot's pty is the one its shell (a direct child) has as stdin; what
+    // is written there goes to foot, not to the shell. A write to a pty
+    // whose terminal has stopped reading blocks, so each gets a second.
     readonly property string _tellScript: [
         "pkill -USR1 -x kitty",
         "pkill -USR2 -x ghostty",
+        'for foot in $(pgrep -x foot); do',
+        '  for kid in $(pgrep -P "$foot"); do',
+        '    tty=$(readlink "/proc/$kid/fd/0") || continue',
+        '    case $tty in /dev/pts/*) printf %s "$2" | timeout 1 tee -- "$tty" >/dev/null ;; esac',
+        '  done',
+        'done 2>/dev/null',
         'if command -v gsettings >/dev/null 2>&1; then',
         '  [ "$(gsettings get org.gnome.desktop.interface color-scheme 2>/dev/null)" = "\'$1\'" ] ||',
         '    gsettings set org.gnome.desktop.interface color-scheme "$1" 2>/dev/null',
@@ -126,10 +139,11 @@ Scope {
         }
     }
 
-    // kitty's and ghostty's block: setText() otherwise writes on a thread
-    // and returns at once, and `tell` above would signal them before their
-    // file had landed.
-    FileView { id: footFile; printErrors: false }
+    // The terminals' block: setText() otherwise writes on a thread and
+    // returns at once, and `tell` above would signal kitty and ghostty
+    // before their file had landed — or recolour a foot whose next
+    // window still opens on the old one.
+    FileView { id: footFile; printErrors: false; blockWrites: true }
     FileView { id: kittyFile; printErrors: false; blockWrites: true }
     FileView { id: ghosttyFile; printErrors: false; blockWrites: true }
     FileView { id: hyprlockFile; printErrors: false }
