@@ -118,9 +118,12 @@ ShellSurface {
             }
         }
 
+        // 6×12, the same block as common/Slider.qml's handle on the
+        // volume rail, so the two cards have one grip (user request
+        // 2026-10-02).
         Rectangle {
-            width: 8
-            height: 16
+            width: 6
+            height: 12
             anchors.verticalCenter: parent.verticalCenter
             x: Math.round(Math.max(0, Math.min(bar.width - width, groove.width * bar.clamped - width / 2)))
             color: Appearance.accent

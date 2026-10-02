@@ -7,7 +7,7 @@ import "../theme"
 // battery rows without one). The handle is media/MediaPanel.qml's FlatBar
 // block, filled with the track's own fill colour, so a volume bar and the
 // now-playing seek/volume bars have the same grip (user request
-// 2026-10-02). Only the track
+// 2026-10-02) — 6×12, and FlatBar uses the same size. Only the track
 // itself: the flanking label/value `Text`s are each surface's own row
 // layout, since their shape differs per surface (a fixed-width label
 // before, a value after, sometimes neither); the design builds every one
@@ -25,8 +25,8 @@ Item {
 
     signal moved(real value)
 
-    readonly property real _knobWidth: 8
-    readonly property real _knobHeight: 16
+    readonly property real _knobWidth: 6
+    readonly property real _knobHeight: 12
     implicitHeight: Math.max(root.trackHeight, root.showKnob ? root._knobHeight : 0)
 
     // Was mouse-drag only when `interactive`.
