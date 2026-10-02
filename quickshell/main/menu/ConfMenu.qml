@@ -332,6 +332,28 @@ ShellSurface {
                 // tooling need, and which of them are missing.
                 { label: "Check setup", icon: "", hint: "rack setup",
                   run: () => Terminal.rack("setup", { title: "Setup check" }) },
+                // "Update all" is rack's own three-stage update (repo,
+                // then AUR, then flatpak, each gated on the one before
+                // it); the three rows under it are the single stages, for
+                // when only one of them is what you meant.
+                { label: "Update", icon: "", children: [
+                    { label: "Update all", icon: "", hint: "rack update",
+                      run: () => Terminal.rack("update", { title: "System update" }) },
+                    { label: "Pacman", icon: "", hint: "pacman -Syu",
+                      requires: "sudo",
+                      run: () => Terminal.run("sudo pacman -Syu") },
+                    { label: "Yay", icon: "", hint: "yay -Sua", requires: "yay",
+                      run: () => Terminal.run("yay -Sua") },
+                    { label: "Flatpak", icon: "", hint: "flatpak update",
+                      requires: "flatpak",
+                      run: () => Terminal.run("flatpak update") }
+                ]},
+                { label: "Defaults", icon: "", hint: "what opens what",
+                  children: panel.defaultRoles.map(role => ({
+                      label: role.label, icon: role.icon,
+                      hint: panel.defaultHint(role),
+                      children: panel.defaultRows(role)
+                  })) },
                 // Fixes for one piece of hardware each (udev/), which a
                 // machine without the device doesn't need — see
                 // patchRows() below.
