@@ -292,7 +292,7 @@ ShellSurface {
         // construction — the overhang geometry is stated once, up there.
         anchors.fill: cardSlot
 
-        radius: Theme.radiusCard
+        radius: Theme.radius
         color: Appearance.surface
         // 2px to match Hyprland's own `border_size`, exactly as a toast
         // does — the colour here is what shows if HyprFrame is hidden.

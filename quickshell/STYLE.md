@@ -78,8 +78,6 @@ Leave enough space between neighbours to tell them apart (`Theme.space2`,
   `Theme.iconSize`. Only dots and badges stay round. The bar
   is 36px (24 + 6 each side) and its rows are centred exactly; don't nudge
   them with an offset.
-- The dropdown cards themselves (the surfaces that hang from the bar) are
-  square: `Theme.radiusCard` (0), like the Hyprland windows.
 - Buttons, cards and panels inside dropdowns: `Theme.radius`
   (`radiusMedium`/`radiusLarge` where already in use). No other literal radii.
 - New bar items build on `BarButton.qml` and `HoverPill.qml` instead of
@@ -176,3 +174,6 @@ Add to this list whenever the user rejects a visual pattern.
   accent/red into theirs plus a coloured rule and a scale-up. All replaced
   by ladder steps (`selected`, `hover`, `hoverStrong`); the accent stays in
   text and glyphs (see §2, §8).
+- 2026-10-02: square (0px) outer corners on the dropdown cards, to match
+  the Hyprland windows. The user kept the 2px `Theme.radius` cards
+  instead; the cards and the bar's pills share one radius (see §5).
