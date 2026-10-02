@@ -29,7 +29,10 @@ Item {
     readonly property bool _low: root.row.urgency === "low"
     readonly property string _title: root.row.summary || root.row.appName || ""
     readonly property string _body: root.row.body || ""
+    // Buttons only. "default" is what clicking the card body runs, and
+    // senders often give it no label: Ghostty's drew an empty square.
     readonly property var _actions: Notifications.actionsFor(root.row)
+        .filter(a => a && a.identifier !== "default" && (a.text || "") !== "")
     readonly property bool _activatable: Notifications.isActivatable(root.row)
     readonly property string _appIcon: Notifications.iconFor(root.row)
 
