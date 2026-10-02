@@ -111,7 +111,10 @@ Leave enough space between neighbours to tell them apart (`Theme.space2`,
   makes the neighbours jitter. Animate `x`/`y`/`opacity`/`scale` of a single
   item instead.
 - Movement uses decelerating easing (`Theme.easingDecel`) and stays short
-  (≈ 120–160ms). An ease-in-out start reads as lag.
+  (≈ 120–160ms). An ease-in-out start reads as lag. Exception: the power
+  menu's sliding-scale tiles use a `SpringAnimation` (≈ 300ms, slight
+  overshoot) on one value that drives every tile's scale, x and colour.
+  The short ease there looked stiff.
 - A moving highlight (e.g. the sliding workspace indicator) goes **on top**
   of the items and carries a clipped copy of their labels in the on-accent
   colour (see `main/bar/Workspaces.qml`). Don't time label colour changes to
@@ -177,3 +180,7 @@ Add to this list whenever the user rejects a visual pattern.
 - 2026-10-02: square (0px) outer corners on the dropdown cards, to match
   the Hyprland windows. The user kept the 2px `Theme.radius` cards
   instead; the cards and the bar's pills share one radius (see §5).
+- 2026-10-02: the power menu's portrait tiles slid in 120ms OutCubic with
+  fill/glyph colours on their own 120ms fade. The user found it stiff and
+  said it "ruins the look". Now a spring drives the slide and the colours
+  follow the same value (see §7).

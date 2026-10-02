@@ -70,7 +70,7 @@ ShellSurface {
     // on that path the tile row could end up never taking keyboard focus
     // at all, leaving the arrow keys, Enter and Escape silently dead.
     // ShellSurface focuses focusTarget for the same reason.
-    onSurfaceOpened: box.kbIndex = 0
+    onSurfaceOpened: box.reset()
 
     Process { id: execProc }
     function runCmd(cmd) {
@@ -137,6 +137,87 @@ ShellSurface {
             box.kbIndex = (box.kbIndex + delta + box.items.length) % box.items.length
         }
 
+        // ── Sliding scale ────────────────────────────────
+        // Portrait tiles (user request 2026-10-02): the selected one is
+        // full size and every other shrinks by `falloff` per step away
+        // from it, so the neighbours are nearly as big and the far ends
+        // smallest. One animated value, focusPos, drives every tile's
+        // scale and x together, so the whole row slides as one piece
+        // instead of each tile re-laying out its neighbours (STYLE.md §7).
+        readonly property int tileWidth: 128
+        readonly property int tileHeight: 192
+        readonly property real falloff: 0.12
+        readonly property real minScale: 0.6
+
+        property real focusPos: box.kbIndex
+        property bool snapFocus: false
+        // A spring, not a timed ease: a 120ms OutCubic slide here looked
+        // stiff (user, 2026-10-02). The spring also keeps its velocity
+        // when a second key press retargets it mid-slide, where a
+        // NumberAnimation restarts from rest and stutters.
+        Behavior on focusPos {
+            enabled: !box.snapFocus
+            SpringAnimation { spring: 3.5; damping: 0.32; epsilon: 0.005 }
+        }
+
+        // Tiles darken with distance too (user request 2026-10-02, "kind
+        // of a shadow effect"): one ladder step per tile away, down to
+        // bar, with the text dimming alongside. The slab underneath is
+        // sunken, below every tile step, so no tile ever matches it and
+        // shows as a bare outline. Driven by focusPos,
+        // not kbIndex, so the shading slides in step with the sizes.
+        function distance(i) {
+            return Math.abs(box.focusPos - i)
+        }
+        // Colour at distance d along stops[0], stops[1], …, one per step.
+        function ramp(stops, d) {
+            const x = Math.max(0, Math.min(stops.length - 1, d))
+            const k = Math.min(stops.length - 2, Math.floor(x))
+            return box.mix(stops[k], stops[k + 1], x - k)
+        }
+        function mix(a, b, t) {
+            return Qt.rgba(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t,
+                           a.b + (b.b - a.b) * t, a.a + (b.a - a.a) * t)
+        }
+
+        // Back to the first tile without sliding there from wherever the
+        // menu was last closed.
+        function reset() {
+            box.snapFocus = true
+            box.kbIndex = 0
+            box.snapFocus = false
+        }
+
+        function scaleAt(i, f) {
+            return Math.max(box.minScale, 1 - box.falloff * Math.abs(f - i))
+        }
+        function rowWidth(f) {
+            let w = (box.items.length - 1) * Theme.space4
+            for (let j = 0; j < box.items.length; j++) w += box.tileWidth * box.scaleAt(j, f)
+            return w
+        }
+        // Centre of tile i, laying the scaled tiles edge to edge with an
+        // even gap and centring the row in the strip.
+        function tileCenter(i) {
+            const f = box.focusPos
+            let left = (box.stripWidth - box.rowWidth(f)) / 2
+            for (let j = 0; j < i; j++) left += box.tileWidth * box.scaleAt(j, f) + Theme.space4
+            return left + box.tileWidth * box.scaleAt(i, f) / 2
+        }
+        // Widest the row gets (selection in the middle), so the slab
+        // keeps one width whichever tile is selected.
+        readonly property real stripWidth: Math.max(...box.items.map((_, i) => box.rowWidth(i)))
+
+        // Hover selects the tile under the pointer only when the pointer
+        // itself moved. The tiles slide under a still cursor, and without
+        // this the selection would chase them back and forth.
+        property point lastPointer: Qt.point(-1, -1)
+        function pointerAt(i, p) {
+            if (p.x === box.lastPointer.x && p.y === box.lastPointer.y) return
+            box.lastPointer = Qt.point(p.x, p.y)
+            box.kbIndex = i
+        }
+
         focus: true
         Keys.onPressed: (event) => {
             if (event.key === Qt.Key_Escape) {
@@ -173,18 +254,18 @@ ShellSurface {
             if (typed === "j") { box.step(1); event.accepted = true; return }
             if (typed === "k") { box.step(-1); event.accepted = true; return }
         }
-        onVisibleChanged: if (panel.shown) { box.kbIndex = 0; box.forceActiveFocus() }
+        onVisibleChanged: if (panel.shown) { box.reset(); box.forceActiveFocus() }
 
         // ── The slab ─────────────────────────────────────
         Rectangle {
             id: slab
 
-            readonly property int pad: 22
+            readonly property int pad: Theme.space6
 
             implicitWidth: content.implicitWidth + slab.pad * 2
             implicitHeight: content.implicitHeight + slab.pad * 2
 
-            color: SlabStyle.panelBg
+            color: Appearance.sunken
             radius: SlabStyle.panelRadius
             border.width: 1
             border.color: SlabStyle.panelBorder
@@ -205,9 +286,11 @@ ShellSurface {
                 // with them — a rule needs something on each side of it.
                 // The ColumnLayout stays for the padding math even at one
                 // child (slab sizes itself off `content`).
-                Row {
+                // Not a Row: each tile places itself from box.tileCenter().
+                Item {
                     Layout.alignment: Qt.AlignHCenter
-                    spacing: SlabStyle.gap
+                    implicitWidth: box.stripWidth
+                    implicitHeight: box.tileHeight
 
                     Repeater {
                         model: box.items
@@ -218,10 +301,10 @@ ShellSurface {
                             required property int index
 
                             readonly property bool pressed: tileTap.pressed
-                            readonly property bool kbFocused: box.kbIndex === tile.index
-                            readonly property bool active: tileHover.hovered || tile.kbFocused
-                            width: 152
-                            height: 152
+                            width: box.tileWidth
+                            height: box.tileHeight
+                            x: box.tileCenter(tile.index) - box.tileWidth / 2
+                            scale: box.scaleAt(tile.index, box.focusPos)
                             radius: SlabStyle.cardRadius
 
                             // State is the fill, a step up the ladder per
@@ -230,13 +313,24 @@ ShellSurface {
                             // red) wash mixed into the card, plus a
                             // coloured rule along the top edge and a 3%
                             // scale-up, until 2026-09-27.
+                            // The fill follows the slide (box.ramp), so no
+                            // Behavior here: one restarted every frame
+                            // would lag behind it.
                             color: tile.pressed ? Appearance.hoverStrong
-                                 : tile.active  ? Appearance.hover
-                                 : SlabStyle.cardBg
+                                 : box.mix(box.ramp([Appearance.hover, Appearance.surfaceAlt, Appearance.surface, Appearance.bar], tile.dist),
+                                           Appearance.selected, tile.sel)
                             border.width: 1
                             border.color: SlabStyle.cardBorder
 
-                            Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
+                            readonly property real dist: box.distance(tile.index)
+
+                            // The selection highlight (user request
+                            // 2026-10-02): `selected` fill, accent glyph,
+                            // strongest label. It crossfades on its own
+                            // timer, the new tile fading in while the old
+                            // one fades out, on top of the distance shading.
+                            property real sel: box.kbIndex === tile.index ? 1 : 0
+                            Behavior on sel { NumberAnimation { duration: Theme.animPanel; easing.type: Theme.easingStandard } }
 
                             // ── Reveal ───────────────────────────
                             // The tiles deal themselves onto the slab left
@@ -278,18 +372,22 @@ ShellSurface {
                                     // The danger glyph stays red whether
                                     // or not it's the current stop — it's
                                     // labelling the action, not the
-                                    // selection.
+                                    // selection. It still recedes with the
+                                    // rest of the tile, through opacity,
+                                    // so it doesn't glow out of the shade.
                                     color: tile.modelData.danger ? Appearance.red
-                                         : tile.active ? Appearance.accent : Appearance.fgSoft
+                                         : box.mix(box.ramp([Appearance.fg, Appearance.fgSoft, Appearance.fgMuted], tile.dist),
+                                                   Appearance.accent, tile.sel)
+                                    opacity: tile.modelData.danger ? 1 - 0.15 * Math.min(3, tile.dist) : 1
                                     font.family: Theme.font
-                                    font.pixelSize: 34
-                                    Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
+                                    font.pixelSize: Theme.fontHuge
                                 }
 
                                 Text {
                                     Layout.alignment: Qt.AlignHCenter
                                     text: tile.modelData.label
-                                    color: tile.active ? Appearance.fgStrong : Appearance.fg
+                                    color: box.mix(box.ramp([Appearance.fg, Appearance.fg, Appearance.fgSoft, Appearance.fgMuted], tile.dist),
+                                                   Appearance.fgStrong, tile.sel)
                                     font.family: Theme.fontHeading
                                     // Was Theme.fontSmall (11px), which
                                     // was unreadable: the small caps this
@@ -321,7 +419,7 @@ ShellSurface {
                             HoverHandler {
                                 id: tileHover
                                 cursorShape: Qt.PointingHandCursor
-                                onHoveredChanged: if (hovered) box.kbIndex = tile.index
+                                onPointChanged: if (hovered) box.pointerAt(tile.index, point.scenePosition)
                             }
                             TapHandler { id: tileTap; onTapped: panel.runCmd(tile.modelData.cmd) }
                         }
