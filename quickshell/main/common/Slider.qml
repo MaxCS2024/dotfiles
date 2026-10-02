@@ -3,8 +3,11 @@ import "../config"
 import "../theme"
 
 // The 1px-track/gold-fill slider shape repeated across the
-// popouts (quick settings' Vol/Lum with a knob, now-playing's progress and
-// the audio mixer's device/per-app rows without one). Only the track
+// popouts (the volume rail's output/mic/per-app rows with a handle, the
+// battery rows without one). The handle is media/MediaPanel.qml's FlatBar
+// block, filled with the track's own fill colour, so a volume bar and the
+// now-playing seek/volume bars have the same grip (user request
+// 2026-10-02). Only the track
 // itself: the flanking label/value `Text`s are each surface's own row
 // layout, since their shape differs per surface (a fixed-width label
 // before, a value after, sometimes neither); the design builds every one
@@ -22,8 +25,9 @@ Item {
 
     signal moved(real value)
 
-    readonly property real _knobSize: 7
-    implicitHeight: Math.max(root.trackHeight, root.showKnob ? root._knobSize : 0)
+    readonly property real _knobWidth: 8
+    readonly property real _knobHeight: 16
+    implicitHeight: Math.max(root.trackHeight, root.showKnob ? root._knobHeight : 0)
 
     // Was mouse-drag only when `interactive`.
     activeFocusOnTab: root.interactive
@@ -54,14 +58,11 @@ Item {
 
     Rectangle {
         visible: root.showKnob
-        width: root._knobSize
-        height: root._knobSize
-        radius: root._knobSize / 2
-        color: Appearance.surface
-        border.width: 1
-        border.color: root.fillColor
+        width: root._knobWidth
+        height: root._knobHeight
+        color: root.fillColor
         anchors.verticalCenter: track.verticalCenter
-        x: Math.max(0, Math.min(root.width - width, track.width * root.value - width / 2))
+        x: Math.round(Math.max(0, Math.min(root.width - width, track.width * root.value - width / 2)))
     }
 
     MouseArea {
