@@ -237,7 +237,8 @@ ShellSurface {
         }
     }
 
-    // The art, square, masked to the card's radius. Masked rather
+    // The art, square, masked to Theme.radius like the buttons beside
+    // it (the card itself is square, Theme.radiusCard). Masked rather
     // than clipped: a rounded Rectangle does not round what an Image
     // inside it paints.
     component ArtSquare: Rectangle {
@@ -517,7 +518,7 @@ ShellSurface {
 
         anchors.fill: cardSlot
 
-        radius: Theme.radius
+        radius: Theme.radiusCard
         color: Appearance.surface
         border.width: Theme.hyprBorderWidth
         border.color: Appearance.border

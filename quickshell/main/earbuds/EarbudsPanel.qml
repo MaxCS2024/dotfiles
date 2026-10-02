@@ -95,7 +95,7 @@ ShellSurface {
 
         anchors.fill: cardSlot
 
-        radius: Theme.radius
+        radius: Theme.radiusCard
         color: Appearance.surface
         border.width: Theme.hyprBorderWidth
         border.color: Appearance.border

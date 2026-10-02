@@ -97,7 +97,7 @@ PopupWindow {
 
     Rectangle {
         anchors.fill: parent
-        radius: Theme.radius
+        radius: Theme.radiusCard
         color: Appearance.surface
         border.color: Appearance.border
         border.width: 1

@@ -78,6 +78,8 @@ Leave enough space between neighbours to tell them apart (`Theme.space2`,
   `Theme.iconSize`. Only dots and badges stay round. The bar
   is 36px (24 + 6 each side) and its rows are centred exactly; don't nudge
   them with an offset.
+- The dropdown cards themselves (the surfaces that hang from the bar) are
+  square: `Theme.radiusCard` (0), like the Hyprland windows.
 - Buttons, cards and panels inside dropdowns: `Theme.radius`
   (`radiusMedium`/`radiusLarge` where already in use). No other literal radii.
 - New bar items build on `BarButton.qml` and `HoverPill.qml` instead of

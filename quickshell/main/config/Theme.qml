@@ -89,6 +89,11 @@ Singleton {
     readonly property int radius: Settings.cornerRadius
     readonly property int radiusLarge: 4
     readonly property int radiusMedium: 6
+    // The outer corners of the cards that drop from the bar (calendar,
+    // media, rails, themes, tray menu): square like the Hyprland windows
+    // (decoration.rounding 0), user request 2026-10-02. What sits inside
+    // a card keeps `radius`, the same as the bar's pills.
+    readonly property int radiusCard: 0
 
     readonly property int animFast: 120
     readonly property int animNormal: 200
