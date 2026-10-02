@@ -79,6 +79,8 @@ alias du="du -h"
 alias compress='tar -czvf'
 alias decompress='tar -xzvf'
 
+# Open with xdg-open
+alias open="xdg-open"
 
 # ╭──────────────────────────────────────────────╮
 # │ tmux                                         │
