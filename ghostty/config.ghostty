@@ -7,3 +7,39 @@
 # restart — the shell sends SIGUSR2 after writing, which makes ghostty
 # reload its configuration.
 config-file = ?~/.cache/quickshell/ghostty-colors
+
+# Everything below copies foot.ini, the terminal the others follow, so
+# the three look the same. Padding is in whole points, which ghostty
+# scales by 96/72: 11 is the nearest to foot's 14px. Its rows came out a pixel shorter than
+# foot's 22px with the same font, hence the cell height.
+font-family = JetBrainsMono Nerd Font
+font-size = 12
+window-padding-x = 11
+window-padding-y = 0
+adjust-cell-height = 1
+
+# foot renders no ligatures.
+font-feature = -calt
+font-feature = -liga
+font-feature = -dlig
+
+# ghostty's scrollback is a byte limit, not lines; its default 10 MB
+# holds well over foot's 10000.
+mouse-scroll-multiplier = discrete:7
+
+# A steady block in reverse video, as foot draws it. Shell integration
+# would turn it into a bar at the prompt; no-cursor keeps the block.
+cursor-style = block
+cursor-style-blink = false
+cursor-color = cell-foreground
+cursor-text = cell-background
+shell-integration-features = no-cursor
+
+# Selections in reverse video too, foot's default.
+selection-foreground = cell-background
+selection-background = cell-foreground
+
+# No GTK titlebar (foot has none on Hyprland) and no size overlay while
+# resizing.
+window-decoration = none
+resize-overlay = never
