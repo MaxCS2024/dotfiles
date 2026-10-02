@@ -274,6 +274,12 @@ ShellSurface {
             source: art
             maskEnabled: true
             maskSource: artMask
+            // A soft mask edge instead of the default hard cut-off,
+            // which drops the antialiased corner pixels: at a 2px
+            // radius that left the art fully square beside buttons
+            // that visibly round.
+            maskThresholdMin: 0.5
+            maskSpreadAtMin: 1.0
             visible: art.status === Image.Ready
         }
 
