@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../config"
+import "../services"
 import "../theme"
 
 Rectangle {
@@ -83,7 +84,23 @@ Rectangle {
 
             RowLayout {
                 Layout.fillWidth: true
+                // The icon's height whether or not this row has one, so
+                // an app's row is no taller than a script's.
+                Layout.minimumHeight: Theme.iconSize
                 spacing: Theme.space2
+
+                // The sending app's icon, as on the toast
+                // (NotificationCard.qml); nothing when it names none.
+                Image {
+                    Layout.preferredWidth: Theme.iconSize
+                    Layout.preferredHeight: Theme.iconSize
+                    source: Notifications.iconFor(root.entry)
+                    sourceSize.width: Theme.iconSize
+                    sourceSize.height: Theme.iconSize
+                    fillMode: Image.PreserveAspectFit
+                    asynchronous: true
+                    visible: status === Image.Ready
+                }
 
                 Text {
                     text: root.entry.summary || root.entry.appName

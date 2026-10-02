@@ -4,8 +4,11 @@
 // Notification object, so the same component draws a live toast and one
 // restored from disk.
 //
-// No glyphs: no icon fallback and no close mark. Left-click runs the row's
-// action (or dismisses when there is none); right-click always dismisses.
+// The sending app's icon sits before the headline, so a card says where it
+// came from; only the app's own icon, never `image` (an avatar or a
+// thumbnail), and nothing in its place when the app names none — no
+// fallback glyph, no close mark. Left-click runs the row's action (or
+// dismisses when there is none); right-click always dismisses.
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
@@ -28,6 +31,7 @@ Item {
     readonly property string _body: root.row.body || ""
     readonly property var _actions: Notifications.actionsFor(root.row)
     readonly property bool _activatable: Notifications.isActivatable(root.row)
+    readonly property string _appIcon: Notifications.iconFor(root.row)
 
     // Urgency is text colour only: red headline when critical.
     readonly property color _titleColor: root._critical ? Appearance.red : Appearance.fgStrong
@@ -73,14 +77,32 @@ Item {
             anchors.topMargin: Theme.space3
             spacing: Theme.space1
 
-            Text {
-                text: root._title
-                color: root._titleColor
-                font.bold: true
-                font.pixelSize: Theme.fontMedium
-                font.family: Theme.font
+            RowLayout {
                 Layout.fillWidth: true
-                elide: Text.ElideRight
+                spacing: Theme.space2
+
+                Image {
+                    Layout.preferredWidth: Theme.iconSize
+                    Layout.preferredHeight: Theme.iconSize
+                    source: root._appIcon
+                    // Rasterised at the size it is drawn — see
+                    // bar/SystemTray.qml.
+                    sourceSize.width: Theme.iconSize
+                    sourceSize.height: Theme.iconSize
+                    fillMode: Image.PreserveAspectFit
+                    asynchronous: true
+                    visible: status === Image.Ready
+                }
+
+                Text {
+                    text: root._title
+                    color: root._titleColor
+                    font.bold: true
+                    font.pixelSize: Theme.fontMedium
+                    font.family: Theme.font
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                }
             }
 
             Text {

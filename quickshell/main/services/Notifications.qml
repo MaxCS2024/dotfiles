@@ -124,6 +124,17 @@ Singleton {
         root.dismiss(row)
     }
 
+    // The sending app's icon as an Image source, "" when it names none.
+    // appIcon is a theme name (Quickshell fills it from the desktop-entry
+    // hint when the sender leaves it empty) or a file path, which is what
+    // Brave sends. Never `image`: that is an avatar or a thumbnail.
+    function iconFor(row) {
+        const icon = (row && row.appIcon) || ""
+        if (icon.startsWith("/")) return "file://" + icon
+        if (icon.includes("://")) return icon
+        return AppIcons.path(icon)
+    }
+
     // Whether clicking the card body does anything — a relay --exec vector,
     // or a sender-registered "default" action.
     function isActivatable(row) {
@@ -205,11 +216,23 @@ Singleton {
         return appName === "relay"
     }
 
+    // A sandboxed app's notification comes through the desktop portal,
+    // which leaves app_name empty and names the app only by the
+    // desktop-entry hint (Flatpak Discord, 2026-10-02). Without this every
+    // portal app read "Unknown" — which _bypassesDnd() takes for a bare
+    // script, so a critical one from Discord got through DND.
+    function _appName(notif) {
+        if (notif.appName) return notif.appName
+        const id = root._hint(notif, "desktop-entry")
+        const entry = id !== "" ? DesktopEntries.byId(id) : null
+        return (entry && entry.name) || "Unknown"
+    }
+
     function _snapshot(notif) {
         return {
             id: root._nextId++,
             originalId: notif.id,
-            appName: notif.appName || "Unknown",
+            appName: root._appName(notif),
             appIcon: notif.appIcon || "",
             summary: notif.summary || "",
             body: notif.body || "",
@@ -251,7 +274,7 @@ Singleton {
         var updated
         try {
             updated = {
-                appName: notif.appName || "Unknown",
+                appName: root._appName(notif),
                 appIcon: notif.appIcon || "",
                 summary: notif.summary || "",
                 body: notif.body || "",
