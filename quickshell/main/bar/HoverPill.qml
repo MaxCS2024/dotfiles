@@ -31,8 +31,12 @@ Item {
     Rectangle {
         id: bg
         anchors.fill: parent
-        // Fully round, not Theme.radius — a true pill shape, per its name.
-        radius: height / 2
+        // Theme.radius (the corner-radius setting, 2px by default): the
+        // bar's items went from fully round to near-square on user
+        // request 2026-10-02. The workspace chips match (bar/
+        // WorkspacePill.qml, bar/Workspaces.qml), since this layers on
+        // top of them.
+        radius: Theme.radius
         // The hover colour at zero alpha, not "transparent": that is
         // transparent *black*, so the colour fade passed through a dark
         // half-alpha grey and an occupied workspace chip visibly dipped

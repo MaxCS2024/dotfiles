@@ -73,7 +73,9 @@ Leave enough space between neighbours to tell them apart (`Theme.space2`,
 
 - Bar items: `Theme.barItemHeight` (24px) tall, a fixed height rather than
   the content's plus a margin, padded `Theme.barItemPadX` (12px) each side,
-  fully round (`radius: height / 2`), glyphs at `Theme.iconSize`. The bar
+  near-square corners (`radius: Theme.radius`, the 2px corner-radius
+  setting; fully round pills were dropped 2026-10-02), glyphs at
+  `Theme.iconSize`. Only dots and badges stay round. The bar
   is 36px (24 + 6 each side) and its rows are centred exactly; don't nudge
   them with an offset.
 - Buttons, cards and panels inside dropdowns: `Theme.radius`
@@ -87,7 +89,7 @@ Leave enough space between neighbours to tell them apart (`Theme.space2`,
   `Theme.cardPadding`. Heights and widths of controls, rows and icon
   buttons are multiples of 4 (24, 28, 32, 40, …). If a value falls between
   two steps, take the nearer step; don't add in-between tokens.
-- Allowed off-grid values: 1–2px hairlines (borders, dividers), a radius of `height / 2`, and negative margins that only enlarge
+- Allowed off-grid values: 1–2px hairlines (borders, dividers), a radius of `height / 2` on a dot or badge, and negative margins that only enlarge
   an invisible hit area. A repeating grid may use a hairline gap if the
   cell plus the gap is a multiple of 4 (the calendar's 34 + 2).
 

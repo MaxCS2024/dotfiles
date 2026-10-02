@@ -74,7 +74,7 @@ Item {
     // own highlight on top.
     Rectangle {
         anchors.fill: parent
-        radius: height / 2
+        radius: Theme.radius
         // Solid accent for the current workspace, one elevation step for
         // occupied ones, nothing for empty ones. No outline: state is
         // carried by fill alone (quickshell/STYLE.md, "Borders"). Empty is

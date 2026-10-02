@@ -87,7 +87,7 @@ Item {
     // sit flat on it.
     Rectangle {
         anchors.fill: parent
-        radius: height / 2
+        radius: Theme.radius
         color: Appearance.sunken
     }
 
@@ -163,7 +163,7 @@ Item {
         y: row.y + (row.height - height) / 2
         width: root.pillSize
         height: root.pillSize
-        radius: height / 2
+        radius: Theme.radius
         color: Appearance.accent
         clip: true
         // opacity, not visible — the special workspace takes focus while
