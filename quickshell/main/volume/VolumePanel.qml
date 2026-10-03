@@ -416,6 +416,26 @@ ShellSurface {
             }
 
             // ── Output ───────────────────────────────────
+            // Capitals and tracking, the section-label shape the network
+            // rail settled on (2026-09-18) — set with capitalization
+            // rather than by shouting in the string, so the label still
+            // reads as a sentence in the source and in a grep, and with
+            // the tracking caps need at body size. Always shown, unlike
+            // Input's: there is always a sink, or the "No device" fallback
+            // the header names.
+            Text {
+                text: "Output"
+                color: Appearance.fg
+                font.pixelSize: Theme.fontSmall
+                font.family: Theme.font
+                font.capitalization: Font.AllUppercase
+                font.letterSpacing: Theme.tracking(Theme.fontSmall, 0.12)
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.topMargin: Theme.space1
+                elide: Text.ElideRight
+            }
+
             // The shape quicksettings/VolumeTab.qml draws, and the one the
             // OSD draws: a mute glyph, a track, a percentage. The glyph is
             // the mute button, which is why it is the one thing on the row
@@ -473,33 +493,13 @@ ShellSurface {
                 }
             }
 
-            // ── Output device ────────────────────────────
-            // Capitals and tracking, the section-label shape the network
-            // rail settled on (2026-09-18) — set with capitalization
-            // rather than by shouting in the string, so the label still
-            // reads as a sentence in the source and in a grep, and with
-            // the tracking caps need at body size.
-            //
-            // Both this and the list under it go when there is only one
-            // sink: a picker offering the device you are already on is a
-            // row of chrome, and this card is meant to stop where its
-            // content stops. The settings tab in the footer still lists
-            // it, for the machine where a second device is expected to
-            // appear and hasn't.
-            Text {
-                visible: panel.audioSinks.length > 1
-                text: "Output device"
-                color: Appearance.fg
-                font.pixelSize: Theme.fontSmall
-                font.family: Theme.font
-                font.capitalization: Font.AllUppercase
-                font.letterSpacing: Theme.tracking(Theme.fontSmall, 0.12)
-                Layout.fillWidth: true
-                Layout.minimumWidth: 0
-                Layout.topMargin: Theme.space1
-                elide: Text.ElideRight
-            }
-
+            // The output devices, when there is more than one — under the
+            // Output title the way the input devices sit under Input's. A
+            // picker offering the device you are already on is a row of
+            // chrome, and this card is meant to stop where its content
+            // stops. The settings tab in the footer still lists it, for
+            // the machine where a second device is expected to appear and
+            // hasn't.
             DevicePicker {
                 devices: panel.audioSinks
                 current: Volume.sink
