@@ -15,9 +15,10 @@ import "../services"
 // Redesigned 2026-09-10 per user request ("more modern, more linux rice
 // inspired"). What it was: five 240x380 portrait plates in a row on the
 // classical paper/ink palette, each just a glyph over a word. What it is
-// now: one slab carrying a single row of five compact action tiles, each
-// a glyph over a small-caps label, in the same monospace face as the rest
-// of the shell.
+// now: a single row of five compact action tiles, each a glyph over a
+// label, in the same monospace face as the rest of the shell. They sat on
+// a slab until 2026-10-06, when the user had it removed; the tiles now
+// stand straight on the dimmed backdrop.
 //
 // It opened with a good deal more — a neofetch-style identity header
 // (distro mark, user@host, kernel/uptime, clock, battery), a shell-prompt
@@ -31,9 +32,7 @@ import "../services"
 // It follows theme/ (Appearance + SlabStyle), not config/Theme.qml's
 // "classical plate" tokens, so it matches the bento dashboard rebuilt in
 // ff379e3 — same grounds, same corner scale, same staggered reveal. The
-// slab is fully opaque (user request 2026-09-10, applied to both
-// surfaces at once via SlabStyle's alphas); only the backdrop it lays
-// over the screen is see-through.
+// tiles are fully opaque; only the backdrop is see-through.
 //
 // Kept from the version before it: the dimmed backdrop, the mask-to-`box`
 // + focus-grab dismissal (3.2, now common/ShellSurface.qml's), the
@@ -50,7 +49,7 @@ ShellSurface {
     anchors { top: true; bottom: true; left: true; right: true }
 
     // The tiles fade out on their own duration; the window has to
-    // outlive the slowest of them or the slab blinks out from under its
+    // outlive the slowest of them or the row blinks out from under its
     // own closing animation. dashboard/Dashboard.qml carried the same
     // arrangement until it was deleted on 2026-09-21.
     exitDuration: Math.max(Theme.animPanel, SlabStyle.revealDuration)
@@ -80,7 +79,7 @@ ShellSurface {
         panel.close()
     }
 
-    // Only `box` (the slab) is click-through-masked, same as every
+    // Only `box` (the tile row) is click-through-masked, same as every
     // version of this file before it — a click on the dimmed backdrop
     // itself does nothing rather than closing the menu (an accidental
     // near-miss click shouldn't dismiss it); the focus grab that
@@ -93,9 +92,9 @@ ShellSurface {
         id: dim
         anchors.fill: parent
         color: "black"
-        // Deeper than the 0.55 the portrait cards sat on: the slab is a
-        // single smaller object now, and it needs the screen behind it to
-        // recede further for it to read as the only thing in focus.
+        // Deeper than the 0.55 the portrait cards sat on: the tile row is
+        // a single smaller object now, and it needs the screen behind it
+        // to recede further for it to read as the only thing in focus.
         opacity: panel.shown ? 0.62 : 0
         Behavior on opacity { NumberAnimation { duration: Theme.animPanel; easing.type: Theme.easingStandard } }
     }
@@ -121,8 +120,8 @@ ShellSurface {
         readonly property var current: box.items[box.kbIndex]
 
         anchors.centerIn: parent
-        implicitWidth: slab.implicitWidth
-        implicitHeight: slab.implicitHeight
+        implicitWidth: box.stripWidth
+        implicitHeight: box.tileHeightSelected
         opacity: panel.shown ? 1 : 0
         scale: panel.shown ? 1 : 0.98
 
@@ -137,17 +136,19 @@ ShellSurface {
             box.kbIndex = (box.kbIndex + delta + box.items.length) % box.items.length
         }
 
-        // ── Sliding scale ────────────────────────────────
-        // Portrait tiles (user request 2026-10-02): the selected one is
-        // full size and every other shrinks by `falloff` per step away
-        // from it, so the neighbours are nearly as big and the far ends
-        // smallest. One animated value, focusPos, drives every tile's
-        // scale and x together, so the whole row slides as one piece
-        // instead of each tile re-laying out its neighbours (STYLE.md §7).
+        // ── Tiles ────────────────────────────────────────
+        // One row of equal tiles straight on the dimmed backdrop, with no
+        // slab behind them (user request 2026-10-06). The selected tile
+        // grows taller, evenly up and down, so every tile stays centred
+        // on the same line. This replaced the 2026-10-02 sliding scale,
+        // where every tile shrank with its distance from the selection.
+        // One animated value, focusPos, drives every tile's height and
+        // colour together; the tiles aren't in a layout, so the growth
+        // re-lays nothing out (STYLE.md §7).
         readonly property int tileWidth: 128
-        readonly property int tileHeight: 192
-        readonly property real falloff: 0.12
-        readonly property real minScale: 0.6
+        readonly property int tileHeight: 160
+        readonly property int tileHeightSelected: 200
+        readonly property int gap: Theme.space4
 
         property real focusPos: box.kbIndex
         property bool snapFocus: false
@@ -162,10 +163,8 @@ ShellSurface {
 
         // Tiles darken with distance too (user request 2026-10-02, "kind
         // of a shadow effect"): one ladder step per tile away, down to
-        // bar, with the text dimming alongside. The slab underneath is
-        // sunken, below every tile step, so no tile ever matches it and
-        // shows as a bare outline. Driven by focusPos,
-        // not kbIndex, so the shading slides in step with the sizes.
+        // bar, with the text dimming alongside. Driven by focusPos, not
+        // kbIndex, so the shading slides in step with the heights.
         function distance(i) {
             return Math.abs(box.focusPos - i)
         }
@@ -188,29 +187,20 @@ ShellSurface {
             box.snapFocus = false
         }
 
-        function scaleAt(i, f) {
-            return Math.max(box.minScale, 1 - box.falloff * Math.abs(f - i))
+        // How far tile i sits above the row's top edge: half of what it
+        // has left to grow. Only the tile at focusPos (and, mid-slide, the
+        // pair either side of it) is above the resting height. Rounded so
+        // the top and bottom edges move by whole pixels, the same amount
+        // each, and the tile's label stays exactly on the row's centre.
+        function insetAt(i) {
+            const t = Math.max(0, 1 - box.distance(i))
+            return Math.round((box.tileHeightSelected - box.tileHeight) * (1 - t) / 2)
         }
-        function rowWidth(f) {
-            let w = (box.items.length - 1) * Theme.space4
-            for (let j = 0; j < box.items.length; j++) w += box.tileWidth * box.scaleAt(j, f)
-            return w
-        }
-        // Centre of tile i, laying the scaled tiles edge to edge with an
-        // even gap and centring the row in the strip.
-        function tileCenter(i) {
-            const f = box.focusPos
-            let left = (box.stripWidth - box.rowWidth(f)) / 2
-            for (let j = 0; j < i; j++) left += box.tileWidth * box.scaleAt(j, f) + Theme.space4
-            return left + box.tileWidth * box.scaleAt(i, f) / 2
-        }
-        // Widest the row gets (selection in the middle), so the slab
-        // keeps one width whichever tile is selected.
-        readonly property real stripWidth: Math.max(...box.items.map((_, i) => box.rowWidth(i)))
+        readonly property int stripWidth: box.items.length * box.tileWidth + (box.items.length - 1) * box.gap
 
         // Hover selects the tile under the pointer only when the pointer
-        // itself moved. The tiles slide under a still cursor, and without
-        // this the selection would chase them back and forth.
+        // itself moved. A tile growing under a still cursor would
+        // otherwise count as hovering it.
         property point lastPointer: Qt.point(-1, -1)
         function pointerAt(i, p) {
             if (p.x === box.lastPointer.x && p.y === box.lastPointer.y) return
@@ -256,175 +246,138 @@ ShellSurface {
         }
         onVisibleChanged: if (panel.shown) { box.reset(); box.forceActiveFocus() }
 
-        // ── The slab ─────────────────────────────────────
-        Rectangle {
-            id: slab
+        // Not a Row: each tile places itself from its index and
+        // box.insetAt(), straight on the backdrop.
+        Repeater {
+            model: box.items
 
-            readonly property int pad: Theme.space6
+            delegate: Rectangle {
+                id: tile
+                required property var modelData
+                required property int index
 
-            implicitWidth: content.implicitWidth + slab.pad * 2
-            implicitHeight: content.implicitHeight + slab.pad * 2
+                readonly property bool pressed: tileTap.pressed
+                width: box.tileWidth
+                x: tile.index * (box.tileWidth + box.gap)
+                y: box.insetAt(tile.index)
+                height: box.tileHeightSelected - 2 * tile.y
+                radius: SlabStyle.cardRadius
 
-            color: Appearance.sunken
-            radius: SlabStyle.panelRadius
-            border.width: 1
-            border.color: SlabStyle.panelBorder
+                // State is the fill, a step up the ladder per
+                // state, and the glyph's colour below; nothing
+                // else (STYLE.md §2, §8). This was an accent (or
+                // red) wash mixed into the card, plus a
+                // coloured rule along the top edge and a 3%
+                // scale-up, until 2026-09-27.
+                // The fill follows the slide (box.ramp), so no
+                // Behavior here: one restarted every frame
+                // would lag behind it.
+                color: tile.pressed ? Appearance.hoverStrong
+                     : box.mix(box.ramp([Appearance.hover, Appearance.surfaceAlt, Appearance.surface, Appearance.bar], tile.dist),
+                               Appearance.selected, tile.sel)
+                border.width: 1
+                border.color: SlabStyle.cardBorder
 
-            layer.enabled: true
-            layer.effect: PopupShadow {}
-            ColumnLayout {
-                id: content
-                anchors.fill: parent
-                anchors.margins: slab.pad
-                spacing: Theme.space4
+                readonly property real dist: box.distance(tile.index)
 
-                // ── Actions ──────────────────────────────────────
-                // The only thing left on the slab, per user request
-                // 2026-09-10: the identity header above these tiles and
-                // the shell-prompt footer below them are both gone, and
-                // the two hairlines that divided them from this row went
-                // with them — a rule needs something on each side of it.
-                // The ColumnLayout stays for the padding math even at one
-                // child (slab sizes itself off `content`).
-                // Not a Row: each tile places itself from box.tileCenter().
-                Item {
-                    Layout.alignment: Qt.AlignHCenter
-                    implicitWidth: box.stripWidth
-                    implicitHeight: box.tileHeight
+                // The selection highlight (user request
+                // 2026-10-02): `selected` fill, accent glyph,
+                // strongest label. It crossfades on its own
+                // timer, the new tile fading in while the old
+                // one fades out, on top of the distance shading.
+                property real sel: box.kbIndex === tile.index ? 1 : 0
+                Behavior on sel { NumberAnimation { duration: Theme.animPanel; easing.type: Theme.easingStandard } }
 
-                    Repeater {
-                        model: box.items
+                // ── Reveal ───────────────────────────
+                // The tiles deal themselves onto the screen left
+                // to right on open, borrowed from
+                // DashboardCard so the two overlays in this
+                // shell open the same way. As there, the
+                // stagger is only taken on the way in: on
+                // close every tile has to be gone before the
+                // window hides — which is what exitDuration
+                // above is set for — and a staggered fade-out
+                // would leave the last ones snapping off
+                // mid-animation.
+                readonly property int revealDelay: tile.index * SlabStyle.revealStagger
+                property real _rise: panel.shown ? 0 : SlabStyle.revealRise
 
-                        delegate: Rectangle {
-                            id: tile
-                            required property var modelData
-                            required property int index
+                opacity: panel.shown ? 1 : 0
+                transform: Translate { y: tile._rise }
 
-                            readonly property bool pressed: tileTap.pressed
-                            width: box.tileWidth
-                            height: box.tileHeight
-                            x: box.tileCenter(tile.index) - box.tileWidth / 2
-                            scale: box.scaleAt(tile.index, box.focusPos)
-                            radius: SlabStyle.cardRadius
-
-                            // State is the fill, a step up the ladder per
-                            // state, and the glyph's colour below; nothing
-                            // else (STYLE.md §2, §8). This was an accent (or
-                            // red) wash mixed into the card, plus a
-                            // coloured rule along the top edge and a 3%
-                            // scale-up, until 2026-09-27.
-                            // The fill follows the slide (box.ramp), so no
-                            // Behavior here: one restarted every frame
-                            // would lag behind it.
-                            color: tile.pressed ? Appearance.hoverStrong
-                                 : box.mix(box.ramp([Appearance.hover, Appearance.surfaceAlt, Appearance.surface, Appearance.bar], tile.dist),
-                                           Appearance.selected, tile.sel)
-                            border.width: 1
-                            border.color: SlabStyle.cardBorder
-
-                            readonly property real dist: box.distance(tile.index)
-
-                            // The selection highlight (user request
-                            // 2026-10-02): `selected` fill, accent glyph,
-                            // strongest label. It crossfades on its own
-                            // timer, the new tile fading in while the old
-                            // one fades out, on top of the distance shading.
-                            property real sel: box.kbIndex === tile.index ? 1 : 0
-                            Behavior on sel { NumberAnimation { duration: Theme.animPanel; easing.type: Theme.easingStandard } }
-
-                            // ── Reveal ───────────────────────────
-                            // The tiles deal themselves onto the slab left
-                            // to right on open, borrowed from
-                            // DashboardCard so the two overlays in this
-                            // shell open the same way. As there, the
-                            // stagger is only taken on the way in: on
-                            // close every tile has to be gone before the
-                            // window hides — which is what exitDuration
-                            // above is set for — and a staggered fade-out
-                            // would leave the last ones snapping off
-                            // mid-animation.
-                            readonly property int revealDelay: tile.index * SlabStyle.revealStagger
-                            property real _rise: panel.shown ? 0 : SlabStyle.revealRise
-
-                            opacity: panel.shown ? 1 : 0
-                            transform: Translate { y: tile._rise }
-
-                            Behavior on opacity {
-                                SequentialAnimation {
-                                    PauseAnimation { duration: panel.shown ? tile.revealDelay : 0 }
-                                    NumberAnimation { duration: SlabStyle.revealDuration; easing.type: Theme.easingStandard }
-                                }
-                            }
-                            Behavior on _rise {
-                                SequentialAnimation {
-                                    PauseAnimation { duration: panel.shown ? tile.revealDelay : 0 }
-                                    NumberAnimation { duration: SlabStyle.revealDuration; easing.type: Theme.easingQuint }
-                                }
-                            }
-
-                            ColumnLayout {
-                                anchors.centerIn: parent
-                                spacing: Theme.space3
-
-                                Text {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: tile.modelData.icon
-                                    // The danger glyph stays red whether
-                                    // or not it's the current stop — it's
-                                    // labelling the action, not the
-                                    // selection. It still recedes with the
-                                    // rest of the tile, through opacity,
-                                    // so it doesn't glow out of the shade.
-                                    color: tile.modelData.danger ? Appearance.red
-                                         : box.mix(box.ramp([Appearance.fg, Appearance.fgSoft, Appearance.fgMuted], tile.dist),
-                                                   Appearance.accent, tile.sel)
-                                    opacity: tile.modelData.danger ? 1 - 0.15 * Math.min(3, tile.dist) : 1
-                                    font.family: Theme.font
-                                    font.pixelSize: Theme.fontHuge
-                                }
-
-                                Text {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: tile.modelData.label
-                                    color: box.mix(box.ramp([Appearance.fg, Appearance.fg, Appearance.fgSoft, Appearance.fgMuted], tile.dist),
-                                                   Appearance.fgStrong, tile.sel)
-                                    font.family: Theme.fontHeading
-                                    // Was Theme.fontSmall (11px), which
-                                    // was unreadable: the small caps this
-                                    // used to carry rendered the lowercase
-                                    // letters as capitals around 0.75em,
-                                    // so an 11px label was really an ~8px
-                                    // one. These are the only words left
-                                    // on the slab and they name what the
-                                    // button does, so they get read at a
-                                    // glance or they're not worth drawing.
-                                    font.pixelSize: Theme.fontLarge
-                                    // Plain sentence case, per user
-                                    // request 2026-09-10 — the strings in
-                                    // `items` are already written that way
-                                    // ("Lock", "Log out"), so nothing here
-                                    // transforms them. This is the one
-                                    // label in the shell that departs from
-                                    // common/Plate.qml's small-caps header
-                                    // recipe, and deliberately: that recipe
-                                    // is for section headings a few px
-                                    // tall, not for the words on a button.
-                                    // The tracking went with the caps —
-                                    // 0.14em is a small-caps correction and
-                                    // reads as a gap at normal case.
-
-                                }
-                            }
-
-                            HoverHandler {
-                                id: tileHover
-                                cursorShape: Qt.PointingHandCursor
-                                onPointChanged: if (hovered) box.pointerAt(tile.index, point.scenePosition)
-                            }
-                            TapHandler { id: tileTap; onTapped: panel.runCmd(tile.modelData.cmd) }
-                        }
+                Behavior on opacity {
+                    SequentialAnimation {
+                        PauseAnimation { duration: panel.shown ? tile.revealDelay : 0 }
+                        NumberAnimation { duration: SlabStyle.revealDuration; easing.type: Theme.easingStandard }
                     }
                 }
+                Behavior on _rise {
+                    SequentialAnimation {
+                        PauseAnimation { duration: panel.shown ? tile.revealDelay : 0 }
+                        NumberAnimation { duration: SlabStyle.revealDuration; easing.type: Theme.easingQuint }
+                    }
+                }
+
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    spacing: Theme.space3
+
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: tile.modelData.icon
+                        // The danger glyph stays red whether
+                        // or not it's the current stop — it's
+                        // labelling the action, not the
+                        // selection. It still recedes with the
+                        // rest of the tile, through opacity,
+                        // so it doesn't glow out of the shade.
+                        color: tile.modelData.danger ? Appearance.red
+                             : box.mix(box.ramp([Appearance.fg, Appearance.fgSoft, Appearance.fgMuted], tile.dist),
+                                       Appearance.accent, tile.sel)
+                        opacity: tile.modelData.danger ? 1 - 0.15 * Math.min(3, tile.dist) : 1
+                        font.family: Theme.font
+                        font.pixelSize: Theme.fontHuge
+                    }
+
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: tile.modelData.label
+                        color: box.mix(box.ramp([Appearance.fg, Appearance.fg, Appearance.fgSoft, Appearance.fgMuted], tile.dist),
+                                       Appearance.fgStrong, tile.sel)
+                        font.family: Theme.fontHeading
+                        // Was Theme.fontSmall (11px), which
+                        // was unreadable: the small caps this
+                        // used to carry rendered the lowercase
+                        // letters as capitals around 0.75em,
+                        // so an 11px label was really an ~8px
+                        // one. These are the only words left
+                        // on the menu and they name what the
+                        // button does, so they get read at a
+                        // glance or they're not worth drawing.
+                        font.pixelSize: Theme.fontLarge
+                        // Plain sentence case, per user
+                        // request 2026-09-10 — the strings in
+                        // `items` are already written that way
+                        // ("Lock", "Log out"), so nothing here
+                        // transforms them. This is the one
+                        // label in the shell that departs from
+                        // common/Plate.qml's small-caps header
+                        // recipe, and deliberately: that recipe
+                        // is for section headings a few px
+                        // tall, not for the words on a button.
+                        // The tracking went with the caps —
+                        // 0.14em is a small-caps correction and
+                        // reads as a gap at normal case.
+
+                    }
+                }
+
+                HoverHandler {
+                    id: tileHover
+                    cursorShape: Qt.PointingHandCursor
+                    onPointChanged: if (hovered) box.pointerAt(tile.index, point.scenePosition)
+                }
+                TapHandler { id: tileTap; onTapped: panel.runCmd(tile.modelData.cmd) }
             }
         }
     }

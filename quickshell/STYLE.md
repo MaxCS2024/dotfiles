@@ -112,9 +112,9 @@ Leave enough space between neighbours to tell them apart (`Theme.space2`,
   item instead.
 - Movement uses decelerating easing (`Theme.easingDecel`) and stays short
   (≈ 120–160ms). An ease-in-out start reads as lag. Exception: the power
-  menu's sliding-scale tiles use a `SpringAnimation` (≈ 300ms, slight
-  overshoot) on one value that drives every tile's scale, x and colour.
-  The short ease there looked stiff.
+  menu's tiles use a `SpringAnimation` (≈ 300ms, slight overshoot) on one
+  value that drives every tile's height and colour. The short ease there
+  looked stiff.
 - A moving highlight (e.g. the sliding workspace indicator) goes **on top**
   of the items and carries a clipped copy of their labels in the on-accent
   colour (see `main/bar/Workspaces.qml`). Don't time label colour changes to
@@ -184,3 +184,8 @@ Add to this list whenever the user rejects a visual pattern.
   fill/glyph colours on their own 120ms fade. The user found it stiff and
   said it "ruins the look". Now a spring drives the slide and the colours
   follow the same value (see §7).
+- 2026-10-06: the power menu's slab (the sunken panel behind the tiles)
+  and its sliding scale, where every tile shrank with its distance from
+  the selection. The tiles now stand on the dimmed backdrop at one size
+  in one row, and the selected or hovered tile grows taller, centred on
+  the row's line.
