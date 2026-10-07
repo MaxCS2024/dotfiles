@@ -45,7 +45,11 @@ Loader {
     //
     // So a module must not set its own `visible`, and nothing needs to
     // avoid hiding an ancestor of these Loaders on their account.
-    visible: !item || !("hasContent" in item) || item.hasContent
+    // `hasContent` is the same test kept apart from `visible`, so
+    // BarIsland can hide an island whose modules are all empty without
+    // reading `visible` back through itself.
+    readonly property bool hasContent: !item || !("hasContent" in item) || item.hasContent
+    visible: hasContent
 
     sourceComponent: Modules.registry[root.name]
 

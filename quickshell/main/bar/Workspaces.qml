@@ -5,19 +5,20 @@ import QtQuick.Layouts
 import "../config"
 import "../theme"
 
-// The workspace chips sit together on one pill-shaped track, so the
-// cluster reads as a single bar module rather than loose circles.
+// The workspace chips sit together on their bar island (BarIsland.qml),
+// which is their track: it used to be a sunken strip drawn here, and
+// inside an island that showed as a second box with a 4px band of island
+// colour at each end.
 Item {
     id: root
 
     implicitWidth: row.implicitWidth + 2 * root.trackPadX
-    implicitHeight: row.implicitHeight + 2 * root.trackPad
+    implicitHeight: root.pillSize
     Layout.alignment: Qt.AlignVCenter
 
-    readonly property int trackPad: Theme.space1
-    // More room at the ends than above/below, so the end chips don't
-    // crowd the track's rounded caps.
-    readonly property int trackPadX: Theme.space2
+    // On top of the island's own Theme.space1, so the end chips keep the
+    // 8px they had from the old track's ends.
+    readonly property int trackPadX: Theme.space1
     readonly property int pillSize: Theme.barItemHeight
 
     property var screen
@@ -80,15 +81,6 @@ Item {
 
     WheelHandler {
         onWheel: (event) => root.switchBy(event.angleDelta.y > 0 ? -1 : 1)
-    }
-
-    // Sunk below the bar rather than raised above it, so the raised
-    // occupied/current chips lift off the track while empty workspaces
-    // sit flat on it.
-    Rectangle {
-        anchors.fill: parent
-        radius: Theme.radius
-        color: Appearance.sunken
     }
 
     RowLayout {

@@ -40,7 +40,7 @@ This is the most-repeated mistake in this repo, so it comes first.
   instead. A selected row, chip or button is `Appearance.selected`.
 - Elevation ladder, lowest to highest:
   `sunken` → `bar` → `surface` → `surfaceAlt` → `hover` → `hoverStrong` →
-  `selected`. `sunken` is for a track set into the bar (the workspace strip).
+  `selected`. `sunken` is for a track set into a surface.
   Move by steps; don't invent in-between shades.
 - **Accent marks one thing per group**: the current or selected item. If
   several items in a cluster are accent-coloured, none of them stands out.
@@ -75,9 +75,16 @@ Leave enough space between neighbours to tell them apart (`Theme.space2`,
   the content's plus a margin, padded `Theme.barItemPadX` (12px) each side,
   near-square corners (`radius: Theme.radius`, the 2px corner-radius
   setting; fully round pills were dropped 2026-10-02), glyphs at
-  `Theme.iconSize`. Only dots and badges stay round. The bar
-  is 36px (24 + 6 each side) and its rows are centred exactly; don't nudge
-  them with an offset.
+  `Theme.iconSize`. Only dots and badges stay round.
+- The bar is a row of floating islands (`main/bar/BarIsland.qml`), not
+  one strip: each island is 32px (24 + `space1` each side) in
+  `Appearance.bar` with `Theme.radius` corners, `space2` from the screen
+  edge, `space4` from its sides, and `space2` from the next island.
+  Modules get an island each unless `islandGroups` in `Bar.qml` puts
+  them together (volume, network, earbuds, battery). The window between
+  islands is clear. Rows are centred exactly; don't nudge them with an
+  offset. A module doesn't draw its own track or plate behind itself;
+  the island is that.
 - Buttons, cards and panels inside dropdowns: `Theme.radius`
   (`radiusMedium`/`radiusLarge` where already in use). No other literal radii.
 - New bar items build on `BarButton.qml` and `HoverPill.qml` instead of

@@ -2,6 +2,7 @@ singleton Modules 1.0 Modules.qml
 ActiveWindow 1.0 ActiveWindow.qml
 Bar 1.0 Bar.qml
 BarButton 1.0 BarButton.qml
+BarIsland 1.0 BarIsland.qml
 BarModuleLoader 1.0 BarModuleLoader.qml
 BatteryButton 1.0 BatteryButton.qml
 BrightnessButton 1.0 BrightnessButton.qml

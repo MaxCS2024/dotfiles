@@ -63,9 +63,34 @@ Variants {
         // stores `height: 0` for "unset" rather than a second copy of the
         // default, so there is nothing left to drift. bar.cfg.height (a
         // per-monitor override, from Settings.qml) still wins if the user
-        // sets one. 36, not the old 35: Theme.barItemHeight (24) plus 6
-        // each side, on the 4px grid (STYLE.md §5).
-        readonly property int barHeight: bar.cfg.height > 0 ? bar.cfg.height : 36
+        // sets one. 40: a 32px island (Theme.barItemHeight plus
+        // Theme.space1 each side, see BarIsland.qml) below an 8px gap
+        // from the screen edge, on the 4px grid (STYLE.md §5).
+        readonly property int barHeight: bar.cfg.height > 0 ? bar.cfg.height : 40
+
+        // Modules that share one island when they sit next to each other
+        // in a row; every other module floats on an island of its own.
+        // Earbuds is in the group because it sits between network and
+        // battery in the layout and would otherwise split the island.
+        readonly property var islandGroups: [
+            ["volume", "network", "earbuds", "battery"]
+        ]
+        function groupOf(name) {
+            return bar.islandGroups.findIndex(g => g.includes(name))
+        }
+        // ["tray", "volume", "network", "battery"] →
+        // [["tray"], ["volume", "network", "battery"]]
+        function islandsOf(names) {
+            const out = []
+            let prev = -1
+            for (const n of names) {
+                const g = bar.groupOf(n)
+                if (g >= 0 && g === prev) out[out.length - 1].push(n)
+                else out.push([n])
+                prev = g
+            }
+            return out
+        }
 
         // bar.cfg.enabled is the persisted per-monitor setting;
         // Panels.barVisible is the SUPER+ALT+SPACE runtime toggle (see
@@ -191,19 +216,19 @@ Variants {
         // and `.keyboardNavigable` per item (also a real property on
         // each loader) — both are genuine dependencies of this binding,
         // not method calls that would fall outside QML's tracking.
+        // Each row's Repeater makes islands (BarIsland.qml), and each
+        // island holds the loaders; its `count` is tracked the same way.
         readonly property var kbTargets: {
             const result = []
-            for (let i = 0; i < leftRepeater.count; i++) {
-                const it = leftRepeater.itemAt(i)
-                if (it && it.keyboardNavigable) result.push(it)
-            }
-            for (let i = 0; i < centerRepeater.count; i++) {
-                const it = centerRepeater.itemAt(i)
-                if (it && it.keyboardNavigable) result.push(it)
-            }
-            for (let i = 0; i < rightRepeater.count; i++) {
-                const it = rightRepeater.itemAt(i)
-                if (it && it.keyboardNavigable) result.push(it)
+            for (const rep of [leftRepeater, centerRepeater, rightRepeater]) {
+                for (let i = 0; i < rep.count; i++) {
+                    const island = rep.itemAt(i)
+                    if (!island) continue
+                    for (let j = 0; j < island.count; j++) {
+                        const it = island.loaderAt(j)
+                        if (it && it.keyboardNavigable) result.push(it)
+                    }
+                }
             }
             return result
         }
@@ -299,111 +324,96 @@ Variants {
                 y: bar.onBottom ? bar.slideOffset : -bar.slideOffset
             }
 
-            Rectangle {
-                id: barBg
-                anchors.fill: parent
-                radius: bar.cfg.floating ? Theme.radiusLarge : 0
-                // Appearance.bar, not Appearance.barGlass: barGlass folds in
-                // Settings.barOpacity, a shared setting (services/ is
-                // symlinked to main), so reading it here would let main's
-                // opacity slider through into this bar. The opaque token
-                // keeps this bar always fully opaque, the way the fixed
-                // literal it replaces did, while still following whichever
-                // palette theme/Appearance.qml is currently resolving to.
-                color: Appearance.bar
-            }
-
-            RowLayout {
-                id: leftRow
+            // No strip of bar colour behind the rows: each island draws
+            // its own (BarIsland.qml) and the window between them is
+            // clear. The islands keep a Theme.space2 gap from the screen
+            // edge and Theme.space4 from its sides, close to the 15px
+            // Hyprland leaves around tiled windows.
+            Item {
+                id: islandArea
                 anchors {
-                    left: parent.left
-                    // Was 8 — same value rightRow uses, so both ends of
-                    // the bar are inset alike. Every BarButton carries
-                    // Theme.barItemPadX (12px) of its own pad inside the
-                    // hover pill, so the first glyph still lands 16px in,
-                    // not hard against the edge.
-                    leftMargin: Theme.space1
-                    verticalCenter: parent.verticalCenter                }
-                // Was 12 — with the settings button's side pad on top,
-                // that left a 23px void between a bare glyph and the
-                // filled workspace chips, so the icon read as stranded
-                // instead of part of the same left cluster. One grid
-                // step above the edge inset, which is what the heavier
-                // chips want beside them.
-                spacing: Theme.space2
+                    fill: parent
+                    topMargin: bar.onBottom ? 0 : Theme.space2
+                    bottomMargin: bar.onBottom ? Theme.space2 : 0
+                    leftMargin: Theme.space4
+                    rightMargin: Theme.space4
+                }
 
-                Repeater {
-                    id: leftRepeater
-                    model: bar.layout.left
-                    delegate: BarModuleLoader {
-                        id: moduleLoader
-                        required property string modelData
-                        name: modelData
-                        barWindow: bar
-                        keyboardFocused: bar.kbActive && bar.kbTargets[bar.kbIndex] === moduleLoader
+                RowLayout {
+                    id: leftRow
+                    anchors {
+                        left: parent.left
+                        verticalCenter: parent.verticalCenter
+                    }
+                    spacing: Theme.space2
+
+                    Repeater {
+                        id: leftRepeater
+                        model: bar.islandsOf(bar.layout.left)
+                        delegate: BarIsland {
+                            required property var modelData
+                            names: modelData
+                            barWindow: bar
+                        }
                     }
                 }
-            }
 
-            RowLayout {
-                id: centerRow
-                anchors.verticalCenter: parent.verticalCenter
-                // The clock holds the middle of the bar, and whatever
-                // shares the row grows out from beside it. Centring the
-                // row as a whole moved the clock every time a module
-                // with `hasContent` came or went — half the voxtype
-                // pill's width each time dictation started (user request
-                // 2026-09-24; that pill has since moved off the bar, to
-                // osd/VoxtypeOsd.qml). Without a clock in the row, the row
-                // centres as a whole, the way it always did.
-                //
-                // `x`, not anchors.centerIn plus a horizontalCenterOffset:
-                // the anchor rounds its half-pixel one way and the offset
-                // another, which left the clock 1px off whenever the pill
-                // was up. One Math.round over the whole sum lands the
-                // clock on the same pixel either way.
-                x: {
-                    let pivot = null
-                    for (let i = 0; i < centerRepeater.count; i++) {
-                        const it = centerRepeater.itemAt(i)
-                        if (it && it.name === "clock") pivot = it
+                RowLayout {
+                    id: centerRow
+                    anchors.verticalCenter: parent.verticalCenter
+                    // The clock's island holds the middle of the screen,
+                    // and whatever shares the row grows out from beside
+                    // it. Centring the row as a whole moved the clock
+                    // every time a module with `hasContent` came or went
+                    // (user request 2026-09-24). Without a clock in the
+                    // row, the row centres as a whole.
+                    //
+                    // `x`, not anchors.centerIn plus a
+                    // horizontalCenterOffset: the anchor rounds its
+                    // half-pixel one way and the offset another, which
+                    // left the clock 1px off. One Math.round over the
+                    // whole sum lands it on the same pixel either way.
+                    // Centred on the window, not islandArea, which is the
+                    // same thing while both side margins match.
+                    x: {
+                        let pivot = null
+                        for (let i = 0; i < centerRepeater.count; i++) {
+                            const it = centerRepeater.itemAt(i)
+                            if (it && it.names.includes("clock")) pivot = it
+                        }
+                        return pivot
+                            ? Math.round(parent.width / 2 - (pivot.x + pivot.width / 2))
+                            : Math.round((parent.width - centerRow.width) / 2)
                     }
-                    return pivot
-                        ? Math.round(parent.width / 2 - (pivot.x + pivot.width / 2))
-                        : Math.round((parent.width - centerRow.width) / 2)
-                }
-                spacing: Theme.space2
+                    spacing: Theme.space2
 
-                Repeater {
-                    id: centerRepeater
-                    model: bar.layout.center
-                    delegate: BarModuleLoader {
-                        id: moduleLoader
-                        required property string modelData
-                        name: modelData
-                        barWindow: bar
-                        keyboardFocused: bar.kbActive && bar.kbTargets[bar.kbIndex] === moduleLoader
+                    Repeater {
+                        id: centerRepeater
+                        model: bar.islandsOf(bar.layout.center)
+                        delegate: BarIsland {
+                            required property var modelData
+                            names: modelData
+                            barWindow: bar
+                        }
                     }
                 }
-            }
 
-            RowLayout {
-                id: rightRow
-                anchors {
-                    right: parent.right
-                    rightMargin: Theme.space1
-                    verticalCenter: parent.verticalCenter                }
-                spacing: Theme.space1
+                RowLayout {
+                    id: rightRow
+                    anchors {
+                        right: parent.right
+                        verticalCenter: parent.verticalCenter
+                    }
+                    spacing: Theme.space2
 
-                Repeater {
-                    id: rightRepeater
-                    model: bar.layout.right
-                    delegate: BarModuleLoader {
-                        id: moduleLoader
-                        required property string modelData
-                        name: modelData
-                        barWindow: bar
-                        keyboardFocused: bar.kbActive && bar.kbTargets[bar.kbIndex] === moduleLoader
+                    Repeater {
+                        id: rightRepeater
+                        model: bar.islandsOf(bar.layout.right)
+                        delegate: BarIsland {
+                            required property var modelData
+                            names: modelData
+                            barWindow: bar
+                        }
                     }
                 }
             }
