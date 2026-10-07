@@ -177,7 +177,7 @@ ShellRoot {
         VoxtypeOsd {}
     }
     NotificationPopups {}
-    ScreenshotPopup {}
+    Screenshot {}
 
     LazyLoader {
         id: wallpaperSwitcherLoader
@@ -359,7 +359,6 @@ ShellRoot {
         active: false
         AppManager {}
     }
-    WallpaperPopup {}
     // Replaces PowerOrbMenu.qml per the "retire the orb,
     // one power menu" decision (see PowerMenuPopout.qml's own header).
     PowerMenuPopout {}

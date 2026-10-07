@@ -11,8 +11,8 @@ import "../services"
 // A singleton because three things need it and none of them owns it. The
 // gallery (WallpaperSwitcher.qml) is lazily built and most sessions never
 // open it; the rotation has to run whether it was opened or not; and
-// WallpaperPopup reports the result of an apply that may have come from
-// either. All of it used to live in the switcher window except the
+// the result of an apply that may have come from either goes out as a
+// notification from here. All of it used to live in the switcher window except the
 // rotation, which lived in the since-deleted settingswindow's
 // WallpaperPane.qml — dropped from this config on 2026-09-13, which is
 // why
@@ -142,17 +142,17 @@ Singleton {
         onExited: (exitCode, exitStatus) => {
             const path = root.applying
             const name = path.split("/").pop()
+            // An ordinary card in the toast stack, like every other
+            // shell event. This used to be its own banner popup with a
+            // crop of the image, which looked like nothing else up there.
             if (exitCode === 0) {
-                Notifications.addManual("Wallpaper changed", name, "normal", "Wallpaper")
-                Panels.notifyWallpaperApplied(path, true, name)
+                Notifications.post("Wallpaper changed", name, "normal", "Wallpaper", "")
                 // awww has written its cache by now, so this is what makes
                 // the gallery's "Current" mark move without being told.
                 root.readCurrent()
             } else {
-                const failMessage = "Could not apply " + name
-                    + " — check that awww and matugen are installed"
-                Notifications.addManual("Wallpaper Failed", failMessage, "critical", "Wallpaper")
-                Panels.notifyWallpaperApplied(path, false, failMessage)
+                Notifications.post("Couldn't apply " + name,
+                    "Check that awww and matugen are installed", "critical", "Wallpaper", "")
             }
             root.applying = ""
         }

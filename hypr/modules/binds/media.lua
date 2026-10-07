@@ -1,6 +1,6 @@
--- Screenshot: routed through Quickshell's screenshot popup, which runs
--- grim + slurp + wl-copy itself and shows a thumbnail/notification —
--- see notifications/ScreenshotPopup.qml in the quickshell dotfiles.
+-- Screenshot: routed through Quickshell's screenshot capture, which runs
+-- grim + slurp + wl-copy itself and posts a notification —
+-- see notifications/Screenshot.qml in the quickshell dotfiles.
 --
 -- Not `repeating`: holding the key would start a capture per repeat tick,
 -- each with its own slurp overlay stacked on the last.

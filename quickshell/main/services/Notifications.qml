@@ -315,8 +315,10 @@ Singleton {
     // NotificationServer.onNotification below, so they need their own way
     // in. `urgency` accepts the same "low"/"normal"/"critical" strings as
     // _urgencyName(); originalId -1 marks a row no sender owns, which is
-    // what keeps actionsFor() and the live-ref map away from it.
-    function _manualRow(title, message, urgency, appName, glyph) {
+    // what keeps actionsFor() and the live-ref map away from it. `argv`,
+    // when given, is what clicking the card runs — stored the same way as
+    // a relay --exec vector, so a history row stays clickable.
+    function _manualRow(title, message, urgency, appName, glyph, argv) {
         return {
             id: root._nextId++,
             originalId: -1,
@@ -326,7 +328,7 @@ Singleton {
             body: message || "",
             image: "",
             glyph: glyph || "",
-            execArgv: "",
+            execArgv: argv && argv.length > 0 ? JSON.stringify(argv) : "",
             urgency: urgency || "normal",
             expireTimeout: -1,
             time: Date.now(),
@@ -335,22 +337,14 @@ Singleton {
         }
     }
 
-    // History only. For callers that already put something on screen
-    // themselves — the settings panel's own toast, the screenshot popup —
-    // and just need the event to survive being looked back at.
-    function addManual(title, message, urgency, appName) {
-        root.history = [root._manualRow(title, message, urgency, appName),
-            ...root.history].slice(0, root.maxHistory)
-    }
-
     // History *and* the toast stack, for a shell-generated event that has
     // no UI of its own. Deliberately runs the same two gates a D-Bus
     // notification passes through (see onNotification): DND silences it to
     // history, and an idle screen keeps it off the stack rather than
     // stacking toasts nobody is there to read. Anything that reaches this
     // is worth a history row either way, so the write happens first.
-    function post(title, message, urgency, appName, glyph) {
-        const row = root._manualRow(title, message, urgency, appName, glyph)
+    function post(title, message, urgency, appName, glyph, argv) {
+        const row = root._manualRow(title, message, urgency, appName, glyph, argv)
         root.history = [row, ...root.history].slice(0, root.maxHistory)
 
         if (Settings.dnd && !root._bypassesDnd(row)) return

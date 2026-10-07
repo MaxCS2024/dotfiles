@@ -227,7 +227,7 @@ running. Grouped by what breaks if it's missing.
   blocked".
 
 - **grim** and **slurp** — the screenshot path in
-  `notifications/ScreenshotPopup.qml`. grim captures the whole screen,
+  `notifications/Screenshot.qml`. grim captures the whole screen,
   the focused output, or a region; slurp is the region select. These are
   the first of four tools Conf's Utilities rows name in `requires:`:
   `menu/MenuActions.qml` probes PATH once per menu open — they come and
@@ -251,7 +251,7 @@ running. Grouped by what breaks if it's missing.
   changes. A cancelled pick exits non-zero with empty stdout and is
   deliberately silent.
 
-- **jq** — `notifications/ScreenshotPopup.qml` pipes `hyprctl
+- **jq** — `notifications/Screenshot.qml` pipes `hyprctl
   activewindow -j` and `hyprctl monitors -j` through it to find the
   geometry for the window and screen captures; without it those two
   variants fail (with a toast) while a region capture still works. Also

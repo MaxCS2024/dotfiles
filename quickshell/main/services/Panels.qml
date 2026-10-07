@@ -18,11 +18,6 @@ import QtQml
 Singleton {
     id: root
 
-    signal wallpaperApplied(string path, bool success, string message)
-    function notifyWallpaperApplied(path, success, message) {
-        root.wallpaperApplied(path, success, message)
-    }
-
     // ── Bar visibility ───────────────────────────────────
     // Runtime-only, deliberately not persisted through Settings'
     // per-monitor `enabled` flag (services/Settings.qml):
@@ -133,12 +128,12 @@ Singleton {
     function claimRightRail(name) { root.rightRailClaimed(name) }
 
     // ── Screen capture ─────────────────────────────
-    // notifications/ScreenshotPopup.qml does the capturing for all three
+    // notifications/Screenshot.qml does the capturing for all three
     // modes ("region" | "window" | "screen") so a shot started from the
-    // Conf menu gets the same file, clipboard copy, thumbnail and history
-    // row as the Print key does. In-process relay only — that popup is
-    // built eagerly and keeps its own "screenshot" IPC target, so there
-    // is no second external surface for this here.
+    // Conf menu gets the same file, clipboard copy, notification and
+    // history row as the Print key does. In-process relay only — that
+    // component is built eagerly and keeps its own "screenshot" IPC
+    // target, so there is no second external surface for this here.
     signal captureRequested(string mode)
 
     function capture(mode) { root.captureRequested(mode || "region") }

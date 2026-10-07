@@ -138,7 +138,7 @@ ShellSurface {
         Wallpapers.apply(panel.selectedPath)
         // Closed rather than left up under an "Applying…" state: the
         // thing you just asked to look at is behind this window, and
-        // wallpaper/WallpaperPopup.qml says whether it worked.
+        // a notification card says whether it worked.
         panel.close()
     }
 
