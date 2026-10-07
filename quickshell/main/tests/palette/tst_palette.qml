@@ -197,6 +197,16 @@ TestCase {
         })
     }
 
+    // Occupied workspaces draw their number in their colour on surfaceAlt.
+    function test_workspace_colours_read_on_occupied_chips_data() { return sources() }
+    function test_workspace_colours_read_on_occupied_chips(data) {
+        const t = Palette.derive(data.base)
+        workspaceColours(t).forEach((c, i) => {
+            const r = Palette.contrastRatio(c, t.surfaceAlt)
+            verify(r >= 2.5, "workspace" + (i + 1) + " at " + r.toFixed(2) + ":1")
+        })
+    }
+
     function test_matugen_without_hues_still_makes_a_palette() {
         // A colors.json from before color5/color6 were templated.
         const w = Palette.fromMatugen(matugenJson)

@@ -30,6 +30,9 @@ Item {
     // with a sliding indicator on top, so the pill itself looks the same
     // whether active or not. The scratchpad pill still shows its own.
     property bool showsActive: true
+    // The number's colour while the workspace is occupied. Workspaces.qml
+    // gives workspaces 1–5 their own colour, the one their indicator uses.
+    property color occupiedColor: Appearance.accent
 
     signal clicked()
 
@@ -65,7 +68,7 @@ Item {
     readonly property color _markColor: root.urgent
         ? Qt.rgba(Appearance.red.r, Appearance.red.g, Appearance.red.b, 0.5 + 0.5 * root._urgentPulse)
         : (root.active && root.showsActive ? Appearance.bar
-           : (root.occupied ? Appearance.accent : Appearance.fgMuted))
+           : (root.occupied ? root.occupiedColor : Appearance.fgMuted))
 
     // A resting background, not just HoverPill's on-hover one — bare
     // glyphs on the bare bar read as too flat/minimal for a cluster of

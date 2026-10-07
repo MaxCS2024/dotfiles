@@ -68,8 +68,9 @@ glance, and colour alone isn't enough:
 
 Exception: the current-workspace indicator takes a colour of its own for
 workspaces 1–5 (`Appearance.workspaceColor(id)`, tokens `workspace1`–`5`
-in `palette.js`), at the user's request on 2026-10-07; other workspaces
-use `accent`.
+in `palette.js`), at the user's request on 2026-10-07, and an occupied
+one of those draws its number in the same colour instead of `accent`.
+Other workspaces use `accent` for both.
 
 Leave enough space between neighbours to tell them apart (`Theme.space2`,
 8px, on the bar).

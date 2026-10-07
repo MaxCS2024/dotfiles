@@ -167,7 +167,10 @@ function derive(base) {
     // on top of them readable. HSL lightness isn't perceived lightness
     // (blue looks far darker than gold at the same value), so each hue
     // then moves away from the bar until the number clears 3:1 (the
-    // floor fgMuted uses, on the same unlinearised scale).
+    // floor fgMuted uses, on the same unlinearised scale). Occupied
+    // workspaces also draw their number in this colour on surfaceAlt,
+    // so it has to clear 2.5:1 against that too.
+    var surfaceAlt = lift(1.25)
     function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)) }
     function workspace(i) {
         var h = WORKSPACE_HUES[i] / 360
@@ -175,7 +178,8 @@ function derive(base) {
         var l = dark ? clamp(accent.hslLightness, 0.62, 0.72)
                      : clamp(accent.hslLightness, 0.36, 0.44)
         var c = Qt.hsla(h, s, l, 1)
-        while (contrastRatio(c, bg) < 3.0 && l > 0.15 && l < 0.9) {
+        while ((contrastRatio(c, bg) < 3.0 || contrastRatio(c, surfaceAlt) < 2.5)
+               && l > 0.15 && l < 0.9) {
             l += dark ? 0.02 : -0.02
             c = Qt.hsla(h, s, l, 1)
         }
@@ -189,7 +193,7 @@ function derive(base) {
         sunken: recede(bg, 1.35),
         bar: bg,
         surface: surface,
-        surfaceAlt: lift(1.25),
+        surfaceAlt: surfaceAlt,
         hover: lift(1.35),
         hoverStrong: lift(1.45),
         selected: lift(1.55),

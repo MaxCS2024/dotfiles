@@ -99,6 +99,7 @@ Item {
 
                 active: root.isActive(wsItem.modelData)
                 occupied: root.isOccupied(wsItem.modelData)
+                occupiedColor: Appearance.workspaceColor(wsItem.modelData)
                 label: wsItem.modelData
                 // The sliding indicator above draws the current state.
                 showsActive: false
