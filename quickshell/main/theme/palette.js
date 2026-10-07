@@ -35,6 +35,7 @@ var TOKENS = [
     "fgStrong", "fg", "fgSoft", "fgMuted", "fgFaint", "fgDim",
     "placeholder", "icon", "disabled",
     "accent", "green", "orange", "red", "magenta", "cyan",
+    "workspace1", "workspace2", "workspace3", "workspace4", "workspace5",
     "dangerBg", "dangerBorder", "badgePacman", "badgeAur", "badgeFlatpak", "installedBg"
 ]
 
@@ -102,6 +103,12 @@ function fromMatugen(text) {
     }
 }
 
+// The hues of the current-workspace indicator for workspaces 1–5
+// (bar/Workspaces.qml): blue, green, gold, rose, violet. Fixed hues
+// rather than the palette's own status colours, because a wallpaper
+// palette often has three of those in one hue family.
+var WORKSPACE_HUES = [210, 140, 45, 345, 275]
+
 // Base palette in, every token out.
 //
 // Surfaces move away from bg and text recedes towards it, in whichever
@@ -154,6 +161,27 @@ function derive(base) {
     var magenta = _set(base.magenta) ? _col(base.magenta) : atHue(300 / 360)
     var cyan = _set(base.cyan) ? _col(base.cyan) : atHue(180 / 360)
 
+    // The workspace hues at the accent's saturation and lightness, held
+    // inside a band so they stay vivid enough to tell apart (a pastel
+    // accent would wash them all out) and keep the bar-coloured number
+    // on top of them readable. HSL lightness isn't perceived lightness
+    // (blue looks far darker than gold at the same value), so each hue
+    // then moves away from the bar until the number clears 3:1 (the
+    // floor fgMuted uses, on the same unlinearised scale).
+    function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)) }
+    function workspace(i) {
+        var h = WORKSPACE_HUES[i] / 360
+        var s = clamp(accent.hslSaturation, 0.55, 0.8)
+        var l = dark ? clamp(accent.hslLightness, 0.62, 0.72)
+                     : clamp(accent.hslLightness, 0.36, 0.44)
+        var c = Qt.hsla(h, s, l, 1)
+        while (contrastRatio(c, bg) < 3.0 && l > 0.15 && l < 0.9) {
+            l += dark ? 0.02 : -0.02
+            c = Qt.hsla(h, s, l, 1)
+        }
+        return c
+    }
+
     return {
         // One step *below* the bar: a recessed track set into it (the
         // workspace strip). Moves the opposite way from the surface
@@ -188,6 +216,11 @@ function derive(base) {
         red: red,
         magenta: magenta,
         cyan: cyan,
+        workspace1: workspace(0),
+        workspace2: workspace(1),
+        workspace3: workspace(2),
+        workspace4: workspace(3),
+        workspace5: workspace(4),
 
         // Washes of the status colours, so a palette's red drags its
         // danger background along with it.

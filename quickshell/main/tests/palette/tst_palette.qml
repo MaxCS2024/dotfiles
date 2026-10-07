@@ -163,6 +163,40 @@ TestCase {
         verify(Qt.colorEqual(t.cyan, "#9ad0e8"))
     }
 
+    // ── The workspace colours ────────────────────────────
+
+    function workspaceColours(t) {
+        return [t.workspace1, t.workspace2, t.workspace3, t.workspace4, t.workspace5]
+    }
+
+    function test_workspace_colours_are_distinct_hues_data() { return sources() }
+    function test_workspace_colours_are_distinct_hues(data) {
+        const ws = workspaceColours(Palette.derive(data.base))
+        for (let i = 0; i < ws.length; i++)
+            for (let j = i + 1; j < ws.length; j++) {
+                const d = Math.abs(ws[i].hslHue - ws[j].hslHue) * 360
+                verify(Math.min(d, 360 - d) >= 40,
+                       "workspace" + (i + 1) + " and " + (j + 1) + " are " + d.toFixed(0) + "° apart")
+            }
+    }
+
+    function test_workspace_colours_stay_vivid_on_a_pastel_accent() {
+        // matugen's primary is often near-white pink; the hues mustn't
+        // fade to five shades of almost-white.
+        const t = Palette.derive({ bg: "#1a1110", fg: "#f1dfdb", accent: "#ffb4a7" })
+        for (const c of workspaceColours(t))
+            verify(c.hslSaturation >= 0.5 && c.hslLightness <= 0.75)
+    }
+
+    function test_bar_text_reads_on_workspace_colours_data() { return sources() }
+    function test_bar_text_reads_on_workspace_colours(data) {
+        const t = Palette.derive(data.base)
+        workspaceColours(t).forEach((c, i) => {
+            const r = Palette.contrastRatio(c, t.bar)
+            verify(r >= 3.0, "workspace" + (i + 1) + " at " + r.toFixed(2) + ":1")
+        })
+    }
+
     function test_matugen_without_hues_still_makes_a_palette() {
         // A colors.json from before color5/color6 were templated.
         const w = Palette.fromMatugen(matugenJson)

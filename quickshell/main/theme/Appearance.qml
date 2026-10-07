@@ -225,6 +225,17 @@ Singleton {
     readonly property color magenta: root._t.magenta
     readonly property color cyan: root._t.cyan
 
+    // The current-workspace indicator's fill for workspaces 1–5, one hue
+    // each (bar/Workspaces.qml). Any other workspace uses accent.
+    readonly property var workspaceColors: [
+        root._t.workspace1, root._t.workspace2, root._t.workspace3,
+        root._t.workspace4, root._t.workspace5
+    ]
+    function workspaceColor(id) {
+        return id >= 1 && id <= root.workspaceColors.length
+            ? root.workspaceColors[id - 1] : root.accent
+    }
+
     readonly property color dangerBg: root._t.dangerBg
     readonly property color dangerBorder: root._t.dangerBorder
     readonly property color badgePacman: root._t.badgePacman

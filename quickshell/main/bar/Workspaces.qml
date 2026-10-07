@@ -156,7 +156,9 @@ Item {
         width: root.pillSize
         height: root.pillSize
         radius: Theme.radius
-        color: Appearance.accent
+        // Each of workspaces 1–5 has its own colour; the fill fades to
+        // the new one over the same time as the slide.
+        color: Appearance.workspaceColor(Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id : 0)
         clip: true
         // opacity, not visible — the special workspace takes focus while
         // shown, and the pill should fade out rather than vanish.
@@ -164,6 +166,7 @@ Item {
 
         Behavior on x { NumberAnimation { duration: Theme.workspaceSlideDuration; easing.type: Theme.easingDecel } }
         Behavior on opacity { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
+        Behavior on color { ColorAnimation { duration: Theme.workspaceSlideDuration; easing.type: Theme.easingDecel } }
 
         Row {
             x: row.x - indicator.x
