@@ -81,7 +81,8 @@ Leave enough space between neighbours to tell them apart (`Theme.space2`,
   `Appearance.bar` with `Theme.radius` corners, `space2` from the screen
   edge, `space4` from its sides, and `space2` from the next island.
   Modules get an island each unless `islandGroups` in `Bar.qml` puts
-  them together (volume, network, battery). The window between
+  them together (volume, network, battery); that island is always
+  the last in the right row, nearest the screen edge. The window between
   islands is clear. Rows are centred exactly; don't nudge them with an
   offset. A module doesn't draw its own track or plate behind itself;
   the island is that.

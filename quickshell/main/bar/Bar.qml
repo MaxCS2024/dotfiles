@@ -93,6 +93,16 @@ Variants {
             }
             return out
         }
+        // The right row, with the volume/network/battery island always
+        // last, nearest the screen edge, whatever order the saved layout
+        // has (user request 2026-10-07). The example above becomes
+        // [["tray"], ["earbuds"], ["volume", "network", "battery"]].
+        readonly property var rightIslands: {
+            const islands = bar.islandsOf(bar.layout.right)
+            const last = islands.findIndex(isl => bar.groupOf(isl[0]) === 0)
+            if (last >= 0) islands.push(islands.splice(last, 1)[0])
+            return islands
+        }
 
         // bar.cfg.enabled is the persisted per-monitor setting;
         // Panels.barVisible is the SUPER+ALT+SPACE runtime toggle (see
@@ -410,7 +420,7 @@ Variants {
 
                     Repeater {
                         id: rightRepeater
-                        model: bar.islandsOf(bar.layout.right)
+                        model: bar.rightIslands
                         delegate: BarIsland {
                             required property var modelData
                             names: modelData
