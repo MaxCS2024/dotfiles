@@ -62,7 +62,7 @@ ShellSurface {
 
     // The whole folder. There was a type-to-filter field, with shuffle,
     // rescan and the hourly-rotation switch beside it in the header's
-    // right end; all of it went, with the caption and the key hints
+    // right end; all of it went, with the count and the key hints
     // under the carousel, to leave the screen to the pictures (user
     // request 2026-10-07). Rotation still runs on its persisted setting.
     readonly property var shownFiles: Wallpapers.files
@@ -279,8 +279,8 @@ ShellSurface {
                 // crop to the screen's own ratio is what awww will do
                 // anyway. Whichever of width and height runs out first
                 // decides, so the hero grows to fill a wide screen and
-                // stops when it would outgrow the space under the
-                // header.
+                // stops when it would outgrow the space between the
+                // header and the caption.
                 readonly property int heroWidth:
                     Math.round(Math.min(stage.width * 0.5, stage.height * 16 / 9))
                 readonly property int heroHeight: Math.round(stage.heroWidth * 9 / 16)
@@ -559,6 +559,19 @@ ShellSurface {
                         }
                     }
                 }
+            }
+
+            // ── Caption ──────────────────────────────────
+            // The hero's name, and only that: the count and key hints
+            // that sat with it stay gone (user request 2026-10-07).
+            Text {
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: Theme.space1
+                visible: panel.shownFiles.length > 0
+                text: panel.selectedPath === "" ? "" : Wallpapers.displayName(panel.selectedPath)
+                color: "#ffffff"
+                font.pixelSize: Theme.fontLarge
+                font.family: Theme.font
             }
 
             // ── Nothing to show ──────────────────────────
