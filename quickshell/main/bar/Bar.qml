@@ -68,26 +68,28 @@ Variants {
         // from the screen edge, on the 4px grid (STYLE.md §5).
         readonly property int barHeight: bar.cfg.height > 0 ? bar.cfg.height : 40
 
-        // Modules that share one island when they sit next to each other
-        // in a row; every other module floats on an island of its own.
-        // Earbuds is in the group because it sits between network and
-        // battery in the layout and would otherwise split the island.
+        // Modules that share one island; every other module floats on an
+        // island of its own.
         readonly property var islandGroups: [
-            ["volume", "network", "earbuds", "battery"]
+            ["volume", "network", "battery"]
         ]
         function groupOf(name) {
             return bar.islandGroups.findIndex(g => g.includes(name))
         }
-        // ["tray", "volume", "network", "battery"] →
-        // [["tray"], ["volume", "network", "battery"]]
+        // A group's members in a row all go on one island, placed where
+        // the first of them is; anything the layout puts between them
+        // follows that island. Earbuds sits between network and battery
+        // in the saved layout, so:
+        // ["tray", "volume", "network", "earbuds", "battery"] →
+        // [["tray"], ["volume", "network", "battery"], ["earbuds"]]
         function islandsOf(names) {
             const out = []
-            let prev = -1
+            const groupIsland = {}
             for (const n of names) {
                 const g = bar.groupOf(n)
-                if (g >= 0 && g === prev) out[out.length - 1].push(n)
-                else out.push([n])
-                prev = g
+                if (g < 0) out.push([n])
+                else if (g in groupIsland) groupIsland[g].push(n)
+                else out.push(groupIsland[g] = [n])
             }
             return out
         }
