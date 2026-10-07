@@ -78,7 +78,10 @@ Leave enough space between neighbours to tell them apart (`Theme.space2`,
   `Theme.iconSize`. Only dots and badges stay round.
 - The bar is a row of floating islands (`main/bar/BarIsland.qml`), not
   one strip: each island is 32px (24 + `space1` each side) in
-  `Appearance.bar` with `Theme.radius` corners, `space2` from the screen
+  `Appearance.bar` with `Theme.radius` corners and a 1px
+  `Appearance.border` edge (the neutral structural edge of §1; a
+  brighter, near-white one was offered 2026-10-07 and turned down),
+  `space2` from the screen
   edge, `space4` from its sides, and `space2` from the next island.
   Modules get an island each unless `islandGroups` in `Bar.qml` puts
   them together (volume, network, battery); that island is always

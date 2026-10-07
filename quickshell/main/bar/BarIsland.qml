@@ -37,6 +37,11 @@ Rectangle {
     // The opaque token, as the single bar was: barGlass folds in
     // Settings.barOpacity, which is shared with other configs.
     color: Appearance.bar
+    // A neutral structural edge, the same one the dropdown cards carry
+    // (STYLE.md §1), so each island reads as its own piece against the
+    // wallpaper.
+    border.width: 1
+    border.color: Appearance.border
 
     RowLayout {
         id: row
