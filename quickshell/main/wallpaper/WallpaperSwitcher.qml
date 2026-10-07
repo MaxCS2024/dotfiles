@@ -40,7 +40,7 @@ ShellSurface {
 
     surfaceNamespace: "quickshell:wallpaper"
     surfaceName: "wallpaper"
-    focusTarget: filterInput
+    focusTarget: keys
 
     // 220, not ShellSurface's 200: this fades on the shell-wide panel
     // duration, and a refactor is not the place to quietly shorten it.
@@ -50,8 +50,6 @@ ShellSurface {
     // and so can what is on screen — a rotation may have fired an hour
     // ago.
     onSurfaceOpened: {
-        panel.filter = ""
-        filterInput.text = ""
         panel.userMoved = false
         Wallpapers.refresh()
         panel.syncSelection()
@@ -62,16 +60,12 @@ ShellSurface {
     // as a background they are bleeding off.
     readonly property int gutter: 56
 
-    // Type-to-filter, over the display name rather than the path: the
-    // folder is one directory, so the path adds nothing to match on, and
-    // the extension and resolution suffix would match everything.
-    property string filter: ""
-
-    readonly property var shownFiles: {
-        const q = panel.filter.trim().toLowerCase()
-        if (q === "") return Wallpapers.files
-        return Wallpapers.files.filter(p => Wallpapers.displayName(p).toLowerCase().indexOf(q) !== -1)
-    }
+    // The whole folder. There was a type-to-filter field, with shuffle,
+    // rescan and the hourly-rotation switch beside it in the header's
+    // right end; all of it went, with the caption and the key hints
+    // under the carousel, to leave the screen to the pictures (user
+    // request 2026-10-07). Rotation still runs on its persisted setting.
+    readonly property var shownFiles: Wallpapers.files
 
     // The carousel owns the position — it is the thing that scrolls, and
     // a second copy of "which one is selected" would have to be kept in
@@ -114,8 +108,7 @@ ShellSurface {
     // PathView lays the whole model around its path, so at the last image
     // the next two are already drawn to the right of the hero. Clamping
     // the position there would have meant a gallery that shows you what
-    // comes next and then refuses to go to it. The caption's "9 of 9" is
-    // what says where the end is.
+    // comes next and then refuses to go to it.
     function move(step) {
         const n = panel.shownFiles.length
         if (n === 0) return
@@ -148,10 +141,35 @@ ShellSurface {
         function onCurrentPathsChanged() { panel.syncSelection() }
     }
 
-    // Filtering re-indexes the list under the selection, so it goes back
-    // to the first match rather than pointing at whichever image happens
-    // to have inherited the old index.
-    onFilterChanged: flow.currentIndex = 0
+    // The gallery's whole keyboard surface, held by an item that draws
+    // nothing now that there is no filter field to hold it. Left/Right
+    // rather than Up/Down: the carousel is one row, and the arrows should
+    // point the way it moves.
+    Item {
+        id: keys
+
+        Keys.onPressed: (event) => {
+            if (event.key === Qt.Key_Escape) {
+                panel.close()
+                event.accepted = true
+            } else if (event.key === Qt.Key_Right || event.key === Qt.Key_Down) {
+                panel.move(1)
+                event.accepted = true
+            } else if (event.key === Qt.Key_Left || event.key === Qt.Key_Up) {
+                panel.move(-1)
+                event.accepted = true
+            } else if (event.key === Qt.Key_Home) {
+                panel.jumpTo(0)
+                event.accepted = true
+            } else if (event.key === Qt.Key_End) {
+                panel.jumpTo(panel.shownFiles.length - 1)
+                event.accepted = true
+            } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                panel.applySelected()
+                event.accepted = true
+            }
+        }
+    }
 
     // ── The dim ──────────────────────────────────────────
     Rectangle {
@@ -235,132 +253,11 @@ ShellSurface {
                     Text {
                         text: Wallpapers.loading ? "Loading…"
                             : Wallpapers.files.length === 0 ? Wallpapers.dirDisplay
-                            : panel.filter.trim() !== ""
-                                ? panel.shownFiles.length + " of " + Wallpapers.files.length + " images"
                             : Wallpapers.files.length === 1 ? "1 image"
                             : Wallpapers.files.length + " images"
                         color: Qt.rgba(1, 1, 1, 0.66)
                         font.pixelSize: Theme.fontSmall
                         font.family: Theme.font
-                    }
-                }
-
-                Item { Layout.fillWidth: true }
-
-                // ── Filter ───────────────────────────────
-                Rectangle {
-                    implicitWidth: 260
-                    implicitHeight: 32
-                    radius: Theme.radius
-                    // A fill and no edge: a border beside this fill
-                    // would be two marks for one field (STYLE.md §1).
-                    color: Qt.rgba(1, 1, 1, 0.08)
-
-                    Text {
-                        anchors.left: parent.left
-                        anchors.leftMargin: Theme.space3
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "Filter…"
-                        visible: filterInput.text === ""
-                        color: Qt.rgba(1, 1, 1, 0.4)
-                        font.pixelSize: Theme.fontSmall
-                        font.family: Theme.font
-                    }
-
-                    TextInput {
-                        id: filterInput
-
-                        anchors.fill: parent
-                        anchors.leftMargin: Theme.space3
-                        anchors.rightMargin: Theme.space3
-                        verticalAlignment: TextInput.AlignVCenter
-                        color: "#ffffff"
-                        font.pixelSize: Theme.fontSmall
-                        font.family: Theme.font
-                        clip: true
-                        cursorVisible: true
-
-                        onTextChanged: panel.filter = text
-
-                        // The gallery's whole keyboard surface, because
-                        // this is the item that holds focus while it is
-                        // open — same arrangement as the launcher's own
-                        // search field. Left/Right rather than Up/Down:
-                        // the carousel is one row, and the arrows should
-                        // point the way it moves.
-                        Keys.onPressed: (event) => {
-                            if (event.key === Qt.Key_Escape) {
-                                // One layer at a time: a filter that has
-                                // narrowed the gallery is what Escape
-                                // undoes first, and only an empty field
-                                // closes the window.
-                                if (filterInput.text !== "") filterInput.text = ""
-                                else panel.close()
-                                event.accepted = true
-                            } else if (event.key === Qt.Key_Right || event.key === Qt.Key_Down) {
-                                panel.move(1)
-                                event.accepted = true
-                            } else if (event.key === Qt.Key_Left || event.key === Qt.Key_Up) {
-                                panel.move(-1)
-                                event.accepted = true
-                            } else if (event.key === Qt.Key_Home) {
-                                panel.jumpTo(0)
-                                event.accepted = true
-                            } else if (event.key === Qt.Key_End) {
-                                panel.jumpTo(panel.shownFiles.length - 1)
-                                event.accepted = true
-                            } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                panel.applySelected()
-                                event.accepted = true
-                            }
-                        }
-                    }
-                }
-
-                // ── Shuffle ──────────────────────────────
-                // U+F074 is nf-fa-shuffle. Applies a random one that
-                // isn't already up and closes, for the same reason
-                // picking one does: the result is behind this window.
-                GalleryButton {
-                    glyph: "\uf074"
-                    label: "Shuffle"
-                    enabled: Wallpapers.files.length > 1
-                    onTapped: {
-                        Wallpapers.shuffle()
-                        panel.close()
-                    }
-                }
-
-                // U+F021 is nf-fa-arrows_rotate, the refresh glyph
-                // quicksettings/PowerTab.qml already uses for Reboot.
-                GalleryButton {
-                    glyph: "\uf021"
-                    label: "Rescan"
-                    onTapped: Wallpapers.refresh()
-                }
-
-                // ── Hourly rotation ──────────────────────
-                // Labelled, unlike the switches in the two rails: those
-                // sit under a caption that names the state they put the
-                // machine in, and this one has no caption to lean on.
-                RowLayout {
-                    spacing: Theme.space2
-                    Layout.leftMargin: Theme.space2
-
-                    Text {
-                        text: "Rotate hourly"
-                        color: Qt.rgba(1, 1, 1, 0.66)
-                        font.pixelSize: Theme.fontSmall
-                        font.family: Theme.font
-                    }
-
-                    ToggleSwitch {
-                        checked: Settings.rotateWallpaperHourly
-                        trackOffColor: Qt.rgba(1, 1, 1, 0.18)
-                        trackOnColor: Appearance.accent
-                        borderColor: Qt.rgba(1, 1, 1, 0.25)
-                        knobColor: "#ffffff"
-                        onToggled: Settings.rotateWallpaperHourly = !Settings.rotateWallpaperHourly
                     }
                 }
             }
@@ -382,8 +279,8 @@ ShellSurface {
                 // crop to the screen's own ratio is what awww will do
                 // anyway. Whichever of width and height runs out first
                 // decides, so the hero grows to fill a wide screen and
-                // stops when it would outgrow the space between the
-                // header and the caption.
+                // stops when it would outgrow the space under the
+                // header.
                 readonly property int heroWidth:
                     Math.round(Math.min(stage.width * 0.5, stage.height * 16 / 9))
                 readonly property int heroHeight: Math.round(stage.heroWidth * 9 / 16)
@@ -594,11 +491,9 @@ ShellSurface {
                             // a border showing state (STYLE.md §1,
                             // removed 2026-09-27).
 
-                            // What is on screen right now. On the image
-                            // rather than in the caption below: the
-                            // caption only ever describes the hero, and
-                            // this is worth knowing about the one you are
-                            // scrolling toward as well.
+                            // What is on screen right now, on the image
+                            // itself: this is worth knowing about the one
+                            // you are scrolling toward as well as the hero.
                             Rectangle {
                                 anchors.left: parent.left
                                 anchors.top: parent.top
@@ -666,30 +561,6 @@ ShellSurface {
                 }
             }
 
-            // ── Caption ──────────────────────────────────
-            ColumnLayout {
-                Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: Theme.space1
-                spacing: Theme.space1
-                visible: panel.shownFiles.length > 0
-
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: panel.selectedPath === "" ? "" : Wallpapers.displayName(panel.selectedPath)
-                    color: "#ffffff"
-                    font.pixelSize: Theme.fontLarge
-                    font.family: Theme.font
-                }
-
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: (panel.selectedIndex + 1) + " of " + panel.shownFiles.length
-                    color: Qt.rgba(1, 1, 1, 0.45)
-                    font.pixelSize: Theme.fontSmall
-                    font.family: Theme.font
-                }
-            }
-
             // ── Nothing to show ──────────────────────────
             Item {
                 Layout.fillWidth: true
@@ -711,24 +582,13 @@ ShellSurface {
 
                     Text {
                         text: Wallpapers.loading ? "Looking…"
-                            : Wallpapers.files.length === 0
-                                ? "No images in " + Wallpapers.dirDisplay
-                            : "Nothing matches “" + panel.filter.trim() + "”"
+                            : "No images in " + Wallpapers.dirDisplay
                         color: Qt.rgba(1, 1, 1, 0.55)
                         font.pixelSize: Theme.fontNormal
                         font.family: Theme.font
                         Layout.alignment: Qt.AlignHCenter
                     }
                 }
-            }
-
-            // ── Footer ───────────────────────────────────
-            Text {
-                Layout.alignment: Qt.AlignHCenter
-                text: "Scroll or ← → to move · Enter to apply · Esc to close"
-                color: Qt.rgba(1, 1, 1, 0.38)
-                font.pixelSize: Theme.fontSmall
-                font.family: Theme.font
             }
         }
     }
