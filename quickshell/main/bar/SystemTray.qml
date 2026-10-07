@@ -30,12 +30,19 @@ Item {
     // stale tray is empty either way.
     readonly property bool hasContent: SystemTray.items.values.length > 0
 
-    implicitWidth: row.implicitWidth
+    // The island pads every module by Theme.space1, but a lone 16px icon
+    // sits (barItemHeight - iconSize) / 2 lower than that from the
+    // island's top edge, so with no pad of its own the tray island was
+    // taller than wide (user request 2026-10-07). This pad makes each
+    // side the same distance from the icons as the top and bottom.
+    readonly property int padX: (Theme.barItemHeight - root.iconSize) / 2
+
+    implicitWidth: row.implicitWidth + 2 * root.padX
     implicitHeight: root.iconSize
 
     RowLayout {
         id: row
-        anchors.verticalCenter: parent.verticalCenter
+        anchors.centerIn: parent
         spacing: root.spacing
 
         Repeater {
