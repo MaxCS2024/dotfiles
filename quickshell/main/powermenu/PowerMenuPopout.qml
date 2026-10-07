@@ -143,41 +143,35 @@ ShellSurface {
         // ── Tiles ────────────────────────────────────────
         // One row of equal tiles straight on the dimmed backdrop, with no
         // slab behind them (user request 2026-10-06). The selected tile
-        // grows taller, evenly up and down, so every tile stays centred
-        // on the same line. This replaced the 2026-10-02 sliding scale,
-        // where every tile shrank with its distance from the selection.
-        // One animated value, focusPos, drives every tile's height and
-        // colour together; the tiles aren't in a layout, so the growth
-        // re-lays nothing out (STYLE.md §7).
+        // grows tallest and its two neighbours a little, so the row
+        // swells like a wave around the selection; every tile grows
+        // evenly up and down and stays centred on the same line. This
+        // replaced the 2026-10-02 sliding scale, where every tile shrank
+        // with its distance from the selection. Each tile's own animated
+        // value, wavePos, drives its height; the tiles aren't in a
+        // layout, so the growth re-lays nothing out (STYLE.md §7).
         readonly property int tileWidth: 128
-        readonly property int tileHeight: 160
-        readonly property int tileHeightSelected: 200
-        readonly property int gap: Theme.space4
+        // Height by distance from the selection: selected, neighbour,
+        // everything further out.
+        readonly property var waveHeights: [200, 176, 160]
+        readonly property int tileHeightSelected: box.waveHeights[0]
+        // Close-set (user request 2026-10-06): a sliver of backdrop
+        // between tiles, enough to tell them apart and no more.
+        readonly property int gap: Theme.space2
 
-        property real focusPos: box.kbIndex
         property bool snapFocus: false
-        // A spring, not a timed ease: a 120ms OutCubic slide here looked
-        // stiff (user, 2026-10-02). The spring also keeps its velocity
-        // when a second key press retargets it mid-slide, where a
-        // NumberAnimation restarts from rest and stutters.
-        Behavior on focusPos {
-            enabled: !box.snapFocus
-            SpringAnimation { spring: 3.5; damping: 0.32; epsilon: 0.005 }
-        }
 
-        // Tiles darken with distance too (user request 2026-10-02, "kind
-        // of a shadow effect"): one ladder step per tile away, down to
-        // bar, with the text dimming alongside. Driven by focusPos, not
-        // kbIndex, so the shading slides in step with the heights.
-        function distance(i) {
-            return Math.abs(box.focusPos - i)
-        }
-        // Colour at distance d along stops[0], stops[1], …, one per step.
-        function ramp(stops, d) {
-            const x = Math.max(0, Math.min(stops.length - 1, d))
-            const k = Math.min(stops.length - 2, Math.floor(x))
-            return box.mix(stops[k], stops[k + 1], x - k)
-        }
+        // Each tile follows the selection on its own spring (tile.wavePos
+        // below), and the tiles set off one after another, rippling out
+        // from the newly selected tile by rippleStep per place. Until
+        // 2026-10-06 one shared spring moved every tile on the same frame,
+        // which the user found stiff and unnatural.
+        readonly property int rippleStep: 40
+
+        // Tiles used to darken with distance too, one ladder step per
+        // tile away ("kind of a shadow effect", 2026-10-02); removed per
+        // user request 2026-10-06, so every resting tile now shares one
+        // fill and only the selection stands out.
         function mix(a, b, t) {
             return Qt.rgba(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t,
                            a.b + (b.b - a.b) * t, a.a + (b.a - a.a) * t)
@@ -191,14 +185,18 @@ ShellSurface {
             box.snapFocus = false
         }
 
-        // How far tile i sits above the row's top edge: half of what it
-        // has left to grow. Only the tile at focusPos (and, mid-slide, the
-        // pair either side of it) is above the resting height. Rounded so
-        // the top and bottom edges move by whole pixels, the same amount
-        // each, and the tile's label stays exactly on the row's centre.
-        function insetAt(i) {
-            const t = Math.max(0, 1 - box.distance(i))
-            return Math.round((box.tileHeightSelected - box.tileHeight) * (1 - t) / 2)
+        // How far tile i sits below the row's top edge: half of what it
+        // has left to grow. The height runs linearly between the
+        // waveHeights steps, so mid-slide the wave moves smoothly from
+        // one tile to the next. Rounded so the top and bottom edges move
+        // by whole pixels, the same amount each, and the tile's label
+        // stays exactly on the row's centre.
+        function insetAt(i, f) {
+            const hs = box.waveHeights
+            const x = Math.min(hs.length - 1, Math.abs(f - i))
+            const k = Math.min(hs.length - 2, Math.floor(x))
+            const h = hs[k] + (hs[k + 1] - hs[k]) * (x - k)
+            return Math.round((box.tileHeightSelected - h) / 2)
         }
         readonly property int stripWidth: box.items.length * box.tileWidth + (box.items.length - 1) * box.gap
 
@@ -263,8 +261,41 @@ ShellSurface {
                 readonly property bool pressed: tileTap.pressed
                 width: box.tileWidth
                 x: tile.index * (box.tileWidth + box.gap)
-                y: box.insetAt(tile.index)
+                y: box.insetAt(tile.index, tile.wavePos)
                 height: box.tileHeightSelected - 2 * tile.y
+
+                // This tile's own copy of the selection, which its height
+                // follows. It's handed the new kbIndex after a delay that
+                // grows with the tile's distance from it, so the wave
+                // ripples outward instead of every tile jumping at once.
+                property real wavePos: 0
+                Component.onCompleted: tile.wavePos = box.kbIndex
+                // A spring, not a timed ease: a 120ms OutCubic slide here
+                // looked stiff (user, 2026-10-02). The spring also keeps
+                // its velocity when a second key press retargets it
+                // mid-slide, where a NumberAnimation restarts from rest
+                // and stutters.
+                Behavior on wavePos {
+                    enabled: !box.snapFocus
+                    SpringAnimation { spring: 3.5; damping: 0.32; epsilon: 0.005 }
+                }
+                Timer {
+                    id: rippleTimer
+                    onTriggered: tile.wavePos = box.kbIndex
+                }
+                Connections {
+                    target: box
+                    function onKbIndexChanged() {
+                        const d = Math.abs(box.kbIndex - tile.index)
+                        if (box.snapFocus || d === 0) {
+                            rippleTimer.stop()
+                            tile.wavePos = box.kbIndex
+                        } else {
+                            rippleTimer.interval = d * box.rippleStep
+                            rippleTimer.restart()
+                        }
+                    }
+                }
                 radius: SlabStyle.cardRadius
 
                 // State is the fill, a step up the ladder per
@@ -273,22 +304,16 @@ ShellSurface {
                 // red) wash mixed into the card, plus a
                 // coloured rule along the top edge and a 3%
                 // scale-up, until 2026-09-27.
-                // The fill follows the slide (box.ramp), so no
-                // Behavior here: one restarted every frame
-                // would lag behind it.
                 color: tile.pressed ? Appearance.hoverStrong
-                     : box.mix(box.ramp([Appearance.hover, Appearance.surfaceAlt, Appearance.surface, Appearance.bar], tile.dist),
-                               Appearance.selected, tile.sel)
+                     : box.mix(Appearance.surfaceAlt, Appearance.selected, tile.sel)
                 border.width: 1
                 border.color: SlabStyle.cardBorder
-
-                readonly property real dist: box.distance(tile.index)
 
                 // The selection highlight (user request
                 // 2026-10-02): `selected` fill, accent glyph,
                 // strongest label. It crossfades on its own
                 // timer, the new tile fading in while the old
-                // one fades out, on top of the distance shading.
+                // one fades out.
                 property real sel: box.kbIndex === tile.index ? 1 : 0
                 Behavior on sel { NumberAnimation { duration: Theme.animPanel; easing.type: Theme.easingStandard } }
 
@@ -332,13 +357,9 @@ ShellSurface {
                         // The danger glyph stays red whether
                         // or not it's the current stop — it's
                         // labelling the action, not the
-                        // selection. It still recedes with the
-                        // rest of the tile, through opacity,
-                        // so it doesn't glow out of the shade.
+                        // selection.
                         color: tile.modelData.danger ? Appearance.red
-                             : box.mix(box.ramp([Appearance.fg, Appearance.fgSoft, Appearance.fgMuted], tile.dist),
-                                       Appearance.accent, tile.sel)
-                        opacity: tile.modelData.danger ? 1 - 0.15 * Math.min(3, tile.dist) : 1
+                             : box.mix(Appearance.fg, Appearance.accent, tile.sel)
                         font.family: Theme.font
                         font.pixelSize: Theme.fontHuge
                     }
@@ -346,8 +367,7 @@ ShellSurface {
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: tile.modelData.label
-                        color: box.mix(box.ramp([Appearance.fg, Appearance.fg, Appearance.fgSoft, Appearance.fgMuted], tile.dist),
-                                       Appearance.fgStrong, tile.sel)
+                        color: box.mix(Appearance.fg, Appearance.fgStrong, tile.sel)
                         font.family: Theme.fontHeading
                         // Was Theme.fontSmall (11px), which
                         // was unreadable: the small caps this

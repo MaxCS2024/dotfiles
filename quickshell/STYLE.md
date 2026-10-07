@@ -120,9 +120,11 @@ Leave enough space between neighbours to tell them apart (`Theme.space2`,
   item instead.
 - Movement uses decelerating easing (`Theme.easingDecel`) and stays short
   (≈ 120–160ms). An ease-in-out start reads as lag. Exception: the power
-  menu's tiles use a `SpringAnimation` (≈ 300ms, slight overshoot) on one
-  value that drives every tile's height and colour. The short ease there
-  looked stiff.
+  menu's tiles each use a `SpringAnimation` (≈ 300ms, slight overshoot)
+  on their own copy of the selection, which drives their height. The
+  springs start one after another, 40ms per place outward from the new
+  selection. A short ease there looked stiff, and so did one shared
+  spring that moved every tile on the same frame.
 - A moving highlight (e.g. the sliding workspace indicator) goes **on top**
   of the items and carries a clipped copy of their labels in the on-accent
   colour (see `main/bar/Workspaces.qml`). Don't time label colour changes to
@@ -196,4 +198,11 @@ Add to this list whenever the user rejects a visual pattern.
   and its sliding scale, where every tile shrank with its distance from
   the selection. The tiles now stand on the dimmed backdrop at one size
   in one row, and the selected or hovered tile grows taller, centred on
-  the row's line.
+  the row's line. Its neighbours grow a little too, so the row swells
+  like a wave. The distance shading (each tile one ladder step darker
+  per place from the selection) went the same day; resting tiles share
+  one fill.
+- 2026-10-06: the power menu's wave on one shared spring. Every tile
+  reacted on the same frame, which the user found stiff and unnatural.
+  Each tile now has its own spring, started with a 40ms-per-place
+  ripple outward from the new selection (see §7).
