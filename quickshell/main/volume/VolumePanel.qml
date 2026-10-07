@@ -284,6 +284,14 @@ ShellSurface {
         when: panel.shown
     }
 
+    // Keeps the volume module's pill lit on the bar while the rail is up.
+    Binding {
+        target: Panels
+        property: "volumeShown"
+        value: panel.shown
+        when: panel.shown
+    }
+
     Rectangle {
         id: card
 

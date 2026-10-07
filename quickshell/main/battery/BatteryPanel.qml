@@ -118,6 +118,14 @@ ShellSurface {
         when: panel.shown
     }
 
+    // Keeps the battery module's pill lit on the bar while the rail is up.
+    Binding {
+        target: Panels
+        property: "batteryShown"
+        value: panel.shown
+        when: panel.shown
+    }
+
     Rectangle {
         id: card
 

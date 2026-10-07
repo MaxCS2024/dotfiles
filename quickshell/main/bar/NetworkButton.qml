@@ -11,6 +11,7 @@ BarButton {
     // the same reason: a module whose click opens a surface doesn't also
     // need a card that opens itself.
     dropdownEnabled: false
+    panelShown: Panels.networkShown
 
     icon: Network.icon
 

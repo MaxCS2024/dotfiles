@@ -11,6 +11,7 @@ BarButton {
     // rail a click away says all three on a card you can actually reach
     // into.
     dropdownEnabled: false
+    panelShown: Panels.volumeShown
 
     icon: Volume.icon
     iconColor: Volume.muted ? Appearance.red : Appearance.icon

@@ -219,6 +219,14 @@ ShellSurface {
         when: panel.shown
     }
 
+    // Keeps the network module's pill lit on the bar while the rail is up.
+    Binding {
+        target: Panels
+        property: "networkShown"
+        value: panel.shown
+        when: panel.shown
+    }
+
     // A plain connect is tried first and only the NoSecrets failure prompts,
     // and a second pskRequired for the same ssid (wrong password) shows an
     // inline error rather than reopening the prompt.

@@ -11,6 +11,7 @@ BarButton {
     // away now shows, with the per-pack breakdown underneath that a card
     // that size never had room for.
     dropdownEnabled: false
+    panelShown: Panels.batteryShown
 
     icon: Battery.icon
     iconColor: Battery.fillColor

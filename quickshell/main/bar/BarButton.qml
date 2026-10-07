@@ -22,6 +22,10 @@ Item {
     property int maxLabelWidth: 0        // 0 = unconstrained
     property int minWidth: 280
     property bool dropdownEnabled: true
+    // Whether the surface this module's click opens is up (a rail, from
+    // Panels), so the pill stays lit while it is, as it does for an open
+    // dropdown.
+    property bool panelShown: false
 
     // Set by bar/Bar.qml's roving keyboard focus, forwarded
     // through bar/BarModuleLoader.qml the same live-binding way barWindow
@@ -57,7 +61,7 @@ Item {
         // height (font metrics render a 16px glyph taller than 16px)
         // put every pill at a slightly different off-grid height.
         implicitHeight: Theme.barItemHeight
-        active: hover.hovered || dropdown.visible || root.keyboardFocused
+        active: hover.hovered || dropdown.visible || root.panelShown || root.keyboardFocused
         anchors.centerIn: parent
 
         RowLayout {
