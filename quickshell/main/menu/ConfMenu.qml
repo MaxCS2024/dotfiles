@@ -68,6 +68,10 @@ ShellSurface {
     focusTarget: filterInput
 
     anchors { top: true; bottom: true; left: true; right: true }
+    // Ignore, not the default Normal: Normal keeps this surface out of
+    // the strip the bar reserves, so the dim would stop at the bar's edge
+    // instead of covering it. Overlay sits above the bar's Top layer.
+    exclusionMode: ExclusionMode.Ignore
 
     // 220, not ShellSurface's 200: this fades on the shell-wide panel
     // duration, and a refactor is not the place to quietly shorten it.

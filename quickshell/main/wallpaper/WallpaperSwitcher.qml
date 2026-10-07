@@ -27,6 +27,7 @@
 // What is behind it all lives in Wallpapers.qml next door: the listing,
 // which image each output is showing, the apply, the shuffle, and the
 // hourly rotation that runs whether or not this window was ever built.
+import Quickshell
 import QtQuick
 import QtQuick.Layouts
 import "../common"
@@ -87,7 +88,10 @@ ShellSurface {
     property bool userMoved: false
 
     anchors { top: true; bottom: true; left: true; right: true }
-    exclusiveZone: 0
+    // Ignore, not the default Normal: Normal keeps this surface out of
+    // the strip the bar reserves, so the dim would stop at the bar's edge
+    // instead of covering it. Overlay sits above the bar's Top layer.
+    exclusionMode: ExclusionMode.Ignore
     // No mask, unlike every other window in this config: the dim is part
     // of the surface and clicking it is how the gallery is dismissed, so
     // the whole screen has to take clicks while this is up.

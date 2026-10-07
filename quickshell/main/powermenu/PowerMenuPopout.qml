@@ -47,6 +47,10 @@ ShellSurface {
     focusTarget: box
 
     anchors { top: true; bottom: true; left: true; right: true }
+    // Ignore, not the default Normal: Normal keeps this surface out of
+    // the strip the bar reserves, so the dim would stop at the bar's edge
+    // instead of covering it. Overlay sits above the bar's Top layer.
+    exclusionMode: ExclusionMode.Ignore
 
     // The tiles fade out on their own duration; the window has to
     // outlive the slowest of them or the row blinks out from under its

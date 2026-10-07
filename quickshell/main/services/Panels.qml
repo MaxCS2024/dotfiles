@@ -42,6 +42,23 @@ Singleton {
     function showBar() { root.barVisible = true }
     function hideBar() { root.barVisible = false }
 
+    // How much of each monitor's top and bottom edge its bar reserves
+    // right now, keyed by monitor name: { top, bottom } in px, 0 for a
+    // hidden bar. Published by bar/Bar.qml; read by network/
+    // NetworkPanel.qml, whose window covers the bar so its share sheet
+    // can dim it, and which so has to keep its card below the bar
+    // itself. Reassigned whole rather than mutated, because a var only
+    // notifies when it is assigned.
+    property var barStrips: ({})
+    function setBarStrip(monitor, strip) {
+        const next = Object.assign({}, root.barStrips)
+        next[monitor] = strip
+        root.barStrips = next
+    }
+    function barStripFor(monitor) {
+        return root.barStrips[monitor] || { top: 0, bottom: 0 }
+    }
+
     // Where the clock module's middle sits across the bar, as a fraction
     // of the bar's width — 0.5 for the centre row it lives in by default.
     // Published by bar/Clock.qml, read by the calendar card to place

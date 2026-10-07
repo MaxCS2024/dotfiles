@@ -44,6 +44,10 @@ ShellSurface {
     exitDuration: Theme.animPanel
 
     anchors { top: true; bottom: true; left: true; right: true }
+    // Ignore, not the default Normal: Normal keeps this surface out of
+    // the strip the bar reserves, so the dim would stop at the bar's edge
+    // instead of covering it. Overlay sits above the bar's Top layer.
+    exclusionMode: ExclusionMode.Ignore
 
 
 

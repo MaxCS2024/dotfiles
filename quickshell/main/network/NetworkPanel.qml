@@ -30,6 +30,7 @@
 // open to look, that one is the surface you open to configure.
 import Quickshell
 import Quickshell.Bluetooth
+import Quickshell.Hyprland
 import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
@@ -62,15 +63,22 @@ ShellSurface {
     // the user's asking and then given back a fifth of itself the same day
     // — the width's own 400-plus-an-eighth, one axis over — which is a half
     // plus a tenth, hence 3/5 rather than a factor applied to a factor.
-    // Derived rather than a number: this surface is already the screen
-    // below the bar, so it tracks the bar's height and the monitor's
-    // without being told either. Rounded, because a fraction would
+    // Derived rather than a number: this is the screen less the bar's
+    // strip, so it tracks the bar's height and the monitor's without
+    // being told either. Rounded, because a fraction would
     // otherwise put the card's bottom edge on a part pixel and soften the
     // border there.
     //
     // Everything above the AP list in the Wi-Fi tab is fixed or capped, so
     // this is the list's height — see the "Other networks" section.
-    readonly property int cardHeight: Math.round((panel.height - panel.inset * 2) * 3 / 5)
+    readonly property int cardHeight:
+        Math.round((panel.height - panel.barStrip.top - panel.barStrip.bottom - panel.inset * 2) * 3 / 5)
+
+    // The bar's reserved strip on this monitor. The window ignores it (see
+    // exclusionMode below), so the card keeps clear of the bar by hand.
+    readonly property var barStrip: Panels.barStripFor(
+        panel.screen ? panel.screen.name
+                     : (Hyprland.focusedMonitor ? Hyprland.focusedMonitor.name : ""))
 
     // Far enough that the card *and* its shadow are past the screen edge.
     readonly property int slideDistance: panel.cardWidth + panel.inset + 24
@@ -85,7 +93,7 @@ ShellSurface {
     // inside the delegate that toggles it, because the Repeater owns that
     // delegate's lifetime and a provider change rebuilds it.
 
-    // Full screen (below the bar), not a 352px strip hugging the right
+    // Full screen, bar included, not a 352px strip hugging the right
     // edge. The rail itself is still a 450px card anchored to that edge —
     // see `card` below, which is what actually looks like the toast stack
     // — but the share sheet has to be able to centre a QR code on the
@@ -97,9 +105,11 @@ ShellSurface {
     // whenever the sheet isn't up, exactly as the toast stack does with
     // its own full-height surface.
     anchors { top: true; bottom: true; left: true; right: true }
-    // Reserve nothing, respect what the bar reserves — which is what puts
-    // this surface's top edge under the bar rather than behind it.
-    exclusiveZone: 0
+    // Ignore, not the default Normal: Normal keeps this surface out of
+    // the strip the bar reserves, so the share sheet's scrim would stop at
+    // the bar's edge instead of covering it. Overlay sits above the bar's
+    // Top layer. The card is held below the bar by `barStrip` instead.
+    exclusionMode: ExclusionMode.Ignore
     // Only the card takes clicks, so the rest of the screen this surface
     // now covers stays click-through — the same idiom the toast stack and
     // the OSDs use. `null` means "the whole window", which is what the
@@ -130,7 +140,7 @@ ShellSurface {
         id: cardSlot
         anchors.top: parent.top
         anchors.right: parent.right
-        anchors.topMargin: panel.inset
+        anchors.topMargin: panel.barStrip.top + panel.inset
         anchors.rightMargin: panel.inset
         width: panel.cardWidth
         // No bottom anchor since the halving — the card hangs from the top

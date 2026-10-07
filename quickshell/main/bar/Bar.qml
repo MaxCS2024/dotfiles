@@ -161,6 +161,18 @@ Variants {
         // into it.
         readonly property bool occupying: bar.shown || bar.slideProgress < 1
 
+        // What Auto reserves — the bar plus its floating gap, which is
+        // slideDistance — published for the surfaces that ignore the
+        // strip and so have to keep clear of it themselves (see
+        // Panels.barStrips).
+        readonly property int reserved: bar.occupying ? bar.slideDistance : 0
+        readonly property var strip: ({
+            top: bar.onBottom ? 0 : bar.reserved,
+            bottom: bar.onBottom ? bar.reserved : 0
+        })
+        onStripChanged: Panels.setBarStrip(bar.monitorName, bar.strip)
+        Component.onCompleted: Panels.setBarStrip(bar.monitorName, bar.strip)
+
         visible: bar.cfg.enabled
         // Auto is the untouched default: Quickshell derives the
         // reserved strip from the anchors and height itself. Ignore
