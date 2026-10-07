@@ -13,6 +13,7 @@ BarButton {
     // No hover dropdown, like bar/BatteryButton.qml: the card is the
     // breakdown.
     dropdownEnabled: false
+    panelShown: Panels.earbudsShown
 
     readonly property bool hasContent: Earbuds.ready
     readonly property var bud: Earbuds.lowestBud
