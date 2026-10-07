@@ -1,6 +1,7 @@
 pragma Singleton
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 import Quickshell.Services.Notifications
 import QtQuick
 
@@ -136,11 +137,61 @@ Singleton {
     }
 
     // Whether clicking the card body does anything — a relay --exec vector,
-    // or a sender-registered "default" action.
+    // a sender-registered "default" action, or a window to jump to.
     function isActivatable(row) {
         if (root._parseExecArgv(row) !== null) return true
+        if (root.windowFor(row) !== null) return true
         return root.actionsFor(row).some(a => a && a.identifier === "default")
     }
+
+    // Every name the sender might go by as a window class, lowercased: its
+    // app name ("Ghostty"), its desktop-entry id and icon name
+    // ("com.mitchellh.ghostty", which Quickshell copies into appIcon), the
+    // entry's StartupWMClass, and the last part of a reverse-DNS id, since
+    // Flatpak Discord sends com.discordapp.Discord for a window classed
+    // "discord".
+    function _classKeys(row) {
+        const keys = []
+        const add = k => {
+            k = String(k || "").toLowerCase()
+            if (k !== "" && keys.indexOf(k) === -1) keys.push(k)
+        }
+        const ids = [row.desktopEntry, (row.appIcon || "").includes("/") ? "" : row.appIcon]
+        for (const id of ids) {
+            if (!id) continue
+            add(id)
+            add(id.split(".").pop())
+            const entry = DesktopEntries.byId(id)
+            if (entry) add(entry.startupClass)
+        }
+        add(row.appName)
+        return keys
+    }
+
+    // The sender's open window, or null. Prefers one the app has marked
+    // urgent, which is usually the one the notification is about. The
+    // desktop's own tools (relay) have no window of their own.
+    function windowFor(row) {
+        if (!row || root._isOwnTool(row.appName)) return null
+        const keys = root._classKeys(row)
+        if (keys.length === 0) return null
+        const matches = Hyprland.toplevels.values.filter(t => {
+            const cls = String((t.wayland && t.wayland.appId)
+                || (t.lastIpcObject && t.lastIpcObject.class) || "").toLowerCase()
+            return cls !== "" && (keys.indexOf(cls) !== -1 || keys.indexOf(cls.split(".").pop()) !== -1)
+        })
+        return matches.find(t => t.urgent) || matches[0] || null
+    }
+
+    // Focusing the window switches to its workspace (or shows its special
+    // workspace) too.
+    function _focusWindow(win) {
+        Hyprland.dispatch('hl.dsp.focus({ window = "address:0x' + win.address + '" })')
+    }
+
+    // Windows that were open before the shell started are only listed
+    // once Hyprland has been asked for them.
+    Component.onCompleted: Hyprland.refreshToplevels()
 
     function _parseExecArgv(row) {
         if (!row || !row.execArgv) return null
@@ -160,6 +211,10 @@ Singleton {
     // survives to disk, which means a RESTORED popup is still clickable. A
     // third-party client's "default" action only works while its sender is
     // alive, which is the difference that makes the hint worth having.
+    //
+    // Otherwise the sender's window is focused first, which takes you to
+    // its workspace, and then its "default" action runs, so an app that
+    // uses it to open the right chat or tab still gets to.
     function activate(row) {
         const argv = root._parseExecArgv(row)
         if (argv) {
@@ -167,6 +222,9 @@ Singleton {
             root.dismiss(row)
             return
         }
+
+        const win = root.windowFor(row)
+        if (win) root._focusWindow(win)
 
         const actions = root.actionsFor(row)
         for (var i = 0; i < actions.length; i++) {
@@ -234,6 +292,9 @@ Singleton {
             originalId: notif.id,
             appName: root._appName(notif),
             appIcon: notif.appIcon || "",
+            // The sender's desktop-entry id, which is how windowFor() finds
+            // its window when the app name alone doesn't match the class.
+            desktopEntry: root._hint(notif, "desktop-entry"),
             summary: notif.summary || "",
             body: notif.body || "",
             image: notif.image || "",
@@ -253,7 +314,7 @@ Singleton {
 
     // Fields a client can change in place. Anything else on the row (id,
     // originalId, time) identifies it and must not move.
-    readonly property var _mutableFields: ["appName", "appIcon", "summary", "body", "image", "glyph", "execArgv", "urgency", "expireTimeout"]
+    readonly property var _mutableFields: ["appName", "appIcon", "desktopEntry", "summary", "body", "image", "glyph", "execArgv", "urgency", "expireTimeout"]
 
     // A client updating a notification through replaces_id does NOT produce a
     // second onNotification — quickshell writes the new content onto the
@@ -276,6 +337,7 @@ Singleton {
             updated = {
                 appName: root._appName(notif),
                 appIcon: notif.appIcon || "",
+                desktopEntry: root._hint(notif, "desktop-entry"),
                 summary: notif.summary || "",
                 body: notif.body || "",
                 image: notif.image || "",
