@@ -87,6 +87,14 @@ ShellSurface {
         when: panel.shown
     }
 
+    // Keeps the weather module's pill lit on the bar while the rail is up.
+    Binding {
+        target: Panels
+        property: "weatherShown"
+        value: panel.shown
+        when: panel.shown
+    }
+
     Rectangle {
         id: card
 

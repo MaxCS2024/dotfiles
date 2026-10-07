@@ -91,7 +91,7 @@ Singleton {
     property real earbudsAnchor: 0.9
     property bool earbudsShown: false
 
-    // Whether the volume, network and battery rails are up, published by
+    // Whether each rail is up, published by
     // each rail so its module's pill on the bar stays lit while it is
     // (bar/BarButton.qml's panelShown). One flag per rail rather than a
     // single "which rail" name: the rails hand over to each other, and a
@@ -99,6 +99,8 @@ Singleton {
     property bool volumeShown: false
     property bool networkShown: false
     property bool batteryShown: false
+    property bool weatherShown: false
+    property bool notificationsShown: false
 
     // How much of the right screen edge a rail is covering right now, its
     // own 8px inset included — 0 whenever none is showing.

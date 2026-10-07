@@ -12,6 +12,7 @@ BarButton {
     // bar/VolumeButton.qml and bar/BatteryButton.qml (user request
     // 2026-09-23): what it showed is on the rail a click away.
     dropdownEnabled: false
+    panelShown: Panels.weatherShown
 
     readonly property bool hasContent: Weather.ready
 

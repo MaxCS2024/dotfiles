@@ -123,6 +123,15 @@ ShellSurface {
         when: panel.shown
     }
 
+    // Keeps the notifications module's pill lit on the bar while the rail
+    // is up.
+    Binding {
+        target: Panels
+        property: "notificationsShown"
+        value: panel.shown
+        when: panel.shown
+    }
+
     Rectangle {
         id: card
 

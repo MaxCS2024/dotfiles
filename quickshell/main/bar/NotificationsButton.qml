@@ -10,6 +10,7 @@ BarButton {
     icon: Settings.dnd ? "\uf1f6" : "\uf0f3"
     iconColor: Settings.dnd ? Appearance.fgDim : Appearance.icon
     minWidth: 260
+    panelShown: Panels.notificationsShown
 
     // Left click opens the right-edge rail (notifications/
     // NotificationHistoryPanel.qml), the same trade bar/NetworkButton.qml
