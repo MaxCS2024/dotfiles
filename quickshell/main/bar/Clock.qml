@@ -73,9 +73,10 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.weekdayLabel
                 // Appearance.fg, not fgMuted: muted read too dim against
-                // the time beside it. That call is why quicksettings/ and
-                // systemsettings/ point back at this note; it survived the
-                // stint as a fixed white that bar/HoverPill.qml describes.
+                // the time beside it. That call is why network/
+                // NetworkPanel.qml points back at this note; it survived
+                // the stint as a fixed white that bar/HoverPill.qml
+                // describes.
                 color: Appearance.fg
                 font.pixelSize: Theme.fontBig
                 font.family: Theme.font

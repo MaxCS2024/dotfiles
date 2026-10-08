@@ -96,9 +96,10 @@ Singleton {
         when: root._wifiDevice !== null
     }
 
-    // ── Public state — same names/shapes the three existing consumers
-    // (bar/NetworkButton.qml, quicksettings/NetworkTab.qml,
-    // systemsettings/SettingsNetworkTab.qml) already read. One
+    // ── Public state — same names/shapes the three consumers at the
+    // time (bar/NetworkButton.qml, quicksettings/NetworkTab.qml,
+    // systemsettings/SettingsNetworkTab.qml, the last two since
+    // deleted) already read. One
     // property dropped: `band` (2.4/5/6 GHz) has no equivalent
     // anywhere in this API — not on WifiNetwork, not on NMSettings
     // (which isn't even exported to QML) — so it's gone, not silently
@@ -296,8 +297,7 @@ Singleton {
     // without being told.
     //
     // `networks` and `availableCount` are untouched — bar/NetworkButton
-    // counts what is in range, and quicksettings/NetworkTab is one list
-    // with no known section to subtract.
+    // counts what is in range, and needs no known section subtracted.
     readonly property var unsavedNetworks: root.networks.filter(
         n => !root.knownNetworks.some(k => k.ssid === n.ssid))
     readonly property int unsavedCount: root.unsavedNetworks.length

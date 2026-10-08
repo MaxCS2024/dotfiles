@@ -349,11 +349,11 @@ ShellRoot {
     // The app manager (apps/AppManager.qml) — what is installed, and one
     // search over pacman, the AUR and Flathub for what isn't. Lazy like
     // the windows above: it spawns three package queries per search and
-    // most sessions never open it. Opens itself from
-    // Component.onCompleted for the request that built it, and a query
-    // that came with that request is handed over the same way the
-    // dashboard's first-open handoff above does, since `find` on a window
-    // that does not exist yet has nowhere to land.
+    // most sessions never open it. It is a ShellSurface, so it opens
+    // itself for the request that built it and picks up a query that came
+    // with that request the way the panelLoaders note above describes,
+    // since `find` on a window that does not exist yet has nowhere to
+    // land.
     LazyLoader {
         id: appsLoader
         active: false

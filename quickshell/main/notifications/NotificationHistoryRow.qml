@@ -36,12 +36,12 @@ Rectangle {
     // between them, and a gap does that only while the two either side of
     // it are short; a filled row says it whatever is in them.
     //
-    // surfaceAlt is one elevation step over the `surface` every container
-    // that draws these rows is painted in — the rail's card, the quick
-    // settings panel, the dashboard's tiles — so the row lifts off its
-    // background by the same amount everywhere without knowing which of
-    // them it is in. Hover keeps its own step above that, so pointing at a
-    // row still answers.
+    // surfaceAlt is one elevation step over the `surface` the rail's card
+    // is painted in, so the row lifts off its background by one step. It
+    // was written for three containers (the rail, the quick settings
+    // panel and the dashboard's tiles, the last two deleted 2026-09-21)
+    // and still doesn't need to know which one it is in. Hover keeps its
+    // own step above that, so pointing at a row still answers.
     //
     // Appearance rather than Theme for both, like every surface written
     // since the bento dashboard: it falls through to these same Theme

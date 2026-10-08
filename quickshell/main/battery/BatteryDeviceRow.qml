@@ -1,8 +1,8 @@
 // One battery in the battery rail's lists — a pack in the bay, or a
 // peripheral that reports a charge.
 //
-// The shape is quicksettings/MixerTab.qml's stream row, which the volume
-// rail draws too: a glyph, a name with its state beside it, a faint line
+// The shape is the volume rail's stream row (from the deleted
+// quicksettings/MixerTab.qml): a glyph, a name with its state beside it, a faint line
 // of detail, and a bar. A pack and a playback stream have nothing in
 // common except being one of several things each with a level, and that
 // is exactly the part this shell should draw the same way twice.

@@ -416,7 +416,7 @@ ShellSurface {
                 }
 
                 // Back, forward, and home — the same trio the dashboard's
-                // calendar card carries, and the same glyphs. What they
+                // calendar card carried, and the same glyphs. What they
                 // step is the view: a month in the day view, a year in
                 // the year view, which is what the chevrons are pointing
                 // at in each case.

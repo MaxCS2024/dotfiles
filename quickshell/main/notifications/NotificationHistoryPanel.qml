@@ -17,10 +17,11 @@
 // rail went full-screen so its QR sheet could centre itself on the
 // monitor, and nothing here needs to leave the card.
 //
-// Rows are notifications/NotificationHistoryRow.qml, the same delegate
+// Rows are notifications/NotificationHistoryRow.qml, the delegate
 // quicksettings/NotificationsTab.qml and dashboard/
-// DashboardNotifications.qml draw, deliberately not restyled for the
-// rail: a notification looks the same wherever this shell shows it.
+// DashboardNotifications.qml drew until both were deleted, and it was
+// deliberately not restyled for the rail: a notification looked the same
+// wherever this shell showed it.
 //
 // Colours come from theme/Appearance.qml rather than config/Theme.qml,
 // like every surface written since the bento dashboard — it falls
@@ -214,7 +215,7 @@ ShellSurface {
                 // fixed word that will never elide, and the thing worth
                 // recognising at the top of this card is the bell.
                 //
-                // fontHuge, which is the size the dashboard card draws its
+                // fontHuge, which is the size the dashboard card drew its
                 // own empty-state bell at, and about the height of the two
                 // text lines it now stands beside.
                 Text {
@@ -268,8 +269,8 @@ ShellSurface {
                 // saying the same thing twice, and the empty state below
                 // already says it better.
                 //
-                // U+F1F8 is nf-fa-trash, as in the dashboard card's own
-                // clear control. Danger tones, because this is the one
+                // U+F1F8 is nf-fa-trash, as in the deleted dashboard
+                // card's own clear control. Danger tones, because this is the one
                 // thing on the card that destroys something — a row's
                 // own close glyph takes one notification away, this takes
                 // all hundred.
@@ -369,8 +370,7 @@ ShellSurface {
             // The empty state, taking the list's place rather than
             // sitting under it, so the card doesn't hold a hundred rows
             // of blank column above one line of text. Wording and glyph
-            // are the dashboard card's — the same absence should read the
-            // same way in both places.
+            // came from the dashboard card, deleted 2026-09-21.
             Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true

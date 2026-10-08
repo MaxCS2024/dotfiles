@@ -23,11 +23,10 @@
 // motion and the Hyprland frame still come from Theme/common so the card
 // material itself is the toasts'.
 //
-// Content is the glanceable half of quicksettings/NetworkTab.qml (status,
-// interface, IP, DNS, the AP list) plus the two things a tab that size had
-// no room for — live throughput and the airplane-mode switch. The tab is
-// still there and still reachable from the footer; this is the surface you
-// open to look, that one is the surface you open to configure.
+// Content is the glanceable half of the deleted quicksettings/
+// NetworkTab.qml (status, interface, IP, DNS, the AP list) plus the two
+// things a tab that size had no room for — live throughput and the
+// airplane-mode switch.
 import Quickshell
 import Quickshell.Bluetooth
 import Quickshell.Hyprland
@@ -399,9 +398,8 @@ ShellSurface {
                             : Network.type === "wifi" ? Network.strength + "% signal"
                             : "No connection"
                         // fgSoft rather than fgMuted — see the note in
-                        // bar/Clock.qml that quicksettings/ and
-                        // systemsettings/ already point back at: muted
-                        // reads too dim to be a caption under a name.
+                        // bar/Clock.qml: muted reads too dim to be a
+                        // caption under a name.
                         // A finished result steps up to fg: it is the one
                         // thing this line ever says that was asked for
                         // rather than merely true.

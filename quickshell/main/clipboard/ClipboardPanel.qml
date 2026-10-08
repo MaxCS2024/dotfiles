@@ -12,9 +12,8 @@
 // .qml, which could show a preview line and nothing else — a clipboard
 // entry is usually longer than the row it is listed in, and the whole
 // point of picking one is seeing what you are about to paste.
-// quicksettings/ClipboardTab.qml stays where it is; that one is the
-// surface you open to wipe the history, this is the one you open to find
-// something in it.
+// Wiping the history was quicksettings/ClipboardTab.qml's job until that
+// tab was deleted; it lives here now too (see Wipe below).
 //
 // cliphist is the store (DEPENDENCIES.md): `cliphist list` gives
 // `id<TAB>preview` a line at a time, `cliphist decode <id>` gives the
@@ -219,7 +218,7 @@ ShellSurface {
         const id = panel.deleteQueue.shift()
         // cliphist delete takes a whole `list` line on stdin rather than
         // an id as an argument, so the line has to be found again — the
-        // same round trip quicksettings/ClipboardTab.qml makes, with the
+        // same round trip quicksettings/ClipboardTab.qml made, with the
         // id passed in as $1 instead of spliced into the awk program.
         deleteProc.command = ["sh", "-c",
             "cliphist list | awk -F'\\t' -v id=\"$1\" '$1==id{print;exit}' | cliphist delete",

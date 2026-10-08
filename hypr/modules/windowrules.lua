@@ -109,7 +109,7 @@ hl.window_rule({
 	size = "monitor_w*0.6 monitor_h*0.65",
 })
 
--- TODO: quickshell launcher/quicksettings panels probably want to float.
+-- TODO: the quickshell launcher probably wants to float.
 -- Run `hyprctl clients` with the panel open to find its real class, then:
 -- hl.window_rule({
 -- 	name = "float-qs-launcher",

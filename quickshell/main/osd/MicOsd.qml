@@ -5,7 +5,7 @@ import "../services"
 
 // Mirrors VolumeOsd.qml exactly, but for Mic (the default input) instead
 // of Volume (the default output) — including firing on any Mic.volume/
-// muted change, not just the quicksettings slider, so it also covers a
+// muted change, not just the volume rail's slider, so it also covers a
 // future mic-specific keybind the same way VolumeOsd already covers
 // scroll-to-adjust from the bar.
 OsdWindow {

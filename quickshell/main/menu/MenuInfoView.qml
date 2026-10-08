@@ -8,7 +8,8 @@ import "../theme"
 // doing something: System › About, drawn as a list of label/value pairs.
 //
 // It is a mapping of services/SystemInfo.qml, which the quick settings
-// dashboard and the system settings tab read too. This view used to
+// dashboard and the system settings tab read too until both were
+// deleted, leaving this view its only reader. This view used to
 // gather the same facts with a shell script of its own — three copies of
 // one question, which is what that service exists to end.
 //

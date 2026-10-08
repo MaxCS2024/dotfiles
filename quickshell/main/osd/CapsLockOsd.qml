@@ -37,7 +37,7 @@ OsdWindow {
             spacing: Theme.space3
 
             Text {
-                text: "\uf023"   // fa-lock, same glyph as PowerTab's "Lock"
+                text: "\uf023"   // fa-lock, same glyph as the power menu's "Lock"
                 color: CapsLock.active ? Appearance.green : Appearance.icon
                 font.pixelSize: 20
                 font.family: Theme.font

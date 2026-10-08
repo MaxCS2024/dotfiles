@@ -21,11 +21,9 @@
 // rows for the same reason, and scroll past their cap.
 //
 // Content is quicksettings/VolumeTab.qml and quicksettings/MixerTab.qml —
-// the two leaves of the settings panel's "sound" group — on one card:
-// the output slider and device picker, the input (microphone) slider and
-// device picker, and the per-app mixer. Those tabs are still there and still reachable from the
-// footer; this is the surface you open to reach for a slider, that one is
-// the surface you open to configure. Same split the other two rails keep.
+// the two leaves of the settings panel's "sound" group, deleted with it
+// on 2026-09-21 — on one card: the output slider and device picker, the
+// input (microphone) slider and device picker, and the per-app mixer.
 //
 // Colours come from theme/Appearance.qml rather than config/Theme.qml,
 // like every surface written since the bento dashboard — it falls through
@@ -79,8 +77,8 @@ ShellSurface {
     // Sinks are the output devices themselves — the picker below — as
     // distinct from the streams a client plays *into* one, which is the
     // mixer. `!n.isStream` is what separates them; both are `isSink` on
-    // this side of the graph. Lifted verbatim from quicksettings/
-    // VolumeTab.qml, whose list this is.
+    // this side of the graph. Lifted verbatim from the deleted
+    // quicksettings/VolumeTab.qml.
     //
     // A device with nothing plugged in (an HDMI port with no monitor, a
     // headset jack with no headset) is left out; see services/
@@ -92,7 +90,8 @@ ShellSurface {
 
     // AudioOutStream marks a client's playback stream into a sink (a
     // browser tab, a game, a music player) — distinct from AudioInStream,
-    // which is a capture stream. quicksettings/MixerTab.qml's filter.
+    // which is a capture stream. The deleted quicksettings/MixerTab.qml's
+    // filter.
     //
     // Sorted by node id, which is the graph's own creation order and is
     // never reused: `Pipewire.nodes.values` comes back in whatever order
@@ -444,7 +443,7 @@ ShellSurface {
                 elide: Text.ElideRight
             }
 
-            // The shape quicksettings/VolumeTab.qml draws, and the one the
+            // The shape quicksettings/VolumeTab.qml drew, and the one the
             // OSD draws: a mute glyph, a track, a percentage. The glyph is
             // the mute button, which is why it is the one thing on the row
             // that changes colour.

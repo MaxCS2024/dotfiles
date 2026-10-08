@@ -30,8 +30,8 @@ import "../services"
 // close, and that is the whole of it.
 //
 // It follows theme/ (Appearance + SlabStyle), not config/Theme.qml's
-// "classical plate" tokens, so it matches the bento dashboard rebuilt in
-// ff379e3 — same grounds, same corner scale, same staggered reveal. The
+// "classical plate" tokens, as the bento dashboard rebuilt in ff379e3
+// did — same grounds, same corner scale, same staggered reveal. The
 // tiles are fully opaque; only the backdrop is see-through.
 //
 // Kept from the version before it: the dimmed backdrop, the mask-to-`box`
@@ -316,9 +316,8 @@ ShellSurface {
 
                 // ── Reveal ───────────────────────────
                 // The tiles deal themselves onto the screen left
-                // to right on open, borrowed from
-                // DashboardCard so the two overlays in this
-                // shell open the same way. As there, the
+                // to right on open, borrowed from the
+                // deleted DashboardCard. As there, the
                 // stagger is only taken on the way in: on
                 // close every tile has to be gone before the
                 // window hides — which is what exitDuration

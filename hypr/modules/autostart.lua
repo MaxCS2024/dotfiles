@@ -20,11 +20,12 @@ hl.on("hyprland.start", function ()
 	-- iconPath(name, true) is "" for both; under gtk3 both resolve, while a
 	-- genuinely absent name still correctly answers false.
 	--
-	-- Four call sites gate an icon on exactly those checks and were silently
-	-- falling back forever: launcher/Launcher.qml, bar/ActiveWindow.qml,
-	-- quicksettings/MixerTab.qml (via hasThemeIcon) and
-	-- notifications/NotificationCard.qml. "gtk3" reads gtk-icon-theme-name
-	-- from ~/.config/gtk-3.0/settings.ini (Adwaita) and fixes all four.
+	-- Icons gated on exactly those checks were silently falling back
+	-- forever. Today that is services/AppIcons.qml (iconPath, behind the
+	-- launcher, the active window, the tray and notifications) and
+	-- volume/VolumePanel.qml's mixer (hasThemeIcon). "gtk3" reads
+	-- gtk-icon-theme-name from ~/.config/gtk-3.0/settings.ini (Adwaita)
+	-- and fixes both.
 	--
 	-- This does NOT affect the image://icon provider, which loads icons fine
 	-- under either value — so it is never the explanation for an icon that

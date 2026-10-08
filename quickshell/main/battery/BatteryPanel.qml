@@ -248,7 +248,7 @@ ShellSurface {
             }
 
             // The charge as a bar, which quicksettings/BatteryTab.qml
-            // draws beside a huge percentage and this draws under one.
+            // drew beside a huge percentage and this draws under one.
             // A Slider with no knob and nothing interactive about it:
             // the shell's one track shape, so a battery reads like a
             // volume level rather than like a second kind of meter.

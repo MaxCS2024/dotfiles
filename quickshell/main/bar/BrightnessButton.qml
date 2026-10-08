@@ -15,9 +15,9 @@ BarButton {
     icon: ""
     label: Math.round(Brightness.percent) + "%"
 
-    // No onTapped: unlike Volume/Network/Battery there's no dedicated
-    // QuickSettings tab for brightness to jump to — the dropdown below
-    // already shows the current level, which is all there is to show.
+    // No onTapped: unlike Volume/Network/Battery there's no brightness
+    // rail to open — the dropdown below already shows the current level,
+    // which is all there is to show.
 
     // Mirrors VolumeButton's wheel handling exactly, including the 40ms
     // throttle — a bare wheel tick can fire faster than adjustBy's own

@@ -314,8 +314,8 @@ Variants {
         }
 
         // Settings.stayAwake (services/Settings.qml) is the shared
-        // on/off toggle the bar icon and quicksettings' "Coffee" switch
-        // both drive. Quickshell.Wayland.IdleInhibitor needs a window
+        // on/off toggle the bar icon and the Conf menu's "Stay awake"
+        // toggle (Toggles) both drive. Quickshell.Wayland.IdleInhibitor needs a window
         // property pointing at a real window for the compositor to judge
         // as "important" (a PanelWindow, per Quickshell's own docs,
         // usually qualifies) — since Variants instantiates one Bar per
