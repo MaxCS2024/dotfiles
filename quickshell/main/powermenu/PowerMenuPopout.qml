@@ -106,12 +106,11 @@ ShellSurface {
     Item {
         id: box
 
-        // Lock/Reboot/Power off match the pre-existing commands
-        // (PowerTab.qml/PowerOrbMenu.qml); Log out is the row the 6.6
-        // mockup added that neither predecessor had. Icon codepoints match
-        // quicksettings/PowerTab.qml and dashboard/DashboardHero.qml
-        // exactly, so all three power UIs in this shell agree. Suspend was
-        // removed per user request 2026-10-08.
+        // Lock/Reboot/Power off keep the commands and icons of the power
+        // UIs this replaced (PowerTab.qml, PowerOrbMenu.qml, both since
+        // deleted); Log out is the row the 6.6 mockup added. This is the
+        // shell's only power UI now. Suspend was removed per user request
+        // 2026-10-08.
         readonly property var items: [
             { icon: "", label: "Lock",      cmd: "pidof hyprlock || hyprlock", danger: false },
             { icon: "", label: "Reboot",    cmd: "systemctl reboot",           danger: false },
