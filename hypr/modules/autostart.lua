@@ -39,13 +39,6 @@ hl.on("hyprland.start", function ()
 	hl.exec_cmd("awww-daemon")
 	hl.exec_cmd("wl-paste --watch cliphist store")
 	hl.exec_cmd("hypridle") -- idle/lock daemon, config in hypr/hypridle.conf
-	-- Closing the lid doesn't suspend (user request 2026-10-08). logind
-	-- owns the lid switch and suspends by default; this inhibitor takes it
-	-- for the session without a root-owned logind.conf, so the change
-	-- travels with the repo. It lasts as long as the session, so the login
-	-- screen still suspends on lid close. modules/binds/lid.lua locks the
-	-- screen instead.
-	hl.exec_cmd("systemd-inhibit --what=handle-lid-switch --who=Hyprland --why='Lid close locks instead of suspending' sleep infinity")
 	-- The polkit agent: the password dialog for apps that ask the system
 	-- for rights over D-Bus, such as Impression writing a USB stick or a
 	-- disk tool formatting an internal drive. Without one they fail with
