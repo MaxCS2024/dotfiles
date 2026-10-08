@@ -6,6 +6,7 @@ require("modules.binds.workspaces")
 require("modules.binds.monitor")
 require("modules.binds.mouse")
 require("modules.binds.media")
+require("modules.binds.lid")
 
 -- Two toggles that reshape what is already on screen rather than
 -- opening anything: a floating zoom on SUPER+F, and chrome-off zen on
