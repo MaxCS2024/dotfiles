@@ -30,6 +30,14 @@ Singleton {
     // bar stays without one either way.
     property bool barVisible: true
 
+    // The dynamic island (~/.config/quickshell/dynamic-island, its own
+    // config and process) hides and shows with the bar, however the bar
+    // was toggled. It asks for barVisible once at startup; this tells it
+    // every change after that. Where the island isn't running, the call
+    // just fails.
+    onBarVisibleChanged: Quickshell.execDetached(["qs", "-c", "dynamic-island", "ipc", "call",
+        "island", "setBarVisible", root.barVisible ? "true" : "false"])
+
     // Not a panel: the bar is built eagerly and this mutates real state
     // rather than asking a window to appear, which is why it keeps a
     // function of its own rather than answering to toggle("bar").
