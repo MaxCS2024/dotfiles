@@ -241,8 +241,10 @@ Singleton {
     // rather than void (bar) are still written out by hand below —
     // they are genuinely different, not repetitive.
     readonly property var surfaces: [
-        // SUPER+P (hypr/modules/binds/apps.lua).
-        { ipc: "launcher", fn: "Launcher", shortcut: "launcher-toggle", desc: "Toggle the app launcher" },
+        // The launcher (SUPER+P) is not here: it is its own config,
+        // ../launcher, which registers launcher-toggle itself, so it works
+        // without the bar. Hyprland drops a client that asks for a
+        // shortcut someone already holds, so it must not come back here.
 
         // SUPER+ALT+SPACE (hypr/modules/binds/apps.lua) — took that bind
         // over from a "systemsettings-toggle" shortcut that was deleted

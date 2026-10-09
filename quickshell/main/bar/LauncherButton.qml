@@ -1,5 +1,5 @@
+import Quickshell
 import QtQuick
-import "../services"
 
 BarButton {
     id: root
@@ -8,5 +8,7 @@ BarButton {
 
     icon: "󰍉"
 
-    onTapped: Panels.toggle("launcher")
+    // The launcher is its own config (../launcher), so it is asked over
+    // IPC like the dynamic island is. Nothing happens if it isn't running.
+    onTapped: Quickshell.execDetached(["qs", "-c", "launcher", "ipc", "call", "launcher", "toggle"])
 }

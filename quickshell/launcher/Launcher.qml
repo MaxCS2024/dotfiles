@@ -1,34 +1,67 @@
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
-import "../common"
-import "../config"
-import "../services"
-import "../theme"
+import "common"
+import "common/localBin.js" as LocalBin
+import "config"
+import "services"
+import "theme"
 
-ShellSurface {
+// The app launcher, in a config of its own so it works with or without
+// the bar (moved out of main/launcher/ on 2026-10-09). shell.qml holds its
+// IPC target and the SUPER+P shortcut.
+//
+// The open/close half is main/common/ShellSurface.qml's, trimmed to the
+// one surface: see that file's header for the invariant the hide timer
+// and open()'s hideTimer.stop() hold between them.
+PanelWindow {
     id: launcher
 
-    surfaceNamespace: "quickshell:launcher"
-    surfaceName: "launcher"
-    focusTarget: searchInput
+    readonly property bool shown: launcher._shown
+    property bool _shown: false
 
-    anchors { top: true; bottom: true; left: true; right: true }
-
-    // 220, not ShellSurface's 200: this fades on the shell-wide panel
-    // duration, and a refactor is not the place to quietly shorten it.
-    exitDuration: Theme.animPanel
-
-    // Every open is a fresh search. The hide timer used to clear the
-    // field as well, a moment after the window went; it does not need to,
-    // because this runs before the next one is ever seen — and leaving
-    // the text up through the fade shows what was just dismissed.
-    onSurfaceOpened: {
+    function open() {
+        hideTimer.stop()
+        launcher.visible = true
+        launcher._shown = true
+        searchInput.forceActiveFocus()
+        focusGrab.active = true
+        // Every open is a fresh search. The text is left up through the
+        // fade instead, which shows what was just dismissed.
         searchInput.text = ""
         launcher.query = ""
         launcher.selectedIndex = 0
         launcher.runFilter()
+    }
+
+    function close() {
+        launcher._shown = false
+        focusGrab.active = false
+        hideTimer.restart()
+    }
+
+    function toggle() { launcher._shown ? launcher.close() : launcher.open() }
+
+    color: "transparent"
+    visible: false
+    anchors { top: true; bottom: true; left: true; right: true }
+
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+    WlrLayershell.namespace: "quickshell:launcher"
+
+    Timer {
+        id: hideTimer
+        interval: Theme.animPanel
+        onTriggered: if (!launcher._shown) launcher.visible = false
+    }
+
+    HyprlandFocusGrab {
+        id: focusGrab
+        windows: [launcher]
+        onCleared: launcher.close()
     }
 
     property int maxResults: 50
@@ -58,19 +91,26 @@ ShellSurface {
 
     // Quickshell's execute() ignores Terminal=true: btop, nvim or yazi
     // started that way gets no terminal and exits on the spot, with
-    // nothing on screen. Those go through Terminal.run instead, into the
-    // terminal System › Defaults picked, tiled and with no "press Enter" —
-    // an app you opened, not a task to watch. The command has its field
-    // codes (%F) stripped already, which is what an app launched with no
-    // files wants.
+    // nothing on screen. Those open in the terminal System › Defaults
+    // picked, through `relay default exec terminal` the way the bar's
+    // Terminal.run does it, tiled and with no "press Enter": an app you
+    // opened, not a task to watch. The command has its field codes (%F)
+    // stripped already, which is what an app launched with no files wants.
     function launch(entry) {
         if (!entry.runInTerminal) {
             entry.execute()
             return
         }
         const cd = entry.workingDirectory
-            ? "cd " + Terminal.quote([entry.workingDirectory]) + " && " : ""
-        Terminal.run(cd + Terminal.quote(entry.command), { floating: false, hold: false })
+            ? "cd " + launcher.quote([entry.workingDirectory]) + " && " : ""
+        Quickshell.execDetached(LocalBin.argv("relay",
+            ["default", "exec", "terminal", "--", cd + launcher.quote(entry.command)]))
+    }
+
+    // An argv as one sh command line, each word single-quoted
+    // (main/services/Terminal.qml's quote()).
+    function quote(argv) {
+        return argv.map(a => "'" + String(a).split("'").join("'\\''") + "'").join(" ")
     }
 
     function score(haystack, needle) {

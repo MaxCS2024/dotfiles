@@ -36,6 +36,9 @@ hl.on("hyprland.start", function ()
 	-- it session-wide also moves every other Qt app onto GTK file dialogs
 	-- instead of the portal, which is a bigger change than the icons warrant.
 	hl.exec_cmd("env QT_QPA_PLATFORMTHEME=gtk3 qs -c main")
+	-- The app launcher (SUPER+P), its own config since 2026-10-09 so it
+	-- works without the bar. Same theme override: it uses AppIcons too.
+	hl.exec_cmd("env QT_QPA_PLATFORMTHEME=gtk3 qs -c launcher")
 	hl.exec_cmd("awww-daemon")
 	hl.exec_cmd("wl-paste --watch cliphist store")
 	hl.exec_cmd("hypridle") -- idle/lock daemon, config in hypr/hypridle.conf

@@ -2,7 +2,6 @@ import Quickshell
 import Quickshell.Hyprland
 import QtQuick
 import "bar"
-import "launcher"
 import "osd"
 import "notifications"
 import "lockscreen"
@@ -101,7 +100,7 @@ ShellRoot {
     // built the first time something names it.
     readonly property var wallpapers: Wallpapers
 
-    // Launcher, WallpaperSwitcher and the app manager are the heaviest
+    // WallpaperSwitcher and the app manager are the heaviest
     // (apps/AppManager.qml has services/Packages.qml run six pacman and
     // flatpak queries the moment it is built) and most sessions never open some
     // of them — LazyLoader defers construction to first use.
@@ -112,8 +111,9 @@ ShellRoot {
     // <target> ...` keeps working even before the window has ever
     // loaded (see that file's comment). Every window below opens itself
     // via its own Component.onCompleted the moment it's lazily created,
-    // since that only ever happens in response to an open/toggle request
-    // — see the matching comment in launcher/Launcher.qml.
+    // since that only ever happens in response to an open/toggle request.
+    // The launcher used to be one of them; it is its own config now
+    // (../launcher), so it opens without the bar.
 
     // ── Waking the lazily-built windows ─────────────────────
     // Fourteen near-identical Connections blocks until 2026-09-21, one
@@ -127,7 +127,6 @@ ShellRoot {
     // used to live here — call find() on the fresh item, but only if it
     // was not already up — is gone from both places that had it.
     readonly property var panelLoaders: ({
-        "launcher": launcherLoader,
         "wallpaper": wallpaperSwitcherLoader,
         "lockscreen-preview": lockPreviewLoader,
         "menu": menuLoader,
@@ -158,11 +157,6 @@ ShellRoot {
         }
     }
 
-    LazyLoader {
-        id: launcherLoader
-        active: false
-        Launcher {}
-    }
     VolumeOsd {}
     BrightnessOsd {}
     MicOsd {}

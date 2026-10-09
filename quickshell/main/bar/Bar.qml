@@ -207,7 +207,7 @@ Variants {
         // None the rest of the time (the bar never wants
         // to steal keyboard input from whatever app is focused); only
         // OnDemand while kbActive, the same mechanism/idiom
-        // launcher/Launcher.qml and every card and window here already
+        // ../launcher/Launcher.qml and every card and window here already
         // use for their own Escape handling (`box.forceActiveFocus()` +
         // `Keys.onPressed`), not a new one invented for this.
         WlrLayershell.keyboardFocus: kbActive ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
