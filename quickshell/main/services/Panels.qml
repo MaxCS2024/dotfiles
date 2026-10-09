@@ -284,10 +284,8 @@ Singleton {
         { ipc: "calendar", fn: "Calendar", shortcut: "calendar-toggle", desc: "Toggle the calendar" },
         { ipc: "earbuds", fn: "Earbuds", shortcut: "earbuds-toggle", desc: "Toggle the earbuds card" },
 
-        // Unbound like the rails: the bar's clipboard module is the way
-        // in (bar/ClipboardButton.qml). A `hl.dsp.global` bind is the
-        // obvious home for the SUPER+V this config has never had.
-        { ipc: "clipboard", fn: "Clipboard", shortcut: "clipboard-toggle", desc: "Toggle the clipboard window" },
+        // The clipboard window (SUPER+C) is not here either: it is its own
+        // config, ../clipboard, which registers clipboard-toggle itself.
 
         // IPC only, no shortcut.
         { ipc: "wallpaper", fn: "Wallpaper" },

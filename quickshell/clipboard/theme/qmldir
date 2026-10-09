@@ -1,0 +1,2 @@
+singleton Appearance 1.0 Appearance.qml
+singleton ConfStyle 1.0 ConfStyle.qml

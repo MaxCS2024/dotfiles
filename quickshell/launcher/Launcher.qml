@@ -1,6 +1,4 @@
 import Quickshell
-import Quickshell.Hyprland
-import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 import "common"
@@ -11,57 +9,29 @@ import "theme"
 
 // The app launcher, in a config of its own so it works with or without
 // the bar (moved out of main/launcher/ on 2026-10-09). shell.qml holds its
-// IPC target and the SUPER+P shortcut.
-//
-// The open/close half is main/common/ShellSurface.qml's, trimmed to the
-// one surface: see that file's header for the invariant the hide timer
-// and open()'s hideTimer.stop() hold between them.
-PanelWindow {
+// IPC target and the SUPER+P shortcut. ShellSurface, Appearance and
+// Settings are ../shared's read-only stand-ins for the bar's.
+ShellSurface {
     id: launcher
 
-    readonly property bool shown: launcher._shown
-    property bool _shown: false
+    surfaceNamespace: "quickshell:launcher"
+    focusTarget: searchInput
 
-    function open() {
-        hideTimer.stop()
-        launcher.visible = true
-        launcher._shown = true
-        searchInput.forceActiveFocus()
-        focusGrab.active = true
-        // Every open is a fresh search. The text is left up through the
-        // fade instead, which shows what was just dismissed.
+    anchors { top: true; bottom: true; left: true; right: true }
+
+    // 220, not ShellSurface's 200: this fades on the shell-wide panel
+    // duration, and a refactor is not the place to quietly shorten it.
+    exitDuration: Theme.animPanel
+
+    // Every open is a fresh search. The hide timer used to clear the
+    // field as well, a moment after the window went; it does not need to,
+    // because this runs before the next one is ever seen — and leaving
+    // the text up through the fade shows what was just dismissed.
+    onSurfaceOpened: {
         searchInput.text = ""
         launcher.query = ""
         launcher.selectedIndex = 0
         launcher.runFilter()
-    }
-
-    function close() {
-        launcher._shown = false
-        focusGrab.active = false
-        hideTimer.restart()
-    }
-
-    function toggle() { launcher._shown ? launcher.close() : launcher.open() }
-
-    color: "transparent"
-    visible: false
-    anchors { top: true; bottom: true; left: true; right: true }
-
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
-    WlrLayershell.namespace: "quickshell:launcher"
-
-    Timer {
-        id: hideTimer
-        interval: Theme.animPanel
-        onTriggered: if (!launcher._shown) launcher.visible = false
-    }
-
-    HyprlandFocusGrab {
-        id: focusGrab
-        windows: [launcher]
-        onCleared: launcher.close()
     }
 
     property int maxResults: 50

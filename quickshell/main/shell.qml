@@ -15,7 +15,6 @@ import "battery"
 import "earbuds"
 import "weather"
 import "calendar"
-import "clipboard"
 import "apps"
 import "keybinds"
 import "theme"
@@ -139,7 +138,6 @@ ShellRoot {
         "weather": weatherLoader,
         "earbuds": earbudsLoader,
         "calendar": calendarLoader,
-        "clipboard": clipboardLoader,
         "themes": themesLoader,
         "apps": appsLoader
     })
@@ -319,16 +317,8 @@ ShellRoot {
         active: false
         CalendarPanel {}
     }
-    // The clipboard window (clipboard/ClipboardPanel.qml, user request
-    // 2026-09-21) — search over the top, the history down the left, the
-    // selected entry in full on the right. Lazy and self-opening like
-    // the rest; it spawns a cliphist process per open and per selection,
-    // so most sessions should never build it.
-    LazyLoader {
-        id: clipboardLoader
-        active: false
-        ClipboardPanel {}
-    }
+    // The clipboard window used to be here; it is its own config now
+    // (../clipboard), so it opens without the bar.
     // The themes menu (theme/ThemesPanel.qml) — the wallpaper's own
     // palette and theme/Palettes.qml's eight named ones, as a card under
     // the bar's themes module. Lazy and self-opening on the same contract

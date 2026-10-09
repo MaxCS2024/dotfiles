@@ -39,6 +39,9 @@ hl.on("hyprland.start", function ()
 	-- The app launcher (SUPER+P), its own config since 2026-10-09 so it
 	-- works without the bar. Same theme override: it uses AppIcons too.
 	hl.exec_cmd("env QT_QPA_PLATFORMTHEME=gtk3 qs -c launcher")
+	-- The clipboard window (SUPER+C), split out the same day for the same
+	-- reason. It shows no app icons, so it needs no theme override.
+	hl.exec_cmd("qs -c clipboard")
 	hl.exec_cmd("awww-daemon")
 	hl.exec_cmd("wl-paste --watch cliphist store")
 	hl.exec_cmd("hypridle") -- idle/lock daemon, config in hypr/hypridle.conf

@@ -1,0 +1,1 @@
+../../main/theme/ConfStyle.qml

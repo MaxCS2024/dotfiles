@@ -21,20 +21,24 @@
 // spliced into the command string — an entry's *content* is somebody
 // else's text, and the delete path below feeds a list line straight back
 // into cliphist.
+//
+// A config of its own since 2026-10-09 (moved out of main/clipboard/), so
+// it works with or without the bar. shell.qml holds its IPC target and the
+// SUPER+C shortcut. ShellSurface, Appearance and Settings are ../shared's
+// read-only stand-ins for the bar's.
 import Quickshell
 import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
-import "../common"
-import "../config"
-import "../services"
-import "../theme"
+import "common"
+import "config"
+import "services"
+import "theme"
 
 ShellSurface {
     id: panel
 
     surfaceNamespace: "quickshell:clipboard"
-    surfaceName: "clipboard"
     focusTarget: filterInput
 
     // Theme.animPanel (220), not ShellSurface's 200: this surface fades on the
