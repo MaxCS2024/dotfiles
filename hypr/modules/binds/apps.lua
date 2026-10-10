@@ -8,8 +8,8 @@
 -- shell's registration exactly (quickshell/main/services/Panels.qml);
 -- a name nothing registered dispatches into nowhere, silently.
 --
--- SUPER+Q and SUPER+COMMA are free: the dashboard and the settings
--- window that held them are gone, each replaced by a surface below.
+-- SUPER+Q is free: the dashboard that held it is gone, replaced by a
+-- surface below.
 
 local vars = require("modules.vars")
 local features = require("modules.features")
@@ -58,6 +58,12 @@ hl.bind(mainMod .. " + CTRL + W", hl.dsp.global("quickshell:network-toggle"))
 -- other desktop spends on copy, which is the one thing this window is
 -- for.
 hl.bind(mainMod .. " + C", hl.dsp.global("quickshell:clipboard-toggle"))
+
+-- The dynamic island's settings window: opens it, focuses it, or closes
+-- it if it already has focus (quickshell/dynamic-island/SettingsWindow.qml).
+-- COMMA is where GNOME and macOS keep settings. While the island isn't
+-- running, nothing has registered it and the key does nothing.
+hl.bind(mainMod .. " + COMMA", hl.dsp.global("quickshell:island-settings"))
 
 -- Shifted, because plain SUPER+T is the float toggle in
 -- modules/binds/window.lua and T is still the letter this is about.

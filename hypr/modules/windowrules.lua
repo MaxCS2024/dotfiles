@@ -109,6 +109,19 @@ hl.window_rule({
 	size = "monitor_w*0.6 monitor_h*0.65",
 })
 
+-- The dynamic island's settings window (SUPER+COMMA,
+-- quickshell/dynamic-island/SettingsWindow.qml) opens floating in the
+-- middle, at the 880x600 it asks for; the float toggle tiles it at the
+-- side. Every Quickshell window has the class org.quickshell, so the
+-- title tells this one apart.
+hl.window_rule({
+	name = "float-island-settings",
+	match = { class = "^org\\.quickshell$", title = "^Settings$" },
+
+	float = true,
+	center = true,
+})
+
 -- TODO: the quickshell launcher probably wants to float.
 -- Run `hyprctl clients` with the panel open to find its real class, then:
 -- hl.window_rule({
