@@ -545,7 +545,8 @@ row. In such a row (`keyRow`, `SettingsWindow.inKeyRow`) the control's
 own focus fill stays off, except a button's (Turn off, Rename, mute,
 the layout arrows), which shows on top, since a row can hold several
 stops; a grabbed slider's circle (60%) and a grabbed Segmented row's
-highlight still show. Outside a row: a switch sits on a 48 × 32 pill
+highlight still show. Every switch is in a row (Wi-Fi and Bluetooth's
+once sat beside their headings). Outside a row: a switch would sit on a 48 × 32 pill
 and a slider's knob on a 24px circle at 32%, a text field's pill lifts
 to 32%. Each page's Flickable reaches 8px past the page on the right
 (its content doesn't), so a switch's pill at the right edge isn't
@@ -755,7 +756,8 @@ How Network works (`NetworkSettings.qml`, a singleton over nmcli;
 the user change system connections without a password
 (`settings.modify.system: yes`); VPNs are switched by UUID, since names
 can hold spaces and colons (nmcli -t escapes them; `fields()` undoes it).
-- Wi-Fi: the heading with the radio's switch, then the networks in range
+- Wi-Fi: the heading, a "Use Wi-Fi" row with the radio's switch, then
+  the networks in range
   as on the island's page (`Controls.wifiNetworks`; the window scans
   with its own `Controls.windowWifiScan`, so the island page closing
   doesn't stop it). A secured network never joined asks for its
@@ -773,7 +775,8 @@ check. A shell step can be checked with a fake `nmcli`
 earlier on PATH that prints its arguments.
 
 How Bluetooth works (`BluetoothSettingsPage.qml`; `bt-agent.py`):
-- Adapter: the switch, and "Visible to other devices" (the adapter's
+- Adapter: under the heading, a "Use Bluetooth" row with the switch, and
+  "Visible to other devices" (the adapter's
   `discoverable`, "As <adapter name>").
 - My devices: the paired ones (`Controls.bluetoothDevices`), connected
   ones solid white, "Connected – 80%" with a battery. A click opens
@@ -1051,3 +1054,6 @@ Dated record of what the user chose or rejected, and why.
   layout rows, the control's own fill off inside them (buttons and
   grabbed controls excepted). Setting rows' names and controls moved in
   (16px, 8px) to sit inside the pill.
+- 2026-10-11: the Wi-Fi and Bluetooth switches left their headings for
+  rows of their own, "Use Wi-Fi" and "Use Bluetooth" (like "Use this
+  display"), so they light up whole for the keys too. The user's request.

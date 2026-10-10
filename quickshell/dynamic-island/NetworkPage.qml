@@ -76,17 +76,15 @@ Item {
             spacing: 4
 
             // ── Wi-Fi ──
-            Item {
+            Heading { text: "Wi-Fi" }
+
+            // The radio's switch, a row of its own so it lights up whole
+            // for the keys like every other setting.
+            SettingRow {
                 width: content.width
-                height: 32
-
-                Heading { text: "Wi-Fi" }
-
+                visible: Controls.wifiDevice !== null
+                label: "Use Wi-Fi"
                 Toggle {
-                    anchors.right: parent.right
-                    anchors.rightMargin: 8
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: Controls.wifiDevice !== null
                     on: Controls.wifiOn
                     onToggled: Controls.setWifi(!Controls.wifiOn)
                 }

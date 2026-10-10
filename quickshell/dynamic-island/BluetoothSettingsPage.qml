@@ -101,17 +101,15 @@ Item {
             spacing: 4
 
             // ── The adapter ──
-            Item {
+            Heading { text: "Adapter" }
+
+            // The adapter's switch, a row of its own so it lights up whole
+            // for the keys like every other setting.
+            SettingRow {
                 width: content.width
-                height: 32
-
-                Heading { text: "Adapter" }
-
+                visible: page.adapter !== null
+                label: "Use Bluetooth"
                 Toggle {
-                    anchors.right: parent.right
-                    anchors.rightMargin: 8
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: page.adapter !== null
                     on: Controls.bluetoothOn
                     onToggled: Controls.setBluetooth(!Controls.bluetoothOn)
                 }
