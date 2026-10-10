@@ -44,11 +44,12 @@ PanelWindow {
     // the largest panel, the wallpaper gallery, decides it.
     implicitWidth: Math.max(400, galleryWidth)
     implicitHeight: Math.max(288, galleryHeight)
-    // The wallpaper gallery: a third of the screen's width, a quarter of
-    // its height (the user's "kind of like a third … a quarter of the
-    // screen high"; to be tuned).
+    // The wallpaper gallery: a third of the screen's width (the user's
+    // "kind of like a third"), and only as tall as its row: images 12% of
+    // the screen's height, the middle one's 16px lift, 16px padding.
     readonly property real galleryWidth: Math.round(modelData.width / 3)
-    readonly property real galleryHeight: Math.round(modelData.height / 4)
+    readonly property real galleryTileHeight: Math.round(modelData.height * 0.12)
+    readonly property real galleryHeight: galleryTileHeight + gallery.lift + 32
     mask: Region { item: pill }
     // Keyboard focus while the settings panel (or one of its pages) is
     // open, for the Wi-Fi page's password field. Set as the panel opens,
@@ -1046,6 +1047,7 @@ PanelWindow {
             width: root.expandedWidth - 32
             height: root.expandedHeight - 32
             images: Wallpapers.images
+            tileH: root.galleryTileHeight
             opacity: root.panel === "wallpaper" ? root.panelOpacity : 0
             visible: root.panel === "wallpaper" && root.phase !== "collapsed"
             onPicked: path => {

@@ -66,7 +66,7 @@ does may need main.
   settings window.
 - Panels stay about 360px wide or less and use the shared open/close
   sequence. The wallpaper gallery is the exception: a third of the
-  screen's width and a quarter of its height.
+  screen's width, as tall as its row of images.
 
 **Out of scope:** settings for the island itself (time format, OSD on or
 off, …), colour themes (main's palettes and matugen theming), a
@@ -125,7 +125,7 @@ The island shows one thing at a time.
 | bluetooth | settings panel's Bluetooth segment | Bluetooth page: header, devices | 360 × 288 |
 | battery page | settings panel's battery segment | battery page: header with the charge, power profiles | 360 × 200 |
 | power     | middle click               | lock, reboot, log out, power off orbs | 304 × 88 |
-| wallpaper | SUPER+ALT+W                | wallpaper gallery        | screen ÷ 3 × screen ÷ 4 |
+| wallpaper | SUPER+ALT+W                | wallpaper gallery        | screen ÷ 3 × its row (640 × 178) |
 | workspace | switching to any workspace | "Workspace N"            | fits the text |
 | osd       | volume or brightness changes | icon, percentage, filling ring | one width for 0–100% |
 | battery   | charger plugged in; battery below 20% or 10% | battery icon + "Charging – 46%" or "Low battery – 18%" | fits the text |
@@ -372,15 +372,15 @@ Testing: never click an orb, or run any of these commands, to check it.
 SUPER+ALT+W (the global shortcut `quickshell:island-wallpapers`, bound in
 `~/.dotfiles/hypr/modules/binds/apps.lua`) opens it on the focused
 screen's island, or closes it there. The island grows to a third of the
-screen's width and a quarter of its height (640 × 270 on the laptop;
-the user's rough size, "to be tuned"), with the shared open/close
-sequence, 16px padding.
+screen's width and only as tall as its row: the images (12% of the
+screen's height), the middle one's lift and 16px padding (640 × 178 on
+the laptop), with the shared open/close sequence.
 
 Inside (`WallpaperGallery.qml`): the images in `~/Pictures/Wallpapers`
-(png, jpg, jpeg, webp, by name) in one row, all the same size (16:9 at
-55% of the inner height, 16px apart), cut off at the island's edges.
-The chosen one is in the middle and raised 16px; nothing else sets it
-apart. 12px corners, decoded at 480px wide. It opens on the wallpaper
+(png, jpg, jpeg, webp, by name) in one row, all the same size (16:9,
+16px apart), cut off at the island's edges, along the bottom of the
+padding. The chosen one is in the middle and raised 16px to the top;
+nothing else sets it apart. 12px corners, decoded at 480px wide. It opens on the wallpaper
 showing now (`awww query`). ← and → move (160ms, OutCubic), Enter sets
 the middle one and closes, Escape closes, and so does a click outside.
 "No images in ~/Pictures/Wallpapers" when the folder is empty.
@@ -922,3 +922,5 @@ Dated record of what the user chose or rejected, and why.
   middle one is only raised, not bigger or brighter (the user's
   correction). The layout flash tracks each keyboard on its own and
   ignores virtual ones; it still fired while voxtype typed.
+- 2026-10-10: the gallery is only as tall as its row (no empty space
+  above and below the images), at the user's request.

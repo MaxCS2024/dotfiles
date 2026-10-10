@@ -14,8 +14,9 @@ Item {
     signal picked(string path)
     signal cancelled()
 
-    // Every image 16:9 at 55% of the height; the middle one raised.
-    readonly property real tileH: Math.round(height * 0.55)
+    // Every image 16:9; the island sets the height and makes itself just
+    // tall enough for the row with the middle one raised.
+    property real tileH: 120
     readonly property real tileW: Math.round(tileH * 16 / 9)
     readonly property real gap: 16
     readonly property real lift: 16
@@ -60,9 +61,8 @@ Item {
             width: gallery.tileW
             height: gallery.tileH
             x: gallery.width / 2 + offset - width / 2
-            // Lower by half the lift, so the row with its raised one stays
-            // centred in the island.
-            y: (gallery.height - height) / 2 + gallery.lift / 2 - (chosen ? gallery.lift : 0)
+            // The row sits at the bottom, the middle one raised to the top.
+            y: chosen ? 0 : gallery.lift
             visible: Math.abs(offset) - width / 2 < gallery.width / 2
             radius: 12
             color: Qt.rgba(1, 1, 1, 0.12)
