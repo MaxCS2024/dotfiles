@@ -44,10 +44,11 @@ PanelWindow {
     // the largest panel, the wallpaper gallery, decides it.
     implicitWidth: Math.max(400, galleryWidth)
     implicitHeight: Math.max(288, galleryHeight)
-    // The wallpaper gallery: a third of the screen's width (the user's
-    // "kind of like a third"), and only as tall as its row: images 12% of
-    // the screen's height, the middle one's 16px lift, 16px padding.
-    readonly property real galleryWidth: Math.round(modelData.width / 3)
+    // The wallpaper gallery: exactly three whole images wide (the middle
+    // one and one to each side, none cut off), and only as tall as its
+    // row: images 12% of the screen's height, the middle one's 16px lift,
+    // 16px padding.
+    readonly property real galleryWidth: 3 * gallery.tileW + 2 * gallery.gap + 32
     readonly property real galleryTileHeight: Math.round(modelData.height * 0.12)
     readonly property real galleryHeight: galleryTileHeight + gallery.lift + 32
     mask: Region { item: pill }
