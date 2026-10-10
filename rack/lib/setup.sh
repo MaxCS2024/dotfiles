@@ -65,6 +65,9 @@ declare -ga RACK_SETUP_OPTIONAL=(
     "hyprsunset:hyprsunset"
     # The media keys (hypr/modules/binds/media.lua); without it they do nothing.
     "playerctl:playerctl"
+    # notify-send, for rig's notifications and relay's OSD; dunst shows
+    # them. Without it those scripts stay quiet.
+    "libnotify:notify-send"
     "hyprpolkitagent:/usr/lib/hyprpolkitagent/hyprpolkitagent"
     "matugen:matugen"
     "grim:grim"
