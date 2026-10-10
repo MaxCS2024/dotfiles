@@ -1,8 +1,10 @@
 # Secrets and per-machine state, never the config itself.
 .env
 .histfile
-# This laptop's monitors and input, written by the island's settings window.
+# This laptop's monitors, input and idle timers, written by the island's
+# settings window.
 hypr/local.lua
+hypr/hypridle.local.conf
 
 # zsh regenerates this completion cache on first start; tracking it meant
 # every shell launch showed up as a diff.

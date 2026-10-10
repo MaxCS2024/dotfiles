@@ -1,0 +1,11 @@
+# Patch: Battery charge limit
+# Trigger: --subsystem-match=power_supply
+#
+# Lets the wheel group set the battery's charge thresholds, so the
+# dynamic island's settings window (Power › Charge limit) can stop
+# charging at 80% without asking for a password. The kernel creates the
+# files root-only; this hands them to wheel whenever a battery appears.
+# ThinkPads (thinkpad_acpi) and other laptops whose driver offers
+# charge_control_end_threshold (the start threshold too, where there is
+# one); on any other machine it matches nothing.
+ACTION=="add", SUBSYSTEM=="power_supply", ATTR{type}=="Battery", TEST=="charge_control_end_threshold", RUN+="/bin/sh -c 'chgrp wheel /sys%p/charge_control_*_threshold && chmod g+w /sys%p/charge_control_*_threshold'"
