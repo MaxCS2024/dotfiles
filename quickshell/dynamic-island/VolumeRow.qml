@@ -31,7 +31,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         enabled: row.ready
         readonly property bool navigable: true
-        color: Qt.rgba(1, 1, 1, muteArea.containsMouse || (activeFocus && SettingsWindow.keyboard === true) ? 0.12 : 0)
+        color: Qt.rgba(1, 1, 1, activeFocus && SettingsWindow.keyboard === true ? SettingsWindow.focusFill : muteArea.containsMouse ? 0.12 : 0)
         Keys.onPressed: event => {
             if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
                 row.node.audio.muted = !row.node.audio.muted

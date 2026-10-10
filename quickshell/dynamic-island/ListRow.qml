@@ -4,8 +4,8 @@ import QtQuick
 // icon, the name and a short detail on the right ("Connected", "Saved").
 // No fill at rest, white at 12% while hovered (an orb's resting fill),
 // and solid white with black text while `active`. In the settings
-// window it takes the keys: lit like a hovered row while focused (white
-// at 80% when active), Enter or Space clicks it. `highlighted` lights it
+// window it takes the keys: lit at SettingsWindow.focusFill while
+// focused (focusSolid when active), Enter or Space clicks it. `highlighted` lights it
 // the same way for a list that keeps the keys itself (Choice).
 Rectangle {
     id: row
@@ -29,8 +29,8 @@ Rectangle {
 
     height: 40
     radius: height / 2
-    color: active ? Qt.rgba(1, 1, 1, lit ? 0.8 : 1)
-        : Qt.rgba(1, 1, 1, area.containsMouse || lit ? 0.12 : 0)
+    color: active ? Qt.rgba(1, 1, 1, lit ? SettingsWindow.focusSolid : 1)
+        : Qt.rgba(1, 1, 1, lit ? SettingsWindow.focusFill : area.containsMouse ? 0.12 : 0)
     Behavior on color { ColorAnimation { duration: 120 } }
 
     readonly property color ink: active ? "black" : "white"

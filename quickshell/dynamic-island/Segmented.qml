@@ -4,8 +4,8 @@ import QtQuick
 // the chosen one solid white with black text, the rest no fill, white
 // at 12% while hovered, like the fused pill's segments. `options` are
 // { label, value }; `picked(value)` asks for one. Focused by the keys
-// (settings window) the chosen one shows it (white at 80%). Enter or
-// Space grabs the row: ← → move a highlight like hover, Enter or Space
+// (settings window) the chosen one shows it (SettingsWindow.focusSolid). Enter or
+// Space grabs the row: ← → move a highlight (focusFill), Enter or Space
 // picks, Escape lets go without picking, so ← otherwise means back.
 Row {
     id: seg
@@ -62,8 +62,8 @@ Row {
             width: optionText.implicitWidth + 24
             height: 32
             radius: height / 2
-            color: chosen ? Qt.rgba(1, 1, 1, lit ? 0.8 : 1)
-                : Qt.rgba(1, 1, 1, optionArea.containsMouse || lit ? 0.12 : 0)
+            color: chosen ? Qt.rgba(1, 1, 1, lit ? SettingsWindow.focusSolid : 1)
+                : Qt.rgba(1, 1, 1, lit ? SettingsWindow.focusFill : optionArea.containsMouse ? 0.12 : 0)
             Behavior on color { ColorAnimation { duration: 120 } }
 
             Text {

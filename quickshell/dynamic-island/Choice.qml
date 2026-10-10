@@ -4,8 +4,8 @@ import QtQuick
 // hovered) with the current value and a chevron. A click unfolds the
 // options below it, five rows tall, scrolling past that; picking one, or
 // a second click on the pill, folds it again. `options` are
-// { label, value }. Focused by the keys (settings window) the pill looks
-// hovered; Enter or Space unfolds it, ↑ ↓ move through the options,
+// { label, value }. Focused by the keys (settings window) the pill lifts
+// to SettingsWindow.focusFill; Enter or Space unfolds it, ↑ ↓ move through the options,
 // Enter or Space picks one, Escape folds it again.
 Column {
     id: choice
@@ -51,7 +51,7 @@ Column {
         width: choice.width
         height: 32
         radius: height / 2
-        color: Qt.rgba(1, 1, 1, headArea.containsMouse || (choice.keyed && !choice.expanded) ? 0.2 : 0.12)
+        color: Qt.rgba(1, 1, 1, choice.keyed && !choice.expanded ? SettingsWindow.focusFill : headArea.containsMouse ? 0.2 : 0.12)
         Behavior on color { ColorAnimation { duration: 120 } }
 
         Text {

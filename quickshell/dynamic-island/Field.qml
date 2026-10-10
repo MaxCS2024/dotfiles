@@ -3,8 +3,8 @@ import QtQuick
 // A one-line text field in the settings window: a 40px pill, white at
 // 12%, bold 13px text, a placeholder at 40% while empty, like the
 // island's password field. `password` hides the text. Enter sends
-// `accepted`, Escape `cancelled`. In the window's key order its cursor
-// shows that it has the keys.
+// `accepted`, Escape `cancelled`. With the keys in it (settings window)
+// it lifts to SettingsWindow.focusFill.
 Rectangle {
     id: field
 
@@ -20,7 +20,7 @@ Rectangle {
 
     height: 40
     radius: 20
-    color: Qt.rgba(1, 1, 1, 0.12)
+    color: Qt.rgba(1, 1, 1, input.activeFocus && SettingsWindow.keyboard === true ? SettingsWindow.focusFill : 0.12)
 
     MouseArea {
         anchors.fill: parent

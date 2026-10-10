@@ -155,7 +155,7 @@ Item {
                     visible: page.adding
                     anchors.fill: parent
                     radius: 20
-                    color: Qt.rgba(1, 1, 1, 0.12)
+                    color: Qt.rgba(1, 1, 1, search.activeFocus && SettingsWindow.keyboard === true ? SettingsWindow.focusFill : 0.12)
 
                     TextInput {
                         id: search
@@ -385,8 +385,9 @@ Item {
         onClicked: InputSettings.unset(key)
     }
 
-    // A round 32px glyph button: no fill, white at 12% while hovered or
-    // focused by the keys; Enter or Space clicks it.
+    // A round 32px glyph button: no fill, white at 12% while hovered,
+    // SettingsWindow.focusFill while focused by the keys; Enter or Space
+    // clicks it.
     component IconButton: Rectangle {
         id: ib
         property string icon: ""
@@ -395,7 +396,7 @@ Item {
         width: 32
         height: 32
         radius: 16
-        color: Qt.rgba(1, 1, 1, ibArea.containsMouse || (activeFocus && SettingsWindow.keyboard === true) ? 0.12 : 0)
+        color: Qt.rgba(1, 1, 1, activeFocus && SettingsWindow.keyboard === true ? SettingsWindow.focusFill : ibArea.containsMouse ? 0.12 : 0)
         Keys.onPressed: event => {
             if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
                 ib.clicked()

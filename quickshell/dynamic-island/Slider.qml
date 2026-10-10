@@ -5,7 +5,8 @@ import QtQuick
 // While dragged it shows the dragged value, so a source that updates
 // late (brightness is polled) doesn't make the knob jump back.
 // Focused by the keys (settings window) the knob sits on a 24px circle
-// of white at 12%. Enter or Space grabs it (the circle at 20%): then
+// (SettingsWindow.focusFill). Enter or Space grabs it (the circle at
+// focusSolid): then
 // ← → move it by `keyStep`, and Enter, Space or Escape let go, so ←
 // otherwise means back. It shows the keyed value until the keys rest.
 Item {
@@ -74,7 +75,7 @@ Item {
         height: 24
         radius: 12
         visible: slider.activeFocus && SettingsWindow.keyboard === true
-        color: Qt.rgba(1, 1, 1, slider.grabbed ? 0.2 : 0.12)
+        color: Qt.rgba(1, 1, 1, slider.grabbed ? SettingsWindow.focusSolid : SettingsWindow.focusFill)
     }
 
     Rectangle {

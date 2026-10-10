@@ -123,8 +123,8 @@ Item {
                         height: Math.max(8, r.h * canvas.layout.k - 2)
                         radius: 12
                         opacity: off && !chosen ? 0.5 : 1
-                        color: chosen ? Qt.rgba(1, 1, 1, lit ? 0.8 : 1)
-                            : Qt.rgba(1, 1, 1, screenArea.containsMouse || lit ? 0.2 : 0.12)
+                        color: chosen ? Qt.rgba(1, 1, 1, lit ? SettingsWindow.focusSolid : 1)
+                            : Qt.rgba(1, 1, 1, lit ? SettingsWindow.focusFill : screenArea.containsMouse ? 0.2 : 0.12)
                         Behavior on color { ColorAnimation { duration: 120 } }
 
                         Column {

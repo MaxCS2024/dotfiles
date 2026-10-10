@@ -534,10 +534,11 @@ the screen went wrong. The Network and Bluetooth pages start scanning
 (and Bluetooth its agent) half a second after they show, so passing
 over them with ↑ ↓ scans nothing.
 
-The focused control looks hovered (white at 12%, or 20% where hover is
-20%), white at 80% when it is the solid white one; a switch sits on a
-48 × 32 pill and a slider's knob on a 24px circle, white at 12%, 20%
-while grabbed. Never a ring (STYLE.md §1). This shows only once the
+The focused control is lit well above hover: white at 32%
+(`SettingsWindow.focusFill`; hover stays 12–20%), and one that is
+already solid white dims to 60% (`focusSolid`), as does a text field's
+pill (32%). A switch sits on a 48 × 32 pill and a slider's knob on a
+24px circle at 32%, 60% while grabbed. Never a ring (STYLE.md §1). This shows only once the
 keys have been used, and a click hides it again
 (`SettingsWindow.keyboard`), so with the mouse the window looks as
 before. How: a control opts in with `navigable: true` and handles its
@@ -1026,3 +1027,8 @@ Dated record of what the user chose or rejected, and why.
   Sliders and Segmented rows are grabbed with Enter first, so ← always
   means back (the user's pick over ← → changing them directly). → back
   into a page returns to the control left.
+- 2026-10-11: the keys' focus was too hard to see (it looked like
+  hover: 12–20%, 80% on solid white). Now 32% white, 60% on a solid
+  white control, a text field lit the same, and a grabbed slider's
+  circle at 60%; at the user's request ("easier to see what options you
+  are on").

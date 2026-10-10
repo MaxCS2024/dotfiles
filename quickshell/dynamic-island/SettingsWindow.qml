@@ -27,6 +27,10 @@ Singleton {
     property bool shown: false
     // The keys were used since the last click (see the window's Keyboard).
     property bool keyboard: false
+    // How the keys' focus shows: a fill well above hover's 12–20%, and a
+    // control that is already solid white dimmed to 60%.
+    readonly property real focusFill: 0.32
+    readonly property real focusSolid: 0.6
 
     // Scrolls every Flickable around `item` until it is in view, with
     // 8px to spare.

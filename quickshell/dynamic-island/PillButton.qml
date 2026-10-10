@@ -3,7 +3,7 @@ import QtQuick
 // A 32px round text button in the settings window. `primary` is solid
 // white with black text (Apply, Keep); otherwise white at 12%, 20% while
 // hovered. Disabled reads at 40% and takes no clicks. Focused by the
-// keys it looks hovered (white at 80% when primary); Enter or Space
+// keys it lifts to SettingsWindow.focusFill (focusSolid when primary); Enter or Space
 // clicks it.
 Rectangle {
     id: button
@@ -26,8 +26,8 @@ Rectangle {
     height: 32
     radius: height / 2
     opacity: enabled ? 1 : 0.4
-    color: primary ? Qt.rgba(1, 1, 1, lit ? 0.8 : 1)
-        : Qt.rgba(1, 1, 1, area.containsMouse || lit ? 0.2 : 0.12)
+    color: primary ? Qt.rgba(1, 1, 1, lit ? SettingsWindow.focusSolid : 1)
+        : Qt.rgba(1, 1, 1, lit ? SettingsWindow.focusFill : area.containsMouse ? 0.2 : 0.12)
     Behavior on color { ColorAnimation { duration: 120 } }
 
     Text {
