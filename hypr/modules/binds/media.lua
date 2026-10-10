@@ -1,36 +1,25 @@
--- Screenshot: routed through Quickshell's screenshot capture, which runs
--- grim + slurp + wl-copy itself and posts a notification —
--- see notifications/Screenshot.qml in the quickshell dotfiles.
+-- Screenshots: Hyprland runs grim, slurp and wl-copy itself, so Print
+-- works whichever shell is up, or none (it used to go through main's
+-- screenshot service and relay's notification; since 2026-10-10 login
+-- starts only the island). Each capture is saved in ~/Pictures/Screenshots
+-- and copied to the clipboard, and Hyprland's own notification says so:
+-- it needs no notification daemon, and none runs without main.
+--   Print        a region, picked with slurp
+--   SHIFT+Print  the whole focused screen
 --
--- Not `repeating`: holding the key would start a capture per repeat tick,
--- each with its own slurp overlay stacked on the last.
-hl.bind("Print", hl.dsp.exec_cmd("qs -c main ipc call screenshot capture"), { locked = true })
-
--- Screenshot to file: same region select, saved to disk and copied to the
--- clipboard, then a notification confirming the copy. The copy is what the
--- notification is about — without the wl-copy step the message would be a
--- lie, since this bind used to write the file and nothing else.
---
--- `relay` needs no PATH fixup here any more: modules/env.lua puts
--- ~/.local/bin on the PATH Hyprland hands to `sh -c`, which is where its
--- installer links it. That line is load-bearing for this bind — without it
--- the notification silently never arrives, because a bind's stderr goes
--- nowhere the user ever sees.
---
--- One line, not a multi-line string: this is handed straight to `sh -c`, and
--- keeping it flat avoids depending on how the dispatcher treats newlines.
--- Cancelling slurp (Esc) exits before grim runs, so a cancelled capture
--- notifies nothing rather than claiming an empty clipboard. A press while a
--- selection is already open (from either Print bind) cancels it instead of
--- opening another overlay over it, the same as the popup does.
+-- Handed to `sh -c` as one line. Cancelling slurp (Esc) exits before grim
+-- runs, so nothing is claimed; a press while a selection is open cancels
+-- it rather than stacking a second overlay. Not `repeating`: holding the
+-- key would start a capture per repeat tick.
+local shotFile = 'dir="$HOME/Pictures/Screenshots"; mkdir -p "$dir"; f="$dir/$(date +%Y-%m-%d_%H-%M-%S).png"; '
+local shotDone = ' && wl-copy --type image/png < "$f"'
+	.. " && hyprctl eval 'hl.notification.create({ text = \"Screenshot copied, saved in Pictures/Screenshots\", timeout = 3000, icon = \"ok\" })'"
+hl.bind("Print", hl.dsp.exec_cmd(
+	'pkill -x slurp && exit 0; sel="$(slurp </dev/null)" || exit 0; [ -n "$sel" ] || exit 0; '
+		.. shotFile .. 'grim -g "$sel" "$f"' .. shotDone
+), { locked = true })
 hl.bind("SHIFT + Print", hl.dsp.exec_cmd(
-	'pkill -x slurp && exit 0; ' ..
-		'dir="$HOME/Pictures/Screenshots"; mkdir -p "$dir"; ' ..
-		'sel="$(slurp </dev/null)" || exit 0; [ -n "$sel" ] || exit 0; ' ..
-		'f="$dir/$(date +%Y-%m-%d_%H-%M-%S).png"; ' ..
-		'grim -g "$sel" "$f" && wl-copy --type image/png < "$f" && ' ..
-		'relay notif send "Screenshot copied" ' ..
-		'"The image is in the clipboard" -a Screenshot --image "$f"'
+	shotFile .. 'grim -o "$(hyprctl monitors -j | jq -r \'.[] | select(.focused) | .name\')" "$f"' .. shotDone
 ), { locked = true })
 
 -- Volume: wpctl (WirePlumber CLI — matches the Pipewire backend your Volume tab already uses)

@@ -18,8 +18,10 @@ hl.on("hyprland.start", function ()
 	-- the island sits over its centre clock and hides with its bar. Not
 	-- having it at login means none of its keys answer: Conf (SUPER+SPACE),
 	-- the power menu (SUPER+ESCAPE; the island's is a middle click), the
-	-- notification and network rails, themes, Print, and
-	-- nothing shows notifications (dunst is masked so main could own them).
+	-- notification and network rails and themes, and nothing shows
+	-- notifications (dunst is masked so main could own them). Conf isn't
+	-- missed: the user wants the island minimal. Print and the media keys
+	-- are Hyprland's own (binds/media.lua).
 	--
 	-- The other configs under quickshell/ are siblings with lines of their
 	-- own; a layout still being tried is run by hand with `qs -c <name>`

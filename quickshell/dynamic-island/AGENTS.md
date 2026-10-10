@@ -76,12 +76,12 @@ launcher and clipboard (their own configs), and a calendar.
 - Notifications. Showing them would mean the island running the
   notification daemon when main isn't running. The user likes the idea
   but doesn't use notifications much yet.
-- Main's keys with nothing behind them now that login starts only the
-  island: Conf (SUPER+SPACE), the notification and network rails,
-  themes and Print. (The media keys went to Hyprland: it runs playerctl
-  for them, so they need no shell.) Each is the user's call: bring it to
-  the island, give it its own config like the launcher, or leave it to
-  main started by hand.
+- Notifications: nothing shows them while main isn't running (dunst is
+  masked). Left for later; the user isn't sure what they want yet.
+- Main's other keys with nothing behind them (the notification and
+  network rails, themes) aren't missed for now. Conf isn't needed: the
+  user wants the island minimal. The media keys and Print went to
+  Hyprland (playerctl; grim, slurp and wl-copy), so they need no shell.
 
 ## Look
 
@@ -866,3 +866,7 @@ Dated record of what the user chose or rejected, and why.
 - 2026-10-10: the media keys are Hyprland's (playerctl), not any
   shell's: the user wants the island to lean on no single part, and
   doesn't want relay in the way either.
+- 2026-10-10: Print and SHIFT+Print are Hyprland's own (grim, slurp,
+  wl-copy, and Hyprland's notification), not main's. Conf is not to be
+  brought over: the user wants this minimal. Notifications are left
+  undecided for now.
