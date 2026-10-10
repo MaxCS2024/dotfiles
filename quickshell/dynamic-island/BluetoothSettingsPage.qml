@@ -26,7 +26,17 @@ Item {
     property var question: null
     property string agentProblem: ""
 
-    Component.onCompleted: Controls.windowBluetoothScan = true
+    // Discovery and the agent start half a second in, so passing over the
+    // section with ↑ ↓ doesn't scan.
+    property bool settled: false
+    Timer {
+        interval: 500
+        running: true
+        onTriggered: {
+            page.settled = true
+            Controls.windowBluetoothScan = true
+        }
+    }
     Component.onDestruction: Controls.windowBluetoothScan = false
 
     function toggle(d) {
@@ -42,7 +52,7 @@ Item {
 
     Process {
         id: agent
-        running: true
+        running: page.settled
         stdinEnabled: true
         // -B: no __pycache__ beside the script in the repo.
         command: ["python3", "-I", "-B", String(Qt.resolvedUrl("bt-agent.py")).replace(/^file:\/\//, "")]

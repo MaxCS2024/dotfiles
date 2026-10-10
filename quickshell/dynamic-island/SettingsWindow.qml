@@ -175,17 +175,22 @@ Singleton {
                 return found
             }
 
+            // The control the keys were last on, to come back to after ←.
+            property var lastControl: null
+
             function focusControl(item) {
                 inPage = true
+                lastControl = item
                 item.forceActiveFocus()
                 root.reveal(item)
             }
 
-            // Into the page, on its first control.
+            // Into the page: back on the control left with ←, while it
+            // is still there, else on the first.
             function enterPage() {
                 const list = controls()
                 if (list.length > 0)
-                    focusControl(list[0])
+                    focusControl(list.indexOf(lastControl) !== -1 ? lastControl : list[0])
             }
 
             // One control on (1) or back (-1); stops at the ends.
@@ -201,14 +206,16 @@ Singleton {
 
             function toSidebar() {
                 inPage = false
-                sidebar.cursor = Math.max(0, root.sections.findIndex(s => s.key === root.section))
                 sidebar.forceActiveFocus()
             }
 
             Connections {
                 target: root
                 // The page is rebuilt; whatever had the keys is gone.
-                function onSectionChanged() { win.toSidebar() }
+                function onSectionChanged() {
+                    win.lastControl = null
+                    win.toSidebar()
+                }
             }
 
             // Keys that reach here found nothing focused (the control
@@ -250,25 +257,28 @@ Singleton {
                     width: win.narrow ? 40 : 200
                     height: parent.height - 32
 
-                    // The row ↑ and ↓ are on; Enter or → opens it.
-                    property int cursor: 0
+                    // ↑ ↓ switch the section at once (the white row moves);
+                    // → (or Enter, Tab) goes into its page.
+                    function go(i) {
+                        const n = root.sections.length
+                        root.section = root.sections[Math.max(0, Math.min(n - 1, i))].key
+                    }
 
                     Keys.onPressed: event => {
                         const k = event.key
+                        const i = root.sections.findIndex(s => s.key === root.section)
                         if (k === Qt.Key_Up)
-                            cursor = Math.max(0, cursor - 1)
+                            go(i - 1)
                         else if (k === Qt.Key_Down)
-                            cursor = Math.min(root.sections.length - 1, cursor + 1)
+                            go(i + 1)
                         else if (k === Qt.Key_Home)
-                            cursor = 0
+                            go(0)
                         else if (k === Qt.Key_End)
-                            cursor = root.sections.length - 1
+                            go(root.sections.length - 1)
                         else if (k === Qt.Key_Right || k === Qt.Key_Return || k === Qt.Key_Enter
-                                || k === Qt.Key_Space || k === Qt.Key_Tab) {
-                            root.section = root.sections[cursor].key
-                            // After the page's rows are built.
-                            Qt.callLater(win.enterPage)
-                        } else
+                                || k === Qt.Key_Tab)
+                            win.enterPage()
+                        else
                             return
                         root.keyboard = true
                         event.accepted = true
@@ -296,12 +306,10 @@ Singleton {
 
                             SidebarRow {
                                 required property var modelData
-                                required property int index
                                 width: parent.width
                                 icon: modelData.icon
                                 label: modelData.label
                                 active: root.section === modelData.key
-                                highlighted: root.keyboard && sidebar.activeFocus && index === sidebar.cursor
                                 compact: win.narrow
                                 onClicked: root.section = modelData.key
                             }
@@ -332,7 +340,7 @@ Singleton {
 
                     // What the focused control leaves: ↑ ↓ (and Tab) go
                     // from control to control, ← or Escape back to the
-                    // sidebar.
+                    // sidebar; → is already here.
                     Keys.onPressed: event => {
                         const k = event.key
                         if (k === Qt.Key_Down || k === Qt.Key_Tab)
@@ -341,7 +349,7 @@ Singleton {
                             win.step(-1)
                         else if (k === Qt.Key_Left || k === Qt.Key_Escape)
                             win.toSidebar()
-                        else
+                        else if (k !== Qt.Key_Right)
                             return
                         root.keyboard = true
                         event.accepted = true

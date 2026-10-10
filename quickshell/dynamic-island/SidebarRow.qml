@@ -2,9 +2,8 @@ import QtQuick
 
 // One section in the settings window's sidebar: a 40px fully round pill
 // with the section's icon and name, like a ListRow without the detail.
-// No fill at rest, white at 12% while hovered or `highlighted` (the
-// keyboard is on it), solid white with black text for the current
-// section, white at 80% when that one is highlighted. `compact` (the window tiled narrow)
+// No fill at rest, white at 12% while hovered, solid white with black
+// text for the current section. `compact` (the window tiled narrow)
 // leaves only the icon, centred in a 40px circle.
 Rectangle {
     id: row
@@ -12,7 +11,6 @@ Rectangle {
     property string icon: ""
     property string label: ""
     property bool active: false
-    property bool highlighted: false
     property bool compact: false
     signal clicked()
 
@@ -21,8 +19,7 @@ Rectangle {
     // `hovered` rather than area.containsMouse here: while the window is
     // torn down the area can go first, and the colour came out undefined.
     property bool hovered: false
-    color: active ? Qt.rgba(1, 1, 1, highlighted ? 0.8 : 1)
-        : Qt.rgba(1, 1, 1, hovered || highlighted ? 0.12 : 0)
+    color: active ? "white" : Qt.rgba(1, 1, 1, hovered ? 0.12 : 0)
     Behavior on color { ColorAnimation { duration: 120 } }
 
     readonly property color ink: active ? "black" : "white"

@@ -509,26 +509,36 @@ current section.
 Changes take effect at once and are saved straight away (toggles and
 sliders), except on Displays, which stages them behind Apply.
 
-**Keyboard:** the whole window works from the arrow keys. It opens with
-the keys in the sidebar: ↑ ↓ (Home, End) move a highlight over the
-sections, and → Enter Space or Tab open the highlighted one and go into
-its page, on its first control. In the page ↓ ↑ (Tab, Shift+Tab) go from
-control to control in the order they are built, stopping at the ends,
-and scroll it into view; ← or Escape go back to the sidebar. Enter or
-Space press the focused control: a row, a button, a switch, a screen on
-the Displays canvas (selects it; moving screens is the mouse's), mute on
-a volume row. A slider moves with ← → (5%, or one step if coarser). A
-Choice unfolds on Enter, ↑ ↓ move through it, Enter picks, Escape folds.
-A Segmented row moves its highlight with ← → and picks with Enter, so
-arrows alone never change a setting except on a slider. A text field
-has the keys like any control; ↑ ↓ and Tab leave it. While Displays asks
-"Keep these display settings?" the keys stay in that dialog, and after
-an Apply pressed from the keys they start on Revert, the safe answer if
-the screen went wrong. The focused control looks hovered (white at 12%,
-or 20% where hover is 20%), white at 80% when it is the solid white one;
-a switch sits on a 48 × 32 pill and a slider's knob on a 24px circle,
-both white at 12%. Never a ring (STYLE.md §1). This shows only once
-the keys have been used, and a click hides it again
+**Keyboard:** the whole window works from the arrow keys, in two
+places: the sidebar, then the page. It opens with the keys in the
+sidebar, where ↑ ↓ (Home, End) switch the section at once: the solid
+white row moves and its page shows, with no separate highlight (the
+user's choice). → (or Enter, Tab) goes into the page, on the control
+the keys left it from, else the first. In the page ↓ ↑ (Tab, Shift+Tab)
+go from control to control in the order they are built, stopping at the
+ends, and scroll it into view; ← (or Escape) goes back to the sidebar
+from anywhere in it, except while something holds the keys (below) or a
+text field's cursor isn't at its start. Enter or Space press the focused
+control: a row, a button, a switch, a volume row's mute button, a
+screen on the Displays canvas (selects it; moving screens is the
+mouse's). Sliders and Segmented rows are grabbed first, so ← keeps
+meaning back: Enter or Space grabs one, then ← → move it (a slider by
+5%, or one step if coarser; a Segmented row moves its highlight), and on
+a slider Enter, Space or Escape let go; on a Segmented row Enter or
+Space picks and Escape lets go without picking. A Choice unfolds on
+Enter, ↑ ↓ move through it, Enter picks, Escape folds. So no arrow
+changes a setting unless a slider is grabbed. While Displays asks "Keep
+these display settings?" the keys stay in that dialog, and after an
+Apply pressed from the keys they start on Revert, the safe answer if
+the screen went wrong. The Network and Bluetooth pages start scanning
+(and Bluetooth its agent) half a second after they show, so passing
+over them with ↑ ↓ scans nothing.
+
+The focused control looks hovered (white at 12%, or 20% where hover is
+20%), white at 80% when it is the solid white one; a switch sits on a
+48 × 32 pill and a slider's knob on a 24px circle, white at 12%, 20%
+while grabbed. Never a ring (STYLE.md §1). This shows only once the
+keys have been used, and a click hides it again
 (`SettingsWindow.keyboard`), so with the mouse the window looks as
 before. How: a control opts in with `navigable: true` and handles its
 own keys; the page's Keys moves between them (`win.controls()`), and an
@@ -538,9 +548,11 @@ sends the next arrow back where the keys were.
 
 Testing the keys: `wtype -k Down` with the window focused, one key per
 `wtype` and a pause (0.4s) between them: sent back to back, a key
-sometimes arrived as another one. Only arrows, Tab and Escape on pages
-where they change nothing; never Enter on a control, and never ← → on
-a slider.
+sometimes arrived as another one. Open the section wanted over IPC
+rather than counting ↑ ↓ presses (a miscount once pressed Enter on the
+wrong page). Only arrows, Tab and Escape, plus Enter to grab and Escape
+to let go; never Enter on another control, and never ← → on a grabbed
+slider.
 
 **Saving:** per machine, never into the shared dotfiles.
 `~/.config/hypr/local.lua` (in the dotfiles folder but ignored by git) is
@@ -1008,3 +1020,9 @@ Dated record of what the user chose or rejected, and why.
   controls, → or Enter into a section, ← or Escape back. Focus shows as
   the hover fill (white at 80% on a solid white control), only after a
   key press, never as a ring. See Settings window › Keyboard.
+- 2026-10-11: the keys reworked at the user's request: no highlight in
+  the sidebar, ↑ ↓ move the white row itself and switch the section at
+  once; → goes into the page to change settings there, ← comes back.
+  Sliders and Segmented rows are grabbed with Enter first, so ← always
+  means back (the user's pick over ← → changing them directly). → back
+  into a page returns to the control left.

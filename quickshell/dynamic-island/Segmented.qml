@@ -4,8 +4,9 @@ import QtQuick
 // the chosen one solid white with black text, the rest no fill, white
 // at 12% while hovered, like the fused pill's segments. `options` are
 // { label, value }; `picked(value)` asks for one. Focused by the keys
-// (settings window), ← → move a highlight like hover (white at 80% on
-// the chosen one) and Enter or Space picks it.
+// (settings window) the chosen one shows it (white at 80%). Enter or
+// Space grabs the row: ← → move a highlight like hover, Enter or Space
+// picks, Escape lets go without picking, so ← otherwise means back.
 Row {
     id: seg
 
@@ -18,17 +19,31 @@ Row {
     readonly property bool navigable: true
     readonly property bool keyed: activeFocus && SettingsWindow.keyboard === true
     property int cursor: 0
+    property bool grabbed: false
 
-    onActiveFocusChanged: if (activeFocus) cursor = Math.max(0, options.findIndex(o => o.value === value))
+    function letGo() {
+        grabbed = false
+        cursor = Math.max(0, options.findIndex(o => o.value === value))
+    }
+
+    onActiveFocusChanged: letGo()
 
     Keys.onPressed: event => {
         const k = event.key
-        if (k === Qt.Key_Left)
+        if (k === Qt.Key_Return || k === Qt.Key_Enter || k === Qt.Key_Space) {
+            if (grabbed) {
+                const v = options[cursor].value
+                letGo()
+                seg.picked(v)
+            } else {
+                grabbed = true
+            }
+        } else if (grabbed && k === Qt.Key_Left)
             cursor = Math.max(0, cursor - 1)
-        else if (k === Qt.Key_Right)
+        else if (grabbed && k === Qt.Key_Right)
             cursor = Math.min(options.length - 1, cursor + 1)
-        else if (k === Qt.Key_Return || k === Qt.Key_Enter || k === Qt.Key_Space)
-            seg.picked(options[cursor].value)
+        else if (grabbed && k === Qt.Key_Escape)
+            letGo()
         else
             return
         event.accepted = true

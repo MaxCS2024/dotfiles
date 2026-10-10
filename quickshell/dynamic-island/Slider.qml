@@ -5,8 +5,9 @@ import QtQuick
 // While dragged it shows the dragged value, so a source that updates
 // late (brightness is polled) doesn't make the knob jump back.
 // Focused by the keys (settings window) the knob sits on a 24px circle
-// of white at 12%, and ← → move it by `keyStep`; it shows the keyed
-// value the same way until the keys rest.
+// of white at 12%. Enter or Space grabs it (the circle at 20%): then
+// ← → move it by `keyStep`, and Enter, Space or Escape let go, so ←
+// otherwise means back. It shows the keyed value until the keys rest.
 Item {
     id: slider
 
@@ -18,10 +19,24 @@ Item {
     readonly property real shownValue: area.pressed || keyRest.running ? dragValue : value
 
     readonly property bool navigable: true
+    property bool grabbed: false
+
+    onActiveFocusChanged: if (!activeFocus) grabbed = false
 
     Keys.onPressed: event => {
-        const d = event.key === Qt.Key_Right ? 1 : event.key === Qt.Key_Left ? -1 : 0
-        if (d === 0)
+        const k = event.key
+        if (k === Qt.Key_Return || k === Qt.Key_Enter || k === Qt.Key_Space) {
+            grabbed = !grabbed
+            event.accepted = true
+            return
+        }
+        if (k === Qt.Key_Escape && grabbed) {
+            grabbed = false
+            event.accepted = true
+            return
+        }
+        const d = k === Qt.Key_Right ? 1 : k === Qt.Key_Left ? -1 : 0
+        if (d === 0 || !grabbed)
             return
         const from = keyRest.running ? dragValue : value
         dragValue = Math.max(0, Math.min(1, from + d * keyStep))
@@ -59,7 +74,7 @@ Item {
         height: 24
         radius: 12
         visible: slider.activeFocus && SettingsWindow.keyboard === true
-        color: Qt.rgba(1, 1, 1, 0.12)
+        color: Qt.rgba(1, 1, 1, slider.grabbed ? 0.2 : 0.12)
     }
 
     Rectangle {

@@ -15,9 +15,14 @@ Item {
     readonly property var wired: Object.keys(NetworkSettings.devices)
         .filter(d => NetworkSettings.devices[d].type === "ethernet")
 
-    Component.onCompleted: {
-        NetworkSettings.watching = true
-        Controls.windowWifiScan = true
+    // Half a second in, so passing over the section with ↑ ↓ doesn't scan.
+    Timer {
+        interval: 500
+        running: true
+        onTriggered: {
+            NetworkSettings.watching = true
+            Controls.windowWifiScan = true
+        }
     }
     Component.onDestruction: {
         NetworkSettings.watching = false
