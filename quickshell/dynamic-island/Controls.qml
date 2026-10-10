@@ -497,35 +497,31 @@ Singleton {
     // charging state, which flips back and forth around the charge
     // thresholds. Quiet for the first 2 seconds, like `changed`.
     // ── Keyboard layout ──
-    // `layoutNotice(name)` when the main keyboard's layout changes
-    // (Alt+Shift, or any other way), with XKB's name for it ("English
-    // (US)"). Hyprland's activelayout event is no use by itself: every
-    // keyboard device keeps its own layout and reports it when it types,
-    // so a volume key (thinkpad-extra-buttons, still Swedish) or wtype's
-    // virtual keyboard (voxtype typing) looked like a switch. So any
-    // activelayout only prompts a look at the main keyboard's.
+    // `layoutNotice(name)` when a keyboard's layout changes (Alt+Shift, or
+    // any other way), with XKB's name for it ("English (US)"). Every
+    // keyboard device keeps its own layout, so each is tracked on its own,
+    // from Hyprland's activelayout event ("keyboard,layout"): only a change
+    // from that same keyboard's last layout counts. Virtual keyboards
+    // ("hl-virtual-keyboard…": wtype, when voxtype types) are left out,
+    // and so is a keyboard's first report. Comparing against the main
+    // keyboard instead flashed whenever voxtype typed or a volume key was
+    // pressed: "main" is just the keyboard used last, and those have
+    // layouts of their own.
     signal layoutNotice(string name)
-    property string currentLayout: ""
+    property var keyboardLayouts: ({})
 
     Process {
-        id: mainLayout
-        // An event during a look asks for another one after it.
-        property bool again: false
         running: true
-        onExited: if (again) {
-            again = false
-            running = true
-        }
-        command: ["sh", "-c", "hyprctl devices -j | jq -r '.keyboards[] | select(.main) | .active_keymap'"]
+        command: ["sh", "-c", "hyprctl devices -j | jq -r '.keyboards[] | \"\\(.name),\\(.active_keymap)\"'"]
         stdout: StdioCollector {
             onStreamFinished: {
-                const name = text.trim()
-                if (name === "" || name === root.currentLayout)
-                    return
-                const first = root.currentLayout === ""
-                root.currentLayout = name
-                if (!first && root.armed)
-                    root.layoutNotice(name)
+                const known = Object.assign({}, root.keyboardLayouts)
+                for (const line of text.split("\n")) {
+                    const i = line.indexOf(",")
+                    if (i > 0 && known[line.slice(0, i)] === undefined)
+                        known[line.slice(0, i)] = line.slice(i + 1)
+                }
+                root.keyboardLayouts = known
             }
         }
     }
@@ -533,13 +529,25 @@ Singleton {
     Connections {
         target: Hyprland
         function onRawEvent(event) {
-            if (event.name !== "activelayout")
-                return
-            if (mainLayout.running)
-                mainLayout.again = true
-            else
-                mainLayout.running = true
+            if (event.name === "activelayout")
+                root.layoutEvent(event.data)
         }
+    }
+
+    function layoutEvent(data) {
+        const i = data.indexOf(",")
+        const keyboard = data.slice(0, i)
+        const layout = data.slice(i + 1)
+        if (i <= 0 || layout === "" || keyboard.startsWith("hl-virtual-keyboard"))
+            return
+        const before = keyboardLayouts[keyboard]
+        if (before === layout)
+            return
+        const known = Object.assign({}, keyboardLayouts)
+        known[keyboard] = layout
+        keyboardLayouts = known
+        if (before !== undefined && armed)
+            layoutNotice(layout)
     }
 
     signal batteryNotice(string kind)

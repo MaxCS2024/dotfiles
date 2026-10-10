@@ -207,13 +207,17 @@ bold 13px, for 1.5 seconds like the workspace name, since the user did
 it. Like the other flashes it obeys "the newest flash wins", isn't shown
 while a panel is open or mid-drag, and pressing the pill drops it.
 
-`Controls.layoutNotice(name)` drives it: the main keyboard's
-`active_keymap` (`hyprctl devices -j`), looked up on every `activelayout`
-event and flashed when it differs from the last one. The event's own
-layout isn't used: every keyboard device keeps its own layout and
-reports it when it types, so a volume key (`thinkpad-extra-buttons`,
-still Swedish) or wtype's virtual keyboard (voxtype typing) flashed a
-switch that wasn't one. Quiet for the first 2 seconds.
+`Controls.layoutNotice(name)` drives it, from Hyprland's `activelayout`
+event ("keyboard,layout"). Every keyboard device keeps its own layout,
+so each is tracked on its own (`keyboardLayouts`, first read from
+`hyprctl devices -j`): only a change from that same keyboard's last
+layout flashes, and a keyboard's first report doesn't. Virtual keyboards
+(`hl-virtual-keyboard…`: wtype, when voxtype types) are ignored. Two
+earlier versions flashed falsely: one compared every event against the
+last name seen (a volume key reports `thinkpad-extra-buttons`, still
+Swedish), the next read the "main" keyboard, which is only the one used
+last, so voxtype's virtual keyboard became it while typing. Quiet for
+the first 2 seconds.
 
 Testing: emit `Controls.layoutNotice` from a temporary IpcHandler; don't
 switch the real layout.
@@ -373,10 +377,10 @@ the user's rough size, "to be tuned"), with the shared open/close
 sequence, 16px padding.
 
 Inside (`WallpaperGallery.qml`): the images in `~/Pictures/Wallpapers`
-(png, jpg, jpeg, webp, by name) in a row. The chosen one is in the
-middle, 62% of the inner height at 16:9, raised 10px; the rest are 70%
-of its size, at 50%, 16px apart, cut off at the island's edges. All have
-12px corners and are decoded at 480px wide. It opens on the wallpaper
+(png, jpg, jpeg, webp, by name) in one row, all the same size (16:9 at
+55% of the inner height, 16px apart), cut off at the island's edges.
+The chosen one is in the middle and raised 16px; nothing else sets it
+apart. 12px corners, decoded at 480px wide. It opens on the wallpaper
 showing now (`awww query`). ← and → move (160ms, OutCubic), Enter sets
 the middle one and closes, Escape closes, and so does a click outside.
 "No images in ~/Pictures/Wallpapers" when the folder is empty.
@@ -914,3 +918,7 @@ Dated record of what the user chose or rejected, and why.
   screen wide and a quarter high, images from ~/Pictures/Wallpapers in a
   row with the middle one raised, ← → and Enter, set with awww on every
   screen. The user's design; opening, size and moving to be refined later.
+- 2026-10-10: the gallery's images are all one size in one row; the
+  middle one is only raised, not bigger or brighter (the user's
+  correction). The layout flash tracks each keyboard on its own and
+  ignores virtual ones; it still fired while voxtype typed.

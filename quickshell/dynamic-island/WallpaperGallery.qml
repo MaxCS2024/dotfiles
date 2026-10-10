@@ -2,9 +2,9 @@ import Quickshell.Widgets
 import QtQuick
 
 // The island's wallpaper gallery (AGENTS.md, Wallpaper gallery): the
-// images in a row, the chosen one in the middle, larger and raised a
-// little, the others smaller and dimmed to either side, cut off at the
-// edges. ← and → move, Enter sets the middle one, Escape closes.
+// images in one row, all the same size, the chosen one in the middle and
+// raised a little; the row is cut off at the island's edges. ← and →
+// move, Enter sets the middle one, Escape closes.
 // `reset()` starts it on the wallpaper showing now.
 Item {
     id: gallery
@@ -14,13 +14,11 @@ Item {
     signal picked(string path)
     signal cancelled()
 
-    // The middle image: 16:9, 62% of the height; the others 70% of it.
-    readonly property real bigH: Math.round(height * 0.62)
-    readonly property real bigW: Math.round(bigH * 16 / 9)
-    readonly property real smallH: Math.round(bigH * 0.7)
-    readonly property real smallW: Math.round(bigW * 0.7)
+    // Every image 16:9 at 55% of the height; the middle one raised.
+    readonly property real tileH: Math.round(height * 0.55)
+    readonly property real tileW: Math.round(tileH * 16 / 9)
     readonly property real gap: 16
-    readonly property real lift: 10
+    readonly property real lift: 16
 
     function reset(current) {
         const i = images.indexOf(current)
@@ -57,26 +55,20 @@ Item {
             readonly property int d: index - gallery.index
             readonly property bool chosen: d === 0
 
-            // Centre-to-centre: half the big one, a gap, half a small one
-            // for the first step, then a small one and a gap for each more.
-            readonly property real offset: d === 0 ? 0
-                : Math.sign(d) * (gallery.bigW / 2 + gallery.gap + gallery.smallW / 2
-                    + (Math.abs(d) - 1) * (gallery.smallW + gallery.gap))
+            readonly property real offset: d * (gallery.tileW + gallery.gap)
 
-            width: chosen ? gallery.bigW : gallery.smallW
-            height: chosen ? gallery.bigH : gallery.smallH
+            width: gallery.tileW
+            height: gallery.tileH
             x: gallery.width / 2 + offset - width / 2
-            y: (gallery.height - height) / 2 - (chosen ? gallery.lift : 0)
+            // Lower by half the lift, so the row with its raised one stays
+            // centred in the island.
+            y: (gallery.height - height) / 2 + gallery.lift / 2 - (chosen ? gallery.lift : 0)
             visible: Math.abs(offset) - width / 2 < gallery.width / 2
             radius: 12
             color: Qt.rgba(1, 1, 1, 0.12)
-            opacity: chosen ? 1 : 0.5
 
             Behavior on x { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
             Behavior on y { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
-            Behavior on width { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
-            Behavior on height { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
-            Behavior on opacity { NumberAnimation { duration: 160 } }
 
             Image {
                 anchors.fill: parent
