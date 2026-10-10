@@ -2,8 +2,9 @@
 
 A standalone Quickshell config (`qs -c dynamic-island`, in
 `~/.dotfiles/quickshell/dynamic-island`, linked to
-`~/.config/quickshell/dynamic-island` by the rack manifest and started
-at login by `hypr/modules/autostart.lua`): a bar for
+`~/.config/quickshell/dynamic-island` by the rack manifest, and the
+shell started at login by `hypr/modules/autostart.lua`, in place of
+main): a bar for
 Hyprland that shows the time, the current song when dragged right, or
 the date and battery when dragged left, and
 briefly swaps to the workspace name whenever the workspace changes, to
@@ -75,10 +76,11 @@ launcher and clipboard (their own configs), and a calendar.
 - Notifications. Showing them would mean the island running the
   notification daemon when main isn't running. The user likes the idea
   but doesn't use notifications much yet.
-- How login picks main or the island. For now autostart starts both
-  (`qs -n -c dynamic-island` after main): the island sits over main's
-  centre clock and hides when main's bar hides. Later, a per-machine
-  choice read by autostart picks one.
+- Main's keys with nothing behind them now that login starts only the
+  island: Conf (SUPER+SPACE), the notification and network rails,
+  themes, the media keys and Print. Each is the user's call: bring it to
+  the island, give it its own config like the launcher, or leave it to
+  main started by hand.
 
 ## Look
 
@@ -857,3 +859,6 @@ Dated record of what the user chose or rejected, and why.
 - 2026-10-10: the island moved into `~/.dotfiles/quickshell/dynamic-island`
   (rack links it and its .desktop entry) and into autostart, beside main.
   The user's request.
+- 2026-10-10: login starts the island instead of main (autostart). Main
+  can still be started by hand; while it runs, the island follows it as
+  before. The user's choice, after the island had run beside main.

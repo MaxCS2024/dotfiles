@@ -7,10 +7,23 @@ local features = require("modules.features")
 local defaults = require("modules.defaults")
 
 hl.on("hyprland.start", function () 
-	-- "main" is the stable quickshell config (quickshell/main/shell.qml).
-	-- The other configs under quickshell/ are siblings, each started below
-	-- with its own line; a layout still being tried is run by hand with
-	-- `qs -c <name>` until it earns one.
+	-- The shell at login is the dynamic island (quickshell/dynamic-island,
+	-- brief in its AGENTS.md): the pill at the top centre and its settings
+	-- window on SUPER+COMMA. The user's choice on 2026-10-10, replacing
+	-- main. -n refuses a second copy: two answered SUPER+COMMA with two
+	-- windows.
+	hl.exec_cmd("qs -n -c dynamic-island")
+	-- main (quickshell/main/shell.qml), the bar the island replaced, is no
+	-- longer started; run it by hand with the line below. While it is up
+	-- the island sits over its centre clock and hides with its bar. Not
+	-- having it at login means none of its keys answer: Conf (SUPER+SPACE),
+	-- the power menu (SUPER+ESCAPE; the island's is a middle click), the
+	-- notification and network rails, themes, the media keys, Print, and
+	-- nothing shows notifications (dunst is masked so main could own them).
+	--
+	-- The other configs under quickshell/ are siblings with lines of their
+	-- own; a layout still being tried is run by hand with `qs -c <name>`
+	-- until it earns one.
 	-- QT_QPA_PLATFORMTHEME is overridden for this process only. The
 	-- session-wide value (env.lua) is "qt5ct": the *Qt5* tool, which isn't
 	-- installed anyway. Qt6 fails to load it, falls back to the generic Unix
@@ -36,20 +49,13 @@ hl.on("hyprland.start", function ()
 	-- Scoped to this process rather than fixed in env.lua on purpose: setting
 	-- it session-wide also moves every other Qt app onto GTK file dialogs
 	-- instead of the portal, which is a bigger change than the icons warrant.
-	hl.exec_cmd("env QT_QPA_PLATFORMTHEME=gtk3 qs -c main")
+	-- env QT_QPA_PLATFORMTHEME=gtk3 qs -c main
 	-- The app launcher (SUPER+P), its own config since 2026-10-09 so it
 	-- works without the bar. Same theme override: it uses AppIcons too.
 	hl.exec_cmd("env QT_QPA_PLATFORMTHEME=gtk3 qs -c launcher")
 	-- The clipboard window (SUPER+C), split out the same day for the same
 	-- reason. It shows no app icons, so it needs no theme override.
 	hl.exec_cmd("qs -c clipboard")
-	-- The dynamic island (quickshell/dynamic-island, brief in its
-	-- AGENTS.md): the pill at the top centre, and its settings window on
-	-- SUPER+COMMA. It runs beside main for now, sitting over main's centre
-	-- clock and hiding when main's bar hides; how login picks one or the
-	-- other is still undecided. -n refuses a second copy: two answered
-	-- SUPER+COMMA with two windows.
-	hl.exec_cmd("qs -n -c dynamic-island")
 	hl.exec_cmd("awww-daemon")
 	hl.exec_cmd("wl-paste --watch cliphist store")
 	hl.exec_cmd("hypridle") -- idle/lock daemon, config in hypr/hypridle.conf
