@@ -177,8 +177,8 @@ running. Grouped by what breaks if it's missing.
   than showing a placeholder; no specific player required, just
   anything that implements the MPRIS D-Bus interface (which covers
   essentially every mainstream Linux media app). The media keys
-  (`hypr/modules/binds/media.lua`) go to the same player through
-  `services/Media.qml`'s global shortcuts, so no playerctl.
+  (`hypr/modules/binds/media.lua`) don't go through the shell: Hyprland
+  runs playerctl for them, so they work without main.
 
 - **StatusNotifierItem-compatible apps** — `bar/SystemTray.qml` simply
   shows nothing if no app registers a tray icon.

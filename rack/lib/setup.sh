@@ -63,6 +63,8 @@ declare -ga RACK_SETUP_OPTIONAL=(
     "hypridle:hypridle"
     "hyprlock:hyprlock"
     "hyprsunset:hyprsunset"
+    # The media keys (hypr/modules/binds/media.lua); without it they do nothing.
+    "playerctl:playerctl"
     "hyprpolkitagent:/usr/lib/hyprpolkitagent/hyprpolkitagent"
     "matugen:matugen"
     "grim:grim"

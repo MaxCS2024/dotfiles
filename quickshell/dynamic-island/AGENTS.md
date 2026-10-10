@@ -78,7 +78,8 @@ launcher and clipboard (their own configs), and a calendar.
   but doesn't use notifications much yet.
 - Main's keys with nothing behind them now that login starts only the
   island: Conf (SUPER+SPACE), the notification and network rails,
-  themes, the media keys and Print. Each is the user's call: bring it to
+  themes and Print. (The media keys went to Hyprland: it runs playerctl
+  for them, so they need no shell.) Each is the user's call: bring it to
   the island, give it its own config like the launcher, or leave it to
   main started by hand.
 
@@ -862,3 +863,6 @@ Dated record of what the user chose or rejected, and why.
 - 2026-10-10: login starts the island instead of main (autostart). Main
   can still be started by hand; while it runs, the island follows it as
   before. The user's choice, after the island had run beside main.
+- 2026-10-10: the media keys are Hyprland's (playerctl), not any
+  shell's: the user wants the island to lean on no single part, and
+  doesn't want relay in the way either.

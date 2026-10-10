@@ -98,11 +98,13 @@ hl.bind("XF86MonBrightnessDown", function()
 	brightnessDownTimer:set_enabled(false)
 end, { locked = true, release = true })
 
--- Media: services/Media.qml, on the same player the bar's media module and
--- card show (Quickshell's own MPRIS client, so no playerctl). Scripts can
--- reach the same three with `qs -c main ipc call player playPause|next|previous`.
-hl.bind("XF86AudioNext", hl.dsp.global("quickshell:media-next"), { locked = true })
-hl.bind("XF86AudioPause", hl.dsp.global("quickshell:media-play-pause"), { locked = true })
-hl.bind("XF86AudioPlay", hl.dsp.global("quickshell:media-play-pause"), { locked = true })
-hl.bind("XF86AudioPrev", hl.dsp.global("quickshell:media-previous"), { locked = true })
+-- Media: playerctl, so the keys work whichever shell is running (the
+-- island at login, main by hand, or none). They went through main's own
+-- MPRIS client until 2026-10-10, when login stopped starting main and they
+-- went dead with it. playerctl's playerctld, started on demand over
+-- D-Bus, keeps the player last used first, which is the one these reach.
+hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), { locked = true })
+hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
+hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
+hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { locked = true })
 
