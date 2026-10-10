@@ -3,8 +3,9 @@ import QtQuick
 
 // The island's wallpaper gallery (AGENTS.md, Wallpaper gallery): the
 // images in one row, all the same size, the chosen one in the middle and
-// raised a little; the row is cut off at the island's edges. ← and →
-// move, Enter sets the middle one, Escape closes.
+// raised a little; the island is three images wide, so the ones further
+// out wait outside it and slide in. ← and → move, Enter sets the middle
+// one, Escape closes.
 // `reset()` starts it on the wallpaper showing now.
 Item {
     id: gallery
