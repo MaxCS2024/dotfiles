@@ -153,6 +153,11 @@ running. Grouped by what breaks if it's missing.
   or popups. Check ownership with:
   `busctl --user status org.freedesktop.Notifications`
 
+  Since 2026-10-10 login starts the dynamic island instead of main, and
+  dunst (no longer masked) answers notifications, started by D-Bus on the
+  first one. Started by hand while dunst runs, main gets none; to give it
+  the name, `systemctl --user stop dunst` before starting main.
+
 ## Optional — config degrades gracefully without these
 
 - **yay** — the AUR. Without it the app manager (`apps/AppManager.qml`)

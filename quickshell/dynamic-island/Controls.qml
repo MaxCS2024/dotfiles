@@ -7,6 +7,7 @@ import Quickshell.Io
 import Quickshell.Networking
 import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
+import QtQml
 import QtQuick
 
 // Volume, screen brightness, network status, Bluetooth and battery for
@@ -496,6 +497,75 @@ Singleton {
     // and again below 10%. Keyed off UPower's onBattery rather than the
     // charging state, which flips back and forth around the charge
     // thresholds. Quiet for the first 2 seconds, like `changed`.
+    // ── Network and Bluetooth notices ──
+    // `notice(icon, text)` for the island's pill (AGENTS.md, Notices): a
+    // network coming up, failing or dropping, a Bluetooth device
+    // connecting or disconnecting. Quiet for the first 2 seconds.
+    signal notice(string icon, string text)
+
+    // Connected / Wi-Fi lost, from the connected network's name. Losing it
+    // waits 3 seconds: switching networks passes through no network, and
+    // a wired connection taking over isn't a loss. Turning Wi-Fi off
+    // isn't one either.
+    property string lastSsid: ""
+    onSsidChanged: {
+        const before = lastSsid
+        lastSsid = ssid
+        if (!armed)
+            return
+        if (ssid !== "") {
+            wifiLost.stop()
+            notice("\uf1eb", "Connected – " + ssid)
+        } else if (before !== "" && wifiOn) {
+            wifiLost.restart()
+        }
+    }
+
+    Timer {
+        id: wifiLost
+        interval: 3000
+        onTriggered: if (root.ssid === "" && root.wifiOn && root.networkType !== "ethernet")
+            root.notice("\u{f05aa}", "Wi-Fi lost")
+    }
+
+    readonly property bool wiredUp: networkType === "ethernet"
+    onWiredUpChanged: if (armed && wiredUp) notice("\u{f0200}", "Connected – Ethernet")
+
+    // A network that fails to connect, whoever asked: NetworkManager on its
+    // own, the island's page or the settings window. Not for a missing
+    // password, which the island's Wi-Fi page asks for instead.
+    Instantiator {
+        model: root.wifiDevice ? root.wifiDevice.networks.values : []
+        delegate: Connections {
+            required property var modelData
+            target: modelData
+            ignoreUnknownSignals: true
+            function onConnectionFailed(reason) {
+                if (root.armed && reason !== ConnectionFailReason.NoSecrets)
+                    root.notice("\u{f05aa}", "Couldn't connect – " + modelData.name)
+            }
+        }
+    }
+
+    // A Bluetooth device connecting ("Nothing Ear (3) connected – 80%",
+    // with the battery when it reports one) or disconnecting. Not while
+    // the adapter is off: switching it off disconnects everything at once.
+    Instantiator {
+        model: Bluetooth.devices.values
+        delegate: Connections {
+            required property var modelData
+            target: modelData
+            function onConnectedChanged() {
+                if (!root.armed || !root.bluetoothOn)
+                    return
+                const d = modelData
+                root.notice(root.deviceIcon(d), d.connected
+                    ? d.name + " connected" + (d.batteryAvailable ? " – " + Math.round(d.battery * 100) + "%" : "")
+                    : d.name + " disconnected")
+            }
+        }
+    }
+
     // ── Keyboard layout ──
     // `layoutNotice(name)` when a keyboard's layout changes (Alt+Shift, or
     // any other way), with XKB's name for it ("English (US)"). Every

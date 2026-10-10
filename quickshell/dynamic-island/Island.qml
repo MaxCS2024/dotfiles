@@ -197,7 +197,7 @@ PanelWindow {
         const slides = phase === "collapsed" && !dragging
             && !slideOut.running && !slideIn.running
             && out !== osdFace && out !== batteryFace && out !== displayFace
-            && out !== layoutFace
+            && out !== layoutFace && out !== noticeFace
             && !(out === workspaceLabel && workspaceLabel.text === name)
         if (slides) {
             const inn = out === workspaceLabelA ? workspaceLabelB : workspaceLabelA
@@ -224,6 +224,7 @@ PanelWindow {
         showBattery = false
         showDisplay = false
         showLayout = false
+        showNotice = false
         showWorkspace = true
         hideTimer.restart()
     }
@@ -267,6 +268,7 @@ PanelWindow {
             root.showBattery = false
             root.showDisplay = false
             root.showLayout = false
+            root.showNotice = false
             root.showOsd = true
             osdTimer.restart()
         }
@@ -294,6 +296,7 @@ PanelWindow {
             root.showOsd = false
             root.showDisplay = false
             root.showLayout = false
+            root.showNotice = false
             root.showBattery = true
             batteryTimer.restart()
         }
@@ -321,6 +324,7 @@ PanelWindow {
             root.showOsd = false
             root.showBattery = false
             root.showLayout = false
+            root.showNotice = false
             root.showDisplay = true
             displayTimer.restart()
         }
@@ -347,6 +351,7 @@ PanelWindow {
             root.showOsd = false
             root.showBattery = false
             root.showDisplay = false
+            root.showNotice = false
             root.showLayout = true
             layoutTimer.restart()
         }
@@ -356,6 +361,37 @@ PanelWindow {
         id: layoutTimer
         interval: 1500
         onTriggered: root.showLayout = false
+    }
+
+    // The network and Bluetooth notices (Controls.notice): an icon and a
+    // line, "Connected – Telia-3D6C57", "Wi-Fi lost", "Nothing Ear (3)
+    // connected – 80%". 3 seconds, like the battery notice: often nothing
+    // the user did just then.
+    property bool showNotice: false
+    property string noticeIcon: ""
+    property string noticeText: ""
+
+    Connections {
+        target: Controls
+        function onNotice(icon, text) {
+            if (root.phase !== "collapsed" || root.dragging)
+                return
+            root.noticeIcon = icon
+            root.noticeText = text
+            root.showWorkspace = false
+            root.showOsd = false
+            root.showBattery = false
+            root.showDisplay = false
+            root.showLayout = false
+            root.showNotice = true
+            noticeTimer.restart()
+        }
+    }
+
+    Timer {
+        id: noticeTimer
+        interval: 3000
+        onTriggered: root.showNotice = false
     }
 
     SystemClock {
@@ -396,6 +432,8 @@ PanelWindow {
             root.showDisplay = false
             layoutTimer.stop()
             root.showLayout = false
+            noticeTimer.stop()
+            root.showNotice = false
             // Catch the text mid-slide where it is; park the other one.
             slideOut.stop()
             slideIn.stop()
@@ -443,7 +481,8 @@ PanelWindow {
         readonly property real padX: 32
         // The OSD face sits tighter to the ends than the text views.
         readonly property real shownPadX: shown === osdFace ? 24 : padX
-        readonly property Item shown: root.showLayout ? layoutFace
+        readonly property Item shown: root.showNotice ? noticeFace
+            : root.showLayout ? layoutFace
             : root.showDisplay ? displayFace
             : root.showBattery ? batteryFace
             : root.showOsd ? osdFace
@@ -707,6 +746,32 @@ PanelWindow {
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "Layout – " + root.layoutName
+                    color: "white"
+                    font.family: "JetBrainsMono Nerd Font"
+                    font.weight: Font.Bold
+                    font.pixelSize: 13
+                }
+            }
+
+            // The network and Bluetooth notice: its icon at 16px, then the line.
+            Row {
+                id: noticeFace
+                anchors.centerIn: parent
+                spacing: 8
+                opacity: pill.shown === noticeFace ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: 160 } }
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.noticeIcon
+                    color: "white"
+                    font.family: "JetBrainsMono Nerd Font"
+                    font.pixelSize: 16
+                }
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.noticeText
                     color: "white"
                     font.family: "JetBrainsMono Nerd Font"
                     font.weight: Font.Bold

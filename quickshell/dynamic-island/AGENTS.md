@@ -79,8 +79,9 @@ launcher and clipboard (their own configs), and a calendar.
 - Notifications. Showing them would mean the island running the
   notification daemon when main isn't running. The user likes the idea
   but doesn't use notifications much yet.
-- Notifications: nothing shows them while main isn't running (dunst is
-  masked). Left for later; the user isn't sure what they want yet.
+- Notifications from the user's own tools (rack, relay): wanted or not.
+- How notifications look: dunst's default until everything else is
+  settled; designing them comes last.
 - Main's other keys with nothing behind them (the notification and
   network rails, themes) aren't missed for now. Conf isn't needed: the
   user wants the island minimal. The media keys and Print went to
@@ -131,6 +132,7 @@ The island shows one thing at a time.
 | battery   | charger plugged in; battery below 20% or 10% | battery icon + "Charging – 46%" or "Low battery – 18%" | fits the text |
 | layout    | keyboard layout switched   | keyboard icon + "Layout – English (US)" | fits the text |
 | display   | external screen plugged in | monitor icon + "Display connected – XV280K" | fits the text |
+| notice    | network up, failed or lost; Bluetooth device in or out | icon + "Connected – Telia-3D6C57" and the like | fits the text |
 
 The three views sit in a row, song | time | today. A drag right moves one
 view to the left, a drag left one to the right; there is no wrap-around.
@@ -198,6 +200,38 @@ battery's charge thresholds.
 
 Testing: emit `Controls.batteryNotice` from a temporary IpcHandler; don't
 unplug anything.
+
+## Notifications
+
+Notifications are their own thing, not the island's: dunst answers
+`org.freedesktop.Notifications` (unmasked 2026-10-10; D-Bus starts it on
+the first one), so they work whichever shell runs, with dunst's default
+look for now. App notifications go there too; the user doesn't mind how.
+The system ones the user cares about the island shows itself, in the
+pill, from what it watches: the battery notices, "Display connected",
+the layout, and the network and Bluetooth notices below.
+
+## Network and Bluetooth notices
+
+`Controls.notice(icon, text)`, shown like the battery notice: the icon
+at 16px, 8px before the bold 13px line, for 3 seconds, the newest flash
+winning, not while a panel is open or mid-drag, dropped by a press.
+Quiet for the first 2 seconds.
+- "Connected – <network>" when a Wi-Fi network comes up (from
+  `Controls.ssid`), "Connected – Ethernet" when a cable does.
+- "Wi-Fi lost" when the network goes and, 3 seconds later, Wi-Fi is
+  still on with no network and no cable: switching networks passes
+  through none, and switching Wi-Fi off isn't a loss.
+- "Couldn't connect – <network>" when a network reports
+  `connectionFailed`, whoever started it, except for a missing password
+  (the island's Wi-Fi page asks for it).
+- "<device> connected – 80%" (the battery when the device reports one)
+  and "<device> disconnected" for Bluetooth devices, with the device's
+  glyph; not while the adapter is off.
+No USB drives (the user: unnecessary).
+
+Testing: emit `Controls.notice` from a temporary IpcHandler; don't
+disconnect anything.
 
 ## Layout notice
 
@@ -928,3 +962,10 @@ Dated record of what the user chose or rejected, and why.
   above and below the images), at the user's request.
 - 2026-10-10: the gallery is exactly three whole images wide, so none is
   cut off at the sides. The user: "then I think it's perfect".
+- 2026-10-10: notifications. They are their own thing, not the island's:
+  dunst is unmasked and answers them under any shell, default look until
+  the end (design comes last). The island shows the system ones itself:
+  network connected, couldn't connect and Wi-Fi lost; Bluetooth devices
+  connecting and disconnecting; the battery notices as they were. No USB
+  drives. App notifications: the user doesn't mind. The user's own tools
+  (rack, relay): undecided.
