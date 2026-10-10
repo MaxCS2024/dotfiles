@@ -17,6 +17,8 @@ Row {
     spacing: 4
 
     readonly property bool navigable: true
+    property bool inRow: false
+    Component.onCompleted: inRow = SettingsWindow.inKeyRow(seg)
     readonly property bool keyed: activeFocus && SettingsWindow.keyboard === true
     property int cursor: 0
     property bool grabbed: false
@@ -57,7 +59,8 @@ Row {
             required property var modelData
             required property int index
             readonly property bool chosen: modelData.value === seg.value
-            readonly property bool lit: seg.keyed && index === seg.cursor
+            // In a lit row only the grabbed highlight shows.
+            readonly property bool lit: seg.keyed && index === seg.cursor && (seg.grabbed || !seg.inRow)
 
             width: optionText.implicitWidth + 24
             height: 32

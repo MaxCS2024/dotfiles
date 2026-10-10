@@ -536,11 +536,20 @@ over them with ↑ ↓ scans nothing.
 
 The focused control is lit well above hover: white at 32%
 (`SettingsWindow.focusFill`; hover stays 12–20%), and one that is
-already solid white dims to 60% (`focusSolid`); a text field's pill
-lifts to 32% too. A switch sits on a 48 × 32 pill and a slider's knob on a
-24px circle at 32%, 60% while grabbed. Each page's Flickable reaches 8px
-past the page on the right (its content doesn't), so a switch's pill at
-the right edge isn't clipped. Never a ring (STYLE.md §1). This shows only once the
+already solid white dims to 60% (`focusSolid`). A setting in a row
+lights the whole row instead, a 40px round pill like a focused ListRow
+(the user liked those best): a SettingRow (its name now 16px in, its
+control 8px in, so the pill has room), a volume row (now 40px, mute
+button 4px in, percentage 16px in), a Sound app row, an Input layout
+row. In such a row (`keyRow`, `SettingsWindow.inKeyRow`) the control's
+own focus fill stays off, except a button's (Turn off, Rename, mute,
+the layout arrows), which shows on top, since a row can hold several
+stops; a grabbed slider's circle (60%) and a grabbed Segmented row's
+highlight still show. Outside a row: a switch sits on a 48 × 32 pill
+and a slider's knob on a 24px circle at 32%, a text field's pill lifts
+to 32%. Each page's Flickable reaches 8px past the page on the right
+(its content doesn't), so a switch's pill at the right edge isn't
+clipped. Never a ring (STYLE.md §1). This shows only once the
 keys have been used, and a click hides it again
 (`SettingsWindow.keyboard`), so with the mouse the window looks as
 before. How: a control opts in with `navigable: true` and handles its
@@ -1037,3 +1046,8 @@ Dated record of what the user chose or rejected, and why.
 - 2026-10-11: a focused switch's pill was cut off at the page's right
   edge (the Flickable's clip); the Flickables now reach 8px further right
   than their content. The user's report.
+- 2026-10-11: whole rows light up for the keys, as the power mode rows
+  did, which the user liked: setting rows, volume rows, app rows and
+  layout rows, the control's own fill off inside them (buttons and
+  grabbed controls excepted). Setting rows' names and controls moved in
+  (16px, 8px) to sit inside the pill.

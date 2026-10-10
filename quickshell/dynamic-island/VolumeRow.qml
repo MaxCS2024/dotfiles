@@ -7,24 +7,37 @@ import QtQuick
 // "100%". Capped at 100%, like the island's slider; muted reads 0%.
 // `level` (0–1, or -1 for none) draws the input meter: a 2px line under
 // the slider's track. To the keys the mute button and the slider are
-// two stops; Enter or Space on the button mutes.
-Item {
+// two stops; Enter or Space on the button mutes. `framed` (the default)
+// makes it a 40px row of its own that lights up whole while the keys are
+// in it, like a focused ListRow; a Sound app row turns it off and lights
+// up itself.
+FocusScope {
     id: row
 
     property PwNode node: null
     property bool input: false
     property real level: -1
+    property bool framed: true
+    readonly property bool keyRow: framed
 
     readonly property bool ready: node !== null && node.audio !== null
     readonly property real volume: ready ? Math.min(1, node.audio.volume) : 0
     readonly property bool muted: ready ? node.audio.muted : false
     readonly property real shown: muted ? 0 : volume
 
-    implicitHeight: 32
+    implicitHeight: framed ? 40 : 32
     opacity: ready ? 1 : 0.4
 
     Rectangle {
+        anchors.fill: parent
+        radius: 20
+        visible: row.framed && row.activeFocus && SettingsWindow.keyboard === true
+        color: Qt.rgba(1, 1, 1, SettingsWindow.focusFill)
+    }
+
+    Rectangle {
         id: muteButton
+        x: row.framed ? 4 : 0
         width: 32
         height: 32
         radius: 16
@@ -93,6 +106,7 @@ Item {
     Text {
         id: percent
         anchors.right: parent.right
+        anchors.rightMargin: row.framed ? 16 : 0
         anchors.verticalCenter: parent.verticalCenter
         width: fit.implicitWidth
         text: Math.round(row.shown * 100) + "%"

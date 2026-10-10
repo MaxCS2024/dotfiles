@@ -32,6 +32,17 @@ Singleton {
     readonly property real focusFill: 0.32
     readonly property real focusSolid: 0.6
 
+    // Whether `item` sits in a row that lights up whole while the keys
+    // are in it (`keyRow`: SettingRow, a volume row, a Sound app row).
+    // Its own focus fill then stays off, except a button's, since a row
+    // can hold more than one stop.
+    function inKeyRow(item) {
+        for (let p = item.parent; p; p = p.parent)
+            if (p.keyRow === true)
+                return true
+        return false
+    }
+
     // Scrolls every Flickable around `item` until it is in view, with
     // 8px to spare.
     function reveal(item) {

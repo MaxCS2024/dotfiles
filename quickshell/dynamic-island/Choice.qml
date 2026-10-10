@@ -20,6 +20,8 @@ Column {
     spacing: 4
 
     readonly property bool navigable: true
+    property bool inRow: false
+    Component.onCompleted: inRow = SettingsWindow.inKeyRow(choice)
     readonly property bool keyed: activeFocus && SettingsWindow.keyboard === true
     property int cursor: 0
 
@@ -51,7 +53,7 @@ Column {
         width: choice.width
         height: 32
         radius: height / 2
-        color: Qt.rgba(1, 1, 1, choice.keyed && !choice.expanded ? SettingsWindow.focusFill : headArea.containsMouse ? 0.2 : 0.12)
+        color: Qt.rgba(1, 1, 1, choice.keyed && !choice.expanded && !choice.inRow ? SettingsWindow.focusFill : headArea.containsMouse ? 0.2 : 0.12)
         Behavior on color { ColorAnimation { duration: 120 } }
 
         Text {

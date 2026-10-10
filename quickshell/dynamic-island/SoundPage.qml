@@ -144,16 +144,25 @@ Item {
                 Repeater {
                     model: page.streams
 
-                    Item {
+                    // Lights up whole while the keys are on its mute or slider.
+                    FocusScope {
                         id: app
                         required property var modelData
+                        readonly property bool keyRow: true
                         width: parent.width
                         height: 40
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: 20
+                            visible: app.activeFocus && SettingsWindow.keyboard === true
+                            color: Qt.rgba(1, 1, 1, SettingsWindow.focusFill)
+                        }
 
                         IconImage {
                             id: appIcon
                             anchors.left: parent.left
-                            anchors.leftMargin: 8
+                            anchors.leftMargin: 12
                             anchors.verticalCenter: parent.verticalCenter
                             implicitSize: 24
                             source: page.appIcon(app.modelData)
@@ -203,6 +212,8 @@ Item {
                             anchors.left: appText.right
                             anchors.leftMargin: 8
                             anchors.right: parent.right
+                            anchors.rightMargin: 16
+                            framed: false
                             anchors.verticalCenter: parent.verticalCenter
                             node: app.modelData
                         }

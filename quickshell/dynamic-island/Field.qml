@@ -20,7 +20,9 @@ Rectangle {
 
     height: 40
     radius: 20
-    color: Qt.rgba(1, 1, 1, input.activeFocus && SettingsWindow.keyboard === true ? SettingsWindow.focusFill : 0.12)
+    property bool inRow: false
+    Component.onCompleted: inRow = SettingsWindow.inKeyRow(field)
+    color: Qt.rgba(1, 1, 1, input.activeFocus && SettingsWindow.keyboard === true && !inRow ? SettingsWindow.focusFill : 0.12)
 
     MouseArea {
         anchors.fill: parent

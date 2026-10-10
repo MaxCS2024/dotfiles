@@ -4,7 +4,7 @@ import QtQuick
 // off, solid white with a black knob while on, as a fused-pill segment
 // goes solid white when active. `on` comes from outside; `toggled` asks
 // for the other state. Focused by the keys (settings window) it sits on
-// a 48 × 32 pill (SettingsWindow.focusFill); Enter or Space flips it.
+// a 48 × 32 pill (SettingsWindow.focusFill), unless its row lights up; Enter or Space flips it.
 Rectangle {
     id: toggle
 
@@ -12,6 +12,8 @@ Rectangle {
     signal toggled()
 
     readonly property bool navigable: true
+    property bool inRow: false
+    Component.onCompleted: inRow = SettingsWindow.inKeyRow(toggle)
 
     Keys.onPressed: event => {
         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
@@ -26,7 +28,7 @@ Rectangle {
         width: parent.width + 12
         height: parent.height + 12
         radius: height / 2
-        visible: toggle.activeFocus && SettingsWindow.keyboard === true
+        visible: toggle.activeFocus && SettingsWindow.keyboard === true && !toggle.inRow
         color: Qt.rgba(1, 1, 1, SettingsWindow.focusFill)
     }
 

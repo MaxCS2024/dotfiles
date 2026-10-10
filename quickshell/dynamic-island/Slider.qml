@@ -21,6 +21,8 @@ Item {
 
     readonly property bool navigable: true
     property bool grabbed: false
+    property bool inRow: false
+    Component.onCompleted: inRow = SettingsWindow.inKeyRow(slider)
 
     onActiveFocusChanged: if (!activeFocus) grabbed = false
 
@@ -74,7 +76,8 @@ Item {
         width: 24
         height: 24
         radius: 12
-        visible: slider.activeFocus && SettingsWindow.keyboard === true
+        // In a lit row only while grabbed.
+        visible: slider.activeFocus && SettingsWindow.keyboard === true && (slider.grabbed || !slider.inRow)
         color: Qt.rgba(1, 1, 1, slider.grabbed ? SettingsWindow.focusSolid : SettingsWindow.focusFill)
     }
 

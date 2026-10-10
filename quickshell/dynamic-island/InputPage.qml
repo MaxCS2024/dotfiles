@@ -70,7 +70,9 @@ Item {
                     width: content.width
                     height: 40
                     radius: 20
-                    color: Qt.rgba(1, 1, 1, rowArea.containsMouse ? 0.12 : 0)
+                    // Lit whole while the keys are on one of its buttons.
+                    color: Qt.rgba(1, 1, 1, (moveFirstButton.activeFocus || removeButton.activeFocus) && SettingsWindow.keyboard === true
+                        ? SettingsWindow.focusFill : rowArea.containsMouse ? 0.12 : 0)
                     Behavior on color { ColorAnimation { duration: 120 } }
 
                     MouseArea {
@@ -126,12 +128,14 @@ Item {
                         }
 
                         IconButton {
+                            id: moveFirstButton
                             visible: layoutRow.index > 0
                             icon: "\u{f005d}"
                             onClicked: page.moveFirst(layoutRow.modelData)
                         }
 
                         IconButton {
+                            id: removeButton
                             visible: page.layouts.length > 1
                             icon: "\u{f0156}"
                             onClicked: page.remove(layoutRow.modelData)
