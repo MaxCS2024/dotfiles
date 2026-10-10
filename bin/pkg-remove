@@ -1,0 +1,336 @@
+#!/usr/bin/env bash
+# fzf picker over the programs you installed yourself — explicit pacman
+# and AUR packages, and Flatpak apps — to look them over and remove what
+# you no longer need. Each row shows the size, when it was installed and
+# when it was last used; the list starts with what has gone unused the
+# longest. <tab> marks several, <enter> removes the marks (pacman -Rns,
+# flatpak uninstall), then the list comes back for another pass.
+#
+# Packages the system, rack, a rack feature or a default app depends on
+# are hidden (alt-a shows them, with the reason) and never removed here.
+set -euo pipefail
+
+self=$(readlink -f "$0")
+dotfiles=${self%/bin/*}
+
+usage() {
+	cat <<-EOF
+		usage: pkg-remove
+
+		Look over the programs you installed (pacman, AUR, Flatpak), sorted
+		by how long they have gone unused, and remove the ones you pick.
+
+		  enter      remove the marked rows (or the current one)
+		  tab        mark a row
+		  alt-l      sort: unused longest first (the default)
+		  alt-s      sort: biggest first
+		  alt-o      sort: oldest install first
+		  alt-n      sort: by name
+		  alt-a      show / hide protected packages
+		  esc        quit
+	EOF
+}
+
+# ── rows ──────────────────────────────────────────────────────────────
+# One tab-separated row per program, written once per pass to $rows:
+#   1 id   2 source (pacman|aur|flatpak)   3 bytes   4 installed (epoch)
+#   5 staleness sort key: the last use, or for one not run since its
+#     install/upgrade that time minus 1e10, so those come first;
+#     9999999999 = can't tell (no /usr/bin files)
+#   6 protected reason ("-" = removable; bash's read would collapse an
+#     empty tab field)   7 the line fzf shows
+
+# pkg <tab> last use <tab> last install/upgrade, from the atimes of the
+# packages' /usr/bin files. Last use is the access time of the package's /usr/bin files. The root
+# filesystem is relatime, so a run bumps it at most once a day — good
+# enough at this scale. An install or upgrade writes the file fresh, so
+# an atime that isn't past the ctime means "not run since then".
+last_used() {
+	LC_ALL=C pacman -Ql "$@" 2>/dev/null |
+		awk '$2 ~ "^/usr/bin/[^/]+$" { print $1 "\t" $2 }' >"$tmp/bins"
+	cut -f2 "$tmp/bins" | xargs -r -d '\n' stat -L -c '%X %Z %n' 2>/dev/null |
+		awk 'NR == FNR { owner[$2] = $1; next }
+		{
+			a = $1; c = $2; sub(/^[0-9]+ [0-9]+ /, ""); p = owner[$0]
+			if (p == "") next
+			if (a > c + 60 && a > used[p]) used[p] = a
+			if (c > since[p]) since[p] = c
+		}
+		END { for (p in since) print p "\t" used[p] + 0 "\t" since[p] }' \
+			FS='\t' "$tmp/bins" FS=' ' -
+}
+
+# setup_owners REQUIRED|DEFAULT_CONFIG|OPTIONAL: the packages owning the
+# commands in rack's RACK_SETUP_<list> ("Label:command" entries).
+setup_owners() {
+	sed -n "/RACK_SETUP_$1=(/,/^)/s/^ *\"[^:]*:\([^\"]*\)\"/\1/p" \
+		"$dotfiles/rack/lib/setup.sh" 2>/dev/null |
+		while read -r cmd; do command -v "$cmd" || true; done |
+		xargs -r pacman -Qoq 2>/dev/null
+}
+
+# pkg <tab> reason, for everything that mustn't go.
+protected() {
+	local cmd pkg role exec feature
+
+	# base and what it pulls in, the kernel, firmware, microcode and the
+	# boot chain (UKI + Secure Boot, GRUB as the fallback).
+	{
+		echo base
+		LC_ALL=C pacman -Qi base 2>/dev/null |
+			sed -n 's/^Depends On *: //p' | tr -s ' ' '\n' | sed 's/[<>=].*//'
+	} | sed '/^$/d; s/$/\tpart of base/'
+	pacman -Qq | grep -E '^linux(-lts|-zen|-hardened|-rt)?(-headers)?$|^linux-firmware|-ucode$' |
+		sed 's/$/\tkernel or firmware/'
+	printf '%s\tboot\n' grub efibootmgr sbctl mkinitcpio systemd-ukify
+
+	# What rack and these dotfiles run on: the commands rack's setup check
+	# looks for, mapped to the package that owns them, plus the tools the
+	# repo's scripts lean on.
+	setup_owners REQUIRED | sed 's/$/\tneeded by the dotfiles/'
+	setup_owners DEFAULT_CONFIG | sed 's/$/\tneeded by the dotfiles/'
+	setup_owners OPTIONAL | sed 's/$/\tused by the dotfiles/'
+	printf '%s\tneeded by the dotfiles\n' git jq fzf yay
+	printf 'base-devel\tneeded to build AUR packages\n'
+
+	# Anything behind an enabled systemd unit (the login manager, the
+	# firewall, docker…): disable it first, then it shows up here. The
+	# .wants links catch instances too (ly@tty1 → ly@.service).
+	find /etc/systemd/system/*.wants /etc/systemd/user/*.wants \
+		~/.config/systemd/user/*.wants -maxdepth 1 -type l 2>/dev/null |
+		xargs -r readlink -f | grep '^/usr/' | sort -u |
+		xargs -r env LC_ALL=C pacman -Qo 2>/dev/null |
+		awk '{ n = split($1, p, "/"); print $(NF - 1) "\tenabled service " p[n] }'
+
+	# Installed rack features own their packages; `rack features remove`
+	# undoes the rest of the feature too.
+	for feature in $(rack features list 2>/dev/null | awk '$3 == "installed" { print $1 }'); do
+		jq -r --arg f "$feature" '.features[$f].packages // {} | (.repo // []) + (.aur // []) | .[]' \
+			"$dotfiles/rack/features.json" 2>/dev/null |
+			sed "s/\$/\tfeature $feature: rack features remove $feature/"
+	done
+
+	# Default apps (System › Defaults), same refusal as the App manager.
+	for role in terminal editor browser file-manager; do
+		exec=$(relay default get "$role" 2>/dev/null) || continue
+		exec=${exec#uwsm-app -- }
+		if [[ $exec == "flatpak run "* ]]; then
+			pkg=${exec#flatpak run }
+			pkg=${pkg%% *}
+		else
+			cmd=$(command -v "${exec%% *}" 2>/dev/null) || continue
+			pkg=$(pacman -Qoq "$cmd" 2>/dev/null) || continue
+		fi
+		printf '%s\tyour default %s\n' "$pkg" "${role/-/ }"
+	done
+
+	# Explicit packages something else depends on: pacman would refuse.
+	comm -23 <(pacman -Qeq | sort) <(pacman -Qettq | sort) |
+		xargs -r env LC_ALL=C pacman -Qi |
+		awk '/^Name / { name = $3 }
+			/^Required By / { sub(/^[^:]*: /, ""); gsub(/  +/, ", "); print name "\tneeded by " $0 }'
+}
+
+build_rows() {
+	local out=$1 tmp
+	tmp=$(dirname "$out")
+
+	# Best effort: a lookup that finds nothing (a command outside pacman,
+	# no flatpaks) mustn't stop the list. set -e is off inside a function
+	# called left of ||.
+	protected >"$tmp/protected" || true
+	pacman -Qmq >"$tmp/aur"
+	mapfile -t explicit < <(pacman -Qeq)
+	tmp=$tmp last_used "${explicit[@]}" >"$tmp/used" || true
+
+	# Name, size and install date straight from pacman's local database
+	# (exact bytes and epoch, no locale parsing). %REASON% is absent for
+	# explicit installs.
+	awk '
+		FNR == 1 { if (name != "" && !dep) print name "\t" size "\t" date; name = ""; dep = 0 }
+		/^%NAME%$/        { getline; name = $0 }
+		/^%SIZE%$/        { getline; size = $0 }
+		/^%INSTALLDATE%$/ { getline; date = $0 }
+		/^%REASON%$/      { getline; dep = ($0 == "1") }
+		END { if (name != "" && !dep) print name "\t" size "\t" date }
+	' /var/lib/pacman/local/*/desc >"$tmp/pacman"
+
+	# Flatpak apps: no "last used" on disk, so the newest file in the app's
+	# ~/.var/app directory stands in (it doesn't exist until the first
+	# run). The deploy directory's age is the current version's install.
+	flatpak list --app --columns=application,size,installation 2>/dev/null |
+		while IFS=$'\t' read -r id size where; do
+			local root=/var/lib/flatpak used=0 date
+			[[ $where == user ]] && root=~/.local/share/flatpak
+			date=$(stat -L -c %Y "$root/app/$id/current/active" 2>/dev/null || echo 0)
+			if [[ -d ~/.var/app/$id ]]; then
+				used=$(find ~/.var/app/"$id" -maxdepth 3 -printf '%T@\n' 2>/dev/null |
+					sort -n | tail -1)
+				used=${used%.*}
+			fi
+			printf '%s\t%s\t%s\t%s\n' "$id" "$size" "$date" "$used"
+		done >"$tmp/flatpak" || true
+
+	awk -F'\t' -v now="$(date +%s)" '
+		function human(b,   u, i) {
+			split("B KB MB GB TB", u, " ")
+			for (i = 1; b >= 1000 && i < 5; i++) b /= 1000
+			return sprintf(i == 1 ? "%d %s" : "%.1f %s", b, u[i])
+		}
+		function bytes(s,   n, u) {          # flatpak: "516.7 MB"
+			n = s + 0; u = s; sub(/^[0-9.]+[^A-Za-z]*/, "", u)
+			if (u ~ /^k/) return n * 1e3
+			if (u ~ /^M/) return n * 1e6
+			if (u ~ /^G/) return n * 1e9
+			return n
+		}
+		function span(t,   d) {
+			d = int((now - t) / 86400)
+			if (d < 1) return "today"
+			if (d < 2) return "1 day"
+			if (d < 60) return d " days"
+			if (d < 730) return int(d / 30) " months"
+			return int(d / 365) " years"
+		}
+		function ago(t) { return span(t) == "today" ? "today" : span(t) " ago" }
+		# used: the last use, 0 = not run since `since`, "" = unknown
+		function emit(id, src, b, date, used, since, reason,   key, u, glyph) {
+			if (used == "") { key = 9999999999; u = "\033[2m—\033[0m" }
+			else if (used == 0) {
+				key = since - 1e10
+				u = "\033[33m" (span(since) == "today" ? "not run yet" : "not run in " span(since)) "\033[0m"
+			} else { key = used; u = "used " ago(used) }
+			glyph = src == "aur" ? "aur" : src == "flatpak" ? "flat" : "pac"
+			printf "%s\t%s\t%d\t%d\t%d\t%s\t%-34s \033[2m%-4s\033[0m %9s  %-15s %s%s\n",
+				id, src, b, date, key, reason == "" ? "-" : reason,
+				id, glyph, human(b), ago(date), u,
+				reason == "" ? "" : "  \033[2m· " reason "\033[0m"
+		}
+		FILENAME ~ /protected$/ { if (!($1 in why)) why[$1] = $2; next }
+		FILENAME ~ /aur$/       { aur[$1] = 1; next }
+		FILENAME ~ /used$/      { last[$1] = $2; since[$1] = $3; next }
+		FILENAME ~ /pacman$/    {
+			emit($1, ($1 in aur) ? "aur" : "pacman", $2, $3,
+				($1 in last) ? last[$1] : "", since[$1], why[$1])
+			next
+		}
+		FILENAME ~ /flatpak$/   { emit($1, "flatpak", bytes($2), $3, $4 == "" ? 0 : $4, $3, why[$1]) }
+	' "$tmp/protected" "$tmp/aur" "$tmp/used" "$tmp/pacman" "$tmp/flatpak" >"$out"
+}
+
+# ── fzf callbacks ─────────────────────────────────────────────────────
+# --list <rows> [sort|toggle]: the rows in the current order, filtered.
+# The sort and the show-protected switch live in files next to the rows,
+# since fzf's binds can't hold state.
+list() {
+	local rows=$1 dir sort all
+	dir=$(dirname "$rows")
+	case "${2:-}" in
+		toggle) [[ -e $dir/all ]] && rm "$dir/all" || touch "$dir/all" ;;
+		?*) echo "$2" >"$dir/sort" ;;
+	esac
+	sort=$(cat "$dir/sort" 2>/dev/null || echo used)
+	all=0
+	[[ -e $dir/all ]] && all=1
+
+	case "$sort" in
+		size) set -- -k3,3nr ;;
+		old) set -- -k4,4n ;;
+		name) set -- -k1,1 ;;
+		*) set -- -k5,5n -k3,3nr ;;
+	esac
+	awk -F'\t' -v all="$all" 'all || $6 == "-"' "$rows" | sort -t $'\t' "$@"
+}
+
+# --info <source> <id>: the preview pane.
+info() {
+	case "$1" in
+		flatpak) flatpak info "$2" 2>/dev/null ;;
+		*) LC_ALL=C pacman -Qi "$2" 2>/dev/null ;;
+	esac
+}
+
+case "${1:-}" in
+	--list) shift; list "$@"; exit ;;
+	--info) shift; info "$@"; exit ;;
+	--help | -h) usage; exit 0 ;;
+	"") ;;
+	*) usage >&2; exit 1 ;;
+esac
+
+# ── main loop ─────────────────────────────────────────────────────────
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+rows=$tmp/rows
+q() { printf '%q' "$1"; }
+cb="$(q "$self") --list $(q "$rows")"
+
+sort_bind() { # key, sort, prompt
+	printf '%s:reload(%s %s)+change-prompt(%s> )+first' "$1" "$cb" "$2" "$3"
+}
+
+while :; do
+	printf '\033[2mlooking over your programs…\033[0m\r'
+	build_rows "$rows"
+	rm -f "$tmp/sort" "$tmp/all" # each pass opens on the default view
+
+	picks=$(
+		"$self" --list "$rows" | fzf \
+			--multi --ansi --no-sort \
+			--delimiter '\t' --with-nth 7 \
+			--prompt 'unused> ' \
+			--pointer '▌' --gutter ' ' \
+			--color 'pointer:red,marker:red,prompt:blue,label:dim,header:dim' \
+			--header 'enter: remove · tab: mark · alt-l/s/o/n: sort by last use/size/oldest/name · alt-a: show protected' \
+			--preview "$(q "$self") --info {2} {1}" \
+			--preview-window 'down:50%:wrap:border-rounded' \
+			--preview-label 'alt-p: toggle details, alt-j/k: scroll' \
+			--preview-label-pos bottom \
+			--bind 'alt-p:toggle-preview' \
+			--bind 'alt-j:preview-down,alt-k:preview-up' \
+			--bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up' \
+			--bind "$(sort_bind alt-l used unused)" \
+			--bind "$(sort_bind alt-s size size)" \
+			--bind "$(sort_bind alt-o old oldest)" \
+			--bind "$(sort_bind alt-n name name)" \
+			--bind "alt-a:reload($cb toggle)+first"
+	) || exit 0
+
+	repo=() flat=() refused=()
+	while IFS=$'\t' read -r id src _ _ _ why _; do
+		if [[ $why != - ]]; then
+			refused+=("$id — $why")
+		elif [[ $src == flatpak ]]; then
+			flat+=("$id")
+		else
+			repo+=("$id")
+		fi
+	done <<<"$picks"
+
+	clear
+	if ((${#refused[@]})); then
+		printf '\033[33mLeft alone:\033[0m\n'
+		printf '  %s\n' "${refused[@]}"
+		echo
+	fi
+
+	# pacman's and flatpak's own confirm prompts stay on. -Rns takes the
+	# dependencies nothing else needs and the .pacsave'd system configs
+	# with it; your files in ~ stay.
+	status=0
+	if ((${#repo[@]} + ${#flat[@]} == 0)); then
+		echo 'Nothing removed.'
+	fi
+	if ((${#repo[@]})); then
+		sudo pacman -Rns "${repo[@]}" || status=$?
+	fi
+	if ((${#flat[@]})); then
+		flatpak uninstall "${flat[@]}" || status=$?
+		# The runtimes only those apps used.
+		flatpak uninstall --unused || true
+	fi
+
+	printf '\n\033[2m— finished (exit %s) · Enter: back to the list · q: quit —\033[0m\n' "$status"
+	read -r -n 1 key || exit "$status"
+	[[ $key == q ]] && exit "$status"
+done
