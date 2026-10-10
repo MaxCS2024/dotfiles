@@ -7,6 +7,7 @@ launcher, notifications, lockscreen, and the panels behind them all live in
 ```
 hypr/             the compositor — hyprland.lua sources modules/
 quickshell/main/  the shell — shell.qml is the entry point
+quickshell/<name>/ launcher, clipboard and dynamic-island: configs of their own
 rig/              shell library: logging, locking, linking, process handling
 rack/             the config tool — deploys this repo, checks it, sets a machine up
 relay/            the runtime CLI — what binds and panels call to do things
@@ -79,8 +80,8 @@ quietly never runs. The one thing it names rather than probes is the font:
 the bar draws glyphs that exist nowhere else.
 
 Then log into Hyprland. `hypr/modules/autostart.lua` starts the shell itself
-(`qs -c main`) along with the wallpaper, clipboard, idle and night-light
-daemons.
+(`qs -c main`), its sibling configs (launcher, clipboard, dynamic island)
+along with the wallpaper, clipboard, idle and night-light daemons.
 
 ## Onto a USB
 

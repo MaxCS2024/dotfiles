@@ -8,8 +8,9 @@ local defaults = require("modules.defaults")
 
 hl.on("hyprland.start", function () 
 	-- "main" is the stable quickshell config (quickshell/main/shell.qml).
-	-- Experimental layouts live as sibling configs under quickshell/ and
-	-- are run manually with `qs -c <name>` — they never touch autostart.
+	-- The other configs under quickshell/ are siblings, each started below
+	-- with its own line; a layout still being tried is run by hand with
+	-- `qs -c <name>` until it earns one.
 	-- QT_QPA_PLATFORMTHEME is overridden for this process only. The
 	-- session-wide value (env.lua) is "qt5ct": the *Qt5* tool, which isn't
 	-- installed anyway. Qt6 fails to load it, falls back to the generic Unix
@@ -42,6 +43,13 @@ hl.on("hyprland.start", function ()
 	-- The clipboard window (SUPER+C), split out the same day for the same
 	-- reason. It shows no app icons, so it needs no theme override.
 	hl.exec_cmd("qs -c clipboard")
+	-- The dynamic island (quickshell/dynamic-island, brief in its
+	-- AGENTS.md): the pill at the top centre, and its settings window on
+	-- SUPER+COMMA. It runs beside main for now, sitting over main's centre
+	-- clock and hiding when main's bar hides; how login picks one or the
+	-- other is still undecided. -n refuses a second copy: two answered
+	-- SUPER+COMMA with two windows.
+	hl.exec_cmd("qs -n -c dynamic-island")
 	hl.exec_cmd("awww-daemon")
 	hl.exec_cmd("wl-paste --watch cliphist store")
 	hl.exec_cmd("hypridle") -- idle/lock daemon, config in hypr/hypridle.conf

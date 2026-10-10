@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Settings
+Comment=Displays, sound, network, Bluetooth, power and input
+Exec=qs -c dynamic-island ipc call settings focus
+Icon=preferences-system
+Categories=Settings;
+Keywords=display;monitor;sound;audio;wifi;network;bluetooth;power;battery;keyboard;touchpad;mouse;
