@@ -51,6 +51,7 @@ does may need main.
 - The Wi-Fi and Bluetooth pages, for connecting only, and the battery
   page, for the power profile only.
 - The power menu (with main gone, it is the only one).
+- The wallpaper gallery (SUPER+ALT+W; see Wallpaper gallery).
 - The settings window: Displays, Sound, Network, Bluetooth, Power and
   Input, and nothing else (see Settings window).
 
@@ -64,10 +65,12 @@ does may need main.
   networks, VPNs, a pairing code, device settings) belongs to the
   settings window.
 - Panels stay about 360px wide or less and use the shared open/close
-  sequence.
+  sequence. The wallpaper gallery is the exception: a third of the
+  screen's width and a quarter of its height.
 
 **Out of scope:** settings for the island itself (time format, OSD on or
-off, …), colour themes (main's palettes and matugen theming), Conf's sections (Install, Features, Update, Defaults, Style:
+off, …), colour themes (main's palettes and matugen theming), a
+workspace overview, Conf's sections (Install, Features, Update, Defaults, Style:
 Conf is to be split out of main into its own config, like the launcher),
 weather, Do Not Disturb, system stats (CPU, RAM, temperature), the app
 launcher and clipboard (their own configs), and a calendar.
@@ -122,6 +125,7 @@ The island shows one thing at a time.
 | bluetooth | settings panel's Bluetooth segment | Bluetooth page: header, devices | 360 × 288 |
 | battery page | settings panel's battery segment | battery page: header with the charge, power profiles | 360 × 200 |
 | power     | middle click               | lock, reboot, log out, power off orbs | 304 × 88 |
+| wallpaper | SUPER+ALT+W                | wallpaper gallery        | screen ÷ 3 × screen ÷ 4 |
 | workspace | switching to any workspace | "Workspace N"            | fits the text |
 | osd       | volume or brightness changes | icon, percentage, filling ring | one width for 0–100% |
 | battery   | charger plugged in; battery below 20% or 10% | battery icon + "Charging – 46%" or "Low battery – 18%" | fits the text |
@@ -358,6 +362,37 @@ action, through `Quickshell.execDetached` so a running hyprlock outlives
 an island reload.
 
 Testing: never click an orb, or run any of these commands, to check it.
+
+## Wallpaper gallery
+
+SUPER+ALT+W (the global shortcut `quickshell:island-wallpapers`, bound in
+`~/.dotfiles/hypr/modules/binds/apps.lua`) opens it on the focused
+screen's island, or closes it there. The island grows to a third of the
+screen's width and a quarter of its height (640 × 270 on the laptop;
+the user's rough size, "to be tuned"), with the shared open/close
+sequence, 16px padding.
+
+Inside (`WallpaperGallery.qml`): the images in `~/Pictures/Wallpapers`
+(png, jpg, jpeg, webp, by name) in a row. The chosen one is in the
+middle, 62% of the inner height at 16:9, raised 10px; the rest are 70%
+of its size, at 50%, 16px apart, cut off at the island's edges. All have
+12px corners and are decoded at 480px wide. It opens on the wallpaper
+showing now (`awww query`). ← and → move (160ms, OutCubic), Enter sets
+the middle one and closes, Escape closes, and so does a click outside.
+"No images in ~/Pictures/Wallpapers" when the folder is empty.
+
+Setting it (`Wallpapers.apply`): `awww img <path> --transition-type
+wipe`, with no `-o`, so every connected screen gets it. Wallpaper only:
+no colours follow it.
+
+Keyboard: the gallery takes the keyboard outright (Exclusive), so the
+arrows work without a click. Its focus grab starts 150ms after it opens:
+the keyboard change reaches Hyprland just after `open()`, and a grab
+already on by then was cleared by it, closing the gallery as it opened.
+
+Testing: `hyprctl dispatch 'hl.dsp.global("quickshell:island-wallpapers")'`
+opens and closes it like the key; step it with a temporary IpcHandler
+calling `gallery.step()`. Never press Enter or call `apply()` to check.
 
 ## Hiding with the main bar
 
@@ -874,3 +909,8 @@ Dated record of what the user chose or rejected, and why.
   dropped for it ("I don't think we need it"). Still open from the list
   of what went with main: workspaces, the wallpaper, night light and
   Stay awake, the tray.
+- 2026-10-10: no workspace overview ("drop the workspaces"). A wallpaper
+  gallery instead: SUPER+ALT+W, the island grows to about a third of the
+  screen wide and a quarter high, images from ~/Pictures/Wallpapers in a
+  row with the middle one raised, ← → and Enter, set with awww on every
+  screen. The user's design; opening, size and moving to be refined later.

@@ -40,16 +40,25 @@ PanelWindow {
     color: "transparent"
 
     // Big enough for the pill to grow into; only the pill takes clicks.
-    // A fixed size, so the window isn't resized every frame of the opening.
-    implicitWidth: 400
-    implicitHeight: 288
+    // A fixed size, so the window isn't resized every frame of the opening:
+    // the largest panel, the wallpaper gallery, decides it.
+    implicitWidth: Math.max(400, galleryWidth)
+    implicitHeight: Math.max(288, galleryHeight)
+    // The wallpaper gallery: a third of the screen's width, a quarter of
+    // its height (the user's "kind of like a third … a quarter of the
+    // screen high"; to be tuned).
+    readonly property real galleryWidth: Math.round(modelData.width / 3)
+    readonly property real galleryHeight: Math.round(modelData.height / 4)
     mask: Region { item: pill }
     // Keyboard focus while the settings panel (or one of its pages) is
     // open, for the Wi-Fi page's password field. Set as the panel opens,
     // before the focus grab: changing it while the grab is on clears the
     // grab, which closes the island.
-    WlrLayershell.keyboardFocus: phase !== "collapsed" && panel !== "player" && panel !== "power"
-        ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    // The wallpaper gallery takes it outright, so the arrows work without a
+    // click first.
+    WlrLayershell.keyboardFocus: phase === "collapsed" || panel === "player" || panel === "power"
+        ? WlrKeyboardFocus.None
+        : panel === "wallpaper" ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.OnDemand
     // Unmapped once the hide animation has run, so it takes no clicks.
     visible: !gone
 
@@ -58,8 +67,10 @@ PanelWindow {
     // or by switchTo() while open, which eases the size from one to the
     // other.
     property string panel: "player"
-    readonly property real expandedWidth: panel === "power" ? 304 : 360
-    property real expandedHeight: panel === "settings" ? 156
+    readonly property real expandedWidth: panel === "power" ? 304
+        : panel === "wallpaper" ? galleryWidth : 360
+    property real expandedHeight: panel === "wallpaper" ? galleryHeight
+        : panel === "settings" ? 156
         : panel === "power" ? 88
         : panel === "wifi" || panel === "bluetooth" ? 288
         : panel === "battery" ? 200 : 128
@@ -1026,6 +1037,24 @@ PanelWindow {
             onOpenSettings: root.openSettings("power")
         }
 
+        // The wallpaper gallery (WallpaperGallery.qml): Enter sets the middle
+        // image on every screen and closes the island.
+        WallpaperGallery {
+            id: gallery
+            x: 16
+            y: 16
+            width: root.expandedWidth - 32
+            height: root.expandedHeight - 32
+            images: Wallpapers.images
+            opacity: root.panel === "wallpaper" ? root.panelOpacity : 0
+            visible: root.panel === "wallpaper" && root.phase !== "collapsed"
+            onPicked: path => {
+                Wallpapers.apply(path)
+                root.close()
+            }
+            onCancelled: root.close()
+        }
+
         // The power menu: four round icon orbs in a row. The main bar's power menu's commands and icons,
         // and like it, no confirmation: a click runs the action.
         Row {
@@ -1111,8 +1140,20 @@ PanelWindow {
         panel = which
         closeAnim.stop()
         phase = "opening"
-        focusGrab.active = true
+        // The gallery's exclusive keyboard focus reaches Hyprland a moment
+        // after this; a grab already on by then is cleared by it, which
+        // closed the gallery as it opened. So its grab waits for that.
+        if (which === "wallpaper")
+            grabSoon.restart()
+        else
+            focusGrab.active = true
         openAnim.start()
+    }
+
+    Timer {
+        id: grabSoon
+        interval: 150
+        onTriggered: if (root.phase === "opening" || root.phase === "open") focusGrab.active = true
     }
 
     // From one open panel to another (the settings panel and its pages):
@@ -1151,6 +1192,23 @@ PanelWindow {
         when: root.panel === "bluetooth" && root.phase !== "collapsed"
     }
 
+    // SUPER+ALT+W: the focused screen's island opens the wallpaper gallery,
+    // or closes it if it is the one open.
+    Connections {
+        target: Wallpapers
+        function onToggleRequested() {
+            if (!Hyprland.focusedMonitor || Hyprland.focusedMonitor.name !== root.modelData.name)
+                return
+            if (root.phase === "collapsed") {
+                Wallpapers.refresh()
+                root.open("wallpaper")
+                gallery.reset(Wallpapers.current)
+            } else if (root.panel === "wallpaper") {
+                root.close()
+            }
+        }
+    }
+
     // A page's gear: the island closes and the settings window opens on
     // the matching section (Network, Bluetooth or Power).
     function openSettings(section) {
@@ -1164,6 +1222,7 @@ PanelWindow {
         openAnim.stop()
         switchAnim.stop()
         phase = "closing"
+        grabSoon.stop()
         focusGrab.active = false
         closeAnim.start()
     }

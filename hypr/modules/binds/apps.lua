@@ -65,6 +65,12 @@ hl.bind(mainMod .. " + C", hl.dsp.global("quickshell:clipboard-toggle"))
 -- running, nothing has registered it and the key does nothing.
 hl.bind(mainMod .. " + COMMA", hl.dsp.global("quickshell:island-settings"))
 
+-- The dynamic island's wallpaper gallery: the images in
+-- ~/Pictures/Wallpapers, ← and → to move, Enter to set one on every
+-- screen (quickshell/dynamic-island/Wallpapers.qml). ALT because SUPER+W
+-- and SUPER+SHIFT+W close and kill windows; W for wallpaper.
+hl.bind(mainMod .. " + ALT + W", hl.dsp.global("quickshell:island-wallpapers"))
+
 -- Shifted, because plain SUPER+T is the float toggle in
 -- modules/binds/window.lua and T is still the letter this is about.
 hl.bind(mainMod .. " + SHIFT + T", hl.dsp.global("quickshell:themes-toggle"))
