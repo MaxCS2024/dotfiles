@@ -67,7 +67,7 @@ does may need main.
   sequence.
 
 **Out of scope:** settings for the island itself (time format, OSD on or
-off, …), Conf's sections (Install, Features, Update, Defaults, Style:
+off, …), colour themes (main's palettes and matugen theming), Conf's sections (Install, Features, Update, Defaults, Style:
 Conf is to be split out of main into its own config, like the launcher),
 weather, Do Not Disturb, system stats (CPU, RAM, temperature), the app
 launcher and clipboard (their own configs), and a calendar.
@@ -870,3 +870,7 @@ Dated record of what the user chose or rejected, and why.
   wl-copy, and Hyprland's notification), not main's. Conf is not to be
   brought over: the user wants this minimal. Notifications are left
   undecided for now.
+- 2026-10-10: no colour themes in the island: main's theme feature is
+  dropped for it ("I don't think we need it"). Still open from the list
+  of what went with main: workspaces, the wallpaper, night light and
+  Stay awake, the tray.
