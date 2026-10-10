@@ -22,6 +22,8 @@ Item {
         width: 180
         anchors.verticalCenter: parent.verticalCenter
         value: (vs.value - vs.from) / (vs.to - vs.from)
+        // A key moves at least one step, so a coarse step can't stall.
+        keyStep: Math.max(0.05, vs.step / (vs.to - vs.from))
         onMoved: v => vs.moved(Math.round((vs.from + v * (vs.to - vs.from)) / vs.step) * vs.step)
     }
 

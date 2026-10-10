@@ -3,7 +3,8 @@ import QtQuick
 // A one-line text field in the settings window: a 40px pill, white at
 // 12%, bold 13px text, a placeholder at 40% while empty, like the
 // island's password field. `password` hides the text. Enter sends
-// `accepted`, Escape `cancelled`.
+// `accepted`, Escape `cancelled`. In the window's key order its cursor
+// shows that it has the keys.
 Rectangle {
     id: field
 
@@ -28,6 +29,7 @@ Rectangle {
 
     TextInput {
         id: input
+        readonly property bool navigable: true
         anchors.left: parent.left
         anchors.leftMargin: 16
         anchors.right: parent.right

@@ -25,6 +25,19 @@ Item {
     // Fresh on every visit, unless there are edits not applied yet.
     Component.onCompleted: if (!Displays.dirty) Displays.refresh()
 
+    // Apply pressed from the keys: the keep-or-revert dialog gets them,
+    // on Revert, the safe answer if the screen went wrong.
+    property bool keyApply: false
+
+    Connections {
+        target: Displays
+        function onConfirmingChanged() {
+            if (Displays.confirming && page.keyApply)
+                revertButton.forceActiveFocus()
+            page.keyApply = false
+        }
+    }
+
     Flickable {
         id: flick
         anchors.fill: parent
@@ -90,6 +103,15 @@ Item {
                         readonly property bool chosen: Displays.selected === modelData.name
                         readonly property bool off: !modelData.enabled || modelData.mirror !== ""
                         readonly property bool movable: !off && Displays.placed().length > 1
+                        // The keys pick a screen (Enter or Space); moving one is the mouse's.
+                        readonly property bool navigable: true
+                        readonly property bool lit: activeFocus && SettingsWindow.keyboard === true
+                        Keys.onPressed: event => {
+                            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+                                Displays.selected = modelData.name
+                                event.accepted = true
+                            }
+                        }
                         property real dx: 0
                         property real dy: 0
 
@@ -101,7 +123,8 @@ Item {
                         height: Math.max(8, r.h * canvas.layout.k - 2)
                         radius: 12
                         opacity: off && !chosen ? 0.5 : 1
-                        color: chosen ? "white" : Qt.rgba(1, 1, 1, screenArea.containsMouse ? 0.2 : 0.12)
+                        color: chosen ? Qt.rgba(1, 1, 1, lit ? 0.8 : 1)
+                            : Qt.rgba(1, 1, 1, screenArea.containsMouse || lit ? 0.2 : 0.12)
                         Behavior on color { ColorAnimation { duration: 120 } }
 
                         Column {
@@ -332,7 +355,10 @@ Item {
             text: "Apply"
             primary: true
             enabled: Displays.dirty && !Displays.confirming
-            onClicked: Displays.apply()
+            onClicked: {
+                page.keyApply = activeFocus && SettingsWindow.keyboard === true
+                Displays.apply()
+            }
         }
     }
 
@@ -341,6 +367,8 @@ Item {
         anchors.fill: parent
         visible: Displays.confirming
         color: Qt.rgba(0, 0, 0, 0.8)
+        // The keys stay in here while it is up.
+        readonly property bool navTrap: true
 
         // Takes every click meant for the page underneath.
         MouseArea {
@@ -386,6 +414,7 @@ Item {
                     spacing: 8
 
                     PillButton {
+                        id: revertButton
                         text: "Revert"
                         onClicked: Displays.revert()
                     }

@@ -3,7 +3,10 @@ import QtQuick
 // One row of the Wi-Fi or Bluetooth page: a 40px fully round pill with an
 // icon, the name and a short detail on the right ("Connected", "Saved").
 // No fill at rest, white at 12% while hovered (an orb's resting fill),
-// and solid white with black text while `active`.
+// and solid white with black text while `active`. In the settings
+// window it takes the keys: lit like a hovered row while focused (white
+// at 80% when active), Enter or Space clicks it. `highlighted` lights it
+// the same way for a list that keeps the keys itself (Choice).
 Rectangle {
     id: row
 
@@ -11,11 +14,23 @@ Rectangle {
     property string label: ""
     property string detail: ""
     property bool active: false
+    property bool highlighted: false
     signal clicked()
+
+    readonly property bool navigable: true
+    readonly property bool lit: highlighted || (activeFocus && SettingsWindow.keyboard === true)
+
+    Keys.onPressed: event => {
+        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+            row.clicked()
+            event.accepted = true
+        }
+    }
 
     height: 40
     radius: height / 2
-    color: active ? "white" : Qt.rgba(1, 1, 1, area.containsMouse ? 0.12 : 0)
+    color: active ? Qt.rgba(1, 1, 1, lit ? 0.8 : 1)
+        : Qt.rgba(1, 1, 1, area.containsMouse || lit ? 0.12 : 0)
     Behavior on color { ColorAnimation { duration: 120 } }
 
     readonly property color ink: active ? "black" : "white"

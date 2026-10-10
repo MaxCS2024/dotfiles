@@ -25,6 +25,24 @@ Singleton {
     property string section: "displays"
     readonly property var current: sections.find(s => s.key === section)
     property bool shown: false
+    // The keys were used since the last click (see the window's Keyboard).
+    property bool keyboard: false
+
+    // Scrolls every Flickable around `item` until it is in view, with
+    // 8px to spare.
+    function reveal(item) {
+        for (let f = item.parent; f; f = f.parent) {
+            if (f.contentY === undefined || f.contentItem === undefined)
+                continue
+            const top = item.mapToItem(f.contentItem, 0, 0).y - 8
+            const bottom = top + item.height + 16
+            const lowest = f.originY + Math.max(0, f.contentHeight - f.height)
+            if (top < f.contentY)
+                f.contentY = Math.max(f.originY, top)
+            else if (bottom > f.contentY + f.height)
+                f.contentY = Math.min(lowest, bottom - f.height)
+        }
+    }
 
     // Opens on `key` (any other string, "" included, keeps the last
     // section), or focuses the window if it is already open.
@@ -110,136 +128,295 @@ Singleton {
             // Tiled narrow at the side of the screen: icons only.
             readonly property bool narrow: width < 640
 
-            Item {
-                id: sidebar
-                x: 16
-                y: 16
-                width: win.narrow ? 40 : 200
-                height: parent.height - 32
+            // Keyboard (AGENTS.md, Settings window › Keyboard). Whether
+            // the keys were used since the last click: only then does the
+            // focused control show it, so the mouse sees no change.
+            Component.onCompleted: {
+                root.keyboard = false
+                win.toSidebar()
+            }
 
-                Text {
-                    visible: !win.narrow
-                    height: 40
-                    x: 12
-                    verticalAlignment: Text.AlignVCenter
-                    text: "Settings"
-                    color: "white"
-                    font.family: "JetBrainsMono Nerd Font"
-                    font.weight: Font.Bold
-                    font.pixelSize: 20
+            // Whether the keys were last in the page rather than the
+            // sidebar, for when the focused control goes away.
+            property bool inPage: false
+
+            // The page's controls in order: every visible, enabled item
+            // that says `navigable`, in the order they are built, a
+            // ListView's rows by their place. An open dialog
+            // (`navTrap`) keeps the keys to itself.
+            function controls() {
+                const found = []
+                const traps = []
+                const walk = (item, trapped) => {
+                    if (!item.visible || !item.enabled)
+                        return
+                    if (!trapped && item.navTrap === true) {
+                        traps.push(item)
+                        return
+                    }
+                    if (item.navigable === true) {
+                        found.push(item)
+                        return
+                    }
+                    const kids = []
+                    for (let i = 0; i < item.children.length; i++)
+                        kids.push(item.children[i])
+                    const view = item.parent
+                    if (view && view.contentItem === item && view.currentIndex !== undefined)
+                        kids.sort((a, b) => a.y - b.y)
+                    for (const k of kids)
+                        walk(k, trapped)
+                }
+                walk(page, false)
+                if (traps.length === 0)
+                    return found
+                found.length = 0
+                walk(traps[0], true)
+                return found
+            }
+
+            function focusControl(item) {
+                inPage = true
+                item.forceActiveFocus()
+                root.reveal(item)
+            }
+
+            // Into the page, on its first control.
+            function enterPage() {
+                const list = controls()
+                if (list.length > 0)
+                    focusControl(list[0])
+            }
+
+            // One control on (1) or back (-1); stops at the ends.
+            function step(delta) {
+                const list = controls()
+                if (list.length === 0)
+                    return
+                const i = list.findIndex(c => c.activeFocus)
+                const j = i === -1 ? (delta > 0 ? 0 : list.length - 1)
+                    : Math.max(0, Math.min(list.length - 1, i + delta))
+                focusControl(list[j])
+            }
+
+            function toSidebar() {
+                inPage = false
+                sidebar.cursor = Math.max(0, root.sections.findIndex(s => s.key === root.section))
+                sidebar.forceActiveFocus()
+            }
+
+            Connections {
+                target: root
+                // The page is rebuilt; whatever had the keys is gone.
+                function onSectionChanged() { win.toSidebar() }
+            }
+
+            // Keys that reach here found nothing focused (the control
+            // was hidden or rebuilt): go back where the keys last were.
+            FocusScope {
+                id: nav
+                anchors.fill: parent
+                focus: true
+
+                Keys.onPressed: event => {
+                    const k = event.key
+                    if (k !== Qt.Key_Up && k !== Qt.Key_Down && k !== Qt.Key_Left && k !== Qt.Key_Right
+                            && k !== Qt.Key_Tab && k !== Qt.Key_Backtab)
+                        return
+                    root.keyboard = true
+                    if (win.inPage && k !== Qt.Key_Left)
+                        win.enterPage()
+                    else
+                        win.toSidebar()
+                    event.accepted = true
                 }
 
-                Column {
-                    y: 56
-                    width: parent.width
-                    spacing: 4
+                // A click hides the keyboard's focus again; the click
+                // itself goes on to whatever is under it.
+                MouseArea {
+                    anchors.fill: parent
+                    z: 1
+                    acceptedButtons: Qt.AllButtons
+                    onPressed: mouse => {
+                        root.keyboard = false
+                        mouse.accepted = false
+                    }
+                }
 
-                    Repeater {
-                        model: root.sections
+                Item {
+                    id: sidebar
+                    x: 16
+                    y: 16
+                    width: win.narrow ? 40 : 200
+                    height: parent.height - 32
 
-                        SidebarRow {
-                            required property var modelData
-                            width: parent.width
-                            icon: modelData.icon
-                            label: modelData.label
-                            active: root.section === modelData.key
-                            compact: win.narrow
-                            onClicked: root.section = modelData.key
+                    // The row ↑ and ↓ are on; Enter or → opens it.
+                    property int cursor: 0
+
+                    Keys.onPressed: event => {
+                        const k = event.key
+                        if (k === Qt.Key_Up)
+                            cursor = Math.max(0, cursor - 1)
+                        else if (k === Qt.Key_Down)
+                            cursor = Math.min(root.sections.length - 1, cursor + 1)
+                        else if (k === Qt.Key_Home)
+                            cursor = 0
+                        else if (k === Qt.Key_End)
+                            cursor = root.sections.length - 1
+                        else if (k === Qt.Key_Right || k === Qt.Key_Return || k === Qt.Key_Enter
+                                || k === Qt.Key_Space || k === Qt.Key_Tab) {
+                            root.section = root.sections[cursor].key
+                            // After the page's rows are built.
+                            Qt.callLater(win.enterPage)
+                        } else
+                            return
+                        root.keyboard = true
+                        event.accepted = true
+                    }
+
+                    Text {
+                        visible: !win.narrow
+                        height: 40
+                        x: 12
+                        verticalAlignment: Text.AlignVCenter
+                        text: "Settings"
+                        color: "white"
+                        font.family: "JetBrainsMono Nerd Font"
+                        font.weight: Font.Bold
+                        font.pixelSize: 20
+                    }
+
+                    Column {
+                        y: 56
+                        width: parent.width
+                        spacing: 4
+
+                        Repeater {
+                            model: root.sections
+
+                            SidebarRow {
+                                required property var modelData
+                                required property int index
+                                width: parent.width
+                                icon: modelData.icon
+                                label: modelData.label
+                                active: root.section === modelData.key
+                                highlighted: root.keyboard && sidebar.activeFocus && index === sidebar.cursor
+                                compact: win.narrow
+                                onClicked: root.section = modelData.key
+                            }
                         }
                     }
                 }
-            }
 
-            // A hairline between the sidebar and the page, the window's
-            // full height; 16px from the sidebar, 32px from the page.
-            Rectangle {
-                id: divider
-                x: sidebar.x + sidebar.width + 16
-                width: 1
-                height: parent.height
-                color: Qt.rgba(1, 1, 1, 0.12)
-            }
-
-            Item {
-                id: page
-                anchors.left: divider.right
-                anchors.leftMargin: 32
-                anchors.right: parent.right
-                anchors.rightMargin: 24
-                anchors.top: parent.top
-                anchors.topMargin: 16
-                anchors.bottom: parent.bottom
-                anchors.bottomMargin: 16
-
-                Text {
-                    id: pageTitle
-                    height: 40
-                    verticalAlignment: Text.AlignVCenter
-                    text: root.current ? root.current.label : ""
-                    color: "white"
-                    font.family: "JetBrainsMono Nerd Font"
-                    font.weight: Font.Bold
-                    font.pixelSize: 20
+                // A hairline between the sidebar and the page, the window's
+                // full height; 16px from the sidebar, 32px from the page.
+                Rectangle {
+                    id: divider
+                    x: sidebar.x + sidebar.width + 16
+                    width: 1
+                    height: parent.height
+                    color: Qt.rgba(1, 1, 1, 0.12)
                 }
 
-                // The section's page; one not built yet says so.
-                Loader {
-                    anchors.top: pageTitle.bottom
-                    anchors.topMargin: 16
-                    anchors.left: parent.left
+                Item {
+                    id: page
+                    anchors.left: divider.right
+                    anchors.leftMargin: 32
                     anchors.right: parent.right
+                    anchors.rightMargin: 24
+                    anchors.top: parent.top
+                    anchors.topMargin: 16
                     anchors.bottom: parent.bottom
-                    sourceComponent: root.section === "displays" ? displaysPage
-                        : root.section === "sound" ? soundPage
-                        : root.section === "input" ? inputPage
-                        : root.section === "power" ? powerPage
-                        : root.section === "network" ? networkPage
-                        : root.section === "bluetooth" ? bluetoothPage
-                        : notBuilt
-                }
+                    anchors.bottomMargin: 16
 
-                Component {
-                    id: inputPage
-                    InputPage {}
-                }
+                    // What the focused control leaves: ↑ ↓ (and Tab) go
+                    // from control to control, ← or Escape back to the
+                    // sidebar.
+                    Keys.onPressed: event => {
+                        const k = event.key
+                        if (k === Qt.Key_Down || k === Qt.Key_Tab)
+                            win.step(1)
+                        else if (k === Qt.Key_Up || k === Qt.Key_Backtab)
+                            win.step(-1)
+                        else if (k === Qt.Key_Left || k === Qt.Key_Escape)
+                            win.toSidebar()
+                        else
+                            return
+                        root.keyboard = true
+                        event.accepted = true
+                    }
 
-                Component {
-                    id: powerPage
-                    PowerPage {}
-                }
+                    Text {
+                        id: pageTitle
+                        height: 40
+                        verticalAlignment: Text.AlignVCenter
+                        text: root.current ? root.current.label : ""
+                        color: "white"
+                        font.family: "JetBrainsMono Nerd Font"
+                        font.weight: Font.Bold
+                        font.pixelSize: 20
+                    }
 
-                Component {
-                    id: networkPage
-                    NetworkPage {}
-                }
+                    // The section's page; one not built yet says so.
+                    Loader {
+                        anchors.top: pageTitle.bottom
+                        anchors.topMargin: 16
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        sourceComponent: root.section === "displays" ? displaysPage
+                            : root.section === "sound" ? soundPage
+                            : root.section === "input" ? inputPage
+                            : root.section === "power" ? powerPage
+                            : root.section === "network" ? networkPage
+                            : root.section === "bluetooth" ? bluetoothPage
+                            : notBuilt
+                    }
 
-                Component {
-                    id: bluetoothPage
-                    BluetoothSettingsPage {}
-                }
+                    Component {
+                        id: inputPage
+                        InputPage {}
+                    }
 
-                Component {
-                    id: displaysPage
-                    DisplaysPage {}
-                }
+                    Component {
+                        id: powerPage
+                        PowerPage {}
+                    }
 
-                Component {
-                    id: soundPage
-                    SoundPage {}
-                }
+                    Component {
+                        id: networkPage
+                        NetworkPage {}
+                    }
 
-                Component {
-                    id: notBuilt
+                    Component {
+                        id: bluetoothPage
+                        BluetoothSettingsPage {}
+                    }
 
-                    Item {
-                        Text {
-                            anchors.centerIn: parent
-                            text: "Not built yet"
-                            color: "white"
-                            opacity: 0.6
-                            font.family: "JetBrainsMono Nerd Font"
-                            font.weight: Font.Bold
-                            font.pixelSize: 13
+                    Component {
+                        id: displaysPage
+                        DisplaysPage {}
+                    }
+
+                    Component {
+                        id: soundPage
+                        SoundPage {}
+                    }
+
+                    Component {
+                        id: notBuilt
+
+                        Item {
+                            Text {
+                                anchors.centerIn: parent
+                                text: "Not built yet"
+                                color: "white"
+                                opacity: 0.6
+                                font.family: "JetBrainsMono Nerd Font"
+                                font.weight: Font.Bold
+                                font.pixelSize: 13
+                            }
                         }
                     }
                 }

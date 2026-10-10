@@ -6,7 +6,7 @@ import QtQuick
 // slider, and the percentage in bold 13px, left-aligned in the width of
 // "100%". Capped at 100%, like the island's slider; muted reads 0%.
 // `level` (0–1, or -1 for none) draws the input meter: a 2px line under
-// the slider's track.
+// the slider's track. With the keys on the slider, Enter or Space mutes.
 Item {
     id: row
 
@@ -21,6 +21,13 @@ Item {
 
     implicitHeight: 32
     opacity: ready ? 1 : 0.4
+
+    Keys.onPressed: event => {
+        if (row.ready && (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space)) {
+            row.node.audio.muted = !row.node.audio.muted
+            event.accepted = true
+        }
+    }
 
     Rectangle {
         id: muteButton

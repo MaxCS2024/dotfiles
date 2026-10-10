@@ -3,12 +3,32 @@ import QtQuick
 // An on/off switch: a 36 × 20 pill, white at 20% with a white knob while
 // off, solid white with a black knob while on, as a fused-pill segment
 // goes solid white when active. `on` comes from outside; `toggled` asks
-// for the other state.
+// for the other state. Focused by the keys (settings window) it sits on
+// a 48 × 32 pill of white at 12%; Enter or Space flips it.
 Rectangle {
     id: toggle
 
     property bool on: false
     signal toggled()
+
+    readonly property bool navigable: true
+
+    Keys.onPressed: event => {
+        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+            toggle.toggled()
+            event.accepted = true
+        }
+    }
+
+    Rectangle {
+        z: -1
+        anchors.centerIn: parent
+        width: parent.width + 12
+        height: parent.height + 12
+        radius: height / 2
+        visible: toggle.activeFocus && SettingsWindow.keyboard === true
+        color: Qt.rgba(1, 1, 1, 0.12)
+    }
 
     width: 36
     height: 20

@@ -159,6 +159,7 @@ Item {
 
                     TextInput {
                         id: search
+                        readonly property bool navigable: true
                         anchors.left: parent.left
                         anchors.leftMargin: 16
                         anchors.right: closeSearch.left
@@ -384,15 +385,23 @@ Item {
         onClicked: InputSettings.unset(key)
     }
 
-    // A round 32px glyph button: no fill, white at 12% while hovered.
+    // A round 32px glyph button: no fill, white at 12% while hovered or
+    // focused by the keys; Enter or Space clicks it.
     component IconButton: Rectangle {
         id: ib
         property string icon: ""
         signal clicked()
+        readonly property bool navigable: true
         width: 32
         height: 32
         radius: 16
-        color: Qt.rgba(1, 1, 1, ibArea.containsMouse ? 0.12 : 0)
+        color: Qt.rgba(1, 1, 1, ibArea.containsMouse || (activeFocus && SettingsWindow.keyboard === true) ? 0.12 : 0)
+        Keys.onPressed: event => {
+            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+                ib.clicked()
+                event.accepted = true
+            }
+        }
         Behavior on color { ColorAnimation { duration: 120 } }
 
         Text {
