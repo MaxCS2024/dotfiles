@@ -538,7 +538,9 @@ The focused control is lit well above hover: white at 32%
 (`SettingsWindow.focusFill`; hover stays 12–20%), and one that is
 already solid white dims to 60% (`focusSolid`); a text field's pill
 lifts to 32% too. A switch sits on a 48 × 32 pill and a slider's knob on a
-24px circle at 32%, 60% while grabbed. Never a ring (STYLE.md §1). This shows only once the
+24px circle at 32%, 60% while grabbed. Each page's Flickable reaches 8px
+past the page on the right (its content doesn't), so a switch's pill at
+the right edge isn't clipped. Never a ring (STYLE.md §1). This shows only once the
 keys have been used, and a click hides it again
 (`SettingsWindow.keyboard`), so with the mouse the window looks as
 before. How: a control opts in with `navigable: true` and handles its
@@ -1032,3 +1034,6 @@ Dated record of what the user chose or rejected, and why.
   white control, a text field lit the same, and a grabbed slider's
   circle at 60%; at the user's request ("easier to see what options you
   are on").
+- 2026-10-11: a focused switch's pill was cut off at the page's right
+  edge (the Flickable's clip); the Flickables now reach 8px further right
+  than their content. The user's report.

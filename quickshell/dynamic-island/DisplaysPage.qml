@@ -41,6 +41,10 @@ Item {
     Flickable {
         id: flick
         anchors.fill: parent
+        // 8px wider than the page on the right, the content not: room
+        // for a focused switch's pill (Toggle) at the right edge, which
+        // the clip cut off.
+        anchors.rightMargin: -8
         anchors.bottomMargin: 56
         contentHeight: content.height
         clip: true
@@ -48,7 +52,7 @@ Item {
 
         Column {
             id: content
-            width: flick.width
+            width: flick.width - 8
             spacing: 16
 
             // ── The arrangement: every screen as a rectangle, to scale ──
