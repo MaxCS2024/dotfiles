@@ -536,8 +536,8 @@ over them with ↑ ↓ scans nothing.
 
 The focused control is lit well above hover: white at 32%
 (`SettingsWindow.focusFill`; hover stays 12–20%), and one that is
-already solid white dims to 60% (`focusSolid`), as does a text field's
-pill (32%). A switch sits on a 48 × 32 pill and a slider's knob on a
+already solid white dims to 60% (`focusSolid`); a text field's pill
+lifts to 32% too. A switch sits on a 48 × 32 pill and a slider's knob on a
 24px circle at 32%, 60% while grabbed. Never a ring (STYLE.md §1). This shows only once the
 keys have been used, and a click hides it again
 (`SettingsWindow.keyboard`), so with the mouse the window looks as
