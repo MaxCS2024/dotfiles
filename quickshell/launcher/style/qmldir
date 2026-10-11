@@ -1,1 +1,5 @@
-singleton Style 1.0 Main.qml
+# The launcher's skin: Main.qml (the bar's theme) or Island.qml (the
+# dynamic island's black and white). Quickshell doesn't reload on a change
+# here; restart with `qs kill -c launcher` and
+# `hyprctl dispatch 'hl.dsp.exec_cmd("env QT_QPA_PLATFORMTHEME=gtk3 qs -c launcher")'`.
+singleton Style 1.0 Island.qml
