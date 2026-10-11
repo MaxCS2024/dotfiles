@@ -24,16 +24,18 @@
 //
 // A config of its own since 2026-10-09 (moved out of main/clipboard/), so
 // it works with or without the bar. shell.qml holds its IPC target and the
-// SUPER+C shortcut. ShellSurface, Appearance and Settings are ../shared's
-// read-only stand-ins for the bar's.
+// SUPER+C shortcut. ShellSurface is ../shared's stand-in for the bar's.
+//
+// Every colour, size, font and duration here comes from `Style`, the skin
+// that style/qmldir names (Main.qml, the bar's theme; Island.qml, the
+// dynamic island's black and white). This file is the behaviour and the
+// layout; a new look is a new skin, not an edit here.
 import Quickshell
 import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 import "common"
-import "config"
-import "services"
-import "theme"
+import "style"
 
 ShellSurface {
     id: panel
@@ -41,10 +43,9 @@ ShellSurface {
     surfaceNamespace: "quickshell:clipboard"
     focusTarget: filterInput
 
-    // Theme.animPanel (220), not ShellSurface's 200: this surface fades on the
-    // shell-wide panel duration, and a refactor is not the place to
-    // quietly shorten it.
-    exitDuration: Theme.animPanel
+    // The skin's panel duration, not ShellSurface's 200, so the window
+    // isn't hidden before the fade is done.
+    exitDuration: Style.animPanel
 
     anchors { top: true; bottom: true; left: true; right: true }
     // Ignore, not the default Normal: Normal keeps this surface out of
@@ -289,10 +290,10 @@ ShellSurface {
 
     Rectangle {
         anchors.fill: parent
-        color: "black"
-        opacity: panel.shown ? 0.5 : 0
+        color: Style.scrim
+        opacity: panel.shown ? Style.scrimOpacity : 0
         Behavior on opacity {
-            NumberAnimation { duration: Theme.animPanel; easing.type: Theme.easingStandard }
+            NumberAnimation { duration: Style.animPanel; easing.type: Style.easingFade }
         }
     }
 
@@ -304,38 +305,42 @@ ShellSurface {
         // Wider than the keybinds window's 800: this one is two columns,
         // and the right-hand one is the whole reason to open it. Capped
         // against the surface so it still fits a small screen.
-        width: Math.min(940, Math.round(parent.width * 0.76))
+        width: Math.min(Style.width, Math.round(parent.width * 0.76))
         // Fixed rather than fitted to content, unlike the keybinds
         // window: a preview pane that changed height with whatever entry
         // was selected would move the list under the pointer on every
         // keystroke.
-        height: Math.min(580, Math.round(parent.height * 0.8))
+        height: Math.min(Style.height, Math.round(parent.height * 0.8))
         y: Math.round((parent.height - box.height) / 2.6)
-        radius: Theme.radius
-        color: Appearance.surface
-        border.width: Theme.hyprBorderWidth
-        border.color: Appearance.border
+        radius: Style.radius
+        color: Style.background
+        border.width: Style.borderWidth
+        border.color: Style.borderColor
 
         opacity: panel.shown ? 1 : 0
-        scale: panel.shown ? 1 : 0.97
+        scale: panel.shown ? 1 : Style.openScale
         Behavior on opacity {
-            NumberAnimation { duration: Theme.animPanel; easing.type: Theme.easingStandard }
+            NumberAnimation { duration: Style.animPanel; easing.type: Style.easingFade }
         }
         Behavior on scale {
-            NumberAnimation { duration: Theme.animPanel; easing.type: Theme.easingDecel }
+            NumberAnimation { duration: Style.animPanel; easing.type: Style.easingMove }
         }
 
-        layer.enabled: true
+        layer.enabled: Style.shadow
         layer.effect: PopupShadow {}
-        HyprFrame {
-            frameWidth: box.border.width
-            targetRadius: box.radius
+        Loader {
+            anchors.fill: parent
+            active: Style.frame
+            sourceComponent: HyprFrame {
+                frameWidth: box.border.width
+                targetRadius: box.radius
+            }
         }
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: Theme.space4
-            spacing: Theme.space3
+            anchors.margins: Style.padding
+            spacing: Style.gap
 
             // ── Search, and the one control that empties the store ──
             // The field takes the width, which is what was asked for and
@@ -353,27 +358,27 @@ ShellSurface {
             // thing it does not do.
             RowLayout {
                 Layout.fillWidth: true
-                spacing: Theme.space2
+                spacing: Style.smallGap
 
                 Rectangle {
                     Layout.fillWidth: true
-                    implicitHeight: 40
-                    radius: Theme.radius
-                    color: Appearance.surfaceAlt
+                    implicitHeight: Style.fieldHeight
+                    radius: Style.fieldRadius
+                    color: Style.field
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: Theme.space3
-                        anchors.rightMargin: Theme.space3
-                        spacing: Theme.space2
+                        anchors.leftMargin: Style.fieldPadX
+                        anchors.rightMargin: Style.fieldPadX
+                        spacing: Style.smallGap
 
                         // U+F0349 is nf-md-magnify, the glyph the keybinds
                         // window's filter wears.
                         Text {
                             text: "\u{F0349}"
-                            color: Appearance.fgFaint
-                            font.pixelSize: ConfStyle.fontHint
-                            font.family: Theme.font
+                            color: Style.searchIcon
+                            font.pixelSize: Style.searchIconSize
+                            font.family: Style.font
                         }
 
                         TextInput {
@@ -381,12 +386,13 @@ ShellSurface {
 
                             Layout.fillWidth: true
                             Layout.minimumWidth: 0
-                            color: Appearance.fg
-                            font.pixelSize: ConfStyle.fontRow
-                            font.family: Theme.font
+                            color: Style.searchText
+                            font.pixelSize: Style.searchSize
+                            font.family: Style.font
+                            font.weight: Style.fontWeight
                             clip: true
                             selectByMouse: true
-                            selectionColor: Appearance.selected
+                            selectionColor: Style.selection
                             verticalAlignment: TextInput.AlignVCenter
 
                             // This field holds focus for as long as the
@@ -430,9 +436,10 @@ ShellSurface {
                                 anchors.verticalCenter: parent.verticalCenter
                                 visible: filterInput.text.length === 0
                                 text: "Search the clipboard…"
-                                color: Appearance.placeholder
-                                font.pixelSize: ConfStyle.fontRow
-                                font.family: Theme.font
+                                color: Style.placeholder
+                                font.pixelSize: Style.searchSize
+                                font.family: Style.font
+                                font.weight: Style.fontWeight
                             }
                         }
                     }
@@ -446,27 +453,28 @@ ShellSurface {
                 // empty state in the column underneath already says it.
                 Rectangle {
                     visible: panel.entries.length > 0
-                    implicitWidth: wipeLabel.implicitWidth + 20
-                    implicitHeight: 40
-                    radius: Theme.radius
-                    color: wipeHover.hovered ? Appearance.dangerBg : Appearance.surfaceAlt
-                    border.width: 1
-                    border.color: wipeHover.hovered ? Appearance.dangerBorder : Appearance.clear(Appearance.dangerBorder)
+                    implicitWidth: wipeLabel.implicitWidth + Style.wipePadX * 2
+                    implicitHeight: Style.fieldHeight
+                    radius: Style.fieldRadius
+                    color: wipeHover.hovered ? Style.wipeHover : Style.wipe
+                    border.width: Style.wipeBorderWidth
+                    border.color: wipeHover.hovered ? Style.wipeBorderHover : Style.wipeBorder
 
                     Behavior on color {
-                        ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
+                        ColorAnimation { duration: Style.animFast; easing.type: Style.easingFast }
                     }
 
                     Text {
                         id: wipeLabel
                         anchors.centerIn: parent
                         text: "Wipe"
-                        color: wipeHover.hovered ? Appearance.red : Appearance.fgSoft
-                        font.pixelSize: ConfStyle.fontRow
-                        font.family: Theme.font
+                        color: wipeHover.hovered ? Style.wipeTextHover : Style.wipeText
+                        font.pixelSize: Style.searchSize
+                        font.family: Style.font
+                        font.weight: Style.fontWeight
 
                         Behavior on color {
-                            ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard }
+                            ColorAnimation { duration: Style.animFast; easing.type: Style.easingFast }
                         }
                     }
 
@@ -483,7 +491,7 @@ ShellSurface {
             RowLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                spacing: Theme.space3
+                spacing: Style.gap
 
                 // Left: the rows. Half the window — the list and the pane
                 // each get the same width (user request 2026-09-21), which
@@ -520,9 +528,10 @@ ShellSurface {
                         visible: panel.filtered.length === 0
                         text: panel.entries.length === 0 ? "The clipboard history is empty"
                             : "No entry matches that"
-                        color: Appearance.fgDim
-                        font.pixelSize: Theme.fontSmall
-                        font.family: Theme.font
+                        color: Style.emptyText
+                        font.pixelSize: Style.emptySize
+                        font.family: Style.font
+                        font.weight: Style.fontWeight
                     }
 
                 ListView {
@@ -530,7 +539,7 @@ ShellSurface {
 
                     anchors.fill: parent
                     clip: true
-                    spacing: 2
+                    spacing: Style.rowSpacing
                     model: panel.filtered
                     boundsBehavior: Flickable.StopAtBounds
                     currentIndex: panel.selectedIndex
@@ -543,27 +552,27 @@ ShellSurface {
                         readonly property bool current: row.index === panel.selectedIndex
 
                         width: ListView.view.width
-                        height: 32
-                        radius: Theme.radius
-                        color: row.current ? Appearance.selected
-                             : rowHover.hovered ? Appearance.hover
-                             : Appearance.clear(Appearance.hover)
+                        height: Style.rowHeight
+                        radius: Style.rowRadius
+                        color: row.current ? Style.rowSelected
+                             : rowHover.hovered ? Style.rowHover
+                             : Style.rowRest
 
-                        // The selected row is its ground (Appearance.selected,
-                        // the ladder step every selected thing in the shell
-                        // uses) and the brighter ink, and nothing else — the accent bar
+                        // The selected row is its ground (Style.rowSelected)
+                        // and its own ink, and nothing else — the accent bar
                         // that used to run down its leading edge is gone
                         // (user request 2026-09-21).
 
                         Text {
                             anchors.fill: parent
-                            anchors.leftMargin: Theme.space3
-                            anchors.rightMargin: Theme.space2
+                            anchors.leftMargin: Style.rowPadLeft
+                            anchors.rightMargin: Style.rowPadRight
                             verticalAlignment: Text.AlignVCenter
                             text: row.modelData.preview
-                            color: row.current ? Appearance.fgStrong : Appearance.fg
-                            font.pixelSize: Theme.fontNormal
-                            font.family: Theme.font
+                            color: row.current ? Style.rowTextSelected : Style.rowText
+                            font.pixelSize: Style.rowTextSize
+                            font.family: Style.font
+                            font.weight: Style.fontWeight
                             elide: Text.ElideRight
                         }
 
@@ -591,18 +600,18 @@ ShellSurface {
                     Layout.preferredWidth: 1
                     Layout.minimumWidth: 0
                     Layout.fillHeight: true
-                    radius: Theme.radius
-                    color: Appearance.surfaceAlt
+                    radius: Style.paneRadius
+                    color: Style.pane
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: Theme.space3
-                        spacing: Theme.space2
+                        anchors.margins: Style.panePadding
+                        spacing: Style.smallGap
 
                         // What this entry is, before what it says.
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: Theme.space2
+                            spacing: Style.smallGap
 
                             Text {
                                 text: {
@@ -622,9 +631,10 @@ ShellSurface {
                                     return chars + (chars === 1 ? " character" : " characters")
                                         + " · " + lines + (lines === 1 ? " line" : " lines")
                                 }
-                                color: Appearance.fgMuted
-                                font.pixelSize: Theme.fontSmall
-                                font.family: Theme.font
+                                color: Style.infoText
+                                font.pixelSize: Style.infoSize
+                                font.family: Style.font
+                                font.weight: Style.fontWeight
                                 Layout.fillWidth: true
                                 Layout.minimumWidth: 0
                                 elide: Text.ElideRight
@@ -633,9 +643,10 @@ ShellSurface {
                             Text {
                                 visible: panel.bodyTruncated
                                 text: "shown to " + Math.round(panel.bodyLimit / 1000) + "k"
-                                color: Appearance.orange
-                                font.pixelSize: Theme.fontTiny
-                                font.family: Theme.font
+                                color: Style.warnText
+                                font.pixelSize: Style.warnSize
+                                font.family: Style.font
+                                font.weight: Style.fontWeight
                             }
                         }
 
@@ -665,19 +676,20 @@ ShellSurface {
                                 width: bodyView.width
                                 readOnly: true
                                 selectByMouse: true
-                                selectionColor: Appearance.selected
+                                selectionColor: Style.selection
                                 wrapMode: TextEdit.Wrap
                                 text: panel.selectedIsBinary ? panel.selected.preview
                                     : panel.bodyLoading && panel.body === "" ? ""
                                     : panel.body
-                                color: panel.selectedIsBinary ? Appearance.fgMuted : Appearance.fg
-                                font.pixelSize: Theme.fontNormal
+                                color: panel.selectedIsBinary ? Style.bodyTextMuted : Style.bodyText
+                                font.pixelSize: Style.bodySize
+                                font.weight: Style.bodyWeight
                                 // Mono, and the shell's mono is its
                                 // only font — but named rather than
                                 // inherited, because indentation and
                                 // alignment are most of what a pasted
                                 // block carries.
-                                font.family: Theme.fontMono
+                                font.family: Style.bodyFont
                             }
 
                         }
