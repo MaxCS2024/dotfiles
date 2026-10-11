@@ -3,14 +3,18 @@ import QtQuick
 import QtQuick.Layouts
 import "common"
 import "common/localBin.js" as LocalBin
-import "config"
 import "services"
-import "theme"
+import "style"
 
 // The app launcher, in a config of its own so it works with or without
 // the bar (moved out of main/launcher/ on 2026-10-09). shell.qml holds its
-// IPC target and the SUPER+P shortcut. ShellSurface, Appearance and
-// Settings are ../shared's read-only stand-ins for the bar's.
+// IPC target and the SUPER+P shortcut. ShellSurface is ../shared's
+// stand-in for the bar's.
+//
+// Every colour, size, font and duration here comes from `Style`, the skin
+// that style/qmldir names (Main.qml, the bar's theme; Island.qml, the
+// dynamic island's black and white). This file is the behaviour and the
+// layout; a new look is a new skin, not an edit here.
 ShellSurface {
     id: launcher
 
@@ -19,9 +23,9 @@ ShellSurface {
 
     anchors { top: true; bottom: true; left: true; right: true }
 
-    // 220, not ShellSurface's 200: this fades on the shell-wide panel
-    // duration, and a refactor is not the place to quietly shorten it.
-    exitDuration: Theme.animPanel
+    // The skin's panel duration, not ShellSurface's 200, so the window
+    // isn't hidden before the fade is done.
+    exitDuration: Style.animPanel
 
     // Every open is a fresh search. The hide timer used to clear the
     // field as well, a moment after the window went; it does not need to,
@@ -170,20 +174,20 @@ ShellSurface {
 
     Rectangle {
         id: box
-        width: 560
+        width: Style.width
 
-        property int restY: 120
+        property int restY: Style.top
         // Just the search row plus its margins — the size the box sits
         // at before any results are revealed. Derived from searchRow's
         // own position/size (not layout spacing) so it's an exact pixel
         // boundary: separator and results are positioned starting AT
         // this value, guaranteeing zero px of them show while collapsed
         // regardless of font metrics.
-        property int collapsedHeight: searchRow.y + searchRow.height + 12
+        property int collapsedHeight: searchRow.y + searchRow.height + Style.padding
 
-        readonly property int rowHeight: 40
+        readonly property int rowHeight: Style.rowHeight
         readonly property int maxVisibleRows: 8
-        readonly property int emptyStateHeight: 48
+        readonly property int emptyStateHeight: Style.emptyHeight
         // Sized to how many rows are actually showing, capped so a broad
         // query can't grow the box past a reasonable size — beyond that
         // it scrolls instead. A query with zero matches still gets a
@@ -194,7 +198,7 @@ ShellSurface {
             : emptyStateHeight
         // resultsArea.y (searchRow + separator + both gaps) plus the
         // content height plus a matching bottom margin.
-        readonly property int expandedHeight: collapsedHeight + 9 + resultsHeight + 12
+        readonly property int expandedHeight: collapsedHeight + 9 + resultsHeight + Style.padding
 
         anchors.horizontalCenter: parent.horizontalCenter
         y: restY
@@ -209,34 +213,34 @@ ShellSurface {
         // room for them. That's what reads as "results drop down from
         // behind the search bar": there's no second panel to seam
         // against, just this shape unrolling downward.
-        Behavior on height { NumberAnimation { duration: Theme.animPanel; easing.type: Theme.easingDecel } }
+        Behavior on height { NumberAnimation { duration: Style.animPanel; easing.type: Style.easingPanel } }
         clip: true
 
         opacity: launcher.shown ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
+        Behavior on opacity { NumberAnimation { duration: Style.animFast; easing.type: Style.easingFast } }
 
-        radius: Theme.radius
-        color: Appearance.surface
-        // 2px to match Hyprland's own `border_size`
-        // (hypr/modules/decorations.lua), the way the network rail and
-        // the settings panel do — 1px here made a ring half the weight
-        // of the window edges either side of it. The colour is what
-        // shows if the gradient frame below is ever hidden; it covers
-        // this band entirely otherwise.
-        border.color: Appearance.border
-        border.width: Theme.hyprBorderWidth
+        // Capped at half the search row's height, so a skin can ask for
+        // a large radius and get a pill that keeps its round ends as the
+        // box grows.
+        radius: Math.min(Style.radius, box.collapsedHeight / 2)
+        color: Style.background
+        border.color: Style.borderColor
+        border.width: Style.borderWidth
 
-        layer.enabled: true
+        layer.enabled: Style.shadow
         layer.effect: PopupShadow {}
         // The window border from the compositor, drawn around a layer
         // surface — see common/HyprFrame.qml. Declared first so
         // everything below paints over it. The radius stays the
-        // launcher's own (Theme.radius, which follows
-        // Settings.cornerRadius) rather than Hyprland's square 0, so the
-        // ring follows this box's corner as it unrolls.
-        HyprFrame {
-            frameWidth: box.border.width
-            targetRadius: box.radius
+        // launcher's own rather than Hyprland's square 0, so the ring
+        // follows this box's corner as it unrolls.
+        Loader {
+            anchors.fill: parent
+            active: Style.frame
+            sourceComponent: HyprFrame {
+                frameWidth: box.border.width
+                targetRadius: box.radius
+            }
         }
 
         // Everything below is positioned explicitly (not via layout
@@ -245,17 +249,18 @@ ShellSurface {
         // spacing math that could drift with font metrics.
         Item {
             id: searchRow
-            x: 12
-            y: 12
-            width: box.width - 24
+            x: Style.padding
+            y: Style.padding
+            width: box.width - Style.padding * 2
             height: searchInput.implicitHeight
 
             TextInput {
                 id: searchInput
                 anchors.fill: parent
-                color: Appearance.fg
-                font.pixelSize: Theme.iconSize
-                font.family: Theme.font
+                color: Style.searchText
+                font.pixelSize: Style.searchSize
+                font.family: Style.font
+                font.weight: Style.fontWeight
                 clip: true
                 cursorVisible: true
                 // Flip cursorVisible above to false and uncomment this to
@@ -304,20 +309,21 @@ ShellSurface {
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Search apps…"
-                color: Appearance.placeholder
-                font.pixelSize: Theme.iconSize
-                font.family: Theme.font
+                color: Style.placeholder
+                font.pixelSize: Style.searchSize
+                font.family: Style.font
+                font.weight: Style.fontWeight
                 visible: searchInput.text.length === 0
             }
         }
 
         Rectangle {
             id: separator
-            x: 12
+            x: Style.padding
             y: box.collapsedHeight
-            width: box.width - 24
+            width: box.width - Style.padding * 2
             height: 1
-            color: Appearance.separator
+            color: Style.separator
             // box.clip should already keep this out of view while collapsed,
             // but the shadow layer on box (layer.enabled + MultiEffect) can
             // end up compositing a bit outside the clipped region, so this
@@ -327,9 +333,9 @@ ShellSurface {
 
         Item {
             id: resultsArea
-            x: 12
+            x: Style.padding
             y: separator.y + separator.height + 8
-            width: box.width - 24
+            width: box.width - Style.padding * 2
             // Matches box.resultsHeight exactly — box grows to fit this
             // area, not the other way around, so there's never dead space
             // (or a scrollbar-only sliver) below the last visible row.
@@ -339,15 +345,16 @@ ShellSurface {
             Text {
                 anchors.centerIn: parent
                 text: "No matching apps"
-                color: Appearance.fgMuted
-                font.pixelSize: Theme.fontNormal
-                font.family: Theme.font
+                color: Style.emptyText
+                font.pixelSize: Style.emptySize
+                font.family: Style.font
+                font.weight: Style.fontWeight
                 visible: launcher.results.length === 0
             }
 
             RowLayout {
                 anchors.fill: parent
-                spacing: Theme.space2
+                spacing: Style.gap
                 visible: launcher.results.length > 0
 
                 ListView {
@@ -359,7 +366,7 @@ ShellSurface {
 
                     WheelHandler {
                         onWheel: (event) => {
-                            const step = 40 * 3
+                            const step = box.rowHeight * 3
                             resultsList.contentY = Math.max(
                                 0,
                                 Math.min(
@@ -375,23 +382,24 @@ ShellSurface {
                         required property var modelData
                         required property int index
 
-                        width: resultsList.width
-                        height: 40
-                        radius: Theme.radius
-                        color: resultRow.index === launcher.selectedIndex
-                            ? Appearance.selected : Appearance.clear(Appearance.selected)
+                        readonly property bool selected: resultRow.index === launcher.selectedIndex
 
-                        Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingStandard } }
+                        width: resultsList.width
+                        height: box.rowHeight
+                        radius: Style.rowRadius
+                        color: resultRow.selected ? Style.rowSelected : Style.rowRest
+
+                        Behavior on color { ColorAnimation { duration: Style.animFast; easing.type: Style.easingFast } }
 
                         RowLayout {
                             anchors.fill: parent
-                            anchors.leftMargin: Theme.space2
-                            anchors.rightMargin: Theme.space2
-                            spacing: Theme.space2
+                            anchors.leftMargin: Style.rowPadX
+                            anchors.rightMargin: Style.rowPadX
+                            spacing: Style.gap
 
                             Item {
-                                Layout.preferredWidth: 32
-                                Layout.preferredHeight: 32
+                                Layout.preferredWidth: Style.iconSize
+                                Layout.preferredHeight: Style.iconSize
 
                                 Image {
                                     id: appIcon
@@ -400,12 +408,12 @@ ShellSurface {
                                     // app installed since the shell started
                                     // had a letter tile (see that file).
                                     source: AppIcons.path(resultRow.modelData.icon)
-                                    // Matches the 32x32 container above so the
+                                    // Matches the container above so the
                                     // SVG rasterises at the size it is drawn
                                     // rather than being rescaled into it — see
                                     // bar/SystemTray.qml for the measurement.
-                                    sourceSize.width: 32
-                                    sourceSize.height: 32
+                                    sourceSize.width: Style.iconSize
+                                    sourceSize.height: Style.iconSize
                                     fillMode: Image.PreserveAspectFit
                                     asynchronous: true
                                     visible: status === Image.Ready
@@ -413,29 +421,31 @@ ShellSurface {
 
                                 Rectangle {
                                     anchors.fill: parent
-                                    radius: Theme.radius
-                                    color: Appearance.selected
+                                    radius: Style.tileRadius
+                                    color: resultRow.selected ? Style.tileSelected : Style.tile
                                     visible: appIcon.status !== Image.Ready
 
                                     Text {
                                         anchors.centerIn: parent
                                         text: resultRow.modelData.name.length > 0
                                             ? resultRow.modelData.name.charAt(0).toUpperCase() : "?"
-                                        color: Appearance.fg
+                                        color: resultRow.selected ? Style.rowTextSelected : Style.rowText
                                         // Scales with the tile it centres in,
                                         // which is the icon for an app that
                                         // hasn't got one.
-                                        font.pixelSize: Theme.fontBig
-                                        font.family: Theme.font
+                                        font.pixelSize: Style.rowTextSize
+                                        font.family: Style.font
+                                        font.weight: Style.fontWeight
                                     }
                                 }
                             }
 
                             Text {
                                 text: resultRow.modelData.name
-                                color: Appearance.fg
-                                font.pixelSize: Theme.fontBig
-                                font.family: Theme.font
+                                color: resultRow.selected ? Style.rowTextSelected : Style.rowText
+                                font.pixelSize: Style.rowTextSize
+                                font.family: Style.font
+                                font.weight: Style.fontWeight
                                 Layout.fillWidth: true
                                 Layout.minimumWidth: 0
                                 elide: Text.ElideRight
@@ -443,11 +453,12 @@ ShellSurface {
 
                             Text {
                                 text: resultRow.modelData.comment
-                                color: Appearance.fgFaint
-                                font.pixelSize: Theme.fontSmall
-                                font.family: Theme.font
+                                color: resultRow.selected ? Style.rowDetailSelected : Style.rowDetail
+                                font.pixelSize: Style.rowDetailSize
+                                font.family: Style.font
+                                font.weight: Style.fontWeight
                                 elide: Text.ElideRight
-                                Layout.maximumWidth: 160
+                                Layout.maximumWidth: Style.rowDetailWidth
                             }
                         }
 
@@ -468,15 +479,15 @@ ShellSurface {
                     }
                 }
 
-                // Was this file's own copy of the thumb arithmetic until
-                // the Conf menu grew a second one — see
-                // common/ListScrollBar.qml. Same 4px Theme.radius rail as
-                // before; only the maths moved.
+                // The thumb arithmetic is shared with the Conf menu
+                // (common/ListScrollBar.qml); the rail's look is the skin's.
                 ListScrollBar {
                     Layout.fillHeight: true
                     view: resultsList
-                    trackColor: Appearance.scrollTrack
-                    thumbColor: Appearance.scrollThumb
+                    barWidth: Style.scrollWidth
+                    barRadius: Style.scrollRadius
+                    trackColor: Style.scrollTrack
+                    thumbColor: Style.scrollThumb
                 }
             }
         }
