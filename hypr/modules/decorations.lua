@@ -84,6 +84,6 @@ hl.animation({ leaf = "workspacesIn", enabled = true, speed = 1.21, bezier = "al
 hl.animation({ leaf = "workspacesOut", enabled = true, speed = 1.94, bezier = "almostLinear", style = "fade" })
 -- Scratchpad (special workspace) rises from the bottom edge and drops back down.
 -- In "slidevert top/bottom" names the edge it comes in from; on the way out it leaves by the opposite edge.
-hl.animation({ leaf = "specialWorkspaceIn", enabled = true, speed = 3, bezier = "easeOutQuint", style = "slidevert bottom" })
-hl.animation({ leaf = "specialWorkspaceOut", enabled = true, speed = 2.5, bezier = "easeInOutCubic", style = "slidevert top" })
+hl.animation({ leaf = "specialWorkspaceIn", enabled = true, speed = 4.5, bezier = "easeOutQuint", style = "slidevert bottom" })
+hl.animation({ leaf = "specialWorkspaceOut", enabled = true, speed = 3.5, bezier = "easeInOutCubic", style = "slidevert top" })
 hl.animation({ leaf = "zoomFactor", enabled = true, speed = 7, bezier = "quick" })
