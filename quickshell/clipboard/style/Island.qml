@@ -8,7 +8,9 @@ import QtQuick
 // STYLE.md §2 and uses no Appearance tokens, so it doesn't follow the
 // bar's theme. Fills are the island's: white at 12% for a field or
 // button (20% hovered, as its PillButton), solid white with black text
-// for the selected row. Wipe has no red, like the island's Forget.
+// for the selected row. Wipe turns solid red under the pointer (the
+// user's call, 2026-10-11), the island's one colour besides black and
+// white.
 //
 // Same properties as Main.qml; see there for what each one is.
 Singleton {
@@ -44,7 +46,7 @@ Singleton {
     readonly property color selection: Qt.rgba(1, 1, 1, 0.3)
 
     readonly property color wipe: Qt.rgba(1, 1, 1, 0.12)
-    readonly property color wipeHover: Qt.rgba(1, 1, 1, 0.2)
+    readonly property color wipeHover: "#ff453a"
     readonly property color wipeText: "white"
     readonly property color wipeTextHover: "white"
     readonly property int wipeBorderWidth: 0
