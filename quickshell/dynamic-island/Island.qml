@@ -15,8 +15,9 @@ import QtQuick
 // opens the full media player, a right click a small settings panel
 // (whose network, Bluetooth and battery segments turn it into a page of
 // their own), a middle click a power menu; a click on any of them, or anywhere
-// else, closes it. It hides and shows with the main bar: the sides close in
-// to an orb that fades out, and the reverse.
+// else, closes it. SUPER+ALT+SPACE hides and shows it, with the main bar
+// when that runs: the sides close in to an orb that fades out, and the
+// reverse.
 PanelWindow {
     id: root
 
@@ -88,12 +89,12 @@ PanelWindow {
     property real sizeProgress: 0
     property real panelOpacity: 0
 
-    // Hiding with the main bar. `orbing` turns the width Behavior off for
-    // the whole hide/show, so it can't fight shrinkProgress; it is set
-    // before either animation starts and cleared only once the pill is
-    // whole. shrinkProgress 0 is the pill, 1 nothing: the sides close in
+    // Hiding (SUPER+ALT+SPACE, with the main bar). `orbing` turns the
+    // width Behavior off for the whole hide/show, so it can't fight
+    // shrinkProgress; it is set before either animation starts and
+    // cleared only once the pill is whole. shrinkProgress 0 is the pill, 1 nothing: the sides close in
     // to a circle and the circle keeps shrinking to a point.
-    readonly property bool wanted: Controls.mainBarVisible
+    readonly property bool wanted: Controls.barVisible
     property bool orbing: false
     property bool gone: false
     property real shrinkProgress: 0

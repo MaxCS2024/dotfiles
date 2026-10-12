@@ -87,6 +87,12 @@ end
 
 -- The bar itself: hide it, or focus it for arrow-key navigation
 -- (Left/Right to move, Enter to activate, Escape to release). Focus is
--- shifted to leave plain SUPER+B to the browser.
-hl.bind(mainMod .. " + ALT + SPACE", hl.dsp.global("quickshell:bar-toggle"))
+-- shifted to leave plain SUPER+B to the browser. Hiding presses both
+-- shells' shortcuts: main's bar, if main runs, and the dynamic island's
+-- own (quickshell/dynamic-island/Controls.qml), so the key works with
+-- either. With main up, main then tells the island which way it went.
+hl.bind(mainMod .. " + ALT + SPACE", function()
+	hl.dispatch(hl.dsp.global("quickshell:bar-toggle"))
+	hl.dispatch(hl.dsp.global("quickshell:island-toggle"))
+end)
 hl.bind(mainMod .. " + SHIFT + B", hl.dsp.global("quickshell:bar-focus"))

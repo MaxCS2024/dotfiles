@@ -436,11 +436,15 @@ calling `gallery.step()`. Never press Enter or call `apply()` to check.
 
 ## Hiding with the main bar
 
-The island hides and shows with the main bar (SUPER+ALT+SPACE, `qs -c
-main ipc call bar toggle`, or any other way the bar is toggled). The main
-bar's `services/Panels.qml` calls `qs -c dynamic-island ipc call island
-setBarVisible <bool>` on every barVisible change; at startup the island
-asks `bar state` once (`Controls.mainBarVisible`).
+SUPER+ALT+SPACE hides and shows the island (`Controls.barVisible`). The
+bind presses two global shortcuts: main's `quickshell:bar-toggle` and
+the island's own `quickshell:island-toggle`, so the key works with main
+never started. When main runs, the island also follows the bar
+(`qs -c main ipc call bar toggle`, or any other way the bar is
+toggled): main's `services/Panels.qml` calls `qs -c dynamic-island ipc
+call island setBarVisible <bool>` on every barVisible change, which has
+the last word over the island's own flip; at startup the island asks
+`bar state` once.
 
 Hiding (220ms, InCubic, so it speeds up and doesn't linger as a dot):
 the text fades (80ms) as the pill's sides close in; once the width is
@@ -452,7 +456,9 @@ fading back in from 140ms. Hyprland's own layer fade-in softens the
 first frames of showing. An open panel closes first, then the island
 hides. `orbing` keeps the width Behavior off for the whole hide/show.
 
-Testing: `qs -c dynamic-island ipc call island setBarVisible false|true`
+Testing: `hyprctl dispatch 'hl.dsp.global("quickshell:island-toggle")'`
+toggles it like the key, without main.
+`qs -c dynamic-island ipc call island setBarVisible false|true`
 moves only the island. Check `qs -c main ipc call bar state` first and
 leave the island matching it afterwards; a test that ends on `true` while
 the bar is hidden leaves the island showing on its own.
@@ -1057,3 +1063,7 @@ Dated record of what the user chose or rejected, and why.
 - 2026-10-11: the Wi-Fi and Bluetooth switches left their headings for
   rows of their own, "Use Wi-Fi" and "Use Bluetooth" (like "Use this
   display"), so they light up whole for the keys too. The user's request.
+- 2026-10-12: SUPER+ALT+SPACE hides and shows the island on its own,
+  like the main bar, now that login starts only the island. The key
+  presses both main's bar-toggle and the island's island-toggle; main,
+  when it runs, still decides. The user's request.

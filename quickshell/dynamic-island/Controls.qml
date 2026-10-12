@@ -50,23 +50,33 @@ Singleton {
         onPressed: root.changed("brightness", root.brightness)
     }
 
-    // ── Main bar visibility ──
-    // The island hides and shows with the main bar (SUPER+ALT+SPACE, or any
-    // other way the bar is toggled). The main bar's services/Panels.qml calls
-    // `qs -c dynamic-island ipc call island setBarVisible <bool>` whenever
-    // its barVisible changes; at startup the island asks it once.
-    property bool mainBarVisible: true
+    // ── Bar visibility ──
+    // SUPER+ALT+SPACE hides and shows the island. The bind presses both
+    // this shortcut and main's bar-toggle (hypr/modules/binds/apps.lua),
+    // so with main not running the island toggles itself. When main is
+    // running, its services/Panels.qml also calls `qs -c dynamic-island
+    // ipc call island setBarVisible <bool>` whenever its barVisible
+    // changes, and that call has the last word; at startup the island
+    // asks main once.
+    property bool barVisible: true
+
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "island-toggle"
+        description: "Hide or show the dynamic island"
+        onPressed: root.barVisible = !root.barVisible
+    }
 
     IpcHandler {
         target: "island"
-        function setBarVisible(visible: bool): void { root.mainBarVisible = visible }
+        function setBarVisible(visible: bool): void { root.barVisible = visible }
     }
 
     Process {
         running: true
         command: ["qs", "-c", "main", "ipc", "call", "bar", "state"]
         stdout: StdioCollector {
-            onStreamFinished: if (text.trim() === "off") root.mainBarVisible = false
+            onStreamFinished: if (text.trim() === "off") root.barVisible = false
         }
     }
 
