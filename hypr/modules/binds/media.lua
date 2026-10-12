@@ -2,8 +2,10 @@
 -- works whichever shell is up, or none (it used to go through main's
 -- screenshot service and relay's notification; since 2026-10-10 login
 -- starts only the island). Each capture is saved in ~/Pictures/Screenshots
--- and copied to the clipboard, and Hyprland's own notification says so:
--- it needs no notification daemon, and none runs without main.
+-- and copied to the clipboard, and a regular notification says so, with
+-- the capture as its thumbnail: dunst answers it under any shell (D-Bus
+-- starts it). Low urgency and 3 seconds, as for anything done that needs
+-- nothing more (quickshell/dynamic-island/AGENTS.md, Notifications).
 --   Print        a region, picked with slurp
 --   SHIFT+Print  the whole focused screen
 --
@@ -13,7 +15,7 @@
 -- key would start a capture per repeat tick.
 local shotFile = 'dir="$HOME/Pictures/Screenshots"; mkdir -p "$dir"; f="$dir/$(date +%Y-%m-%d_%H-%M-%S).png"; '
 local shotDone = ' && wl-copy --type image/png < "$f"'
-	.. " && hyprctl eval 'hl.notification.create({ text = \"Screenshot copied, saved in Pictures/Screenshots\", timeout = 3000, icon = \"ok\" })'"
+	.. ' && notify-send -a Screenshot -u low -t 3000 -i "$f" "Screenshot copied" "Saved in Pictures/Screenshots as ${f##*/}"'
 hl.bind("Print", hl.dsp.exec_cmd(
 	'pkill -x slurp && exit 0; sel="$(slurp </dev/null)" || exit 0; [ -n "$sel" ] || exit 0; '
 		.. shotFile .. 'grim -g "$sel" "$f"' .. shotDone
