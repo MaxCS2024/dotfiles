@@ -1,13 +1,3 @@
--- Shared values used across the bind files.
--- Every consumer does: local vars = require("modules.vars")
---
--- The four app roles are whatever modules/defaults.lua resolves them to:
--- the default the user set (SUPER+SPACE > System > Defaults, or
--- `relay default set`), else the first candidate this machine has. That
--- file owns the candidates and the order; this one only names the roles
--- the binds use. These are the answer at config load; the app binds
--- themselves ask defaults.lua again on each press (binds/apps.lua), so an
--- uninstalled default hands over without a reload.
 local defaults = require("modules.defaults")
 
 return {

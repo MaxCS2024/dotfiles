@@ -1,7 +1,3 @@
----------------
----- INPUT ----
----------------
-
 hl.config({
 	input = {
 		kb_layout = "se",
@@ -12,7 +8,7 @@ hl.config({
 
 		follow_mouse = 1,
 
-		sensitivity = 0, -- -1.0 - 1.0, 0 means no modification.
+		sensitivity = 0,
 
 		touchpad = {
 			natural_scroll = true,
@@ -25,7 +21,3 @@ hl.gesture({
 	direction = "horizontal",
 	action = "workspace",
 })
-
--- Add real per-device overrides here once you know the device name:
--- run `hyprctl devices` to find it, then:
--- hl.device({ name = "<your-device-name>", sensitivity = -0.3 })

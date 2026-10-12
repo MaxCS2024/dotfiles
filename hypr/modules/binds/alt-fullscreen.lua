@@ -1,7 +1,3 @@
--- Floating "zoom" toggle: pull the active window out of the layout, size it to
--- most of the monitor, and center it. Unlike real fullscreen this keeps the
--- window decorated and floating, so it stays reachable over other floaters.
-
 local vars = require("modules.vars")
 local mainMod = vars.mainMod
 
@@ -15,14 +11,10 @@ local function focused_monitor()
 	end
 end
 
--- Monitor geometry is in physical pixels; dividing by scale gives the logical
--- size the compositor actually lays windows out in.
 local function usable_area(m)
 	local w = m.width / m.scale
 	local h = m.height / m.scale
 
-	-- reserved is the space claimed by bars and other layer surfaces.
-	-- Subtracting it keeps the centered window from sliding under them.
 	local r = m.reserved
 	if type(r) == "table" and #r == 4 then
 		w = w - r[1] - r[3]
