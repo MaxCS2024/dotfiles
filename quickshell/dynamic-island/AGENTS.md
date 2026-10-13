@@ -48,8 +48,10 @@ does may need main.
 - The dictation face, while voxtype records or transcribes.
 - The song view and the media player.
 - The today view: the date and the battery.
-- The settings panel: the fused pill and the two sliders. It is frozen;
-  a new button or row needs a decision here first.
+- The settings panel: the fused pill, the two sliders and, under its
+  notch, the quick settings row (Stay awake, Do not disturb, Night
+  light, microphone). It is frozen; a new button or row needs a decision
+  here first.
 - The Wi-Fi and Bluetooth pages, for connecting only, and the battery
   page, for the power profile only.
 - The power menu (with main gone, it is the only one).
@@ -74,7 +76,7 @@ does may need main.
 off, …), colour themes (main's palettes and matugen theming), a
 workspace overview, Conf's sections (Install, Features, Update, Defaults, Style:
 Conf is to be split out of main into its own config, like the launcher),
-weather, Do Not Disturb, system stats (CPU, RAM, temperature), the app
+weather, system stats (CPU, RAM, temperature), the app
 launcher and clipboard (their own configs), and a calendar.
 
 **Undecided, _TBD_:**
@@ -122,7 +124,7 @@ The island shows one thing at a time.
 | media     | dragging the pill right    | music note + "Title – Artist" | fits the text, at most the 400px window |
 | today     | dragging the pill left     | date and battery, `tors 8 okt – [battery] 46%` | fits the text |
 | player    | left click (press without moving 4px) | media player | 360 × 128 |
-| settings  | right click                | network, Bluetooth, volume and battery fused in one pill, volume and brightness sliders | 360 × 156 |
+| settings  | right click                | network, Bluetooth, volume and battery fused in one pill, volume and brightness sliders; the quick settings row under the notch | 360 × 156, 360 × 208 with the row |
 | wifi      | settings panel's network segment | Wi-Fi page: header, networks | 360 × 288 |
 | bluetooth | settings panel's Bluetooth segment | Bluetooth page: header, devices | 360 × 288 |
 | battery page | settings panel's battery segment | battery page: header with the charge, power profiles | 360 × 200 |
@@ -429,6 +431,37 @@ follow the pill's rounding, the inner sides are square.
 
 A left or right click on the panel outside a control, or
 any click outside the island, closes it.
+
+**Quick settings.** In the panel's 16px bottom padding, centred, is the
+notch: a 32 × 4 bar, white at 30% (60% while hovered or held), with a
+96 × 16 hit area. Dragging it down reveals a second fused pill, the
+same `TileGroup`, 12px under the sliders; the panel grows by 52px to
+360 × 208, following the finger (`Island.quickReveal`, 0–1, drives the
+height and the row's opacity) and the notch rides down with the
+panel's bottom. Released past halfway it finishes the way it was going,
+short of that it eases back (160ms, OutCubic); a click opens or closes
+it. Dragging up hides it. It stays as it was left, also across
+openings, until the next drag. The row (`QuickSettings.qml`, none of it
+needs main):
+- Stay awake (a coffee cup), solid white while on: a
+  `systemd-inhibit --what=idle` lock held by a process, which hypridle
+  honours, so it works with the island hidden. Not saved: a forgotten
+  one would keep the laptop up on battery after a restart. The Power
+  page's "Stay awake is on" row counts it, and its Turn off ends it.
+- Do not disturb (bell, a struck-through bell while on), solid white
+  while on: dunst paused (`dunstctl set-paused`), which holds
+  notifications and shows them once it is unpaused. Read back from dunst
+  on start, after a toggle and each time the panel opens. The pill's
+  own notices aren't notifications, so they still show.
+- Night light (a moon), solid white while on: hyprsunset at 4500 K
+  (`hyprctl hyprsunset temperature 4500`, `identity` off), main's
+  warmth. Saved in settings.json (`quick.nightLight`) and put back when
+  the island starts.
+- Microphone: the default source muted or not, the glyph showing which,
+  never solid, like the speaker segment above.
+
+Testing the row: open the panel and look; never click a segment.
+Night light changes the screen.
 
 Testing: never change the brightness (or run any screen command) to check
 this panel, and don't toggle Bluetooth or mute; open it and look.
@@ -839,8 +872,9 @@ with `hyprctl` swapped for `echo`.
 How Power works (`PowerSettings.qml`, a singleton; `PowerPage.qml`):
 - Power mode: the island battery page's rows (`Controls.profiles`).
 - Main's "Stay awake" (an idle inhibitor on its bar) pauses all three
-  timers. While it is on (`qs -c main ipc call awake state`), a row
-  above them says so, with "Turn off" (`awake disable`). It once made
+  timers, and so does the island's own (Quick settings). While either
+  is on (`qs -c main ipc call awake state`, `QuickSettings.stayAwake`),
+  a row above them says so, with "Turn off" (ends both). It once made
   "Lock after: 1 minute" look broken.
 - When idle: Lock after, Screen off after, Suspend after, each a Choice
   of Never, 1, 2, 3, 5, 10, 15, 20, 30 minutes (plus the current value
@@ -1204,3 +1238,10 @@ Dated record of what the user chose or rejected, and why.
   only thing showing a recording, so SUPER+V recorded unseen after login
   moved to the island. Picked by the user from a list of what the
   island lacks.
+- 2026-10-13: quick settings under a notch at the bottom of the settings
+  panel: dragging it down reveals a second fused pill with Stay awake,
+  Do not disturb, Night light and the microphone, for the toggles that
+  don't fit the top. The user's request, a scope change: Do not disturb
+  comes back (dunst's pause now, not main's), and the frozen panel gets
+  the row. The user named Stay awake and Do not disturb; Night light and
+  the microphone are my picks for "those kind of quick settings".

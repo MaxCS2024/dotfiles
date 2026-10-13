@@ -70,7 +70,7 @@ Item {
                 width: content.width
                 visible: PowerSettings.stayAwake
                 label: "Stay awake is on"
-                detail: "The main bar's Stay awake pauses these timers"
+                detail: "Stay awake pauses these timers"
 
                 PillButton {
                     text: "Turn off"

@@ -14,6 +14,8 @@ Scope {
     readonly property var displays: Displays
     // Writes the saved charge limit back if a battery forgot it.
     readonly property var power: PowerSettings
+    // Puts the saved night light back.
+    readonly property var quick: QuickSettings
 
     Variants {
         model: Quickshell.screens

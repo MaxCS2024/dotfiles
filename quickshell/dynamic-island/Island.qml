@@ -74,13 +74,36 @@ PanelWindow {
     readonly property real expandedWidth: panel === "power" ? 304
         : panel === "wallpaper" ? galleryWidth : 360
     property real expandedHeight: panel === "wallpaper" ? galleryHeight
-        : panel === "settings" ? 156
+        : panel === "settings" ? 156 + quickRowHeight * quickReveal
         : panel === "power" ? 88
         : panel === "wifi" || panel === "bluetooth" ? 288
         : panel === "battery" ? 200 : 128
     Behavior on expandedHeight {
-        enabled: root.phase === "open"
+        // Not while the quick settings row is dragged or eased open: the
+        // height follows quickReveal itself then.
+        enabled: root.phase === "open" && !root.quickDragging && !quickAnim.running
         NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+    }
+
+    // The quick settings row under the settings panel's notch: 0 hidden,
+    // 1 shown, in between while it is dragged. It stays as it was left
+    // until the next drag, also across openings.
+    readonly property real quickRowHeight: 52
+    property real quickReveal: 0
+    property bool quickDragging: false
+
+    NumberAnimation {
+        id: quickAnim
+        target: root
+        property: "quickReveal"
+        duration: 160
+        easing.type: Easing.OutCubic
+    }
+
+    function revealQuick(to) {
+        quickAnim.stop()
+        quickAnim.to = to
+        quickAnim.start()
     }
 
     // "collapsed", "opening", "open" or "closing". The three animated
@@ -1030,6 +1053,102 @@ PanelWindow {
                     }
                 }
             }
+
+            // The quick settings, revealed by dragging the notch below
+            // (12px under the sliders: the column's 8px gap plus 4).
+            Item {
+                width: settingsView.width
+                height: 44
+                opacity: root.quickReveal
+                visible: opacity > 0
+
+                TileGroup {
+                    y: 4
+                    width: parent.width
+                    model: [
+                        {
+                            icon: () => "\u{f0176}",
+                            active: () => QuickSettings.stayAwake,
+                            tap: () => QuickSettings.toggleStayAwake()
+                        },
+                        {
+                            icon: () => QuickSettings.dnd ? "\uf1f6" : "\uf0f3",
+                            active: () => QuickSettings.dnd,
+                            tap: () => QuickSettings.toggleDnd()
+                        },
+                        {
+                            icon: () => "\u{f0594}",
+                            active: () => QuickSettings.nightLight,
+                            tap: () => QuickSettings.toggleNightLight()
+                        },
+                        {
+                            icon: () => QuickSettings.micMuted ? "\u{f036d}" : "\u{f036c}",
+                            active: () => false,
+                            tap: () => QuickSettings.toggleMic()
+                        }
+                    ]
+                }
+            }
+        }
+
+        // The notch: a short bar in the settings panel's bottom padding.
+        // Dragging it down reveals the quick settings row, up hides it
+        // again; past halfway it finishes the way it was going, short of
+        // that it eases back. A click opens or closes the row.
+        Item {
+            anchors.bottom: parent.bottom
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: 96
+            height: 16
+            opacity: root.panel === "settings" ? root.panelOpacity : 0
+            visible: opacity > 0
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: 32
+                height: 4
+                radius: 2
+                color: "white"
+                opacity: notchArea.containsMouse || notchArea.pressed ? 0.6 : 0.3
+                Behavior on opacity { NumberAnimation { duration: 120 } }
+            }
+
+            MouseArea {
+                id: notchArea
+
+                // In the window's coordinates: the notch moves down with
+                // the panel's bottom as the row opens.
+                property real startY: 0
+                property real startReveal: 0
+                property bool moved: false
+
+                anchors.fill: parent
+                hoverEnabled: true
+                enabled: root.panel === "settings" && root.phase === "open"
+                onPressed: mouse => {
+                    quickAnim.stop()
+                    startY = mapToItem(null, mouse.x, mouse.y).y
+                    startReveal = root.quickReveal
+                    moved = false
+                    root.quickDragging = true
+                }
+                onPositionChanged: mouse => {
+                    if (!pressed)
+                        return
+                    const dy = mapToItem(null, mouse.x, mouse.y).y - startY
+                    if (Math.abs(dy) > 4)
+                        moved = true
+                    root.quickReveal = Math.max(0, Math.min(1, startReveal + dy / root.quickRowHeight))
+                }
+                onReleased: {
+                    root.quickDragging = false
+                    root.revealQuick(moved ? (root.quickReveal > 0.5 ? 1 : 0) : (startReveal > 0.5 ? 0 : 1))
+                }
+                onCanceled: {
+                    root.quickDragging = false
+                    root.revealQuick(startReveal > 0.5 ? 1 : 0)
+                }
+            }
         }
 
         // The settings panel's three pages, opened from its network,
@@ -1167,6 +1286,8 @@ PanelWindow {
         if (phase !== "collapsed")
             return
         panel = which
+        if (which === "settings")
+            QuickSettings.refresh()
         closeAnim.stop()
         phase = "opening"
         // The gallery's exclusive keyboard focus reaches Hyprland a moment
