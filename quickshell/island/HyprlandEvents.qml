@@ -6,8 +6,9 @@ import Quickshell.Io
 import QtQuick
 
 // Hyprland state changes (AGENTS.md, Hyprland events): a brief notice
-// when a submap starts or ends, and when the keyboard layout changes.
-// Nothing persistent: no workspaces.
+// when a submap starts or ends, when the keyboard layout changes, and
+// "Workspace N" on a workspace switch. Nothing persistent: no workspace
+// list.
 Singleton {
     id: root
 
@@ -88,6 +89,37 @@ Singleton {
             submit({ key: "layout", icon: "\u{f030c}", label: `Layout – ${layout}` })
     }
 
+    // ── Workspace ──
+    // The dynamic-island's flash, at the user's request: switching to a
+    // workspace shows "Workspace N" (its id, never its name) for
+    // `Config.workspaceTimeout`, sliding in from the side switched
+    // towards. Special workspaces (id below 1) are skipped. Follows the
+    // focused workspace, so focusing another monitor counts too.
+    property int lastWorkspace: Hyprland.focusedWorkspace?.id ?? 0
+    readonly property int focusedWorkspace: Hyprland.focusedWorkspace?.id ?? 0
+
+    onFocusedWorkspaceChanged: workspaceEvent(focusedWorkspace)
+
+    function workspaceEvent(id) {
+        if (!Config.workspaces || id < 1 || id === lastWorkspace)
+            return
+        const direction = id > lastWorkspace ? 1 : -1
+        lastWorkspace = id
+        submit({
+            key: "workspace",
+            face: "workspace",
+            timeout: Config.workspaceTimeout,
+            icon: "",
+            label: `Workspace ${id}`,
+            number: id,
+            direction,
+            // The island slides it in on arrival instead of fading, at the
+            // idle clock's size (the dynamic-island's 24 high, 32 in).
+            slide: direction,
+            small: true,
+        })
+    }
+
     // ── Event tests ──
     // Feeds made-up events through the same handling (AGENTS.md, Testing).
     IpcHandler {
@@ -97,5 +129,7 @@ Singleton {
         function submap(name: string): void { root.submapEvent(name) }
         // The raw event data, "keyboard,layout".
         function layout(data: string): void { root.layoutEvent(data) }
+        // What switching to workspace `id` shows; nothing switches.
+        function workspace(id: int): void { root.workspaceEvent(id) }
     }
 }

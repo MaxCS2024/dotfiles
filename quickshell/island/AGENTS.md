@@ -563,6 +563,19 @@ the generic face.
 
 `Config.hyprlandEvents` turns both off.
 
+**Workspace flash** (the dynamic-island's, at the user's request): a
+switch to workspace N (the focused workspace's id; focusing another
+monitor counts; special workspaces, id below 1, don't) shows "Workspace
+N" for 1.5 s (`Config.workspaceTimeout`), key `workspace`, profile
+`hyprland`, face `workspace`, at the idle clock's size (24 high, 32px
+either side; `small`). Arriving, it slides in from the side switched
+towards (to a higher number, from the right) while the old content
+slides 24px the other way and fades. Switching again while it shows
+slides the old name out and the new one in beside it, 16px apart,
+160ms OutCubic, the old one fading: the dynamic-island's way. Going
+back is a fade. `Config.workspaces` turns it off. Test:
+`qs -c island ipc call hyprland workspace <id>` (switches nothing).
+
 ## Privacy indicators
 
 `Privacy.qml`, outside the queue: nothing in the queue, DND, the
@@ -836,6 +849,14 @@ Running it next to the dynamic-island puts two pills at the top centre;
 SUPER+ALT+SPACE hides the dynamic-island meanwhile.
 
 # Decisions
+
+- 2026-10-13: the dynamic-island's "Workspace N" flash, at the user's
+  request ("I can't with good conscience use this new island" without
+  workspaces), chosen over always-visible workspaces (which the brief
+  rules out) or both. A brief event, so within the brief. Mine: the
+  arrival slide is sequential (out, then in) rather than the old side by
+  side, which would need a snapshot of the outgoing content; between
+  two names it is side by side as before.
 
 - 2026-10-13: the compact music pill shows "Title – Artist" between the
   art and the bars, scrolling back and forth when it doesn't fit, like

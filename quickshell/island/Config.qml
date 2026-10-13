@@ -89,6 +89,9 @@ Singleton {
     // Submap and keyboard layout changes.
     readonly property bool hyprlandEvents: true
     readonly property int hyprlandTimeout: 1500
+    // "Workspace N" on a workspace switch (the dynamic-island's flash).
+    readonly property bool workspaces: true
+    readonly property int workspaceTimeout: 1500
 
     // Microphone, camera and screen in use: the dots and the announcement.
     // Off removes both; nothing else can.

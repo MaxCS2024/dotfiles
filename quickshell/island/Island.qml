@@ -126,27 +126,50 @@ PanelWindow {
         morphTime = t.time
         morphOvershoot = t.overshoot
         keyed = true
+        // An arriving activity that slides (the workspace flash) moves in
+        // from the side it names, the old content going out the other way.
+        swapSlide = islandState === "transient" && activity?.slide && activity.key !== lastSlideKey ? activity.slide : 0
+        lastSlideKey = islandState === "transient" ? (activity?.key ?? "") : ""
         swap.restart()
         Qt.callLater(syncSize)
     }
     onActivityChanged: if (targetKey === shownKey) shownActivity = activity
 
+    // 1: comes in from the right (the old content leaves to the left);
+    // -1: the other way; 0: a plain fade.
+    property int swapSlide: 0
+    property string lastSlideKey: ""
+    readonly property int slideDistance: 24
+
     SequentialAnimation {
         id: swap
-        NumberAnimation { target: content; property: "opacity"; to: 0; duration: Math.round(root.morphTime * 0.3) }
+        ParallelAnimation {
+            NumberAnimation { target: content; property: "opacity"; to: 0; duration: Math.round(root.morphTime * 0.3) }
+            NumberAnimation { target: content; property: "x"; to: -root.swapSlide * root.slideDistance; duration: Math.round(root.morphTime * 0.3) }
+        }
         ScriptAction {
             script: {
                 root.shownKey = root.targetKey
                 root.shownState = root.islandState
                 root.shownActivity = root.activity
+                content.x = root.swapSlide * root.slideDistance
             }
         }
-        NumberAnimation {
-            target: content
-            property: "opacity"
-            to: 1
-            duration: root.morphTime - Math.round(root.morphTime * 0.3)
-            easing.type: Easing.OutCubic
+        ParallelAnimation {
+            NumberAnimation {
+                target: content
+                property: "opacity"
+                to: 1
+                duration: root.morphTime - Math.round(root.morphTime * 0.3)
+                easing.type: Easing.OutCubic
+            }
+            NumberAnimation {
+                target: content
+                property: "x"
+                to: 0
+                duration: root.morphTime - Math.round(root.morphTime * 0.3)
+                easing.type: Easing.OutCubic
+            }
         }
     }
 
@@ -228,8 +251,12 @@ PanelWindow {
         switch (islandState) {
         case "idle":
             return Config.idle === "notch" ? Config.notchWidth : clockText.implicitWidth + Config.idlePadX * 2
-        case "compact":
         case "transient":
+            // A small one (the workspace flash) is the idle clock's size.
+            if (activity?.small)
+                return measure.implicitWidth + Config.idlePadX * 2
+            return fit(measure.implicitWidth)
+        case "compact":
         case "privacy":
             return fit(measure.implicitWidth)
         default:
@@ -244,8 +271,11 @@ PanelWindow {
         case "compact":
             return Config.compactHeight
         case "transient":
-        case "privacy":
+            if (activity?.small)
+                return Config.idleHeight
             // Taller for a face that needs it (a notification's card).
+            return Math.max(Config.transientHeight, measure.implicitHeight)
+        case "privacy":
             return Math.max(Config.transientHeight, measure.implicitHeight)
         default:
             // Each face's expanded height (media and the generic one:
@@ -416,7 +446,9 @@ PanelWindow {
 
         Item {
             id: content
-            anchors.fill: parent
+            // Sized, not anchored, so a sliding swap can move its x.
+            width: parent.width
+            height: parent.height
 
             Text {
                 id: clockText

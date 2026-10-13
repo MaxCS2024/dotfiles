@@ -29,6 +29,8 @@ Singleton {
     //              until the user brings it back (see restore)
     //   defer      for a transient: ms it may wait for a break before it
     //              shows; the profile's unless given (see Deferral)
+    //   small      for a transient: the idle clock's size, not a notice's
+    //              (the workspace flash)
     //   onEnd      optional function(reason), called when the queue ends
     //              it: "expired" (its time ran out) or "dismissed" (the
     //              user). Not when its feature removes or replaces it.
