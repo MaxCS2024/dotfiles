@@ -12,6 +12,7 @@ Scope {
     readonly property var privacy: Privacy
     readonly property var notifications: Notifications
     readonly property var liveActivities: LiveActivities
+    readonly property var dictation: Dictation
 
     Island {}
 }

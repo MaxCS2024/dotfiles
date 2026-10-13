@@ -59,6 +59,10 @@ Singleton {
             if (!kind || g.target.properties["stream.monitor"] === "true")
                 continue
             const name = appName(g.target)
+            // Quickshell's own level meters (the dictation waveform) read
+            // the microphone without recording it.
+            if (kind === "mic" && ["quickshell", "qs"].includes(String(name).toLowerCase()))
+                continue
             if (!u[kind].includes(name))
                 u[kind].push(name)
         }
@@ -131,7 +135,13 @@ Singleton {
         }
     }
 
+    // The one exception to "nothing suppresses it": the microphone isn't
+    // announced while dictating, since the dictation face already shows
+    // it is listening (and the announcement would cover the waveform as
+    // the user starts speaking). The orange dot still shows.
     function announce(kind, ms) {
+        if (kind === "mic" && Dictation.busy)
+            return
         pending = pending.filter(a => a.kind !== kind).concat([{ kind, ms }])
         if (!announcement)
             next()
@@ -153,6 +163,21 @@ Singleton {
     Timer {
         id: announceTimer
         onTriggered: root.next()
+    }
+
+    // Dictation starting just after the microphone did: drop its
+    // announcement too.
+    Connections {
+        target: Dictation
+        function onBusyChanged() {
+            if (!Dictation.busy)
+                return
+            root.pending = root.pending.filter(a => a.kind !== "mic")
+            if (root.announcement?.kind === "mic") {
+                announceTimer.stop()
+                root.next()
+            }
+        }
     }
 
     // A right click on the announcement: on to the next. The dot stays.

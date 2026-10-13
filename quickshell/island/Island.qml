@@ -75,7 +75,7 @@ PanelWindow {
     } : null
 
     readonly property string islandState: privacyActivity ? "privacy"
-        : expanded ? "expanded"
+        : expanded && !transientActivity?.sticky ? "expanded"
         : transientActivity ? "transient"
         : persistentActivity ? "compact"
         : "idle"
@@ -252,6 +252,8 @@ PanelWindow {
         case "idle":
             return Config.idle === "notch" ? Config.notchWidth : clockText.implicitWidth + Config.idlePadX * 2
         case "transient":
+            if (activity?.pillWidth)
+                return activity.pillWidth
             // A small one (the workspace flash) is the idle clock's size.
             if (activity?.small)
                 return measure.implicitWidth + Config.idlePadX * 2
@@ -271,6 +273,8 @@ PanelWindow {
         case "compact":
             return Config.compactHeight
         case "transient":
+            if (activity?.pillHeight)
+                return activity.pillHeight
             if (activity?.small)
                 return Config.idleHeight
             // Taller for a face that needs it (a notification's card).

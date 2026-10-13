@@ -272,6 +272,8 @@ removal) and are capped at medium interruption.
   activities); `island-activity` the command-line wrapper for it.
 - `Privacy.qml`: who is using the microphone, camera and screen, and
   the announcements (see Privacy indicators). Not in the queue.
+- `Dictation.qml`, `DictationFace.qml`: the dynamic-island's dictation
+  face (see Dictation).
 - `Battery.qml`: battery events (see Battery events).
 - `HyprlandEvents.qml`: submap and layout notices (see Hyprland events).
 - `fake-player.py`: a silent MPRIS player for testing (see Testing).
@@ -606,7 +608,8 @@ order, never merged: 8px, orange `#ff9f0a`, green `#30d158`, red
 as it morphs. A dot pops in (160ms, OutBack) and goes at once. Clicking
 one names every app on that device for 3 seconds.
 
-**Announcement.** A device going from unused to used makes the island
+**Announcement.** (Except the microphone while dictating; see
+Dictation.) A device going from unused to used makes the island
 name it for 2 seconds, over everything (the expanded state comes back
 after): the device's glyph in white (the dot beside it already carries
 the colour) and "Firefox is using the microphone", "OBS is sharing the
@@ -672,6 +675,28 @@ Testing, Stopping).
 
 Not built: notification history, grouping, schedules (the brief rules
 them out); inline replies (typing).
+
+## Dictation
+
+The dynamic-island's dictation face, brought over at the user's
+request (its brief, Dictation, has the full design): while voxtype
+records (SUPER+V) and until it has typed the text, a 144 × 32 pill with
+a round cancel button (`voxtype record cancel`), 16 bars following the
+microphone, and a white stop button (`voxtype record toggle`); while
+transcribing, the buttons fade and the bars become a dim travelling
+wave. `Dictation.qml` follows `voxtype status --follow`.
+
+In this island it is a **sticky** transient (key `dictation`, profile
+`dictation`, priority 90): no time limit, it shows over everything but
+a privacy announcement, the expanded state included, and other
+transients wait behind it and show after (their time counted only on
+screen). A right click hides it like any activity; the recording goes
+on (the orange dot still shows it). `Config.dictation` turns it off.
+
+Privacy: the microphone isn't announced while dictating (the face
+already says so, and the announcement would cover the waveform as the
+user starts speaking); its dot still shows. Quickshell's own level
+meters (`quickshell`/`qs` streams) don't count as using the microphone.
 
 ## Live activities
 
@@ -745,6 +770,7 @@ it arrives (enter) and when the island falls back after it (exit).
 | urgent (step 6) | high | 70 | 280 | 180 | yes | – |
 | notification (step 6) | medium | 60 | 280 | 180 | no | 45 s |
 | criticalBattery | high | 55 | 250 | 150 | yes | – |
+| dictation | medium | 90 | 220 | 150 | no | – |
 | osd | low | 50 | 100 | 150 | no | – |
 | hyprland | low | 45 | 220 | 150 | no | – |
 | battery | low | 40 | 220 | 150 | no | – |
@@ -828,6 +854,11 @@ doesn't replace:
   does), `users`, and `links` (every link group as Quickshell sees it).
 - `qs -c island ipc call view fullscreen <bool>` pretends a fullscreen
   window is focused; `view fullscreenReal` goes back to Hyprland.
+- `qs -c island ipc call dictation test recording|transcribing` puts up
+  the dictation face without recording anything (the bars make up a
+  voice; the microphone isn't read); `test ""` follows voxtype again;
+  `status`. Never press SUPER+V or click the face's buttons to test:
+  they drive the real voxtype.
 - `qs -c island ipc call media fake "<title>" "<artist>"` shows a
   made-up track in the music pill above any real player (a stand-in
   object; nothing plays); `media unfake` takes it away.
@@ -849,6 +880,14 @@ Running it next to the dynamic-island puts two pills at the top centre;
 SUPER+ALT+SPACE hides the dynamic-island meanwhile.
 
 # Decisions
+
+- 2026-10-13: the dynamic-island's dictation face, at the user's
+  request. Mine: a sticky transient (new to the queue) so it stays over
+  everything and flashes wait, as in the dynamic-island; the exact
+  144 × 32 pill (`pillWidth`/`pillHeight`); test mode making up levels
+  instead of reading the microphone; no mic announcement while
+  dictating, and the island's own level meter not counted, an exception
+  to the brief's "nothing suppresses" privacy, for the user to confirm.
 
 - 2026-10-13: the dynamic-island's "Workspace N" flash, at the user's
   request ("I can't with good conscience use this new island" without

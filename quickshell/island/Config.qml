@@ -36,6 +36,9 @@ Singleton {
         urgent:          { interruption: "high",   priority: 70, enter: 280, exit: 180, overshoot: true },
         notification:    { interruption: "medium", priority: 60, enter: 280, exit: 180, overshoot: false, defer: 45000 },
         criticalBattery: { interruption: "high",   priority: 55, enter: 250, exit: 150, overshoot: true },
+        // While voxtype records or transcribes: the user's own action,
+        // above everything queued, never deferred.
+        dictation:       { interruption: "medium", priority: 90, enter: 220, exit: 150, overshoot: false },
         osd:             { interruption: "low",    priority: 50, enter: 100, exit: 150, overshoot: false },
         hyprland:        { interruption: "low",    priority: 45, enter: 220, exit: 150, overshoot: false },
         battery:         { interruption: "low",    priority: 40, enter: 220, exit: 150, overshoot: false },
@@ -89,6 +92,8 @@ Singleton {
     // Submap and keyboard layout changes.
     readonly property bool hyprlandEvents: true
     readonly property int hyprlandTimeout: 1500
+    // The dynamic-island's dictation face while voxtype records.
+    readonly property bool dictation: true
     // "Workspace N" on a workspace switch (the dynamic-island's flash).
     readonly property bool workspaces: true
     readonly property int workspaceTimeout: 1500

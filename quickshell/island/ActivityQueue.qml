@@ -31,6 +31,10 @@ Singleton {
     //              shows; the profile's unless given (see Deferral)
     //   small      for a transient: the idle clock's size, not a notice's
     //              (the workspace flash)
+    //   pillWidth, pillHeight  an exact pill size (dictation's 144 × 32)
+    //   sticky     for a transient: no time limit, it stays until its
+    //              feature removes it, and shows even while the island is
+    //              held open (dictation)
     //   onEnd      optional function(reason), called when the queue ends
     //              it: "expired" (its time ran out) or "dismissed" (the
     //              user). Not when its feature removes or replaces it.
@@ -58,7 +62,8 @@ Singleton {
 
     readonly property var transients: activities.filter(a => a.transient && !a.deferredUntil)
     readonly property var persistents: activities.filter(a => !a.transient)
-    readonly property var shownTransient: holdTransients ? null : (transients[0] ?? null)
+    // Held open, only a sticky one comes through.
+    readonly property var shownTransient: holdTransients ? (transients.find(a => a.sticky) ?? null) : (transients[0] ?? null)
     readonly property var topPersistent: persistents[0] ?? null
 
     property int nextSince: 0
@@ -193,6 +198,11 @@ Singleton {
     onShownTransientChanged: {
         const t = shownTransient
         if (!t) {
+            transientTimer.stop()
+            timedKey = ""
+            return
+        }
+        if (t.sticky) {
             transientTimer.stop()
             timedKey = ""
             return
