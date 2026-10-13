@@ -4,7 +4,7 @@ import Quickshell.Io
 import QtQuick
 
 // The bar's settings, read-only, for the configs that run beside it
-// (../launcher, ../clipboard). main/config/Theme.qml is symlinked into
+// (../clipboard). main/config/Theme.qml is symlinked into
 // each of them as it is and finds this in place of
 // main/services/Settings.qml, which owns IPC targets and writes
 // settings.json: a second process doing either would fight the bar.

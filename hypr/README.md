@@ -64,7 +64,7 @@ at login, so those keys do nothing until it is run by hand (see
 | SUPER+B | Default browser | `binds/apps.lua` | Browser is preloaded at login |
 | SUPER+M | Log out | `binds/apps.lua` | See [apps.lua](#bindsappslua) |
 | SUPER+SPACE | Conf menu (main) | `binds/apps.lua` | omarchy uses SUPER+ALT+SPACE, taken here by the bar toggle |
-| SUPER+P | App launcher | `binds/apps.lua` | `quickshell/launcher` |
+| SUPER+P | App launcher | `binds/apps.lua` | fuzzel, as it comes; a second press closes it |
 | SUPER+ESCAPE | Power menu (main) | `binds/apps.lua` | Without main, middle-click the island |
 | SUPER+SHIFT+N | Notifications rail (main) | `binds/apps.lua` | |
 | SUPER+CTRL+W | Network rail (main) | `binds/apps.lua` | W for wifi; CTRL because SUPER+W closes |
@@ -109,7 +109,7 @@ Grouped as cursor size, toolkit backends, XDG session names, Qt.
 
 - **`QT_QPA_PLATFORMTHEME = "qt5ct"`**. qt5ct is the Qt5 tool and isn't
   installed. Qt6 apps that need icon lookups override it per process; see
-  the launcher in [autostart](#modulesautostartlua). It isn't changed here
+  `QT_QPA_PLATFORMTHEME=gtk3` in [autostart](#modulesautostartlua). It isn't changed here
   on purpose: `gtk3` session-wide would also move every Qt app onto GTK file
   dialogs instead of the portal.
 - **`PATH`**. Hyprland hands `sh -c` the environment it was started in, and
@@ -201,15 +201,16 @@ Runs once, on `hyprland.start`.
   (dunst, started by D-Bus), and neither do Print or the media keys
   ([media.lua](#bindsmedialua)). Other layouts under `quickshell/` are run
   by hand with `qs -c <name>` until they earn a line here.
-- **`env QT_QPA_PLATFORMTHEME=gtk3 qs -c launcher`**. Under the session's
+- **`env QT_QPA_PLATFORMTHEME=gtk3`** for Quickshell configs that look up
+  icons (main, and `quickshell/island` run by hand). Under the session's
   `qt5ct`, Qt6 fails to load the theme plugin, falls back to the generic
   Unix theme and never learns an icon theme name. Then `hasThemeIcon(name)`
   is false and `iconPath(name, true)` is `""` for *every* name, installed or
   not (measured with `foot` and `org.gnome.Nautilus`). `gtk3` reads
   `gtk-icon-theme-name` from `~/.config/gtk-3.0/settings.ini` and fixes
-  both. The launcher needs it because it uses `services/AppIcons.qml`
-  (`iconPath`); main needs it for the same file plus the volume mixer
-  (`hasThemeIcon`). It does not affect the `image://icon` provider, which
+  both. Main needs it for `services/AppIcons.qml` (`iconPath`) and the
+  volume mixer (`hasThemeIcon`). (The Quickshell launcher, which needed
+  it too, gave way to fuzzel on 2026-10-13.) It does not affect the `image://icon` provider, which
   works under either value, so it never explains an icon drawn as a broken
   placeholder; that is a malformed source URL.
 - **`qs -c clipboard`**: shows no app icons, so no override.
@@ -435,7 +436,7 @@ have neither `arg` nor `debug`, which also means "not a script".
   Hyprland's global-shortcuts protocol, instead of spawning
   `qs ipc call` per press. The string is `appid:name` and must match the
   registration exactly; a name nobody registered does nothing, silently.
-  Registered in: `launcher/shell.qml`, `clipboard/shell.qml`,
+  Registered in: `clipboard/shell.qml`,
   `settings/SettingsWindow.qml` (`settings-toggle`), `dynamic-island/`
   (`Controls.qml`, `Wallpapers.qml`), and `main/services/Panels.qml` /
   `main/powermenu/PowerMenuPopout.qml` for the main keys.
@@ -630,6 +631,9 @@ Kept from the old comments; the commits have the details.
   the field and arrow moved 22px left. hyprlock 0.9 dropped
   `disable_loading_bar`, `grace` and `no_fade_in`; grace is now the
   `--grace` flag, which nothing passes.
+- 2026-10-13: fuzzel replaced the Quickshell launcher on SUPER+P, at the
+  user's request ("I don't need Quickshell to do everything"); the
+  launcher config was removed.
 - 2026-10-09: the launcher and the clipboard became their own Quickshell
   configs, so they work without main's bar.
 - 2026-10-10: the dynamic island replaced main at login. Print and the media

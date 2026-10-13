@@ -26,8 +26,8 @@ here before building it.
 
 ## Scope
 
-The island is the user's alternative to the main bar: with the launcher,
-the clipboard and its own settings window it runs as a complete shell
+The island is the user's alternative to the main bar: with a launcher
+(fuzzel), the clipboard and its own settings window it runs as a complete shell
 with main never started. The pill must stay small. Check every request
 against this section first. Something that falls outside it is raised
 with the user, not built.
@@ -79,7 +79,7 @@ workspace overview, Conf's sections (Install, Features, Update, Defaults, Style:
 Conf is to be split out of main into its own config, like the launcher),
 weather, system stats (CPU, RAM, temperature), a song-changed flash,
 Bluetooth devices' low-battery flashes, the app
-launcher and clipboard (their own configs), and a calendar.
+launcher (fuzzel) and clipboard (its own config), and a calendar.
 
 **Undecided, _TBD_:**
 - Notifications. Showing them would mean the island running the
@@ -1379,3 +1379,6 @@ Dated record of what the user chose or rejected, and why.
   announcement as a regular notice (3 s, not while a panel is open),
   the dots kept while the island is hidden, no mic notice while
   dictating.
+- 2026-10-13: slimming the shell down, at the user's request: the app
+  launcher is fuzzel now ("I don't need Quickshell to do everything; I
+  can have another application for that"), not a Quickshell config.

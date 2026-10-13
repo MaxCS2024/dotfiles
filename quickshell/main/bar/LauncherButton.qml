@@ -8,7 +8,7 @@ BarButton {
 
     icon: "󰍉"
 
-    // The launcher is its own config (../launcher), so it is asked over
-    // IPC like the dynamic island is. Nothing happens if it isn't running.
-    onTapped: Quickshell.execDetached(["qs", "-c", "launcher", "ipc", "call", "launcher", "toggle"])
+    // The launcher is fuzzel (SUPER+P), not part of the shell: a tap opens
+    // it, or closes it when it is already open.
+    onTapped: Quickshell.execDetached(["sh", "-c", "pkill -x fuzzel || fuzzel"])
 }

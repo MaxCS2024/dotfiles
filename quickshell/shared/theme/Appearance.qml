@@ -7,7 +7,7 @@ import "../services"
 import "palette.js" as Palette
 
 // The bar's palette, read-only, for the configs that run beside it
-// (../launcher, ../clipboard; symlinked into each). main/theme/
+// (../clipboard, symlinked into it). main/theme/
 // Appearance.qml decides which palette is active and saves it; this reads
 // the same two files (the themes menu's fall-appearance.json and
 // matugen's colors.json) and derives the same tokens with the same

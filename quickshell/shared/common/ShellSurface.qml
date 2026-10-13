@@ -4,7 +4,7 @@ import Quickshell.Wayland
 import QtQuick
 
 // main/common/ShellSurface.qml for the configs that run beside the bar
-// (../launcher, ../clipboard; symlinked into each). The same interface and
+// (../clipboard, symlinked into it). The same interface and
 // the same invariant, minus what ties a surface to the bar's
 // services/Panels.qml: `surfaceName`, `firstOpenArg` and opening itself
 // when built. Each of these configs has one window, built at startup and

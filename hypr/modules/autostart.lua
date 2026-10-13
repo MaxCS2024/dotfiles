@@ -3,7 +3,6 @@ local defaults = require("modules.defaults")
 
 hl.on("hyprland.start", function ()
 	hl.exec_cmd("qs -n -c dynamic-island")
-	hl.exec_cmd("env QT_QPA_PLATFORMTHEME=gtk3 qs -c launcher")
 	hl.exec_cmd("qs -c clipboard")
 	hl.exec_cmd("qs -c settings")
 
