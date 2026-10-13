@@ -493,9 +493,14 @@ player itself, so the face reads its position and sends its controls.
 - No flash on a track change: the face updates in place.
 
 The face (`MediaFace.qml`):
-- **Compact** (200 × 32, fixed): the art at the left end (20px, 6px
-  corners, 8px in), four playing bars at the right (3px wide, 2px apart,
-  12px in). Made up, not the audio. `Config.mediaBars`: "still" (the
+- **Compact** (32 high, as wide as the title needs, up to 400): the art
+  at the left end (20px, 6px corners, 8px in), "Title – Artist" (bold
+  13px) 10px past it, four playing bars at the right (3px wide, 2px
+  apart, 12px in) 10px past the title. A title wider than its room
+  scrolls like Spotify's: rests 1.8 s at the start, glides to its end at
+  30px a second (InOutSine), rests, glides back; a new track starts it
+  over; it stops while not on screen. The bars are made up, not the
+  audio. `Config.mediaBars`: "still" (the
   default, from the research: no constant motion) stands them at 6, 11,
   8 and 13px while playing; "subtle" swells them ±2px around that every
   0.7s; "dancing" is random 4–14px every 180ms. Flat at 3px when paused;
@@ -809,6 +814,9 @@ doesn't replace:
   does), `users`, and `links` (every link group as Quickshell sees it).
 - `qs -c island ipc call view fullscreen <bool>` pretends a fullscreen
   window is focused; `view fullscreenReal` goes back to Hyprland.
+- `qs -c island ipc call media fake "<title>" "<artist>"` shows a
+  made-up track in the music pill above any real player (a stand-in
+  object; nothing plays); `media unfake` takes it away.
 - `./fake-player.py [--art FILE] [--paused]`: a silent MPRIS player
   ("Island test player", three tracks, one with a long title) that
   `playerctl -p islandtest play|pause|next|previous` drives. Never play
@@ -827,6 +835,13 @@ Running it next to the dynamic-island puts two pills at the top centre;
 SUPER+ALT+SPACE hides the dynamic-island meanwhile.
 
 # Decisions
+
+- 2026-10-13: the compact music pill shows "Title – Artist" between the
+  art and the bars, scrolling back and forth when it doesn't fit, like
+  Spotify. The user's request; it overrides the project brief's compact
+  (art + indicator only) and the research brief's "no constant motion"
+  for this one pill. Mine: the 1.8 s rests, 30px/s, no edge fade
+  (STYLE.md rules out gradients).
 
 - 2026-10-13: the idle clock takes the dynamic-island's resting size,
   at the user's request: 32px either side of the time (`idlePadX`), 24

@@ -2,9 +2,10 @@ import Quickshell.Services.Mpris
 import Quickshell.Widgets
 import QtQuick
 
-// The media face. Compact: the album art at the left end, the playing
-// bars at the right. Expanded: the dynamic-island's media player. It
-// reads the player the activity carries.
+// The media face. Compact: the album art at the left end, "Title –
+// Artist" in the middle (scrolling back and forth when it doesn't fit),
+// the playing bars at the right. Expanded: the dynamic-island's media
+// player. It reads the player the activity carries.
 Item {
     id: face
 
@@ -14,14 +15,22 @@ Item {
     readonly property var player: activity?.player ?? null
     readonly property bool playing: player?.isPlaying ?? false
 
-    // Compact is a fixed width: the art and the bars sit at the ends.
-    // Minimal (the split's circle): the art alone, round. Expanded: the
-    // player's 360 × 128 (the island adds its padX on either side).
+    // Compact: the art and the bars at the ends, the title between them,
+    // as wide as it needs up to the widest pill. Minimal (the split's
+    // circle): the art alone, round. Expanded: the player's 360 × 128.
+    // (The island adds its padX on either side of each.)
     readonly property int playerWidth: 360
     readonly property int playerHeight: 128
+    readonly property string title: {
+        const t = player?.trackTitle || "Unknown"
+        return player?.trackArtist ? `${t} – ${player.trackArtist}` : t
+    }
+    // Art 8px in + 20 + 10, then 10 + bars 18 + 12px in.
+    readonly property int compactChrome: 8 + 20 + 10 + 10 + 18 + 12
+    readonly property int titleWidth: Math.min(titleText.implicitWidth, Config.maxWidth - compactChrome)
     implicitWidth: mode === "expanded" ? playerWidth - Config.padX * 2
         : mode === "minimal" ? Config.compactHeight
-        : 168
+        : titleWidth + compactChrome - Config.padX * 2
     implicitHeight: mode === "expanded" ? playerHeight : Config.compactHeight
 
     // ── Minimal ──
@@ -45,6 +54,67 @@ Item {
             player: face.player
             size: 20
             radius: 6
+        }
+
+        // The title, between the art and the bars. When it is wider than
+        // its room it scrolls like Spotify's: it rests at the start,
+        // glides to its end at 30px a second, rests, and glides back; a
+        // new track starts it over. It stops while not on screen. (The
+        // user's choice over the research brief's no constant motion.)
+        Item {
+            id: titleBox
+            x: 8 + 20 + 10
+            anchors.verticalCenter: parent.verticalCenter
+            width: Math.min(face.titleWidth, parent.width - face.compactChrome)
+            height: titleText.implicitHeight
+            clip: true
+
+            readonly property real overflow: Math.max(0, titleText.implicitWidth - width)
+            // A new title stops the scroll for a moment, which puts it back
+            // at the start; `running` stays a binding throughout.
+            property bool resetting: false
+            Timer {
+                id: resetTimer
+                interval: 50
+                onTriggered: titleBox.resetting = false
+            }
+
+            Text {
+                id: titleText
+                text: face.title
+                color: Config.foreground
+                font.family: Config.font
+                font.weight: Font.Bold
+                font.pixelSize: Config.fontSize
+                onTextChanged: {
+                    titleBox.resetting = true
+                    resetTimer.restart()
+                }
+            }
+
+            SequentialAnimation {
+                id: scroll
+                running: titleBox.overflow > 0 && titleBox.visible && !titleBox.resetting
+                loops: Animation.Infinite
+                onRunningChanged: if (!running) titleText.x = 0
+
+                PauseAnimation { duration: 1800 }
+                NumberAnimation {
+                    target: titleText
+                    property: "x"
+                    to: -titleBox.overflow
+                    duration: titleBox.overflow / 30 * 1000
+                    easing.type: Easing.InOutSine
+                }
+                PauseAnimation { duration: 1800 }
+                NumberAnimation {
+                    target: titleText
+                    property: "x"
+                    to: 0
+                    duration: titleBox.overflow / 30 * 1000
+                    easing.type: Easing.InOutSine
+                }
+            }
         }
 
         PlayingBars {

@@ -1,6 +1,7 @@
 pragma Singleton
 
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Mpris
 import QtQuick
 
@@ -67,5 +68,44 @@ Singleton {
             // Paused: it lives this long, then leaves the island.
             timeout: p.isPlaying ? 0 : Config.mediaPausedTimeout,
         })
+    }
+
+    // ── Media tests ──
+    // Shows a made-up track in the music pill, above whatever really plays,
+    // without touching any player: a stand-in object with a player's
+    // properties (AGENTS.md, Testing).
+    QtObject {
+        id: fakePlayer
+        property string trackTitle: ""
+        property string trackArtist: ""
+        property string trackArtUrl: ""
+        property bool isPlaying: true
+        property bool lengthSupported: false
+        property real length: 0
+        property real position: 0
+        property bool canGoNext: false
+        property bool canGoPrevious: false
+        property bool canTogglePlaying: false
+    }
+
+    IpcHandler {
+        target: "media"
+
+        function fake(title: string, artist: string): void {
+            fakePlayer.trackTitle = title
+            fakePlayer.trackArtist = artist
+            ActivityQueue.submit({
+                key: "media-test",
+                face: "media",
+                profile: "media",
+                priority: 21,
+                player: fakePlayer,
+                label: artist ? `${title} – ${artist}` : title,
+                timeout: 0,
+            })
+        }
+        function unfake(): void {
+            ActivityQueue.remove("media-test")
+        }
     }
 }
