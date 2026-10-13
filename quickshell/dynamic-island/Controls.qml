@@ -72,6 +72,22 @@ Singleton {
         function setBarVisible(visible: bool): void { root.barVisible = visible }
     }
 
+    // ── Notice tests ──
+    // Fires the island's notices without changing anything on the system,
+    // for test-notices.sh (AGENTS.md, Testing the notices).
+    IpcHandler {
+        target: "island-notices"
+        function battery(kind: string): void { root.batteryNotice(kind) }
+        function display(label: string): void { Displays.connected(label) }
+        function layout(name: string): void { root.layoutNotice(name) }
+        function notice(icon: string, before: string, name: string, after: string): void {
+            root.notice(icon, before, name, after)
+        }
+        // "recording" or "transcribing" puts up the dictation face
+        // without recording anything; "" follows voxtype again.
+        function dictation(state: string): void { Dictation.testState = state }
+    }
+
     Process {
         running: true
         command: ["qs", "-c", "main", "ipc", "call", "bar", "state"]
@@ -508,10 +524,12 @@ Singleton {
     // charging state, which flips back and forth around the charge
     // thresholds. Quiet for the first 2 seconds, like `changed`.
     // ── Network and Bluetooth notices ──
-    // `notice(icon, text)` for the island's pill (AGENTS.md, Notices): a
-    // network coming up, failing or dropping, a Bluetooth device
-    // connecting or disconnecting. Quiet for the first 2 seconds.
-    signal notice(string icon, string text)
+    // `notice(icon, before, name, after)` for the island's pill (AGENTS.md,
+    // Notices): a network coming up, failing or dropping, a Bluetooth
+    // device connecting or disconnecting. The line is before + name +
+    // after; only the name is cut when it is too long. Quiet for the
+    // first 2 seconds.
+    signal notice(string icon, string before, string name, string after)
 
     // Connected / Wi-Fi lost, from the connected network's name. Losing it
     // waits 3 seconds: switching networks passes through no network, and
@@ -525,7 +543,7 @@ Singleton {
             return
         if (ssid !== "") {
             wifiLost.stop()
-            notice("\uf1eb", "Connected – " + ssid)
+            notice("\uf1eb", "Connected – ", ssid, "")
         } else if (before !== "" && wifiOn) {
             wifiLost.restart()
         }
@@ -535,11 +553,11 @@ Singleton {
         id: wifiLost
         interval: 3000
         onTriggered: if (root.ssid === "" && root.wifiOn && root.networkType !== "ethernet")
-            root.notice("\u{f05aa}", "Wi-Fi lost")
+            root.notice("\u{f05aa}", "Wi-Fi lost", "", "")
     }
 
     readonly property bool wiredUp: networkType === "ethernet"
-    onWiredUpChanged: if (armed && wiredUp) notice("\u{f0200}", "Connected – Ethernet")
+    onWiredUpChanged: if (armed && wiredUp) notice("\u{f0200}", "Connected – Ethernet", "", "")
 
     // A network that fails to connect, whoever asked: NetworkManager on its
     // own, the island's page or the settings window. Not for a missing
@@ -552,7 +570,7 @@ Singleton {
             ignoreUnknownSignals: true
             function onConnectionFailed(reason) {
                 if (root.armed && reason !== ConnectionFailReason.NoSecrets)
-                    root.notice("\u{f05aa}", "Couldn't connect – " + modelData.name)
+                    root.notice("\u{f05aa}", "Couldn't connect – ", modelData.name, "")
             }
         }
     }
@@ -569,9 +587,9 @@ Singleton {
                 if (!root.armed || !root.bluetoothOn)
                     return
                 const d = modelData
-                root.notice(root.deviceIcon(d), d.connected
-                    ? d.name + " connected" + (d.batteryAvailable ? " – " + Math.round(d.battery * 100) + "%" : "")
-                    : d.name + " disconnected")
+                root.notice(root.deviceIcon(d), "", d.name, d.connected
+                    ? " connected" + (d.batteryAvailable ? " – " + Math.round(d.battery * 100) + "%" : "")
+                    : " disconnected")
             }
         }
     }

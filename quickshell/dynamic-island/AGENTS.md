@@ -9,7 +9,8 @@ Hyprland that shows the time, the current song when dragged right, or
 the date and battery when dragged left, and
 briefly swaps to the workspace name whenever the workspace changes, to
 the volume or brightness when they change, and to a battery notice when
-the charger goes in or the battery runs low. A
+the charger goes in or the battery runs low, and to a live waveform
+for as long as dictation (voxtype, SUPER+V) listens. A
 left click expands it into a media player, a right click into a small
 settings panel (network, Bluetooth, volume, battery, and the volume and
 brightness sliders, with a Wi-Fi page and a Bluetooth page for
@@ -44,6 +45,7 @@ does may need main.
 **In scope:**
 - The time, the "Workspace N" flash, the volume/brightness OSD and the
   battery notices.
+- The dictation face, while voxtype records or transcribes.
 - The song view and the media player.
 - The today view: the date and the battery.
 - The settings panel: the fused pill and the two sliders. It is frozen;
@@ -79,7 +81,6 @@ launcher and clipboard (their own configs), and a calendar.
 - Notifications. Showing them would mean the island running the
   notification daemon when main isn't running. The user likes the idea
   but doesn't use notifications much yet.
-- Notifications from the user's own tools (rack, relay): wanted or not.
 - How notifications look: dunst's default until everything else is
   settled; designing them comes last.
 - Main's other keys with nothing behind them (the notification and
@@ -129,10 +130,11 @@ The island shows one thing at a time.
 | wallpaper | SUPER+ALT+W                | wallpaper gallery        | three images × its row (757 × 178) |
 | workspace | switching to any workspace | "Workspace N"            | fits the text |
 | osd       | volume or brightness changes | icon, percentage, filling ring | one width for 0–100% |
-| battery   | charger plugged in; battery below 20% or 10% | battery icon + "Charging – 46%" or "Low battery – 18%" | fits the text |
-| layout    | keyboard layout switched   | keyboard icon + "Layout – English (US)" | fits the text |
-| display   | external screen plugged in | monitor icon + "Display connected – XV280K" | fits the text |
-| notice    | network up, failed or lost; Bluetooth device in or out | icon + "Connected – Telia-3D6C57" and the like | fits the text |
+| battery   | charger plugged in; battery below 20% or 10% | battery icon + "Charging – 46%" or "Low battery – 18%" | fits the text, at most 400px |
+| layout    | keyboard layout switched   | keyboard icon + "Layout – English (US)" | fits the text, at most 400px |
+| display   | external screen plugged in | monitor icon + "Display connected – XV280K" | fits the text, at most 400px |
+| notice    | network up, failed or lost; Bluetooth device in or out | icon + "Connected – Telia-3D6C57" and the like | fits the text, at most 400px |
+| dictation | voxtype recording or transcribing (SUPER+V) | cancel button, live waveform, stop button | 144, fixed |
 
 The three views sit in a row, song | time | today. A drag right moves one
 view to the left, a drag left one to the right; there is no wrap-around.
@@ -198,8 +200,8 @@ the first 2 seconds. "Charging" follows UPower's `onBattery` going false,
 not the charging state, which can flip back and forth around the
 battery's charge thresholds.
 
-Testing: emit `Controls.batteryNotice` from a temporary IpcHandler; don't
-unplug anything.
+Testing: `test-notices.sh` (see Testing the notices); don't unplug
+anything.
 
 ## Notifications
 
@@ -211,12 +213,47 @@ The system ones the user cares about the island shows itself, in the
 pill, from what it watches: the battery notices, "Display connected",
 the layout, and the network and Bluetooth notices below.
 
+**The rule** (decided 2026-10-11): the pill is for system state the
+island watches itself, a flash of 1.5–3 seconds that needs no answer.
+A regular notification (dunst) is a message from an app or a tool:
+something to read, maybe act on, or that the island can't see. Nothing
+shows in both places, so nothing that sends its own notifications for
+what the pill already shows (nm-applet, blueman) is run.
+
+Regular notifications:
+- Apps: messages, reminders, finished downloads ("Anna – are we still
+  on for tonight?", "Download complete – report.pdf").
+- The user's own tools, rack and relay: results and failures only, never
+  progress ("Dotfiles synced", "Update failed – click for the log",
+  "Screenshot saved"). `relay notif send` goes straight to D-Bus, so
+  dunst shows them; the glyph hint is main's and dunst ignores it.
+- The Print keys (Hyprland's, `hypr/modules/binds/media.lua`):
+  "Screenshot copied – Saved in Pictures/Screenshots as <file>", the
+  capture as the thumbnail, through `notify-send`. Hyprland's own
+  notification said it before.
+- System problems that need the user, never status readouts: "Disk
+  almost full – 2.1 GB left on /", and "Battery critical – 5%", the one
+  event shown in both places, since a 3-second flash is easy to miss
+  with the laptop about to die. Neither is built yet.
+
+Never a regular notification: anything the pill shows (network,
+Bluetooth, charging, display, layout, volume, brightness), and progress
+("Syncing…", "Connecting…"): only the result.
+
+| Urgency  | For                                         | Timeout          |
+|----------|---------------------------------------------|------------------|
+| low      | done, nothing to do (synced, screenshot)    | 3 s              |
+| normal   | messages, reminders, downloads              | 5 s              |
+| critical | failures, critical battery, disk full       | until dismissed  |
+
+How they look stays dunst's default until the rest is settled.
+
 ## Network and Bluetooth notices
 
-`Controls.notice(icon, text)`, shown like the battery notice: the icon
-at 16px, 8px before the bold 13px line, for 3 seconds, the newest flash
-winning, not while a panel is open or mid-drag, dropped by a press.
-Quiet for the first 2 seconds.
+`Controls.notice(icon, before, name, after)`, shown like the battery
+notice: the icon at 16px, 8px before the bold 13px line (before + name
++ after), for 3 seconds, the newest flash winning, not while a panel is
+open or mid-drag, dropped by a press. Quiet for the first 2 seconds.
 - "Connected – <network>" when a Wi-Fi network comes up (from
   `Controls.ssid`), "Connected – Ethernet" when a cable does.
 - "Wi-Fi lost" when the network goes and, 3 seconds later, Wi-Fi is
@@ -230,8 +267,19 @@ Quiet for the first 2 seconds.
   glyph; not while the adapter is off.
 No USB drives (the user: unnecessary).
 
-Testing: emit `Controls.notice` from a temporary IpcHandler; don't
-disconnect anything.
+Testing: `test-notices.sh` (see Testing the notices); don't disconnect
+anything.
+
+## Long names
+
+Every notice is a `NoticeFace.qml`: the icon, then a line made of
+`before`, `name` and `after`. The pill stays at most 400px wide
+(`pill.noticeMaxWidth`, 400 less the padding); a line that would pass
+that has only its name cut with "…", the network, device or screen, so
+"Couldn't connect –" and "connected – 80%" always show:
+"Couldn't connect – Telia-3D6C57-5GHz-Gu…", "Sony WH-1000XM5
+Wireles… connected – 80%", "Display connected – Dell UltraSharp U27…".
+The battery notice has no name and is never cut.
 
 ## Layout notice
 
@@ -253,8 +301,74 @@ Swedish), the next read the "main" keyboard, which is only the one used
 last, so voxtype's virtual keyboard became it while typing. Quiet for
 the first 2 seconds.
 
-Testing: emit `Controls.layoutNotice` from a temporary IpcHandler; don't
-switch the real layout.
+Testing: `test-notices.sh` (see Testing the notices); don't switch the
+real layout.
+
+## Dictation
+
+While voxtype records (SUPER+V, `voxtype record toggle`) and until it
+has typed the text, the pill shows the dictation face
+(`DictationFace.qml`), main's dictation pill (`osd/VoxtypeOsd.qml`)
+brought over in black and white, since nothing showed a recording once
+main stopped starting at login. It isn't a flash: it stays for as long
+as dictation lasts, over every view and flash. A flash that comes
+meanwhile waits behind it, and shows afterwards if its time hasn't run
+out.
+
+144 × 32 throughout, so the pill never changes width: at the left end
+a 24px round cancel button (white at 12%, 20% hovered, a cross;
+`voxtype record cancel` drops the recording), at the right end a solid
+white stop button with a black square (`voxtype record toggle`, the same
+as SUPER+V, types what was heard; it shrinks to 90% while pressed),
+each 4px from the pill's rounded end (`pill.shownPadX`), and between
+them 16 bars, 2px wide in 4px cells, 2–16px tall, following the default
+microphone's level (heavier in the middle, measured from the room's
+noise floor as main did). Transcribing: the buttons fade (120ms) and the
+bars dim to 60% and become a wave travelling left to right, at most 8px.
+Main's red stop button is white here (Look: white on black).
+
+The face's buttons are the only thing on it to click: a press elsewhere
+on it neither drags nor opens the player. A right or middle click still
+opens the settings panel or the power menu over it, and closing them
+brings it back. The island doesn't take keyboard focus for it, so
+clicking stop leaves the text going to the window that had it. Hidden
+with SUPER+ALT+SPACE, the island shows nothing, dictation or not.
+
+`Dictation.qml` (a singleton) follows `voxtype status --follow` (idle,
+recording, transcribing, stopped; one process, outliving the daemon;
+not retried when voxtype isn't installed) and works out the bar heights
+once for every screen, sampling the microphone only while recording.
+
+Testing: `test-notices.sh pill` ends with it, or
+`qs -c dynamic-island ipc call island-notices dictation recording`
+(`transcribing`, and `""` to go back to voxtype's own state). It shows
+the face without recording anything; the bars follow the real
+microphone. Never click its buttons, or press SUPER+V, to check it:
+they drive the real voxtype.
+
+## Testing the notices
+
+`./test-notices.sh [pill|notifications]` (both when no part is named)
+shows everything that can pop up, one after another, and prints which
+one is up. `pill` flashes every notice the pill has: the battery,
+display, layout, network and Bluetooth notices (one per device glyph),
+then a few with long names, then the dictation face. `notifications` sends the regular ones
+through dunst the way their senders do (see Notifications): three app
+messages with `notify-send`, rack's "Dotfiles synced" and "Update
+failed" with `relay notif send`, the Print keys' line on the newest
+screenshot (nothing captured or copied), and the critical battery and
+disk ones; the critical ones never time out, so the script closes them
+by id after 6 seconds, and on exit.
+
+The pill part goes through the `island-notices` IPC target in
+`Controls.qml`, which emits the same signals the system events do
+(`batteryNotice`, `Displays.connected`, `layoutNotice`, `notice`), so
+nothing on the system changes. The target stays, unlike the temporary
+handlers used elsewhere, so the script keeps working. One notice by hand:
+`qs -c dynamic-island ipc call island-notices notice <glyph> "<before>" "<name>" "<after>"`
+(empty strings for the parts not used).
+The battery notices show the real charge. Close any panel first; the
+island skips notices while one is open.
 
 ## Today view
 
@@ -1063,7 +1177,30 @@ Dated record of what the user chose or rejected, and why.
 - 2026-10-11: the Wi-Fi and Bluetooth switches left their headings for
   rows of their own, "Use Wi-Fi" and "Use Bluetooth" (like "Use this
   display"), so they light up whole for the keys too. The user's request.
+- 2026-10-11: `test-notices.sh` and a lasting `island-notices` IPC
+  target, at the user's request, to see every notice in turn (see
+  Testing the notices).
+- 2026-10-11: long names in the notices are cut with "…", only the name,
+  so the pill stays within 400px and the words around it show (see Long
+  names). The user's request, after the test showed long SSIDs, device
+  and screen names stretching the pill.
+- 2026-10-11: `test-notices.sh` shows the regular notifications too
+  (`notifications`), at the user's request; `pill` or `notifications`
+  runs one part.
+- 2026-10-11: what is a regular notification (see Notifications): the
+  pill for system state it watches, dunst for apps' and tools' messages,
+  nothing in both places; rack and relay send results and failures,
+  never progress (the open question settled); urgency low / normal /
+  critical at 3 s / 5 s / until dismissed. The Print keys' confirmation
+  moved from Hyprland's own notification to a regular one with the
+  capture as its thumbnail. My proposal, which the user accepted.
 - 2026-10-12: SUPER+ALT+SPACE hides and shows the island on its own,
   like the main bar, now that login starts only the island. The key
   presses both main's bar-toggle and the island's island-toggle; main,
   when it runs, still decides. The user's request.
+- 2026-10-13: the dictation face: while voxtype records or transcribes,
+  the pill shows a cancel button, a live waveform and a stop button,
+  main's dictation pill in the island's black and white. Main was the
+  only thing showing a recording, so SUPER+V recorded unseen after login
+  moved to the island. Picked by the user from a list of what the
+  island lacks.

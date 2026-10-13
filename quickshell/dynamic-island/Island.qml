@@ -11,7 +11,8 @@ import QtQuick
 // switch shows "Workspace N" over any of them for 1.5 seconds, and a
 // volume or brightness change shows its percentage and a filling circle
 // for as long. Plugging in the charger, or the battery running low,
-// shows a battery notice for 3 seconds. A left click
+// shows a battery notice for 3 seconds. While voxtype records or
+// transcribes, the dictation face covers all of that. A left click
 // opens the full media player, a right click a small settings panel
 // (whose network, Bluetooth and battery segments turn it into a page of
 // their own), a middle click a power menu; a click on any of them, or anywhere
@@ -198,7 +199,7 @@ PanelWindow {
         const slides = phase === "collapsed" && !dragging
             && !slideOut.running && !slideIn.running
             && out !== osdFace && out !== batteryFace && out !== displayFace
-            && out !== layoutFace && out !== noticeFace
+            && out !== layoutFace && out !== noticeFace && out !== dictationFace
             && !(out === workspaceLabel && workspaceLabel.text === name)
         if (slides) {
             const inn = out === workspaceLabelA ? workspaceLabelB : workspaceLabelA
@@ -366,19 +367,23 @@ PanelWindow {
 
     // The network and Bluetooth notices (Controls.notice): an icon and a
     // line, "Connected – Telia-3D6C57", "Wi-Fi lost", "Nothing Ear (3)
-    // connected – 80%". 3 seconds, like the battery notice: often nothing
-    // the user did just then.
+    // connected – 80%", the name kept apart so only it is cut. 3 seconds,
+    // like the battery notice: often nothing the user did just then.
     property bool showNotice: false
     property string noticeIcon: ""
-    property string noticeText: ""
+    property string noticeBefore: ""
+    property string noticeName: ""
+    property string noticeAfter: ""
 
     Connections {
         target: Controls
-        function onNotice(icon, text) {
+        function onNotice(icon, before, name, after) {
             if (root.phase !== "collapsed" || root.dragging)
                 return
             root.noticeIcon = icon
-            root.noticeText = text
+            root.noticeBefore = before
+            root.noticeName = name
+            root.noticeAfter = after
             root.showWorkspace = false
             root.showOsd = false
             root.showBattery = false
@@ -421,6 +426,10 @@ PanelWindow {
             moved = false
             onDisplayNotice = root.showDisplay
             if (root.phase !== "collapsed" || mouse.button !== Qt.LeftButton)
+                return
+            // The dictation face has its own buttons; the rest of it
+            // neither drags nor opens the player.
+            if (Dictation.busy)
                 return
             // Grabbing the pill drops the workspace name straight away.
             hideTimer.stop()
@@ -480,9 +489,16 @@ PanelWindow {
         id: pill
 
         readonly property real padX: 32
+        // A notice's icon and line together, so the pill is at most 400px.
+        readonly property real noticeMaxWidth: 400 - padX * 2
         // The OSD face sits tighter to the ends than the text views.
-        readonly property real shownPadX: shown === osdFace ? 24 : padX
-        readonly property Item shown: root.showNotice ? noticeFace
+        // The dictation face's buttons sit 4px from the rounded ends.
+        readonly property real shownPadX: shown === osdFace ? 24
+            : shown === dictationFace ? 4 : padX
+        // Dictation isn't a flash: it stays up over everything for as long
+        // as it lasts, and a flash that comes meanwhile waits behind it.
+        readonly property Item shown: Dictation.busy ? dictationFace
+            : root.showNotice ? noticeFace
             : root.showLayout ? layoutFace
             : root.showDisplay ? displayFace
             : root.showBattery ? batteryFace
@@ -672,112 +688,43 @@ PanelWindow {
                 }
             }
 
-            // The battery notice: the battery icon at 16px, then
-            // "Charging – 46%" or "Low battery – 18%".
-            Row {
+            // The notices (NoticeFace.qml): an icon, then a line whose
+            // name part is cut with "…" so the pill stays within 400px.
+            NoticeFace {
                 id: batteryFace
-                anchors.centerIn: parent
-                spacing: 8
-                opacity: pill.shown === batteryFace ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: 160 } }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: Controls.batteryIcon
-                    color: "white"
-                    font.family: "JetBrainsMono Nerd Font"
-                    font.pixelSize: 16
-                }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: (root.batteryKind === "low" ? "Low battery" : "Charging")
-                        + " – " + Math.round(Controls.batteryPercent) + "%"
-                    color: "white"
-                    font.family: "JetBrainsMono Nerd Font"
-                    font.weight: Font.Bold
-                    font.pixelSize: 13
-                }
+                shown: pill.shown === batteryFace
+                maxWidth: pill.noticeMaxWidth
+                icon: Controls.batteryIcon
+                before: (root.batteryKind === "low" ? "Low battery" : "Charging")
+                    + " – " + Math.round(Controls.batteryPercent) + "%"
             }
 
-            // The display notice: a monitor icon at 16px, then
-            // "Display connected – DELL U2720Q".
-            Row {
+            NoticeFace {
                 id: displayFace
-                anchors.centerIn: parent
-                spacing: 8
-                opacity: pill.shown === displayFace ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: 160 } }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "\u{f0379}"
-                    color: "white"
-                    font.family: "JetBrainsMono Nerd Font"
-                    font.pixelSize: 16
-                }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "Display connected – " + root.displayLabel
-                    color: "white"
-                    font.family: "JetBrainsMono Nerd Font"
-                    font.weight: Font.Bold
-                    font.pixelSize: 13
-                }
+                shown: pill.shown === displayFace
+                maxWidth: pill.noticeMaxWidth
+                icon: "\u{f0379}"
+                before: "Display connected – "
+                name: root.displayLabel
             }
 
-            // The layout notice: a keyboard icon at 16px, then
-            // "Layout – English (US)".
-            Row {
+            NoticeFace {
                 id: layoutFace
-                anchors.centerIn: parent
-                spacing: 8
-                opacity: pill.shown === layoutFace ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: 160 } }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "\u{f030c}"
-                    color: "white"
-                    font.family: "JetBrainsMono Nerd Font"
-                    font.pixelSize: 16
-                }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "Layout – " + root.layoutName
-                    color: "white"
-                    font.family: "JetBrainsMono Nerd Font"
-                    font.weight: Font.Bold
-                    font.pixelSize: 13
-                }
+                shown: pill.shown === layoutFace
+                maxWidth: pill.noticeMaxWidth
+                icon: "\u{f030c}"
+                before: "Layout – "
+                name: root.layoutName
             }
 
-            // The network and Bluetooth notice: its icon at 16px, then the line.
-            Row {
+            NoticeFace {
                 id: noticeFace
-                anchors.centerIn: parent
-                spacing: 8
-                opacity: pill.shown === noticeFace ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: 160 } }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.noticeIcon
-                    color: "white"
-                    font.family: "JetBrainsMono Nerd Font"
-                    font.pixelSize: 16
-                }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.noticeText
-                    color: "white"
-                    font.family: "JetBrainsMono Nerd Font"
-                    font.weight: Font.Bold
-                    font.pixelSize: 13
-                }
+                shown: pill.shown === noticeFace
+                maxWidth: pill.noticeMaxWidth
+                icon: root.noticeIcon
+                before: root.noticeBefore
+                name: root.noticeName
+                after: root.noticeAfter
             }
 
             // The two workspace labels; root.workspaceLabel is the current one.
@@ -805,6 +752,19 @@ PanelWindow {
                 font.pixelSize: 13
                 opacity: pill.shown === workspaceLabelB ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: 160 } }
+            }
+        }
+
+        // The dictation face (DictationFace.qml), outside the track: its
+        // buttons reach closer to the ends than the track's inset.
+        Item {
+            anchors.fill: parent
+            opacity: root.compactOpacity * root.orbTextOpacity
+
+            DictationFace {
+                id: dictationFace
+                anchors.centerIn: parent
+                shown: pill.shown === dictationFace
             }
         }
 
