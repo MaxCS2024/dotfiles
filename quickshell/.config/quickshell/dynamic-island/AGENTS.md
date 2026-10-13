@@ -48,7 +48,6 @@ does may need main.
 - The dictation face, while voxtype records or transcribes.
 - The privacy dots and their notices (see Privacy indicators).
 - The song view and the media player.
-- The today view: the date and the battery.
 - The settings panel: the fused pill, the two sliders and, under its
   notch, the quick settings row (Stay awake, Do not disturb, Night
   light, microphone). It is frozen; a new button or row needs a decision
@@ -106,7 +105,7 @@ launcher and the clipboard history (fuzzel, with cliphist), and a calendar.
   (`min(height / 2, 32)`).
 - Size: the width grows and shrinks to fit whatever the island is showing,
   with 32px of padding on each side of the text. Every compact view (time,
-  song, today, workspace) uses this one value, `pill.padX`. The OSD face
+  song, workspace) uses this one value, `pill.padX`. The OSD face
   is the exception, at 24px (`pill.shownPadX`).
 - Type: JetBrainsMono Nerd Font, Bold (`Font.Bold`) everywhere,
   including the player's title.
@@ -124,7 +123,6 @@ The island shows one thing at a time.
 |-----------|----------------------------|--------------------------|-------------|
 | resting   | default; dragging the pill left | time, `18:32`       | fits the text |
 | media     | dragging the pill right    | music note + "Title – Artist" | fits the text, at most the 400px window |
-| today     | dragging the pill left     | date and battery, `tors 8 okt – [battery] 46%` | fits the text |
 | player    | left click (press without moving 4px) | media player | 360 × 128 |
 | settings  | right click                | network, Bluetooth, volume and battery fused in one pill, volume and brightness sliders; the quick settings row under the notch | 360 × 156, 360 × 208 with the row |
 | wifi      | settings panel's network segment | Wi-Fi page: header, networks | 360 × 288 |
@@ -141,21 +139,20 @@ The island shows one thing at a time.
 | notice    | network up, failed or lost; Bluetooth device in or out | icon + "Connected – Telia-3D6C57" and the like | fits the text, at most 400px |
 | dictation | voxtype recording or transcribing (SUPER+V) | cancel button, live waveform, stop button | 144, fixed |
 
-The three views sit in a row, song | time | today. A drag right moves one
-view to the left, a drag left one to the right; there is no wrap-around.
-Dragging means pressing on the pill and moving more than 48px. A view stays
-until dragged away. With no player the song view isn't there and the
-time and today views loop: a drag either way brings in the other, from
-the side it is dragged from; the song view gives way to the time when
-the player goes away (since 2026-10-13). With a player, at either end
-of the row the text doesn't follow the cursor into nothing: it gives a
-little and resists, like a list's edge, at most 16px (`rubberBand`),
-and springs back on release. The player is whichever one is playing,
+Two views: the time and, while there is a player, the song. They loop:
+a drag either way brings in the other, from the side it is dragged
+from. Dragging means pressing on the pill and moving more than 48px. A
+view stays until dragged away. With no player only the time is left:
+the text doesn't follow the cursor into nothing but gives a little and
+resists, like a list's edge, at most 16px (`rubberBand`), and springs
+back on release; the song view gives way to the time when the player
+goes away. (The today view, date and battery, was removed on
+2026-10-13; see Decisions.) The player is whichever one is playing,
 else the first with a title. A title too long for the pill is cut with "…".
 
 After a workspace switch, the island shows "Workspace N", then returns
 to the time (or the song) on its own after 1.5 seconds. The switch slides
-whatever text is up (the time, song or today view, or an earlier
+whatever text is up (the time or song view, or an earlier
 "Workspace N") out and the new name in beside it (16px apart, 160ms,
 OutCubic, the old text fading as it goes), the way the drag views move:
 to a higher number the text moves left and the name comes in from the
@@ -480,15 +477,6 @@ handlers used elsewhere, so the script keeps working. One notice by hand:
 The battery notices show the real charge. Close any panel first; the
 island skips notices while one is open.
 
-## Today view
-
-The Swedish date and the battery: `tors 8 okt – [battery] 46%`
-(`ddd d MMM` in sv_SE, short weekday, with the month's abbreviation dot
-removed). The battery is `Controls.batteryIcon` (the main bar's ladder, a
-bolt while charging) at 16px, via rich text so it holds its own next to
-the 13px bold text, with one space after it, and the rounded percentage;
-it is left out on a machine with no battery.
-
 ## Media player
 
 A left click on the pill opens it, when there is a player (one playing,
@@ -500,7 +488,7 @@ previous / play-pause / next. A click on the player outside its buttons,
 or anywhere outside the island, closes it. A cover that fails to load
 shows a dim music note in the art square. (Until 2026-10-13 it also
 opened with no player, on an empty state; see Decisions.)
-Closing returns to whichever view (song, time or today) it was opened from.
+Closing returns to whichever view (song or time) it was opened from.
 
 Opening: the compact text fades out, the box grows to 360 × 128, then the
 player fades in. Closing is the exact reverse: the player text fades out
@@ -1406,3 +1394,9 @@ Dated record of what the user chose or rejected, and why.
   instead (the user's pick over the rubber band there): either drag
   direction switches between them. The rubber band stays for the ends
   of the three-view row while something plays.
+- 2026-10-13: the today view (date and battery) is gone; the user found
+  it not that useful, and picked removing it over a click-for-date
+  flash, a hover, a "now" view, week numbers or a timer. The battery
+  still has its notices. Song and time now loop while something plays
+  (the same either-way drag the user chose for two views); with nothing
+  playing only the time is left, and a drag rubber-bands.

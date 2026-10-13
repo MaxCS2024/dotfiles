@@ -5,9 +5,8 @@ import Quickshell.Wayland
 import Quickshell.Widgets
 import QtQuick
 
-// Shows the time. Three views sit side by side, song | time | today:
-// dragging right moves one to the left (towards the song), dragging left
-// one to the right (towards the date and battery). A workspace
+// Shows the time. While something plays, the song view sits beside it and
+// the two loop: dragging either way switches between them. A workspace
 // switch shows "Workspace N" over any of them for 1.5 seconds, and a
 // volume or brightness change shows its percentage and a filling circle
 // for as long. Plugging in the charger, or the battery running low,
@@ -176,7 +175,7 @@ PanelWindow {
     }
 
     property bool showWorkspace: false
-    // -1 song, 0 time, 1 today: the views' order from left to right.
+    // -1 song, 0 time.
     property int view: 0
     property int workspaceId: Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id : 0
 
@@ -200,17 +199,16 @@ PanelWindow {
     readonly property int shownView: view
 
     function labelFor(v) {
-        return v === -1 ? mediaLabel : v === 1 ? todayLabel : clockLabel
+        return v === -1 ? mediaLabel : clockLabel
     }
-    // The view a drag in `dir` (1 right, -1 left) brings in, or null at
-    // either end of song | time | today. While nothing is playing the song
-    // view isn't there, and the two left loop: a drag either way brings
-    // in the other one, from the side it is dragged from.
+    // The view a drag in `dir` (1 right, -1 left) brings in, or null for
+    // none. Song and time loop while something plays: a drag either way
+    // brings in the other, from the side it is dragged from. With nothing
+    // playing only the time is left, and a drag rubber-bands.
     function viewTowards(dir) {
         if (!player)
-            return shownView === 1 ? 0 : 1
-        const v = shownView - dir
-        return v > 1 || v < -1 ? null : v
+            return null
+        return shownView === -1 ? 0 : -1
     }
 
     // Set by the drag handlers. release() turns widthTracksDrag off before
@@ -232,7 +230,7 @@ PanelWindow {
     // Two labels take turns. A switch slides whatever text is showing out
     // and the new name in beside it, like the drag views: to a higher
     // number they move left (the new name comes in from the right), to a
-    // lower one they move right. That goes for the time, song and today
+    // lower one they move right. That goes for the time and song
     // views as much as an earlier name. Only the OSD and battery faces,
     // an open panel and a drag still get the plain fade.
     property Text workspaceLabel: workspaceLabelA
@@ -507,7 +505,7 @@ PanelWindow {
             // Catch the text mid-slide where it is; park the other one.
             slideOut.stop()
             slideIn.stop()
-            for (const label of [clockLabel, mediaLabel, todayLabel])
+            for (const label of [clockLabel, mediaLabel])
                 if (label !== pill.shown)
                     label.shift = 0
             dx = pill.shown.shift
@@ -649,31 +647,6 @@ PanelWindow {
                 font.weight: Font.Bold
                 font.pixelSize: 13
                 opacity: pill.shown === mediaLabel || root.peek === mediaLabel ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: 160 } }
-            }
-
-            Text {
-                id: todayLabel
-                property real shift: 0
-                anchors.centerIn: parent
-                transform: Translate { x: todayLabel.shift }
-                // "tors 8 okt – [battery] 46%". The battery is left out with
-                // no battery. Rich text so the glyph can be 16px, to sit
-                // level with the bold text.
-                textFormat: Text.RichText
-                text: {
-                    const glyph = g => "<span style=\"font-size: 16px\">" + g + "</span>"
-                    // Swedish short months end in a dot ("okt."); it goes.
-                    const parts = [Qt.locale("sv_SE").toString(clock.date, "ddd d MMM").replace(/\./g, "")]
-                    if (Controls.batteryPercent >= 0)
-                        parts.push(glyph(Controls.batteryIcon) + " " + Math.round(Controls.batteryPercent) + "%")
-                    return parts.join(" – ")
-                }
-                color: "white"
-                font.family: "JetBrainsMono Nerd Font"
-                font.weight: Font.Bold
-                font.pixelSize: 13
-                opacity: pill.shown === todayLabel || root.peek === todayLabel ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: 160 } }
             }
 
