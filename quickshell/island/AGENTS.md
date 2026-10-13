@@ -22,7 +22,9 @@ step before the next starts.
    the user went on to step 2. Clicking through the mask is unconfirmed.
 2. OSD: **built 2026-10-13**, awaiting the user's try with the real
    keys (only faked readings were tested).
-3. Media
+3. Media: **built 2026-10-13**, tested with `fake-player.py`; the
+   buttons and click-to-open await the user's pointer (no clicking from
+   here).
 4. Battery events and Hyprland state changes
 5. Privacy indicators
 6. Notifications
@@ -174,6 +176,8 @@ since the API evolves.
 - `ActivityFace.qml`: the generic face (icon, label, progress) in the
   compact, transient and expanded layouts.
 - `Osd.qml`: the OSD feature (see OSD); `OsdFace.qml` its face.
+- `Media.qml`: the media feature (see Media); `MediaFace.qml` its face.
+- `fake-player.py`: a silent MPRIS player for testing (see Testing).
 - `test-queue.sh`: walks every state and queue rule (see Testing).
 
 ## Quickshell API (checked against the installed 0.3.2)
@@ -189,6 +193,17 @@ From the qmltypes in `/usr/lib/qt6/qml/Quickshell`:
 - `Pipewire` (`Quickshell.Services.Pipewire`): `defaultAudioSink`,
   `defaultAudioSource`, `ready`; a `PwNode` has `id`, `ready` and
   `audio.volume` / `audio.muted`, bound through `PwObjectTracker`.
+- `Mpris` (`Quickshell.Services.Mpris`): `players` (an ObjectModel;
+  `.values` is the array). `MprisPlayer` has `trackTitle`, `trackArtist`,
+  `trackArtUrl`, `isPlaying`, `playbackState` (`MprisPlaybackState`
+  Stopped / Playing / Paused), `position` and `length` in seconds,
+  `lengthSupported`, `canGoNext`, `canGoPrevious`, `canTogglePlaying`,
+  `next()`, `previous()`, `togglePlaying()`. `position` doesn't move on
+  its own: emitting `positionChanged()` each second is what updates it.
+- `ClippingRectangle` (`Quickshell.Widgets`) puts its children in an
+  inner item, so their `parent` isn't the rectangle; use an id.
+- Inline components (`component X: …`) can't see the file's other ids;
+  pass what they need in as properties.
 - `TextMetrics` has `advanceWidth` and `width`, no `implicitWidth`
   (binding that is silently undefined).
 - `Hyprland` (`Quickshell.Hyprland`): `focusedMonitor`, `focusedWorkspace`,
@@ -293,6 +308,39 @@ volume and brightness alike, so the pill holds still.
 Not covered: external screens (no ddcutil; there is none to test with);
 a key press at 0% or 100%, which changes nothing and so shows nothing.
 
+## Media
+
+`Media.qml` keeps one persistent activity, key `media`, priority 20,
+face `media`, for the current MPRIS player. The activity carries the
+player itself, so the face reads its position and sends its controls.
+
+- **Which player:** the one playing; else the one that played last (so
+  a pause doesn't hand the island to another open player); else any
+  with a title.
+- **When:** while it plays. Paused, it stays `Config.mediaPausedTimeout`
+  (60 s), then leaves. A new title or art while it's gone doesn't bring
+  it back; playing again does. Stopped, or no title: gone at once.
+- No flash on a track change: the face updates in place.
+
+The face (`MediaFace.qml`):
+- **Compact** (200 × 32, fixed): the art at the left end (20px, 6px
+  corners, 8px in), four playing bars at the right (3px wide, 2px apart,
+  12px in). The bars dance (random heights 4–14px, 180ms) while playing
+  and lie flat at 3px when paused, and stop while not on screen. They're
+  made up, not the audio.
+- **Expanded** (400 × 152): the art (56px, 12px corners) at 20, 20; the
+  title, and the artist in `foregroundSoft`, beside it, cut with "…";
+  the bars at the top right; a progress row (elapsed, 4px bar,
+  "-remaining" in 11px) at y 88 when the player knows the length; and
+  previous / play-pause / next as 36px round buttons, 24px apart, at
+  y 108, a faint fill on hover, dim when the player can't. Laid out at
+  full size from the top, so nothing reflows while the pill grows.
+- No art: a music note on a dark square.
+
+The pill's own MouseArea sits under the content, so the buttons take
+their clicks; a click elsewhere on the pill opens or closes it. Hover
+comes from a `HoverHandler`, which the buttons don't hide.
+
 ## Look
 
 The dynamic-island's look, since it is the user's: a black pill, white
@@ -322,6 +370,10 @@ doesn't replace:
 - `qs -c island ipc call queue persist|flash key icon label progress priority ms`,
   `drop key`, `clear`, `list`.
 - `qs -c island ipc call view expand|collapse|current`.
+- `./fake-player.py [--art FILE] [--paused]`: a silent MPRIS player
+  ("Island test player", three tracks, one with a long title) that
+  `playerctl -p islandtest play|pause|next|previous` drives. Never play
+  real audio to test.
 - `qs -c island ipc call osd volume <0–1> <muted>`, `brightness <0–1>`,
   `mic <muted>`: the OSD for made-up readings. Never change the real
   volume, microphone or brightness to test.
@@ -359,6 +411,11 @@ SUPER+ALT+SPACE hides the dynamic-island meanwhile.
   volume, brightness and the mic (newest wins); a fixed-width level face
   with no label; muted reads 0%; the mic as a text notice; `waits:
   false`; brightness polled every 200ms.
+- 2026-10-13: step 3, media, at the user's go-ahead. Mine: which
+  player; a paused player leaves after 60 s; no track-changed flash
+  (the user turned one down for the dynamic-island); made-up playing
+  bars in white rather than tinted from the art; the progress bar shows
+  only, no seeking.
 - 2026-10-13: no global shortcuts from the volume and brightness keys
   (the dynamic-island's way of answering a press at 0% or 100%). It
   would mean new shortcut names and edits to `hypr/modules/binds`;

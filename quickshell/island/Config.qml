@@ -27,6 +27,11 @@ Singleton {
     // How long the OSD stays after the last change.
     readonly property int osdTimeout: 1500
 
+    // The current MPRIS player: art and playing bars, controls when expanded.
+    readonly property bool media: true
+    // How long a paused player stays in the island before it leaves.
+    readonly property int mediaPausedTimeout: 60000
+
     // ── Window ──
     // Distance from the top of the screen to the pill.
     readonly property int topMargin: 7
@@ -43,6 +48,7 @@ Singleton {
     // ── Type ──
     readonly property string font: "JetBrainsMono Nerd Font"
     readonly property int fontSize: 13
+    readonly property int fontSizeSmall: 11
     readonly property int iconSize: 16
     readonly property int expandedIconSize: 32
 

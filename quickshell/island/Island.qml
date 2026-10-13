@@ -148,6 +148,32 @@ PanelWindow {
         Behavior on width { SpringAnimation { spring: 4; damping: 0.36; epsilon: 0.25 } }
         Behavior on height { SpringAnimation { spring: 4; damping: 0.36; epsilon: 0.25 } }
 
+        // ── Pointer ──
+        // Under the content, so a face's own buttons (the media controls)
+        // take their clicks first; a click anywhere else opens or closes.
+        // Hover comes from a HoverHandler, which buttons don't hide.
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                if (Config.expandOn === "click" && root.persistentActivity)
+                    root.expanded = !root.expanded
+            }
+        }
+
+        HoverHandler {
+            onHoveredChanged: {
+                if (hovered) {
+                    collapseTimer.stop()
+                    if (Config.expandOn === "hover")
+                        hoverTimer.restart()
+                } else {
+                    hoverTimer.stop()
+                    if (root.expanded)
+                        collapseTimer.restart()
+                }
+            }
+        }
+
         Item {
             id: content
             anchors.fill: parent
@@ -168,28 +194,6 @@ PanelWindow {
                 anchors.fill: parent
                 activity: root.shownActivity
                 mode: root.shownState
-            }
-        }
-
-        // ── Pointer ──
-        MouseArea {
-            anchors.fill: parent
-            hoverEnabled: true
-
-            onClicked: {
-                if (Config.expandOn === "click" && root.persistentActivity)
-                    root.expanded = !root.expanded
-            }
-            onContainsMouseChanged: {
-                if (containsMouse) {
-                    collapseTimer.stop()
-                    if (Config.expandOn === "hover")
-                        hoverTimer.restart()
-                } else {
-                    hoverTimer.stop()
-                    if (root.expanded)
-                        collapseTimer.restart()
-                }
             }
         }
     }
