@@ -382,11 +382,15 @@ none), `face` ("osd", "media", or "" for the generic one), `waits` and
   "Low battery") replaces it and shows at once.
 - **Dismissing.** A right click on the pill dismisses what it shows
   (`ActivityQueue.dismiss`): a transient is gone; a persistent one
-  leaves and stays away, its feature's updates ignored, until the
-  feature submits it with `revive` or removes it. Media revives when
-  the player starts or pauses again, or another player takes over; a
-  new track doesn't bring it back. A privacy announcement makes way for
-  the next; its dot stays.
+  leaves and is kept aside (`dismissed`), its feature's updates landing
+  there unseen, until the feature submits it with `revive` or removes
+  it, or the user brings it back. Media revives when the player starts
+  or pauses again, or another player takes over; a new track doesn't
+  bring it back. A privacy announcement makes way for the next; its dot
+  stays.
+- **Bringing back.** A left click on the idle pill (the clock or the
+  notch) brings back everything dismissed (`ActivityQueue.restore`), as
+  it is now; one whose time ran out while away stays gone.
 
 ## Window
 
@@ -420,8 +424,8 @@ none), `face` ("osd", "media", or "" for the generic one), `waits` and
 - Expanded opens only from compact (idle and transients have nothing to
   expand) and closes when the pointer has been off the pill for 400ms,
   on a second click, or when the last persistent activity goes.
-- A right click on the pill dismisses what it shows (see Activity
-  queue, Dismissing).
+- A right click on the pill dismisses what it shows; a left click on the
+  idle pill brings it back (see Activity queue, Dismissing).
 
 ### Split
 
@@ -678,9 +682,10 @@ generic face (icon, label, progress).
   notifications. Pushed activities show at once: they report on
   something the user started. (Mine; the research's "same as normal
   notification" is read as for the notices.)
-- **Dismissing:** a right click ends one for the user; the script's
-  later pushes and updates are ignored (and answered "") until it
-  removes the id and pushes it again.
+- **Dismissing:** a right click puts one away for the user; the
+  script's later pushes and updates still apply, unseen, and answer ""
+  as usual. It comes back when the user clicks the idle pill, or when
+  the script removes the id and pushes it again.
 - Compact shows the level too (a 40px bar), so a download reads at a
   glance.
 
@@ -777,6 +782,8 @@ doesn't replace:
 - `qs -c island ipc call view second` (the circle's activity, "" for
   none), `expandSecond` and `dismissSecond` (a click and a right click
   on the circle).
+- `qs -c island ipc call view restore`: what a left click on the idle
+  pill does.
 - `qs -c island ipc call view expand|collapse|current|dismiss`
   (dismiss: what a right click does); `queue dismiss <key>`. `queue
   list` also lists dismissed keys.
@@ -816,6 +823,12 @@ Running it next to the dynamic-island puts two pills at the top centre;
 SUPER+ALT+SPACE hides the dynamic-island meanwhile.
 
 # Decisions
+
+- 2026-10-13: dismissed music could only come back by pausing and
+  playing again, with no hint of it (the user's report). Now a left
+  click on the idle pill brings back everything dismissed, kept up to
+  date while away. Mine: the gesture (the idle pill did nothing on a
+  click).
 
 - 2026-10-13: the user stopped the dynamic-island and made this island
   the shell at login in its place. Lost with the dynamic-island, and

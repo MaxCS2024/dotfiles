@@ -376,7 +376,8 @@ PanelWindow {
         // ── Pointer ──
         // Under the content, so a face's own buttons (the media controls)
         // take their clicks first; a left click anywhere else opens or
-        // closes. A right click dismisses what is showing: an announcement
+        // closes; on the idle pill, it brings back what was dismissed. A
+        // right click dismisses what is showing: an announcement
         // makes way for the next (its dot stays), any other activity
         // leaves the island. A middle click turns the notification hold
         // on or off. Hover comes from a HoverHandler, which buttons don't
@@ -388,6 +389,8 @@ PanelWindow {
             onClicked: mouse => {
                 if (mouse.button === Qt.RightButton)
                     root.dismissShown()
+                else if (root.islandState === "idle")
+                    ActivityQueue.restore()
                 else if (mouse.button === Qt.MiddleButton)
                     Notifications.setHolding(!Notifications.holding)
                 else if (Config.expandOn === "click" && root.persistentActivity && root.islandState !== "privacy")
@@ -540,6 +543,11 @@ PanelWindow {
         // What a right click on the pill does.
         function dismiss(): void {
             root.dismissShown()
+        }
+        // What a left click on the idle pill does: brings back what was
+        // dismissed.
+        function restore(): void {
+            ActivityQueue.restore()
         }
         function current(): string {
             return root.islandState + (root.pillHidden ? " (hidden)" : "")

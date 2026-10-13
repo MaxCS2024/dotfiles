@@ -78,12 +78,13 @@ Singleton {
     }
 
     // Updates that leave the rest alone; each one restarts an idle
-    // lifetime. Unknown or dismissed ids are ignored, so a script
-    // updating every second doesn't bring back what the user dismissed.
+    // lifetime. One the user dismissed is updated where it waits, unseen,
+    // so it comes back current if they bring it back; it doesn't come
+    // back on its own.
     function update(id, fields) {
-        const a = ActivityQueue.find(key(id))
+        const a = ActivityQueue.find(key(id)) ?? ActivityQueue.dismissed[key(id)]
         if (!a)
-            return ActivityQueue.dismissed[key(id)] ? "" : `no activity "${id}"`
+            return `no activity "${id}"`
         ActivityQueue.submit(Object.assign({
             key: a.key,
             timeout: a.transient ? a.timeout : (a.ipcTimeout > 0 ? a.ipcTimeout : Config.liveActivityIdleTimeout),

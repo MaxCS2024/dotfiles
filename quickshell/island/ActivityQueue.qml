@@ -26,6 +26,7 @@ Singleton {
     //              while the island is held open (a level is stale by then)
     //   revive     brings back a key the user dismissed; without it, a
     //              dismissed persistent activity stays away (see dismiss)
+    //              until the user brings it back (see restore)
     //   defer      for a transient: ms it may wait for a break before it
     //              shows; the profile's unless given (see Deferral)
     //   onEnd      optional function(reason), called when the queue ends
@@ -60,17 +61,25 @@ Singleton {
 
     property int nextSince: 0
 
-    // Keys of persistent activities the user dismissed. Their feature's
-    // updates are ignored until one comes with `revive` (media: the
-    // player starting or pausing again, not a new track).
+    // Persistent activities the user dismissed, by key, kept aside with
+    // their latest state: their feature's updates land here, unseen,
+    // until one comes with `revive` (media: the player starting or
+    // pausing again, not a new track) or the user brings them back
+    // (restore).
     property var dismissed: ({})
 
     // Adds the activity, or updates the one with the same key. Fields
     // left out keep their old value (or the default, for a new one).
     function submit(spec) {
         if (dismissed[spec.key]) {
-            if (!spec.revive)
+            if (!spec.revive) {
+                // Kept up to date while away, its lifetime included.
+                const s = Object.assign({}, dismissed[spec.key], spec)
+                if (spec.timeout !== undefined)
+                    s.expiresAt = s.timeout > 0 ? Date.now() + s.timeout : 0
+                dismissed[spec.key] = s
                 return
+            }
             delete dismissed[spec.key]
         }
         const old = find(spec.key)
@@ -124,16 +133,31 @@ Singleton {
     }
 
     // The user's dismissal (right click): the activity leaves now. A
-    // transient is simply gone; a persistent one stays away until its
-    // feature revives it or removes it.
+    // transient is simply gone; a persistent one is kept aside until its
+    // feature revives or removes it, or the user brings it back.
     function dismiss(key) {
         const a = find(key)
         if (!a)
             return
         remove(key)
         if (!a.transient)
-            dismissed[key] = true
+            dismissed[key] = a
         a.onEnd?.("dismissed")
+    }
+
+    // The user bringing back everything they dismissed (a click on the
+    // idle pill), as it is now; anything whose time ran out meanwhile
+    // stays gone.
+    function restore() {
+        const kept = dismissed
+        dismissed = {}
+        const now = Date.now()
+        for (const key in kept) {
+            const a = kept[key]
+            if (a.expiresAt && a.expiresAt <= now)
+                continue
+            submit(Object.assign({}, a, { revive: true }))
+        }
     }
 
     // The queue ending one itself: its time ran out.
