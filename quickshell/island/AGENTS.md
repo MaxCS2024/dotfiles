@@ -28,7 +28,9 @@ step before the next starts.
 4. Battery events and Hyprland state changes: **built 2026-10-13**,
    tested with simulated readings and events; awaiting a real
    plug/unplug and layout switch.
-5. Privacy indicators
+5. Privacy indicators: **built 2026-10-13**, tested with
+   `fake-capture.sh` (fake PipeWire devices), wf-recorder and a faked
+   fullscreen; clicking a dot awaits the user's pointer.
 6. Notifications
 7. IPC live-activities API
 8. Split state
@@ -179,9 +181,13 @@ since the API evolves.
   compact, transient and expanded layouts.
 - `Osd.qml`: the OSD feature (see OSD); `OsdFace.qml` its face.
 - `Media.qml`: the media feature (see Media); `MediaFace.qml` its face.
+- `Privacy.qml`: who is using the microphone, camera and screen, and
+  the announcements (see Privacy indicators). Not in the queue.
 - `Battery.qml`: battery events (see Battery events).
 - `HyprlandEvents.qml`: submap and layout notices (see Hyprland events).
 - `fake-player.py`: a silent MPRIS player for testing (see Testing).
+- `fake-capture.sh`: fake microphone, camera or screen use through
+  PipeWire, no real device (see Testing).
 - `test-queue.sh`: walks every state and queue rule (see Testing).
 
 ## Quickshell API (checked against the installed 0.3.2)
@@ -204,6 +210,13 @@ From the qmltypes in `/usr/lib/qt6/qml/Quickshell`:
   `lengthSupported`, `canGoNext`, `canGoPrevious`, `canTogglePlaying`,
   `next()`, `previous()`, `togglePlaying()`. `position` doesn't move on
   its own: emitting `positionChanged()` each second is what updates it.
+- `Pipewire.linkGroups` (`.values`): `PwLinkGroup` has `source`,
+  `target` (nodes) and `state` (`PwLinkState`, PipeWire's numbers:
+  Error -2, Unlinked -1, Init 0 … Paused 3, Active 4). The state reads
+  -1 until the group itself is in a `PwObjectTracker`; so does a node's
+  `properties` (`media.class`, `device.api`, `application.name`).
+  `.values` is a list type, not a JS array: `Array.from` it.
+- Qt's JavaScript has no `Array.prototype.flatMap`.
 - `UPower` (`Quickshell.Services.UPower`): `displayDevice`, `devices`,
   `onBattery`. `UPowerDevice` has `percentage` (0–1), `state`
   (`UPowerDeviceState`: Unknown, Charging, Discharging, Empty,
@@ -264,12 +277,16 @@ Proposed, set as each feature is built:
 
 - One `PanelWindow` on the focused monitor (`Hyprland.focusedMonitor`
   matched to `Quickshell.screens` by name); it moves with focus.
-- Anchored top, layer `Top`, namespace `quickshell:island`. Step 5 moves
-  it to `Overlay` for the privacy dots, and then hides the pill itself
-  over fullscreen windows.
-- The window is the expanded size plus room for the spring's overshoot
-  (448 × 183). The mask is a `Region` on the pill with the pill's radius,
-  so only the visible pill takes clicks.
+- Anchored top, layer `Overlay` (so the privacy dots stay over
+  fullscreen windows), namespace `quickshell:island`.
+- The window is the expanded size plus room for the dots on either side
+  and the spring's overshoot (544 × 183). The mask is a `Region` of two:
+  the pill (with its radius) and the dots. Only those take clicks.
+- **Fullscreen:** when the focused workspace has a fullscreen window
+  (`Hyprland.focusedWorkspace.hasFullscreen`), the pill fades and
+  shrinks away (160ms) and leaves the mask; the expanded state closes.
+  The dots stay, and a privacy announcement brings the pill back for its
+  2 seconds.
 - With `Config.reserveSpace` it reserves the top margin plus the compact
   pill's height (39px), so tiled windows start below a compact pill.
   Idle is smaller; expanded and transient overlap the windows.
@@ -390,6 +407,49 @@ the generic face.
 
 `Config.hyprlandEvents` turns both off.
 
+## Privacy indicators
+
+`Privacy.qml`, outside the queue: nothing in the queue, DND, the
+expanded state or fullscreen hides it. `Config.privacy` is the only off
+switch.
+
+**Detection.** From PipeWire: every active link from a capture device
+to an app's stream. The source says what is captured:
+- `Audio/Source…` → microphone. A sink's monitor (an `Audio/Sink`,
+  playback being captured) doesn't count, nor a level meter
+  (`stream.monitor`).
+- `Video/Source` with a `device.api` (v4l2, libcamera) → camera. The
+  T480's camera is a PipeWire node (`v4l2_input…`), so apps that use it
+  through PipeWire show; one that opens `/dev/video0` directly doesn't
+  (not covered).
+- any other `Video/Source` → screen sharing (xdg-desktop-portal's
+  streams).
+The app is the stream's `application.name` (or its binary, description
+or name). Screen recorders that use wlr-screencopy (wf-recorder) never
+touch PipeWire: Hyprland's `screencast` event says only that one started
+or stopped, so it counts once it has run 1.5 seconds (a grim screenshot
+doesn't light the dot), named "Something".
+
+**Dots.** One per device in use, microphone, camera, screen in that
+order, never merged: 8px, orange `#ff9f0a`, green `#30d158`, red
+`#ff453a` (`Config.privacy*`), 8px apart in 16px hit areas, starting
+4px right of the pill and centred on its first line, so they ride along
+as it morphs. A dot pops in (160ms, OutBack) and goes at once. Clicking
+one names every app on that device for 3 seconds.
+
+**Announcement.** A device going from unused to used makes the island
+name it for 2 seconds, over everything (the expanded state comes back
+after): the device's glyph in white (the dot beside it already carries
+the colour) and "Firefox is using the microphone", "OBS is sharing the
+screen", "Something is recording the screen". Several apps: "Microphone
+– Firefox, Discord". Devices starting together take turns. A device
+that was off for less than 2 seconds (a stream renegotiating) comes
+back without one.
+
+Not covered: the dynamic-island's own level meters (its Sound page,
+its dictation waveform) read the microphone and may light the dot as
+"quickshell"; untested.
+
 ## Look
 
 The dynamic-island's look, since it is the user's: a black pill, white
@@ -426,6 +486,17 @@ doesn't replace:
 - `qs -c island ipc call hyprland submap <name>` ("" leaves) and
   `hyprland layout "<keyboard>,<layout>"` feed made-up events. Put the
   layout back afterwards, or the next real event compares against it.
+- `./fake-capture.sh mic|camera|screen [app]`: a fake device and a fake
+  app reading it, both PipeWire nodes, linked by hand; runs until
+  Ctrl+C. The reader never connects on its own (`node.autoconnect =
+  false`), and the script stops if it finds it linked to anything else.
+  Never test with `pw-record --target`: when the target is missing it
+  records from the real microphone.
+- `qs -c island ipc call privacy add|drop <kind> <app>` (made-up users,
+  "" for an unknown app), `clear`, `list <kind>` (what a dot click
+  does), `users`, and `links` (every link group as Quickshell sees it).
+- `qs -c island ipc call view fullscreen <bool>` pretends a fullscreen
+  window is focused; `view fullscreenReal` goes back to Hyprland.
 - `./fake-player.py [--art FILE] [--paused]`: a silent MPRIS player
   ("Island test player", three tracks, one with a long title) that
   `playerctl -p islandtest play|pause|next|previous` drives. Never play
@@ -477,6 +548,13 @@ SUPER+ALT+SPACE hides the dynamic-island meanwhile.
   above the OSD (55) and 6 s; the charge limit counts as charged; the
   submap as a brief notice on entering and leaving, as the brief says,
   not a standing activity while in it.
+- 2026-10-13: step 5, privacy indicators, at the user's go-ahead.
+  Mine: dots outside the pill at its right, on its first line; the
+  announcement as the generic face with a white glyph (a coloured dot in
+  it too was a double mark, §8); camera vs screen by `device.api`;
+  Hyprland's screencast event as a second source for screen recording,
+  after 1.5 s; the 2-second grace against re-announcing; the window on
+  the Overlay layer from now on.
 - 2026-10-13: no global shortcuts from the volume and brightness keys
   (the dynamic-island's way of answering a press at 0% or 100%). It
   would mean new shortcut names and edits to `hypr/modules/binds`;

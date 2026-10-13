@@ -6,8 +6,8 @@ import QtQuick
 
 // The island: one pill at the top centre of the focused monitor that
 // morphs between idle, compact, transient and expanded (AGENTS.md,
-// Visual design). It only reads ActivityQueue; what it draws comes from
-// there.
+// Visual design), and the privacy dots beside it. It only reads
+// ActivityQueue and Privacy; what it draws comes from there.
 PanelWindow {
     id: root
 
@@ -23,16 +23,32 @@ PanelWindow {
 
     anchors.top: true
     WlrLayershell.namespace: "quickshell:island"
-    WlrLayershell.layer: WlrLayer.Top
+    // Overlay, so the privacy dots stay over fullscreen windows; the pill
+    // hides itself there instead (see Fullscreen).
+    WlrLayershell.layer: WlrLayer.Overlay
     exclusionMode: Config.reserveSpace ? ExclusionMode.Normal : ExclusionMode.Ignore
     exclusiveZone: Config.topMargin + Config.compactHeight
     color: "transparent"
 
-    // Room for the largest state plus the spring's overshoot. Only the
-    // pill takes input; the rest of the window lets clicks through.
-    implicitWidth: Config.expandedWidth + 48
+    // Room for the largest state, the dots beside it and the spring's
+    // overshoot. Only the pill and the dots take input; the rest of the
+    // window lets clicks through. Hidden over fullscreen, the pill leaves
+    // the mask and only the dots remain.
+    implicitWidth: Config.expandedWidth + 2 * 72
     implicitHeight: Config.topMargin + Config.expandedHeight + 24
-    mask: Region { item: pill; radius: pill.radius }
+    mask: Region {
+        Region { item: root.pillHidden ? null : pill; radius: pill.radius }
+        Region { item: dots }
+    }
+
+    // ── Fullscreen ──
+    // A fullscreen window on the focused workspace hides the pill, unless
+    // a privacy announcement is up; the dots stay. `fullscreenTest`
+    // overrides it for testing.
+    property var fullscreenTest: null
+    readonly property bool fullscreen: fullscreenTest ?? (Hyprland.focusedWorkspace?.hasFullscreen ?? false)
+    readonly property bool pillHidden: fullscreen && !Privacy.announcement
+    onPillHiddenChanged: if (pillHidden) expanded = false
 
     // ── State ──
     property bool expanded: false
@@ -40,11 +56,25 @@ PanelWindow {
     readonly property var transientActivity: ActivityQueue.shownTransient
     readonly property var persistentActivity: ActivityQueue.topPersistent
 
-    readonly property string islandState: expanded ? "expanded"
+    // A privacy announcement comes before everything, the expanded state
+    // included; the island goes back to that state after it. The generic
+    // face, with the device's glyph in white: the coloured dot beside the
+    // pill already marks it.
+    readonly property var privacyActivity: Privacy.announcement ? {
+        key: "privacy:" + Privacy.announcement.serial,
+        face: "",
+        icon: Privacy.glyph(Privacy.announcement.kind),
+        label: Privacy.announcement.text,
+        progress: -1,
+    } : null
+
+    readonly property string islandState: privacyActivity ? "privacy"
+        : expanded ? "expanded"
         : transientActivity ? "transient"
         : persistentActivity ? "compact"
         : "idle"
-    readonly property var activity: islandState === "transient" ? transientActivity
+    readonly property var activity: islandState === "privacy" ? privacyActivity
+        : islandState === "transient" ? transientActivity
         : islandState === "idle" ? null
         : persistentActivity
 
@@ -116,6 +146,7 @@ PanelWindow {
             return Config.idle === "notch" ? Config.notchWidth : clockText.implicitWidth + Config.padX * 2
         case "compact":
         case "transient":
+        case "privacy":
             return fit(measure.implicitWidth)
         default:
             return Config.expandedWidth
@@ -128,6 +159,7 @@ PanelWindow {
         case "compact":
             return Config.compactHeight
         case "transient":
+        case "privacy":
             return Config.transientHeight
         default:
             return Config.expandedHeight
@@ -145,6 +177,12 @@ PanelWindow {
         color: Config.background
         clip: true
 
+        opacity: root.pillHidden ? 0 : 1
+        scale: root.pillHidden ? 0.8 : 1
+        transformOrigin: Item.Top
+        Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+
         Behavior on width { SpringAnimation { spring: 4; damping: 0.36; epsilon: 0.25 } }
         Behavior on height { SpringAnimation { spring: 4; damping: 0.36; epsilon: 0.25 } }
 
@@ -155,7 +193,7 @@ PanelWindow {
         MouseArea {
             anchors.fill: parent
             onClicked: {
-                if (Config.expandOn === "click" && root.persistentActivity)
+                if (Config.expandOn === "click" && root.persistentActivity && root.islandState !== "privacy")
                     root.expanded = !root.expanded
             }
         }
@@ -198,6 +236,56 @@ PanelWindow {
         }
     }
 
+    // ── Privacy dots ──
+    // One per device in use (microphone, camera, screen), in that order,
+    // just right of the pill, centred on its first line, so they move
+    // with it in every state. Never hidden: not by fullscreen, not by the
+    // expanded state. A click names every app on that device.
+    Row {
+        id: dots
+        x: pill.x + pill.width + 4
+        y: pill.y + (Math.min(pill.height, Config.compactHeight) - height) / 2
+
+        Repeater {
+            model: Privacy.kinds
+
+            Item {
+                id: dot
+                required property string modelData
+                readonly property bool active: Privacy.users[modelData].length > 0
+
+                visible: active
+                width: 16
+                height: 16
+
+                Rectangle {
+                    id: mark
+                    anchors.centerIn: parent
+                    width: Config.dotSize
+                    height: Config.dotSize
+                    radius: width / 2
+                    color: Config.privacyColor(dot.modelData)
+                }
+
+                onActiveChanged: if (active) appear.restart()
+                NumberAnimation {
+                    id: appear
+                    target: mark
+                    property: "scale"
+                    from: 0
+                    to: 1
+                    duration: 160
+                    easing.type: Easing.OutBack
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: Privacy.list(dot.modelData)
+                }
+            }
+        }
+    }
+
     Timer {
         id: hoverTimer
         interval: Config.hoverDelay
@@ -223,7 +311,15 @@ PanelWindow {
             root.expanded = false
         }
         function current(): string {
-            return root.islandState
+            return root.islandState + (root.pillHidden ? " (hidden)" : "")
+        }
+        // Pretends a fullscreen window is (or isn't) focused.
+        function fullscreen(on: bool): void {
+            root.fullscreenTest = on
+        }
+        // Back to Hyprland's word on it.
+        function fullscreenReal(): void {
+            root.fullscreenTest = null
         }
     }
 }

@@ -42,6 +42,14 @@ Singleton {
     readonly property bool hyprlandEvents: true
     readonly property int hyprlandTimeout: 1500
 
+    // Microphone, camera and screen in use: the dots and the announcement.
+    // Off removes both; nothing else can.
+    readonly property bool privacy: true
+    // How long the island names the app when a device starts being used,
+    // and when a dot is clicked.
+    readonly property int privacyAnnounceTimeout: 2000
+    readonly property int privacyListTimeout: 3000
+
     // ── Window ──
     // Distance from the top of the screen to the pill.
     readonly property int topMargin: 7
@@ -54,6 +62,14 @@ Singleton {
     readonly property color foreground: "white"
     readonly property color foregroundSoft: Qt.rgba(1, 1, 1, 0.6)
     readonly property color track: Qt.rgba(1, 1, 1, 0.2)
+    // The privacy dots, which the brief fixes: orange, green, red.
+    readonly property color privacyMic: "#ff9f0a"
+    readonly property color privacyCamera: "#30d158"
+    readonly property color privacyScreen: "#ff453a"
+
+    function privacyColor(kind) {
+        return kind === "mic" ? privacyMic : kind === "camera" ? privacyCamera : privacyScreen
+    }
 
     // ── Type ──
     readonly property string font: "JetBrainsMono Nerd Font"
@@ -65,6 +81,7 @@ Singleton {
     // ── Sizes ──
     // Space between the pill's ends and its content.
     readonly property int padX: 16
+    readonly property int dotSize: 8
     readonly property int idleHeight: 24
     readonly property int notchWidth: 120
     readonly property int notchHeight: 8
