@@ -144,12 +144,13 @@ The island shows one thing at a time.
 The three views sit in a row, song | time | today. A drag right moves one
 view to the left, a drag left one to the right; there is no wrap-around.
 Dragging means pressing on the pill and moving more than 48px. A view stays
-until dragged away. With no player the song view isn't there: a drag
-towards it meets the row's end, and the song view gives way to the time
-when the player goes away (since 2026-10-13). At either end of the row
-(and towards the missing song view) the text doesn't follow the cursor
-into nothing: it gives a little and resists, like a list's edge, at
-most 16px (`rubberBand`), and springs back on release. The player is whichever one is playing,
+until dragged away. With no player the song view isn't there and the
+time and today views loop: a drag either way brings in the other, from
+the side it is dragged from; the song view gives way to the time when
+the player goes away (since 2026-10-13). With a player, at either end
+of the row the text doesn't follow the cursor into nothing: it gives a
+little and resists, like a list's edge, at most 16px (`rubberBand`),
+and springs back on release. The player is whichever one is playing,
 else the first with a title. A title too long for the pill is cut with "…".
 
 After a workspace switch, the island shows "Workspace N", then returns
@@ -1401,3 +1402,7 @@ Dated record of what the user chose or rejected, and why.
   rubber-bands: the text gives a little and resists (at most 16px),
   then springs back. Mine, over making the two remaining views wrap
   around, which would put the date on the wrong side.
+- 2026-10-13: with nothing playing, the time and today views loop
+  instead (the user's pick over the rubber band there): either drag
+  direction switches between them. The rubber band stays for the ends
+  of the three-view row while something plays.

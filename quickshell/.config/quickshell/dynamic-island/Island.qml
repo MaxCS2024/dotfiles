@@ -203,10 +203,14 @@ PanelWindow {
         return v === -1 ? mediaLabel : v === 1 ? todayLabel : clockLabel
     }
     // The view a drag in `dir` (1 right, -1 left) brings in, or null at
-    // either end. The song view isn't there while nothing is playing.
+    // either end of song | time | today. While nothing is playing the song
+    // view isn't there, and the two left loop: a drag either way brings
+    // in the other one, from the side it is dragged from.
     function viewTowards(dir) {
+        if (!player)
+            return shownView === 1 ? 0 : 1
         const v = shownView - dir
-        return v > 1 || v < -1 || (v === -1 && !player) ? null : v
+        return v > 1 || v < -1 ? null : v
     }
 
     // Set by the drag handlers. release() turns widthTracksDrag off before
