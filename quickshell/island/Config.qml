@@ -42,7 +42,10 @@ Singleton {
         // Low battery is the one battery event the user didn't cause:
         // it waits for a break. Charger notices answer the user at once.
         lowBattery:      { interruption: "low",    priority: 40, enter: 220, exit: 150, overshoot: false, defer: 45000 },
+        // Scripts' live activities: medium at most. Their flashes wait for
+        // a break; pushed ones (the user's own jobs) show at once.
         ipc:             { interruption: "medium", priority: 30, enter: 250, exit: 180, overshoot: false, defer: 45000 },
+        ipcLow:          { interruption: "low",    priority: 15, enter: 220, exit: 150, overshoot: false, defer: 45000 },
         // The hold mode's count; at 10 while nothing is held.
         hold:            { interruption: "low",    priority: 25, enter: 250, exit: 150, overshoot: false },
         media:           { interruption: "low",    priority: 20, enter: 250, exit: 150, overshoot: false },
@@ -101,6 +104,12 @@ Singleton {
     readonly property int notificationTimeout: 5000
     readonly property int notificationLowTimeout: 3000
     readonly property int notificationUrgentTimeout: 8000
+
+    // The live-activities API for scripts (qs -c island ipc call island …).
+    readonly property bool liveActivities: true
+    // How long a script's live activity lives after its last push or
+    // update when it names no timeout of its own.
+    readonly property int liveActivityIdleTimeout: 600000
 
     // ── Window ──
     // Distance from the top of the screen to the pill.

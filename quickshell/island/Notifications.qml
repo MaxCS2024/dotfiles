@@ -1,7 +1,6 @@
 pragma Singleton
 
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Services.Notifications
 import QtQml
@@ -199,8 +198,9 @@ Singleton {
     // While holding, every notification but a critical one is kept back,
     // unseen; a compact activity shows how many. "Show" releases them
     // now, in order, without waiting for a break; turning hold off does
-    // the same. Middle click on the pill, the island-hold shortcut, or
-    // IPC turn it on and off.
+    // the same. A middle click on the pill or IPC (`toggleHold`, which a
+    // Hyprland bind can run) turn it on and off. No GlobalShortcut: the
+    // island crashed on quitting while it held one (AGENTS.md, Testing).
     property bool holding: false
     property var held: []
 
@@ -246,13 +246,6 @@ Singleton {
             // A right click on the count stops holding (and shows them).
             onEnd: reason => { if (reason === "dismissed") root.setHolding(false) },
         })
-    }
-
-    GlobalShortcut {
-        appid: "quickshell"
-        name: "island-hold"
-        description: "Turn the island's notification hold on or off"
-        onPressed: root.setHolding(!root.holding)
     }
 
     IpcHandler {

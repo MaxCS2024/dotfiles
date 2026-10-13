@@ -11,6 +11,7 @@ Scope {
     readonly property var hyprlandEvents: HyprlandEvents
     readonly property var privacy: Privacy
     readonly property var notifications: Notifications
+    readonly property var liveActivities: LiveActivities
 
     Island {}
 }

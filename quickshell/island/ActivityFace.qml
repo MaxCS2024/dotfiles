@@ -33,7 +33,10 @@ Item {
 
         Text {
             anchors.verticalCenter: parent.verticalCenter
-            width: Math.min(implicitWidth, Config.maxWidth - Config.padX * 2 - 80)
+            // What's left of the widest pill after the icon and the bar.
+            width: Math.min(implicitWidth, Config.maxWidth - Config.padX * 2
+                - (face.activity?.icon ? Config.iconSize + 8 : 0)
+                - (face.hasProgress ? (face.mode === "transient" ? 64 : 40) + 8 : 0))
             text: face.activity?.label ?? ""
             elide: Text.ElideRight
             color: Config.foreground
@@ -42,11 +45,12 @@ Item {
             font.pixelSize: Config.fontSize
         }
 
-        // Only the transient row shows a level; compact stays a glance.
+        // A level: 64px in a transient, 40px compact (a script's
+        // download or build).
         Bar {
             anchors.verticalCenter: parent.verticalCenter
-            visible: face.mode === "transient" && face.hasProgress
-            width: 64
+            visible: face.hasProgress
+            width: face.mode === "transient" ? 64 : 40
             value: face.activity?.progress ?? 0
         }
     }

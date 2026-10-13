@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# Puts a live activity in the island from a script (AGENTS.md, Live
+# activities), filling in what `qs ipc call` would need spelled out:
+#
+#   island-activity push <id> <label> [--icon G] [--progress 0-1] [--timeout ms] [--low]
+#   island-activity flash <id> <label> [--icon G] [--progress 0-1] [--timeout ms] [--low]
+#   island-activity progress <id> <0-1>
+#   island-activity label <id> <label>
+#   island-activity remove <id>
+#   island-activity list
+#
+# push: stays until removed, or `--timeout` ms, or 10 minutes after the
+# last update. flash: shows once, after the next break. --low puts it
+# below media. Exits 1 with the island's message when something is wrong.
+set -euo pipefail
+
+call() {
+    local out
+    out=$(qs -c island ipc call island "$@") || exit 1
+    if [[ -n $out ]]; then
+        echo "$out"
+        [[ $1 == list ]] || exit 1
+    fi
+}
+
+usage() {
+    sed -n '5,10p' "$0" | sed 's/^# *//' >&2
+    exit 2
+}
+
+cmd=${1:-}; shift || true
+case $cmd in
+    push|flash)
+        (($# >= 2)) || usage
+        id=$1 label=$2; shift 2
+        icon="" progress=-1 timeout=0 low=""
+        while (($#)); do
+            case $1 in
+                --icon) icon=$2; shift 2 ;;
+                --progress) progress=$2; shift 2 ;;
+                --timeout) timeout=$2; shift 2 ;;
+                --low) low=Low; shift ;;
+                *) usage ;;
+            esac
+        done
+        call "$cmd$low" "$id" "$icon" "$label" "$progress" "$timeout"
+        ;;
+    progress|label)
+        (($# == 2)) || usage
+        call "$cmd" "$1" "$2"
+        ;;
+    remove)
+        (($# == 1)) || usage
+        call remove "$1"
+        ;;
+    list)
+        call list
+        ;;
+    *) usage ;;
+esac
