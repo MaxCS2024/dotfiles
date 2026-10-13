@@ -5,6 +5,7 @@ hl.on("hyprland.start", function ()
 	hl.exec_cmd("env QT_QPA_PLATFORMTHEME=gtk3 qs -n -c island")
 	hl.exec_cmd("env QT_QPA_PLATFORMTHEME=gtk3 qs -c launcher")
 	hl.exec_cmd("qs -c clipboard")
+	hl.exec_cmd("qs -c settings")
 
 	hl.exec_cmd("awww-daemon")
 	hl.exec_cmd("wl-paste --watch cliphist store")

@@ -37,9 +37,9 @@ the stock config with real usage in `/usr/share/hypr/hyprland.lua`.
 
 ## Machine-local files
 
-`local.lua` and `hypridle.local.conf` are written by the dynamic island's
-settings window (SUPER+COMMA) from `~/.local/state/dynamic-island/settings.json`,
-by `quickshell/dynamic-island/LocalConfig.qml` (with `Displays.qml` and
+`local.lua` and `hypridle.local.conf` are written by the settings window
+(SUPER+COMMA, `quickshell/settings`) from `~/.local/state/dynamic-island/settings.json`,
+by `quickshell/settings/LocalConfig.qml` (with `Displays.qml` and
 `InputSettings.qml`). Edits by hand are lost on its next save. Both are
 ignored by git, since each laptop has its own screens, touchpad and timers.
 The comments inside them come from that generator, not from this repo.
@@ -69,7 +69,7 @@ at login, so those keys do nothing until it is run by hand (see
 | SUPER+SHIFT+N | Notifications rail (main) | `binds/apps.lua` | |
 | SUPER+CTRL+W | Network rail (main) | `binds/apps.lua` | W for wifi; CTRL because SUPER+W closes |
 | SUPER+C | Clipboard history | `binds/apps.lua` | `quickshell/clipboard`; C for copy |
-| SUPER+COMMA | Island settings window | `binds/apps.lua` | Where GNOME and macOS keep settings |
+| SUPER+COMMA | Settings window | `binds/apps.lua` | Where GNOME and macOS keep settings |
 | SUPER+ALT+W | Island wallpaper gallery | `binds/apps.lua` | W for wallpaper; ALT because SUPER+W closes |
 | SUPER+SHIFT+T | Themes (main) | `binds/apps.lua` | SUPER+T is the float toggle |
 | SUPER+V | Dictation start/stop | `binds/apps.lua` | V for voice. Only with the `dictation` feature |
@@ -188,8 +188,13 @@ Runs once, on `hyprland.start`.
   The GTK theme plugin gives it the icon theme (the session's qt5ct has
   no Qt 6 plugin). `-n` refuses a second copy. The dynamic-island
   (`qs -n -c dynamic-island`) is no longer started; with it went the
-  settings window (SUPER+COMMA), the wallpaper gallery (SUPER+ALT+W) and
-  its login jobs (see `quickshell/island/AGENTS.md`, Decisions).
+  wallpaper gallery (SUPER+ALT+W) (see `quickshell/island/AGENTS.md`,
+  Decisions).
+- **`qs -c settings`**: the settings window on its own, like the
+  clipboard (SUPER+COMMA; brief in `quickshell/settings/AGENTS.md`). It
+  also runs the dynamic-island's login jobs: reverting an unconfirmed
+  display trial, writing back a forgotten charge limit, restoring the
+  night light.
 - **main is not started.** Run it by hand with
   `env QT_QPA_PLATFORMTHEME=gtk3 qs -c main`. While it runs, the island sits
   over main's centre clock and hides with its bar. Without it, the "main"
@@ -265,8 +270,8 @@ By rule `name`:
   error and then does nothing (the window keeps the size it asked for, foot's
   700x500). `"monitor_w*0.6 monitor_h*0.65"` works (1152x702 at [384,207] on
   1920x1080). `center` respects the reserved area, so it clears the bar.
-- **`float-island-settings`**: the island's settings window
-  (`quickshell/dynamic-island/SettingsWindow.qml`) opens floating and
+- **`float-island-settings`**: the settings window
+  (`quickshell/settings/SettingsWindow.qml`) opens floating and
   centred at the 880x600 it asks for. Every Quickshell window has the class
   `org.quickshell`, so the title (`Settings`) tells it apart.
 - **`center-floating-dialogs`**: centres XWayland dialogs. Wayland clients
@@ -432,8 +437,8 @@ have neither `arg` nor `debug`, which also means "not a script".
   `qs ipc call` per press. The string is `appid:name` and must match the
   registration exactly; a name nobody registered does nothing, silently.
   Registered in: `launcher/shell.qml`, `clipboard/shell.qml`,
-  `dynamic-island/` (`Controls.qml`, `SettingsWindow.qml`,
-  `Wallpapers.qml`), and `main/services/Panels.qml` /
+  `settings/SettingsWindow.qml` (`settings-toggle`), `dynamic-island/`
+  (`Controls.qml`, `Wallpapers.qml`), and `main/services/Panels.qml` /
   `main/powermenu/PowerMenuPopout.qml` for the main keys.
 - **`run(role)`** asks `defaults.lua` on every press, not at config load,
   so a default uninstalled from the app manager hands over to the next
@@ -444,8 +449,8 @@ have neither `arg` nor `debug`, which also means "not a script".
   one. Same line as Hyprland's default config and `Theme.logoutCmd`.
 - **SUPER+SHIFT+N / SUPER+CTRL+W**: the rails are also a left click on
   main's bar modules; a right click there is DND.
-- **SUPER+COMMA**: opens the island's settings window, focuses it, or closes
-  it if it already has focus.
+- **SUPER+COMMA**: opens the settings window (`quickshell/settings`),
+  focuses it, or closes it if it already has focus.
 - **SUPER+ALT+W**: images in `~/Pictures/Wallpapers`; ← and → to move, Enter
   sets one on every screen.
 - **SUPER+V**: press to record, press again to stop; voxtype types the text
