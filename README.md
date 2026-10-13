@@ -9,11 +9,9 @@ with [GNU stow](https://www.gnu.org/software/stow/).
 hypr/         the compositor — .config/hypr/hyprland.lua sources modules/
 quickshell/   the shell configs, in .config/quickshell/:
                 dynamic-island (the shell at login), settings, island (a
-                brief-built island, run by hand), main (the old bar, run
-                by hand)
-matugen/      turns a wallpaper into the palette the shell writes out
-gtk-3.0/ gtk-4.0/  GTK theming, and the icon theme Qt reads through gtk3
-foot/ kitty/ ghostty/  terminals
+                brief-built island, run by hand)
+gtk-3.0/ gtk-4.0/  GTK theming and colours, and the icon theme Qt reads through gtk3
+foot/ kitty/ ghostty/  terminals, each with its colours file
 btop/ starship/ wireplumber/ zsh/ autostart/
 nvim/         LazyVim's options, keymaps and plugins; nvim/install.sh
 fingerprint/ secureboot/ gpg/  guided setups, each an install.sh
@@ -30,7 +28,7 @@ Adding an application is adding a folder laid out the same way.
 ```bash
 git clone https://github.com/MaxCS2024/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
-stow autostart btop foot ghostty gtk-3.0 gtk-4.0 hypr kitty matugen \
+stow autostart btop foot ghostty gtk-3.0 gtk-4.0 hypr kitty \
      quickshell starship wireplumber zsh
 ```
 
@@ -111,7 +109,7 @@ longer exist after a pull. Remove the ones into this repo, then stow:
 cd ~/.dotfiles && git pull
 find ~ ~/.config ~/.config/quickshell ~/.config/autostart ~/.local/share/applications \
      ~/.local/bin ~/.local/lib -maxdepth 1 -type l -lname '*.dotfiles/*' ! -exec test -e {} \; -print -delete
-stow autostart btop foot ghostty gtk-3.0 gtk-4.0 hypr kitty matugen \
+stow autostart btop foot ghostty gtk-3.0 gtk-4.0 hypr kitty \
      quickshell starship wireplumber zsh
 hyprctl reload
 ```

@@ -21,7 +21,7 @@ the stock config with real usage in `/usr/share/hypr/hyprland.lua`.
 | `modules/monitors.lua` | Monitor defaults for a machine with no `local.lua` |
 | `modules/input.lua` | Keyboard, pointer, touchpad defaults; the 3-finger gesture |
 | `modules/decorations.lua` | Gaps, borders, rounding, shadow, blur, animations |
-| `modules/colors.lua` | Border colours, from matugen |
+| `modules/colors.lua` | Border colours |
 | `modules/layout.lua` | dwindle, master and scrolling layout options |
 | `modules/misc.lua` | Hyprland's default wallpaper and logo, both off |
 | `modules/autostart.lua` | What starts at login |
@@ -52,10 +52,7 @@ touchpad-wide sensitivity.
 
 ## Keymap
 
-`SUPER` is `vars.mainMod`. "main" means the key presses a shortcut that only
-`quickshell/main` registers (`main/services/Panels.qml`). main is not started
-at login, so those keys do nothing until it is run by hand (see
-[autostart](#modulesautostartlua)).
+`SUPER` is `vars.mainMod`.
 
 | Keys | Does | File | Why this key / notes |
 |---|---|---|---|
@@ -144,23 +141,13 @@ which the settings window writes.
   the bottom edge and drops back down. `slidevert bottom/top` names the edge
   it comes in from; on the way out it leaves by the opposite edge, which is
   why Out says `top`.
-- Gaps (`gaps_out = 15`) are also assumed by Quickshell panels that overhang
-  the window column (`main/network/NetworkPanel.qml`,
-  `main/notifications/NotificationHistoryPanel.qml`).
 
 ## modules/colors.lua
 
-Border colours from the same `~/.cache/matugen/colors.json` that Quickshell's
-theme watches, so borders and shell surfaces share one source. Hyprland only
-reads it at config load; the shell runs `hyprctl reload` when the file
-changes.
-
-- **`readPalette`** pattern-matches the flat `"key": "#rrggbb"` map that
-  matugen's quickshell template (`matugen/config.toml`) writes. Every key
-  used (`background`, `color2`, `color4`, `color8`) is unique in the file,
-  so no JSON parser is needed.
-- If the file is missing or doesn't parse, `matugenActive` is false and the
-  literal colours are used, the same fallback as the shell's theme.
+Border colours as fixed values: the active border a gradient, the inactive
+one a single colour. They are the palette matugen last made from the
+wallpaper, frozen on 2026-10-13 when the old bar (which ran matugen and
+kept them in step with the wallpaper) was removed. Edit them freely.
 
 ## modules/layout.lua
 
@@ -188,23 +175,18 @@ Runs once, on `hyprland.start`.
   also runs the dynamic-island's login jobs: reverting an unconfirmed
   display trial, writing back a forgotten charge limit, restoring the
   night light.
-- **main is not started.** Run it by hand with
-  `env QT_QPA_PLATFORMTHEME=gtk3 qs -c main`. While it runs, the island sits
-  over main's centre clock and hides with its bar. Without it, the "main"
-  keys in the [Keymap](#keymap) do nothing. Notifications don't need it
-  (dunst, started by D-Bus), and neither do Print or the media keys
-  ([media.lua](#bindsmedialua)). Other layouts under `quickshell/` are run
-  by hand with `qs -c <name>` until they earn a line here.
+- Notifications need no shell (dunst, started by D-Bus), and neither do
+  Print or the media keys ([media.lua](#bindsmedialua)). Other configs
+  under `quickshell/` are run by hand with `qs -c <name>` until they earn
+  a line here.
 - **`env QT_QPA_PLATFORMTHEME=gtk3`** for Quickshell configs that look up
-  icons (main, and `quickshell/island` run by hand). Under the session's
+  icons (`quickshell/island`, run by hand). Under the session's
   `qt5ct`, Qt6 fails to load the theme plugin, falls back to the generic
   Unix theme and never learns an icon theme name. Then `hasThemeIcon(name)`
   is false and `iconPath(name, true)` is `""` for *every* name, installed or
   not (measured with `foot` and `org.gnome.Nautilus`). `gtk3` reads
   `gtk-icon-theme-name` from `~/.config/gtk-3.0/settings.ini` and fixes
-  both. Main needs it for `services/AppIcons.qml` (`iconPath`) and the
-  volume mixer (`hasThemeIcon`). (The Quickshell launcher, which needed
-  it too, gave way to fuzzel on 2026-10-13.) It does not affect the `image://icon` provider, which
+  both. It does not affect the `image://icon` provider, which
   works under either value, so it never explains an icon drawn as a broken
   placeholder; that is a malformed source URL.
 - **`hypridle`**: config in `hypridle.conf`.
@@ -215,12 +197,10 @@ Runs once, on `hyprland.start`.
   with its own window). It is a systemd user unit, and gets this session's
   `WAYLAND_DISPLAY` because Hyprland exports it.
 - **`hyprsunset`**: blue-light filter, driven live with
-  `hyprctl hyprsunset ...` (`quickshell/main/services/NightLight.qml`).
+  `hyprctl hyprsunset ...` (the settings window's night light).
 - **No `color-scheme` is set here.** GTK4/libadwaita picks light or dark from
-  that setting alone, and the shell sets it to match the palette whenever it
-  writes GTK's colours (`quickshell/main/theme/AppColors.qml`). Forcing
-  prefer-dark at login would put a light palette on the dark stylesheet
-  until the shell corrected it.
+  that setting alone; the old bar set it to match its palette, and the
+  value it last set stays in gsettings.
 - **`voxtype.service`**, only with the `dictation` feature. `voxtype setup
   systemd` installs the unit as `WantedBy=graphical-session.target`, and
   nothing activates that target here (ly starts Hyprland, not uwsm), so the
@@ -240,29 +220,7 @@ By rule `name`:
   is kept in the local `suppressMaximizeRule` so it can be switched off with
   `suppressMaximizeRule:set_enabled(false)`.
 - **`fix-xwayland-drags`**: fixes dragging with XWayland (stock rule).
-- **`blur-bar`**: Quickshell panels are layer surfaces, which Hyprland only
-  blurs with an explicit rule. The namespaces are set in QML through
-  `WlrLayershell.namespace` (`quickshell:bar`, `quickshell:launcher`, ...).
-  It is opt-in: only the bar. A `^quickshell:.*` catch-all used to need a
-  `noblur-*` rule for every panel that looked wrong blurred, and new panels
-  inherited blur until someone noticed. `ignore_alpha = 0.2` skips blur
-  behind nearly transparent pixels, so the margins around rounded popups
-  don't show as blurred rectangles; keep it well under the shell's
-  `alphaBar`/`alphaPanel`, or a panel can dip under it and lose blur
-  entirely. **It does nothing right now**, because `blur.enabled` is false
-  in `decorations.lua`; it is kept for when blur goes back on.
 - **`move-hyprland-run`**: floats the `hyprland-run` prompt near the bottom left.
-- **`float-task-window`**: windows opened to be watched and closed (a package
-  upgrade, `rack setup`, a one-off from the Conf menu) float in the middle
-  instead of being tiled into your layout. Keyed on the app-id
-  `quickshell.float`, not on a terminal's class: the shell asks for it
-  (`Theme.floatAppId` and `services/Terminal.qml`, with whichever flag the
-  terminal takes), so changing the default terminal changes nothing here,
-  and any app that can set its own app-id gets the same treatment.
-  `size` must use the arithmetic form: `"60% 65%"` is accepted without an
-  error and then does nothing (the window keeps the size it asked for, foot's
-  700x500). `"monitor_w*0.6 monitor_h*0.65"` works (1152x702 at [384,207] on
-  1920x1080). `center` respects the reserved area, so it clears the bar.
 - **`float-island-settings`**: the settings window
   (`quickshell/settings/SettingsWindow.qml`) opens floating and
   centred at the 880x600 it asks for. Every Quickshell window has the class
@@ -297,8 +255,7 @@ as on, and one written earlier still counts. What follows is how it worked.
 Which optional features this machine has on. `rack features`
 (`rack/lib/features.sh`) writes `~/.config/rack/features.conf`, one
 `name on|off` per line, then reloads Hyprland, so binds that belong to a
-feature appear and disappear with it. `quickshell/main/services/Features.qml`
-reads the same file.
+feature appear and disappear with it.
 
 - A feature with no line, or no file at all, is **on**, so a machine that
   never ran the picker keeps every bind.
@@ -437,26 +394,23 @@ have neither `arg` nor `debug`, which also means "not a script".
   Hyprland's global-shortcuts protocol, instead of spawning
   `qs ipc call` per press. The string is `appid:name` and must match the
   registration exactly; a name nobody registered does nothing, silently.
-  Registered in: `settings/SettingsWindow.qml` (`settings-toggle`), `dynamic-island/`
-  (`Controls.qml`, `Wallpapers.qml`), and `main/services/Panels.qml` /
-  `main/powermenu/PowerMenuPopout.qml` for the main keys.
+  Registered in: `settings/SettingsWindow.qml` (`settings-toggle`) and
+  `dynamic-island/` (`Controls.qml`, `Wallpapers.qml`).
 - **`run(role)`** asks `defaults.lua` on every press, not at config load,
   so a default uninstalled from the app manager hands over to the next
   installed candidate at once. It costs a few file opens, no process.
 - **SUPER+M** runs `hyprshutdown` (leaves the session the way the power menu
   does) and falls back to Hyprland's own exit when it isn't installed. Not
   `uwsm stop`: that only ends a session uwsm started, and ly starts this
-  one. Same line as Hyprland's default config and `Theme.logoutCmd`.
+  one. Same line as Hyprland's default config.
 - **SUPER+COMMA**: opens the settings window (`quickshell/settings`),
   focuses it, or closes it if it already has focus.
 - **SUPER+ALT+W**: images in `~/Pictures/Wallpapers`; ← and → to move, Enter
   sets one on every screen.
 - **SUPER+V**: press to record, press again to stop; voxtype types the text
-  into the focused window through wtype. main shows a pill while it
-  records (`main/osd/VoxtypeOsd.qml`).
-- **SUPER+ALT+SPACE** presses the dynamic island's `island-toggle`. (It
-  pressed main's `bar-toggle` too, until main's binds went on 2026-10-13;
-  with main run by hand, main still tells the island when its bar hides.)
+  into the focused window through wtype. The dynamic island shows its
+  dictation face while it records.
+- **SUPER+ALT+SPACE** presses the dynamic island's `island-toggle`.
 
 ## binds/window.lua
 
@@ -510,14 +464,10 @@ stays above other floating windows. `usable_area` divides by `scale`
 to transparent (so a rule that forces its own border width still draws
 nothing), and puts every value back on the next press. The old values are
 read from the live config (`capture`), not hard-coded, because the border
-colours change with the wallpaper. `saved` is nil while chrome shows.
+colours can be edited. `saved` is nil while chrome shows.
 
-- **`osd`** sends the state to main's OSD (`main/osd/ZenOsd.qml`, which only
-  draws; the state lives here), shown like volume rather than as a
-  notification. `qs` is in `/usr/bin`, so no `PATH` fix is needed.
 - **`config.reloaded`** clears `saved`. A reload re-reads `decorations.lua`
-  and brings the chrome back, and the shell reloads on every wallpaper
-  change, so this is normal; without it the next press would "restore"
+  and brings the chrome back; without it the next press would "restore"
   values that are already live.
 - Returns `{ toggle = toggle }`, so it can run from outside a key:
   `hyprctl eval 'require("modules.binds.zen").toggle()'`.
@@ -569,22 +519,18 @@ colours change with the wallpaper. `saved` is nil while chrome shows.
 
 ## hyprlock.conf
 
-Drawn after the shell's lock screen design
-(`quickshell/main/lockscreen/LockScreen.qml`, a preview with no auth): the
-wallpaper, a Swedish date, a large HH:MM, a short rule and an underline-only
+The wallpaper, a Swedish date, a large HH:MM, a short rule and an underline-only
 password field. hyprlock stays the real lock, with PAM and fingerprint.
 
 - **`auth.fingerprint`**: fingerprint and password both unlock, whichever
   comes first. It uses fprintd's D-Bus API, not PAM, so nothing in
   `/etc/pam.d`. Without fprintd, hyprlock logs that it couldn't connect and
   the password works as usual.
-- **`$qs_*` colours**: the shell writes its palette to
-  `~/.cache/quickshell/hyprlock-colors.conf` (`theme/AppColors.qml`), sourced
-  right after. The literals only show before the shell has ever run.
-- **`background`**: the wallpaper that was on screen at lock, blurred and
-  dimmed. The path is a link the shell keeps pointing at the current
-  wallpaper (`wallpaper/Wallpapers.qml`), because hyprlock reads it once and
-  can't ask awww; `color` shows until the link exists. `brightness = 0.45`
+- **`$qs_*` colours**: `hyprlock-colors.conf` beside this file, sourced
+  right after: the old bar's last palette, frozen on 2026-10-13.
+- **`background`**: a fixed wallpaper (the one on screen on 2026-10-13),
+  blurred and dimmed; the old bar kept a link to the current wallpaper,
+  which went with it. `color` shows if the file is missing. `brightness = 0.45`
   is what the brightest wallpapers need for the text to stay readable.
   Blur and brightness are one shader, so `blur_passes` must stay above 0 or
   the dimming stops too.
@@ -598,11 +544,6 @@ password field. hyprlock stays the real lock, with PAM and fingerprint.
 
 Found while moving the comments here; nothing was changed for these.
 
-- The main keys (SUPER+SPACE, SUPER+ESCAPE, SUPER+SHIFT+N, SUPER+CTRL+W,
-  SUPER+SHIFT+T, SUPER+SHIFT+B) were removed on 2026-10-13, at the
-  user's request: main isn't started, so they did nothing. zen's OSD
-  (`qs -c main ipc call osd-zen`) still does nothing without main.
-- `blur-bar` has no effect while `blur.enabled` is false.
 - No bind reads `vars.lua`'s `terminal`, `editor`, `fileManager` or
   `browser` (they ask `defaults.lua` directly); only
   `relay/tests/relay-default.test.sh` checks them against `relay default get`.
@@ -632,6 +573,9 @@ Kept from the old comments; the commits have the details.
 - 2026-10-13: the Quickshell clipboard window went too, at the user's
   request: SUPER+C shows cliphist's history in fuzzel
   (`cliphist list | fuzzel --dmenu | cliphist decode | wl-copy`).
+- 2026-10-13: the old bar (`quickshell/main`) was removed, at the user's
+  request, with matugen and the bar's window rules and binds; its last
+  colours were frozen into each app's config.
 - 2026-10-13: fuzzel replaced the Quickshell launcher on SUPER+P, at the
   user's request ("I don't need Quickshell to do everything"); the
   launcher config was removed.
