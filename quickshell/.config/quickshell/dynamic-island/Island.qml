@@ -186,19 +186,27 @@ PanelWindow {
             p.playbackState !== MprisPlaybackState.Stopped || p.trackTitle !== "")
         return players.find(p => p.isPlaying) ?? players[0] ?? null
     }
-    // With no player, the song view says "Nothing playing"; the media
-    // player doesn't open, and closes if its player goes away.
-    onPlayerChanged: if (!player && panel === "player") close()
+    // With no player, neither the song view nor the media player opens,
+    // and both go away when the player does: the player closes, the song
+    // view gives way to the time.
+    onPlayerChanged: {
+        if (player)
+            return
+        if (panel === "player")
+            close()
+        if (view === -1)
+            view = 0
+    }
     readonly property int shownView: view
 
     function labelFor(v) {
         return v === -1 ? mediaLabel : v === 1 ? todayLabel : clockLabel
     }
     // The view a drag in `dir` (1 right, -1 left) brings in, or null at
-    // either end.
+    // either end. The song view isn't there while nothing is playing.
     function viewTowards(dir) {
         const v = shownView - dir
-        return v > 1 || v < -1 ? null : v
+        return v > 1 || v < -1 || (v === -1 && !player) ? null : v
     }
 
     // Set by the drag handlers. release() turns widthTracksDrag off before

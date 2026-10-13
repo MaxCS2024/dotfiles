@@ -144,8 +144,9 @@ The island shows one thing at a time.
 The three views sit in a row, song | time | today. A drag right moves one
 view to the left, a drag left one to the right; there is no wrap-around.
 Dragging means pressing on the pill and moving more than 48px. A view stays
-until dragged away. With no player the song view is still reachable and
-reads "[music note] Nothing playing". The player is whichever one is playing,
+until dragged away. With no player the song view isn't there: a drag
+towards it springs back, and the song view gives way to the time when
+the player goes away (since 2026-10-13). The player is whichever one is playing,
 else the first with a title. A title too long for the pill is cut with "…".
 
 After a workspace switch, the island shows "Workspace N", then returns
@@ -1385,4 +1386,7 @@ Dated record of what the user chose or rejected, and why.
 - 2026-10-13: the media player no longer opens with nothing to play
   (the user's request); a left click with no player does nothing, and
   an open player closes when its player quits. A paused track still
-  opens it. The song view still reads "Nothing playing".
+  opens it.
+- 2026-10-13: the song view is skipped too while nothing is playing
+  (the user's request): a drag towards it springs back, and it gives
+  way to the time when the player quits.
