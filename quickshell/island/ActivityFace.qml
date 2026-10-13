@@ -1,7 +1,8 @@
 import QtQuick
 
 // The generic face: draws any activity from its icon, label and progress,
-// in the compact, transient or expanded layout. Features with a look of
+// in the compact, transient, expanded or minimal (the split's circle)
+// layout. Features with a look of
 // their own (media's art and waveform) get faces of their own later.
 Item {
     id: face
@@ -12,13 +13,17 @@ Item {
 
     readonly property bool hasProgress: (activity?.progress ?? -1) >= 0
 
-    implicitWidth: mode === "expanded" ? expandedLayout.implicitWidth : row.implicitWidth
-    implicitHeight: mode === "expanded" ? Config.expandedHeight : row.implicitHeight
+    implicitWidth: mode === "expanded" ? expandedLayout.implicitWidth
+        : mode === "minimal" ? Config.compactHeight
+        : row.implicitWidth
+    implicitHeight: mode === "expanded" ? Config.expandedHeight
+        : mode === "minimal" ? Config.compactHeight
+        : row.implicitHeight
 
     // ── Compact and transient: one row ──
     Row {
         id: row
-        visible: face.mode !== "expanded"
+        visible: face.mode === "compact" || face.mode === "transient"
         anchors.centerIn: parent
         spacing: 8
 
@@ -96,6 +101,51 @@ Item {
             visible: face.hasProgress
             width: expandedLayout.width
             value: face.activity?.progress ?? 0
+        }
+    }
+
+    // ── Minimal: the icon, ringed by the level when there is one ──
+    Item {
+        visible: face.mode === "minimal"
+        anchors.centerIn: parent
+        width: Config.compactHeight
+        height: width
+
+        Text {
+            anchors.centerIn: parent
+            text: face.activity?.icon ?? ""
+            color: Config.foreground
+            font.family: Config.font
+            font.pixelSize: Config.iconSize
+        }
+
+        Canvas {
+            id: ring
+            anchors.fill: parent
+            anchors.margins: 3
+            visible: face.hasProgress
+
+            property real value: Math.max(0, Math.min(1, face.activity?.progress ?? 0))
+            onValueChanged: requestPaint()
+            onVisibleChanged: requestPaint()
+
+            onPaint: {
+                const c = getContext("2d")
+                c.reset()
+                c.lineWidth = 2
+                c.lineCap = "round"
+                const r = width / 2 - 1
+                c.strokeStyle = Config.track
+                c.beginPath()
+                c.arc(width / 2, height / 2, r, 0, 2 * Math.PI)
+                c.stroke()
+                if (value <= 0)
+                    return
+                c.strokeStyle = Config.foreground
+                c.beginPath()
+                c.arc(width / 2, height / 2, r, -Math.PI / 2, -Math.PI / 2 + 2 * Math.PI * value)
+                c.stroke()
+            }
         }
     }
 

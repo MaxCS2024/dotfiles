@@ -144,6 +144,9 @@ Singleton {
     // ── Sizes ──
     // Space between the pill's ends and its content.
     readonly property int padX: 16
+    // Between the pill and the split's circle (which is as tall as the
+    // compact pill).
+    readonly property int splitGap: 8
     readonly property int dotSize: 8
     readonly property int idleHeight: 24
     readonly property int notchWidth: 120

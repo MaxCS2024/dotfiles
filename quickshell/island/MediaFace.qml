@@ -15,13 +15,25 @@ Item {
     readonly property bool playing: player?.isPlaying ?? false
 
     // Compact is a fixed width: the art and the bars sit at the ends.
-    implicitWidth: mode === "expanded" ? Config.expandedWidth - Config.padX * 2 : 168
+    // Minimal (the split's circle): the art alone, round.
+    implicitWidth: mode === "expanded" ? Config.expandedWidth - Config.padX * 2
+        : mode === "minimal" ? Config.compactHeight
+        : 168
     implicitHeight: mode === "expanded" ? Config.expandedHeight : Config.compactHeight
+
+    // ── Minimal ──
+    Art {
+        visible: face.mode === "minimal"
+        anchors.centerIn: parent
+        player: face.player
+        size: 20
+        radius: 10
+    }
 
     // ── Compact ──
     Item {
         anchors.fill: parent
-        visible: face.mode !== "expanded"
+        visible: face.mode === "compact" || face.mode === "transient"
 
         Art {
             anchors.left: parent.left
@@ -100,7 +112,7 @@ Item {
         // ── Progress ──
         Item {
             id: progress
-            visible: face.player?.lengthSupported && face.player.length > 0
+            visible: (face.player?.lengthSupported ?? false) && face.player.length > 0
             x: 20
             y: 88
             width: parent.width - 40

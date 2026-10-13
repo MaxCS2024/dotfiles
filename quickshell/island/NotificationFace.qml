@@ -13,15 +13,28 @@ Item {
 
     readonly property var notification: activity?.notification ?? null
     readonly property var actions: Notifications.buttons(notification)
-    readonly property bool card: mode !== "compact"
+    readonly property bool card: mode === "transient" || mode === "expanded"
 
-    implicitWidth: card ? Config.maxWidth - Config.padX * 2 : compactRow.implicitWidth
-    implicitHeight: card ? cardItem.height : compactRow.implicitHeight
+    implicitWidth: card ? Config.maxWidth - Config.padX * 2
+        : mode === "minimal" ? Config.compactHeight
+        : compactRow.implicitWidth
+    implicitHeight: card ? cardItem.height
+        : mode === "minimal" ? Config.compactHeight
+        : compactRow.implicitHeight
+
+    // ── Minimal (the split's circle): the picture, round ──
+    Picture {
+        visible: face.mode === "minimal"
+        anchors.centerIn: parent
+        notification: face.notification
+        size: 20
+        radius: 10
+    }
 
     // ── Compact ──
     Row {
         id: compactRow
-        visible: !face.card
+        visible: face.mode === "compact"
         anchors.centerIn: parent
         spacing: 8
 

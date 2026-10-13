@@ -43,7 +43,11 @@ user's look and right click.
    and test calls; clicks, hover and the middle click await the user.
 7. IPC live-activities API: **built 2026-10-13**, tested through
    `island-activity`; awaiting the user's own scripts.
-8. Split state
+8. Split state: **built 2026-10-13**, tested with live activities,
+   media and the hold count; clicking the circle awaits the user.
+
+v1 is complete. Next would be tuning with real use, then the brief's
+v2 candidates, each through the inclusion test.
 
 ---
 
@@ -389,9 +393,10 @@ none), `face` ("osd", "media", or "" for the generic one), `waits` and
   matched to `Quickshell.screens` by name); it moves with focus.
 - Anchored top, layer `Overlay` (so the privacy dots stay over
   fullscreen windows), namespace `quickshell:island`.
-- The window is the expanded size plus room for the dots on either side
-  and an overshoot (544 × 183). The mask is a `Region` of two:
-  the pill (with its radius) and the dots. Only those take clicks.
+- The window is the expanded size plus room for the split's circle and
+  the dots on either side, and an overshoot (600 × 183). The mask is a
+  `Region` of three: the pill (with its radius), the circle while it is
+  out, and the dots. Only those take clicks.
 - **Fullscreen:** when the focused workspace has a fullscreen window
   (`Hyprland.focusedWorkspace.hasFullscreen`), the pill fades and
   shrinks away (160ms) and leaves the mask; the expanded state closes.
@@ -408,13 +413,35 @@ none), `face` ("osd", "media", or "" for the generic one), `waits` and
 | idle      | the queue is empty (or only transients held) | clock: time + 16px each side × 24; notch: 120 × 8 |
 | compact   | a persistent activity, no transient up | content + 16px each side, 160–400 × 32 |
 | transient | a transient is up                      | content + 16px each side, 160–400 × 40 |
-| expanded  | clicked (or hovered, `Config.expandOn`) on a compact pill | 400 × 152 |
+| expanded  | clicked (or hovered, `Config.expandOn`) on a compact pill, or the split's circle | 400 × the face's height (152 for media and the generic face) |
+| split     | compact, with a second persistent activity | the pill, plus a 32px circle 8px to its right |
 
 - Expanded opens only from compact (idle and transients have nothing to
   expand) and closes when the pointer has been off the pill for 400ms,
   on a second click, or when the last persistent activity goes.
 - A right click on the pill dismisses what it shows (see Activity
   queue, Dismissing).
+
+### Split
+
+The brief's two shapes: while compact, a second persistent activity
+(the queue's next after the top one) shows in a circle as tall as the
+compact pill (32px), 8px right of it, centred on its first line. A
+third waits. Transients, announcements and the expanded state take the
+whole island; the circle steps back for them and returns after.
+- **Motion:** the circle grows out from under the pill's right end
+  (scale 0.5 → 1, sliding out) at its activity's enter time, and tucks
+  back at its exit time; `splitReach` carries it, and the privacy dots
+  ride on it, so they stay at the island's right edge. Another activity
+  taking the circle crossfades (60 + 120ms).
+- **Minimal faces:** the generic one draws the icon, ringed by the
+  level when there is one (2px, white over the 20% track, from 12
+  o'clock); media the album art, round (20px); the hold count its
+  number, or the bell while none are held; a kept notification its
+  picture, round.
+- **Pointer:** a click opens the circle's activity expanded (not the
+  top one); a right click dismisses it.
+- Hidden over fullscreen with the pill.
 - The generic face: compact is icon + label; transient adds a 64px level
   bar when there is a progress; expanded is a 32px icon, the label (two
   lines) and a full-width bar.
@@ -746,6 +773,9 @@ doesn't replace:
   activities).
 - `qs -c island ipc call queue release`: what a break does to waiting
   activities; `queue list` shows them as "deferred Ns".
+- `qs -c island ipc call view second` (the circle's activity, "" for
+  none), `expandSecond` and `dismissSecond` (a click and a right click
+  on the circle).
 - `qs -c island ipc call view expand|collapse|current|dismiss`
   (dismiss: what a right click does); `queue dismiss <key>`. `queue
   list` also lists dismissed keys.
@@ -834,6 +864,11 @@ SUPER+ALT+SPACE hides the dynamic-island meanwhile.
   right click as the gesture; media staying dismissed through new
   tracks; the exact numbers within its ranges. Deferral and DND vs hold
   mode left _TBD_ for step 6.
+- 2026-10-13: step 8, the split state, at the user's go-ahead. Mine:
+  compact only; the circle right of the pill, growing out from under
+  its end; the queue's order decides which goes in the circle (so a
+  held count above media puts the music in the circle); minimal faces;
+  a click expands the circle's activity. v1 complete.
 - 2026-10-13: step 7, live activities, at the user's go-ahead. Mine:
   `push`/`flash` (and `Low` forms), `progress`, `label`, `remove`,
   `list`; 10 minutes without an update ends a pushed one; pushed ones

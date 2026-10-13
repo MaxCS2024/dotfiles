@@ -30,14 +30,16 @@ PanelWindow {
     exclusiveZone: Config.topMargin + Config.compactHeight
     color: "transparent"
 
-    // Room for the largest state, the dots beside it and a morph's
-    // overshoot. Only the pill and the dots take input; the rest of the
-    // window lets clicks through. Hidden over fullscreen, the pill leaves
-    // the mask and only the dots remain.
-    implicitWidth: Config.expandedWidth + 2 * 72
+    // Room for the largest state, the split's circle and the dots beside
+    // it, and a morph's overshoot. Only the pill, the circle and the dots
+    // take input; the rest of the window lets clicks through. Hidden over
+    // fullscreen, the pill and the circle leave the mask and only the dots
+    // remain.
+    implicitWidth: Config.expandedWidth + 2 * (Config.splitGap + Config.compactHeight + 4 + 48 + 8)
     implicitHeight: Config.topMargin + Config.expandedHeight + 24
     mask: Region {
         Region { item: root.pillHidden ? null : pill; radius: pill.radius }
+        Region { item: root.splitReach > 0 && !root.pillHidden ? circle : null; radius: circle.radius }
         Region { item: dots }
     }
 
@@ -52,6 +54,9 @@ PanelWindow {
 
     // ── State ──
     property bool expanded: false
+    // Opened from the split's circle: that activity, not the top one.
+    property string expandTarget: ""
+    onExpandedChanged: if (!expanded) expandTarget = ""
 
     readonly property var transientActivity: ActivityQueue.shownTransient
     readonly property var persistentActivity: ActivityQueue.topPersistent
@@ -77,6 +82,8 @@ PanelWindow {
     readonly property var activity: islandState === "privacy" ? privacyActivity
         : islandState === "transient" ? transientActivity
         : islandState === "idle" ? null
+        : islandState === "expanded" && expandTarget
+            ? (ActivityQueue.activities.find(a => a.key === root.expandTarget) ?? persistentActivity)
         : persistentActivity
 
     // Transients wait while the island is open, so the controls under the
@@ -246,6 +253,92 @@ PanelWindow {
         }
     }
 
+    // ── Split ──
+    // Two persistent activities at once (compact only): the second shows
+    // in a small circle beside the pill, the brief's "detached" shape; a
+    // third waits. Its circle grows out from under the pill's right end
+    // at the activity's enter time and goes back at its exit time;
+    // `splitReach` is how far it (and the gap before it) reaches out,
+    // and the dots ride on it. A click opens that activity expanded; a
+    // right click dismisses it. Declared before the pill, which covers it
+    // while it is tucked in.
+    readonly property var secondActivity: islandState === "compact" ? (ActivityQueue.persistents[1] ?? null) : null
+    readonly property bool split: secondActivity !== null && !pillHidden
+    readonly property real splitFull: Config.splitGap + Config.compactHeight
+    property real splitReach: 0
+    property var shownSecond: null
+    readonly property string secondKey: secondActivity ? secondActivity.key + ":" + secondActivity.face : ""
+
+    onSplitChanged: {
+        const a = split ? secondActivity : shownSecond
+        splitAnim.stop()
+        splitAnim.to = split ? splitFull : 0
+        splitAnim.duration = split ? Config.profile(a?.profile).enter : Config.profile(a?.profile).exit
+        splitAnim.restart()
+    }
+
+    // The circle's content follows the second activity, crossfading when
+    // another takes its place; it stays through the circle going away.
+    onSecondKeyChanged: {
+        if (!secondActivity)
+            return
+        if (shownSecond && splitReach > 0 && shownSecond.key !== secondActivity.key)
+            secondSwap.restart()
+        else
+            shownSecond = secondActivity
+    }
+    onSecondActivityChanged: if (secondActivity && shownSecond?.key === secondActivity.key) shownSecond = secondActivity
+
+    NumberAnimation {
+        id: splitAnim
+        target: root
+        property: "splitReach"
+        easing.type: Easing.OutCubic
+    }
+
+    SequentialAnimation {
+        id: secondSwap
+        NumberAnimation { target: secondFace; property: "opacity"; to: 0; duration: 60 }
+        ScriptAction { script: root.shownSecond = root.secondActivity }
+        NumberAnimation { target: secondFace; property: "opacity"; to: 1; duration: 120; easing.type: Easing.OutCubic }
+    }
+
+    Rectangle {
+        id: circle
+        // Tucked under the pill's end at 0, 8px clear of it when out.
+        x: pill.x + pill.width + root.splitReach - width
+        y: pill.y + (Math.min(pill.height, Config.compactHeight) - height) / 2
+        width: Config.compactHeight
+        height: width
+        radius: width / 2
+        color: Config.background
+        visible: root.splitReach > 0
+        scale: 0.5 + 0.5 * root.splitReach / root.splitFull
+        opacity: root.pillHidden ? 0 : 1
+
+        Face {
+            id: secondFace
+            anchors.fill: parent
+            activity: root.shownSecond
+            mode: "minimal"
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            onClicked: mouse => {
+                if (!root.shownSecond)
+                    return
+                if (mouse.button === Qt.RightButton)
+                    ActivityQueue.dismiss(root.shownSecond.key)
+                else {
+                    root.expandTarget = root.shownSecond.key
+                    root.expanded = true
+                }
+            }
+        }
+    }
+
     // ── The pill ──
     Rectangle {
         id: pill
@@ -348,7 +441,7 @@ PanelWindow {
     // expanded state. A click names every app on that device.
     Row {
         id: dots
-        x: pill.x + pill.width + 4
+        x: pill.x + pill.width + root.splitReach + 4
         y: pill.y + (Math.min(pill.height, Config.compactHeight) - height) / 2
 
         Repeater {
@@ -429,6 +522,20 @@ PanelWindow {
         }
         function collapse(): void {
             root.expanded = false
+        }
+        // What a click and a right click on the split's circle do.
+        function expandSecond(): void {
+            if (root.shownSecond && root.splitReach > 0) {
+                root.expandTarget = root.shownSecond.key
+                root.expanded = true
+            }
+        }
+        function dismissSecond(): void {
+            if (root.shownSecond && root.splitReach > 0)
+                ActivityQueue.dismiss(root.shownSecond.key)
+        }
+        function second(): string {
+            return root.split ? root.secondActivity.key : ""
         }
         // What a right click on the pill does.
         function dismiss(): void {

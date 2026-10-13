@@ -11,12 +11,28 @@ Item {
 
     readonly property int count: activity?.count ?? 0
 
-    implicitWidth: mode === "expanded" ? Config.maxWidth - Config.padX * 2 : compactRow.implicitWidth
-    implicitHeight: mode === "expanded" ? 104 : compactRow.implicitHeight
+    implicitWidth: mode === "expanded" ? Config.maxWidth - Config.padX * 2
+        : mode === "minimal" ? Config.compactHeight
+        : compactRow.implicitWidth
+    implicitHeight: mode === "expanded" ? 104
+        : mode === "minimal" ? Config.compactHeight
+        : compactRow.implicitHeight
+
+    // Minimal (the split's circle): the count, or the bell while none
+    // are held.
+    Text {
+        visible: face.mode === "minimal"
+        anchors.centerIn: parent
+        text: face.count > 0 ? String(face.count) : (face.activity?.icon ?? "")
+        color: Config.foreground
+        font.family: Config.font
+        font.weight: Font.Bold
+        font.pixelSize: face.count > 0 ? Config.fontSize : Config.iconSize
+    }
 
     Row {
         id: compactRow
-        visible: face.mode !== "expanded"
+        visible: face.mode === "compact" || face.mode === "transient"
         anchors.centerIn: parent
         spacing: 8
 

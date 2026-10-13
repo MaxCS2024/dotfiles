@@ -7,7 +7,8 @@ Loader {
     id: face
 
     property var activity: null
-    // "compact", "transient" or "expanded".
+    // "compact", "transient", "expanded" or "minimal" (the split's
+    // circle).
     property string mode: "compact"
 
     sourceComponent: activity?.face === "osd" ? osdFace
