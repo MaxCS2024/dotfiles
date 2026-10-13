@@ -76,7 +76,8 @@ does may need main.
 off, …), colour themes (main's palettes and matugen theming), a
 workspace overview, Conf's sections (Install, Features, Update, Defaults, Style:
 Conf is to be split out of main into its own config, like the launcher),
-weather, system stats (CPU, RAM, temperature), the app
+weather, system stats (CPU, RAM, temperature), a screen recording
+indicator, the app
 launcher and clipboard (their own configs), and a calendar.
 
 **Undecided, _TBD_:**
@@ -1316,3 +1317,8 @@ Dated record of what the user chose or rejected, and why.
   release bind without modifiers didn't match with Caps Lock on. Now a
   press bind with and one without CAPS, read 150ms later from any
   keyboard. Confirmed by the user.
+- 2026-10-13: no screen recording indicator (offered as a live state
+  like dictation): the user doesn't need one.
+- 2026-10-13: scrolling on the pill for the volume (5% a notch, on
+  every view) was built and reverted the same day: the user didn't like
+  it. The pill does nothing on scroll.
