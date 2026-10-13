@@ -1,122 +1,125 @@
 # dotfiles
 
-A Hyprland desktop whose shell is [Quickshell](https://quickshell.org): bar,
-launcher, notifications, lockscreen, and the panels behind them all live in
-`quickshell/main`. Everything else here exists to support that.
+A Hyprland desktop whose shell is [Quickshell](https://quickshell.org): the
+dynamic island at the top centre, with a clipboard window and a settings
+window beside it. The app launcher is fuzzel. Configs are linked into place
+with [GNU stow](https://www.gnu.org/software/stow/).
 
 ```
-hypr/             the compositor — hyprland.lua sources modules/
-quickshell/main/  the shell — shell.qml is the entry point
-quickshell/<name>/ clipboard, settings and dynamic-island: configs of their own
-rig/              shell library: logging, locking, linking, process handling
-rack/             the config tool — deploys this repo, checks it, sets a machine up
-relay/            the runtime CLI — what binds and panels call to do things
-matugen/          turns a wallpaper into the palette the shell writes out
-gtk-3.0/ gtk-4.0/ GTK theming, and the icon theme Qt reads through gtk3
-foot/             terminal, one of the default terminal's candidates
-kitty/ ghostty/   terminals, colours only — the same palette foot gets
-fingerprint/      the reader's driver and sudo's finger; `rack features`
-secureboot/       sbctl keys and a signed UKI, guided; `rack features`
-udev/             hardware fixes, one rule per device; `rack patches`
-                  (or Conf › System › Patches) copies one into /etc
-bin/ btop/ nvim/ starship/ zsh/
+hypr/         the compositor — .config/hypr/hyprland.lua sources modules/
+quickshell/   the shell configs, in .config/quickshell/:
+                dynamic-island (the shell at login), clipboard, settings,
+                island (a brief-built island, run by hand), main (the old
+                bar, run by hand), shared (files clipboard links to)
+matugen/      turns a wallpaper into the palette the shell writes out
+gtk-3.0/ gtk-4.0/  GTK theming, and the icon theme Qt reads through gtk3
+foot/ kitty/ ghostty/  terminals
+btop/ starship/ wireplumber/ zsh/ autostart/
+nvim/         LazyVim's options, keymaps and plugins; nvim/install.sh
+fingerprint/ secureboot/ gpg/  guided setups, each an install.sh
+udev/         hardware fixes, one rule per device (see below)
+bin/ docs/
 ```
 
-`rack/manifest.conf` is the table of what gets deployed where. Adding an
-application is adding a line to it.
+Each folder above the line `nvim/` is a stow package: inside it, the files sit
+where they go under `~` (`hypr/.config/hypr/…` becomes `~/.config/hypr`).
+Adding an application is adding a folder laid out the same way.
 
 ## On a new machine
-
-You need `git`, `jq` and `flock` (util-linux) before anything else; the rest
-gets named for you in step 3.
 
 ```bash
 git clone https://github.com/MaxCS2024/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
-
-./rig/install.sh      # rack and relay both sit on rig, so it goes first
-./rack/install.sh
-./relay/install.sh
-
-rack features         # tick the optional parts you want (dictation, weather,
-                      # Nothing earbuds battery, fingerprint, Secure Boot,
-                      # LazyVim, Oh-My-Zsh, Claude Code); it installs and
-                      # sets up what you tick
-rack setup            # what is missing, grouped by how much it matters
-rack deploy           # link every manifest entry into ~/.config and ~
-
-# Logging into Hyprland or opening ghostty before this is fine: the default
-# configs they write on first launch are recognised and moved aside to
-# ~/.local/state/rack/backups/<time>/ on their own. If deploy still reports
-# "exists and is not ours", that is a config somebody wrote. Run it again
-# with --force to move that aside too; nothing is deleted:
-#
-#   rack deploy --force
-
-# btop rewrites its own config whenever you change a setting in its UI, and
-# that file is deployed as a link back into this repo. This keeps your local
-# edits from showing up as repo changes. It lives in .git/index rather than
-# in the repo, so it has to be set once per clone.
-git update-index --skip-worktree btop/btop.conf
+stow autostart btop foot ghostty gtk-3.0 gtk-4.0 hypr kitty matugen \
+     quickshell starship wireplumber zsh
 ```
 
-All three installers link back into the repo rather than copying, so editing a
-file here takes effect with no reinstall step. They put their executables in
-`~/.local/bin`; `hypr/modules/env.lua` prepends that to Hyprland's `PATH`, which
-is why binds can call `relay` by bare name.
+`.stowrc` points stow at `~`, so it is always run from the repo. A config
+the application wrote on its first launch (Hyprland, ghostty) is in the way:
+move it aside first, or let stow take it into the repo with `stow --adopt`
+and look at the diff.
 
-`rack features` is a checklist of the parts of the desktop that are optional.
-Ticking one installs its packages (pacman, and yay for the AUR) and runs its
-setup; unticking one turns it off — its bind, its bar module and its daemon go
-— and then offers to uninstall it and delete its data too. Run it again any
-time to change your mind. Without it, everything is on. What each feature is
-made of is `rack/features.json`.
-
-`rack setup` is the dependency list in executable form — it checks everything
-`quickshell/main/DEPENDENCIES.md` names and installs nothing. A gap in
-**required** means the shell will not work; **optional** means some feature
-quietly never runs. The one thing it names rather than probes is the font:
-`ttf-jetbrains-mono-nerd`, which must be the patched Nerd Font build, because
-the bar draws glyphs that exist nowhere else.
-
-Then log into Hyprland. `hypr/modules/autostart.lua` starts the dynamic
-island (`qs -c dynamic-island`, the shell at login), the clipboard and
-settings configs, and the wallpaper, clipboard, idle and
-night-light daemons. `quickshell/main` is no longer started at login; run
-`qs -c main` by hand for its bar, Conf menu and notifications.
-
-## Onto a USB
-
-The repo is the deliverable — copy the whole directory, or clone it onto the
-stick. On a machine that will not keep the repo around, every installer takes
-`--copy` and puts real files in `~/.local` instead of links back to it:
+btop rewrites its own config whenever you change a setting in its UI, and
+that file is a link back into this repo. This keeps your local edits out of
+the repo; it lives in `.git/index`, so it is set once per clone:
 
 ```bash
-./rig/install.sh --copy && ./rack/install.sh --copy && ./relay/install.sh --copy
+git update-index --skip-worktree btop/.config/btop/btop.conf
 ```
 
-Pass `--dry-run` first to see what any of them would touch, and `--uninstall`
-to remove exactly what they added.
+The optional parts are their own scripts, run when you want them, after
+their packages:
+
+```bash
+# LazyVim, with this repo's options, keymaps and plugins
+sudo pacman -S --needed neovim ripgrep fd lazygit && nvim/install.sh
+# Oh-My-Zsh
+zsh/.config/zsh/install.sh
+# The fingerprint reader and sudo's finger (--validity says if the reader
+# needs python-validity from the AUR; --remove takes it out of PAM again)
+fingerprint/install.sh --prepare && sudo pacman -S --needed fprintd && fingerprint/install.sh
+# Secure Boot: sbctl keys and a signed UKI, guided
+sudo pacman -S --needed sbctl efibootmgr && secureboot/install.sh
+# A GPG signing key
+gpg/install.sh
+# Dictation (SUPER+V)
+sudo pacman -S --needed wtype && yay -S voxtype-bin && voxtype setup --download \
+  && voxtype config set hotkey.enabled false && voxtype config set osd.enabled false \
+  && voxtype setup systemd
+```
+
+The font must be `ttf-jetbrains-mono-nerd`, the patched Nerd Font build: the
+island draws glyphs that exist nowhere else.
+
+Then log into Hyprland. `hypr/.config/hypr/modules/autostart.lua` starts the
+dynamic island, the clipboard and settings configs, and the wallpaper,
+clipboard, idle and night-light daemons.
+
+## Hardware fixes
+
+`udev/` holds one rule per device, copied into `/etc` where it applies (udev
+reads only its own folder):
+
+```bash
+sudo install -m644 -t /etc/udev/rules.d udev/92-battery-charge-limit.rules
+sudo udevadm control --reload
+sudo udevadm trigger --action=add --subsystem-match=power_supply
+```
+
+Each rule's header says what it is for and which `udevadm trigger` arguments
+apply it to a device already plugged in. The settings window's Power section
+runs the charge-limit one for you.
 
 ## Day to day
 
+Stow links whole folders, so a file added to a config is live at once; a new
+config needs `stow <name>`. `stow -D <name>` takes one away again, and
+`stow -R <name>` puts its links right after a move.
+
+Quickshell watches its own files and reloads a second or two after a save.
+An edit that replaces the file's inode — `sed -i`, most formatters — does not
+trip that watch; `touch` a file it still holds to force one. After editing
+Hyprland's config, `hyprctl reload`.
+
+## Moving from rack
+
+Until 2026-10-13 a tool of its own, rack (with rig and relay), linked these
+configs. On a machine set up that way, the old links point at paths that no
+longer exist after a pull. Remove the ones into this repo, then stow:
+
 ```bash
-rack diff             # has anything drifted from the repo?
-rack validate         # would these configs actually load?
-rack deploy hypr      # just one entry
-rack list             # every module and its status
+cd ~/.dotfiles && git pull
+find ~ ~/.config ~/.config/quickshell ~/.config/autostart ~/.local/share/applications \
+     ~/.local/bin ~/.local/lib -maxdepth 1 -type l -lname '*.dotfiles/*' ! -exec test -e {} \; -print -delete
+stow autostart btop foot ghostty gtk-3.0 gtk-4.0 hypr kitty matugen \
+     quickshell starship wireplumber zsh
+hyprctl reload
 ```
 
-`RIG_DRY_RUN=1` in front of any of these prints what would happen and changes
-nothing.
-
-Quickshell watches its own files and reloads a second or two after a save, so
-there is no reload command for it in the manifest. An edit that replaces the
-file's inode — `sed -i`, most formatters — does not trip that watch; `touch` a
-file it still holds to force one.
+The `find` deletes only links that point into `.dotfiles` and lead nowhere.
 
 ## Reading further
 
-- `quickshell/main/DEPENDENCIES.md` — every dependency, and what breaks without it
-- `rack/README.md` — the manifest format and each module
-- `rig/README.md` — the library the tooling is built on
+- `quickshell/.config/quickshell/dynamic-island/AGENTS.md` — the island's design
+- `quickshell/.config/quickshell/STYLE.md` — the shell's style guide
+- `hypr/.config/hypr/README.md` — the Hyprland config, bind by bind

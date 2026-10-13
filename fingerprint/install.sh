@@ -25,9 +25,11 @@
 # tty is tty1 (ly starts Hyprland there), so it goes straight to the password
 # rather than waiting on a finger.
 #
-# rack/features.json runs this: --validity picks the driver, --prepare runs
+# Run by hand (see the README): --validity picks the driver, --prepare runs
 # before the driver is installed, no argument after it, and --remove before
-# it is uninstalled. Safe to run by hand, and again.
+# it is uninstalled. Safe to run again. (The PAM marker below still says
+# "rack features", the tool that ran it until 2026-10-13: it is how lines
+# already in /etc/pam.d are found, so it stays.)
 
 set -euo pipefail
 
@@ -123,13 +125,13 @@ no_reader() {
 			  3. sudo python3 /usr/share/python-validity/playground/factory-reset.py
 			     (it prints nothing when it works)
 			  4. sudo systemctl unmask python3-validity
-			  5. rack features on fingerprint
+			  5. fingerprint/install.sh
 		EOF
     else
         cat >&2 <<-EOF
 			fingerprint: fprintd found no reader it can drive. Is the reader switched on
 			in the BIOS, and is it on https://fprint.freedesktop.org/supported-devices.html?
-			rack features remove fingerprint takes fprintd away again.
+			fingerprint/install.sh --remove, then pacman -R fprintd, takes it away again.
 		EOF
     fi
     exit 1

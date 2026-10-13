@@ -189,7 +189,7 @@ enroll() {
 			     or "Clear Secure Boot keys" / "Delete all keys" elsewhere. Some
 			     firmware asks for a supervisor password to be set first.
 			  3. Leave Secure Boot itself off for now. Save, and boot back into Linux.
-			  4. Run `rack features on secureboot` again.
+			  4. Run `secureboot/install.sh` again.
 		EOF
         exit "$PENDING"
     fi

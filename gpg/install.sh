@@ -68,7 +68,7 @@ identity() {
     elif [[ -z $name || -z $email ]]; then
         if ! [[ -t 0 && -t 1 ]]; then
             printf 'gpg: needs a name and email for the key. Set git config --global user.name and\n' >&2
-            printf 'user.email, or run rack features on gpg in a terminal to be asked.\n' >&2
+            printf 'user.email, or run gpg/install.sh in a terminal to be asked.\n' >&2
             exit "$PENDING"
         fi
         printf 'The key carries a name and an email, shown to whoever checks what it signed.\n'
