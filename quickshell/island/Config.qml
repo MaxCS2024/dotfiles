@@ -32,6 +32,16 @@ Singleton {
     // How long a paused player stays in the island before it leaves.
     readonly property int mediaPausedTimeout: 60000
 
+    // Charger in and out, charging done, low and critical.
+    readonly property bool battery: true
+    readonly property int batteryLowPercent: 20
+    readonly property int batteryCriticalPercent: 5
+    readonly property int batteryTimeout: 3000
+    readonly property int batteryCriticalTimeout: 6000
+    // Submap and keyboard layout changes.
+    readonly property bool hyprlandEvents: true
+    readonly property int hyprlandTimeout: 1500
+
     // ── Window ──
     // Distance from the top of the screen to the pill.
     readonly property int topMargin: 7

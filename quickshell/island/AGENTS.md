@@ -25,7 +25,9 @@ step before the next starts.
 3. Media: **built 2026-10-13**, tested with `fake-player.py`; the
    buttons and click-to-open await the user's pointer (no clicking from
    here).
-4. Battery events and Hyprland state changes
+4. Battery events and Hyprland state changes: **built 2026-10-13**,
+   tested with simulated readings and events; awaiting a real
+   plug/unplug and layout switch.
 5. Privacy indicators
 6. Notifications
 7. IPC live-activities API
@@ -177,6 +179,8 @@ since the API evolves.
   compact, transient and expanded layouts.
 - `Osd.qml`: the OSD feature (see OSD); `OsdFace.qml` its face.
 - `Media.qml`: the media feature (see Media); `MediaFace.qml` its face.
+- `Battery.qml`: battery events (see Battery events).
+- `HyprlandEvents.qml`: submap and layout notices (see Hyprland events).
 - `fake-player.py`: a silent MPRIS player for testing (see Testing).
 - `test-queue.sh`: walks every state and queue rule (see Testing).
 
@@ -200,6 +204,11 @@ From the qmltypes in `/usr/lib/qt6/qml/Quickshell`:
   `lengthSupported`, `canGoNext`, `canGoPrevious`, `canTogglePlaying`,
   `next()`, `previous()`, `togglePlaying()`. `position` doesn't move on
   its own: emitting `positionChanged()` each second is what updates it.
+- `UPower` (`Quickshell.Services.UPower`): `displayDevice`, `devices`,
+  `onBattery`. `UPowerDevice` has `percentage` (0–1), `state`
+  (`UPowerDeviceState`: Unknown, Charging, Discharging, Empty,
+  FullyCharged, PendingCharge, PendingDischarge), `isLaptopBattery`,
+  `isPresent`, `ready`.
 - `ClippingRectangle` (`Quickshell.Widgets`) puts its children in an
   inner item, so their `parent` isn't the rectangle; use an id.
 - Inline components (`component X: …`) can't see the file's other ids;
@@ -341,6 +350,46 @@ The pill's own MouseArea sits under the content, so the buttons take
 their clicks; a click elsewhere on the pill opens or closes it. Hover
 comes from a `HoverHandler`, which the buttons don't hide.
 
+## Battery events
+
+`Battery.qml` compares each UPower reading of the display device (both
+of the T480's batteries combined) with the one before and submits a
+transient on a change. Key `battery`, so the newest replaces the last;
+priority 40, 3 s, the generic face.
+
+| Event | When | Notice |
+|-------|------|--------|
+| charger in | `onBattery` turns false | 󰂄 "Charger connected – 46%" |
+| charger out | `onBattery` turns true | 󰚦 "On battery – 46%" |
+| charged | Charging → FullyCharged | 󰁹 "Fully charged" |
+| charged | Charging → PendingCharge (the charge limit, 80% here) | 󰁹 "Charged to 80%" |
+| low | on battery, crossing below `batteryLowPercent` (20) | 󰁺 "Low battery – 19%" |
+| critical | on battery, crossing below `batteryCriticalPercent` (5), or already below it at start | 󰂃 "Battery critical – 4%", priority 55, 6 s |
+
+The first reading, and any in the first 2 seconds, only sets the
+baseline. A charger plugged in at the limit goes straight to
+PendingCharge without Charging, so it says "Charger connected" only.
+`Config.battery` turns it off.
+
+## Hyprland events
+
+`HyprlandEvents.qml` reads Hyprland's raw events. Priority 45, 1.5 s,
+the generic face.
+
+- **Submap** (`submap>>name`, "" on leaving): 󰌨 "Submap – resize",
+  then "Submap – resize off". Key `submap`. There are no submaps in the
+  hypr config yet; only tested with made-up events.
+- **Keyboard layout** (`activelayout>>keyboard,layout`): 󰌌 "Layout –
+  Swedish", key `layout`. Each keyboard device has a layout of its own
+  (here the built-in keyboard is English (US), the extra buttons
+  Swedish), so a change counts only against that same keyboard's last
+  layout, read from `hyprctl devices -j` at start; a keyboard's first
+  report only sets it, and virtual keyboards (`hl-virtual-keyboard…`)
+  are left out. The dynamic-island learnt this: comparing against the
+  "main" keyboard flashed whenever another device was used.
+
+`Config.hyprlandEvents` turns both off.
+
 ## Look
 
 The dynamic-island's look, since it is the user's: a black pill, white
@@ -370,6 +419,13 @@ doesn't replace:
 - `qs -c island ipc call queue persist|flash key icon label progress priority ms`,
   `drop key`, `clear`, `list`.
 - `qs -c island ipc call view expand|collapse|current`.
+- `qs -c island ipc call battery simulate <onBattery> <percent> <state>`
+  (state: charging, discharging, full, pending) feeds made-up readings
+  through the same comparison, the first against the real reading;
+  `battery real` goes back to UPower without an event.
+- `qs -c island ipc call hyprland submap <name>` ("" leaves) and
+  `hyprland layout "<keyboard>,<layout>"` feed made-up events. Put the
+  layout back afterwards, or the next real event compares against it.
 - `./fake-player.py [--art FILE] [--paused]`: a silent MPRIS player
   ("Island test player", three tracks, one with a long title) that
   `playerctl -p islandtest play|pause|next|previous` drives. Never play
@@ -416,6 +472,11 @@ SUPER+ALT+SPACE hides the dynamic-island meanwhile.
   (the user turned one down for the dynamic-island); made-up playing
   bars in white rather than tinted from the art; the progress bar shows
   only, no seeking.
+- 2026-10-13: step 4, battery and Hyprland events, at the user's
+  go-ahead. Mine: the wording; one key per kind (newest wins); critical
+  above the OSD (55) and 6 s; the charge limit counts as charged; the
+  submap as a brief notice on entering and leaving, as the brief says,
+  not a standing activity while in it.
 - 2026-10-13: no global shortcuts from the volume and brightness keys
   (the dynamic-island's way of answering a press at 0% or 100%). It
   would mean new shortcut names and edits to `hypr/modules/binds`;

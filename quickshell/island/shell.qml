@@ -7,6 +7,8 @@ Scope {
     // starts them. Each checks its own Config switch.
     readonly property var osd: Osd
     readonly property var media: Media
+    readonly property var battery: Battery
+    readonly property var hyprlandEvents: HyprlandEvents
 
     Island {}
 }
