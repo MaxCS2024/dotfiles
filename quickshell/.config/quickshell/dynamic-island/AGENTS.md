@@ -661,10 +661,10 @@ calling `gallery.step()`. Never press Enter or call `apply()` to check.
 
 ## Hiding with the main bar
 
-SUPER+ALT+SPACE hides and shows the island (`Controls.barVisible`). The
-bind presses two global shortcuts: main's `quickshell:bar-toggle` and
-the island's own `quickshell:island-toggle`, so the key works with main
-never started. When main runs, the island also follows the bar
+SUPER+ALT+SPACE hides and shows the island (`Controls.barVisible`)
+through its own `quickshell:island-toggle` (it pressed main's
+`bar-toggle` too until main's binds were removed on 2026-10-13). When
+main runs, by hand, the island also follows the bar
 (`qs -c main ipc call bar toggle`, or any other way the bar is
 toggled): main's `services/Panels.qml` calls `qs -c dynamic-island ipc
 call island setBarVisible <bool>` on every barVisible change, which has

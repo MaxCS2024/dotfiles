@@ -51,9 +51,8 @@ Singleton {
     }
 
     // ── Bar visibility ──
-    // SUPER+ALT+SPACE hides and shows the island. The bind presses both
-    // this shortcut and main's bar-toggle (hypr/modules/binds/apps.lua),
-    // so with main not running the island toggles itself. When main is
+    // SUPER+ALT+SPACE hides and shows the island through this shortcut
+    // (hypr/modules/binds/apps.lua). When main is
     // running, its services/Panels.qml also calls `qs -c dynamic-island
     // ipc call island setBarVisible <bool>` whenever its barVisible
     // changes, and that call has the last word; at startup the island

@@ -63,18 +63,12 @@ at login, so those keys do nothing until it is run by hand (see
 | SUPER+E | Default file manager | `binds/apps.lua` | |
 | SUPER+B | Default browser | `binds/apps.lua` | Browser is preloaded at login |
 | SUPER+M | Log out | `binds/apps.lua` | See [apps.lua](#bindsappslua) |
-| SUPER+SPACE | Conf menu (main) | `binds/apps.lua` | omarchy uses SUPER+ALT+SPACE, taken here by the bar toggle |
 | SUPER+P | App launcher | `binds/apps.lua` | fuzzel, as it comes; a second press closes it |
-| SUPER+ESCAPE | Power menu (main) | `binds/apps.lua` | Without main, middle-click the island |
-| SUPER+SHIFT+N | Notifications rail (main) | `binds/apps.lua` | |
-| SUPER+CTRL+W | Network rail (main) | `binds/apps.lua` | W for wifi; CTRL because SUPER+W closes |
 | SUPER+C | Clipboard history | `binds/apps.lua` | cliphist in fuzzel; C for copy |
 | SUPER+COMMA | Settings window | `binds/apps.lua` | Where GNOME and macOS keep settings |
 | SUPER+ALT+W | Island wallpaper gallery | `binds/apps.lua` | W for wallpaper; ALT because SUPER+W closes |
-| SUPER+SHIFT+T | Themes (main) | `binds/apps.lua` | SUPER+T is the float toggle |
 | SUPER+V | Dictation start/stop | `binds/apps.lua` | V for voice. Only with the `dictation` feature |
-| SUPER+ALT+SPACE | Hide/show the bar and the island | `binds/apps.lua` | |
-| SUPER+SHIFT+B | Focus the bar for arrow keys (main) | `binds/apps.lua` | SUPER+B is the browser |
+| SUPER+ALT+SPACE | Hide/show the island | `binds/apps.lua` | |
 | SUPER+W | Close window | `binds/window.lua` | |
 | SUPER+SHIFT+W | Kill window (`hyprctl kill`) | `binds/window.lua` | For one that doesn't answer |
 | SUPER+T | Float toggle | `binds/window.lua` | |
@@ -453,8 +447,6 @@ have neither `arg` nor `debug`, which also means "not a script".
   does) and falls back to Hyprland's own exit when it isn't installed. Not
   `uwsm stop`: that only ends a session uwsm started, and ly starts this
   one. Same line as Hyprland's default config and `Theme.logoutCmd`.
-- **SUPER+SHIFT+N / SUPER+CTRL+W**: the rails are also a left click on
-  main's bar modules; a right click there is DND.
 - **SUPER+COMMA**: opens the settings window (`quickshell/settings`),
   focuses it, or closes it if it already has focus.
 - **SUPER+ALT+W**: images in `~/Pictures/Wallpapers`; ← and → to move, Enter
@@ -462,10 +454,9 @@ have neither `arg` nor `debug`, which also means "not a script".
 - **SUPER+V**: press to record, press again to stop; voxtype types the text
   into the focused window through wtype. main shows a pill while it
   records (`main/osd/VoxtypeOsd.qml`).
-- **SUPER+ALT+SPACE** presses both `bar-toggle` (main) and `island-toggle`,
-  so it works with either shell. With main up, main tells the island which
-  way it went.
-- **SUPER+SHIFT+B**: Left/Right to move, Enter to activate, Escape to leave.
+- **SUPER+ALT+SPACE** presses the dynamic island's `island-toggle`. (It
+  pressed main's `bar-toggle` too, until main's binds went on 2026-10-13;
+  with main run by hand, main still tells the island when its bar hides.)
 
 ## binds/window.lua
 
@@ -608,8 +599,9 @@ password field. hyprlock stays the real lock, with PAM and fingerprint.
 Found while moving the comments here; nothing was changed for these.
 
 - The main keys (SUPER+SPACE, SUPER+ESCAPE, SUPER+SHIFT+N, SUPER+CTRL+W,
-  SUPER+SHIFT+T, SUPER+SHIFT+B) and zen's OSD (`qs -c main ipc call
-  osd-zen`) do nothing while main isn't running, which is the default now.
+  SUPER+SHIFT+T, SUPER+SHIFT+B) were removed on 2026-10-13, at the
+  user's request: main isn't started, so they did nothing. zen's OSD
+  (`qs -c main ipc call osd-zen`) still does nothing without main.
 - `blur-bar` has no effect while `blur.enabled` is false.
 - No bind reads `vars.lua`'s `terminal`, `editor`, `fileManager` or
   `browser` (they ask `defaults.lua` directly); only
