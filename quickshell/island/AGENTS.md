@@ -41,7 +41,8 @@ user's look and right click.
    fullscreen; clicking a dot awaits the user's pointer.
 6. Notifications: **built 2026-10-13**, tested with `notify-send`
    and test calls; clicks, hover and the middle click await the user.
-7. IPC live-activities API
+7. IPC live-activities API: **built 2026-10-13**, tested through
+   `island-activity`; awaiting the user's own scripts.
 8. Split state
 
 ---
@@ -238,8 +239,8 @@ Settled by the user, 2026-10-13:
   Charger, charged, layout and submap notices answer the user's own
   action and show at once; critical battery never waits.
 
-For step 7: IPC activities must end (a timeout or an explicit removal)
-and are capped at medium interruption.
+For step 7 (built): IPC activities must end (a timeout or an explicit
+removal) and are capped at medium interruption.
 
 ---
 
@@ -262,6 +263,8 @@ and are capped at medium interruption.
 - `Notifications.qml`: the notification daemon and the hold mode (see
   Notifications); `NotificationFace.qml` a notification's card,
   `HoldFace.qml` the hold count, `PillButton.qml` their buttons.
+- `LiveActivities.qml`: the scripts' API, IPC target `island` (see Live
+  activities); `island-activity` the command-line wrapper for it.
 - `Privacy.qml`: who is using the microphone, camera and screen, and
   the announcements (see Privacy indicators). Not in the queue.
 - `Battery.qml`: battery events (see Battery events).
@@ -608,11 +611,63 @@ above media), or "Holding" while none are (10, below media). Expanded:
 "3 notifications held", "Show" (shows them now, in order, without
 waiting for a break) and "Stop holding" (turns it off and shows them).
 A right click on the count stops holding too. On and off: a middle
-click on the pill, the global shortcut `quickshell:island-hold` (not
-bound to a key yet), or IPC.
+click on the pill, or IPC (`notifications toggleHold`), which a
+Hyprland bind can run; none is bound yet. No `GlobalShortcut` (see
+Testing, Stopping).
 
 Not built: notification history, grouping, schedules (the brief rules
 them out); inline replies (typing).
+
+## Live activities
+
+The project brief's scope valve: timers, downloads and builds are the
+user's scripts, which put activities in the island through IPC target
+`island` (`qs -c island ipc call island <function> …`; the brief's
+`show` is reserved by `qs ipc`, hence `push`). Keys are `ipc:<id>`, the
+generic face (icon, label, progress).
+
+| Function | Does |
+|----------|------|
+| `push id icon label progress timeout` | a live activity: compact, stays |
+| `pushLow …` | the same below media |
+| `flash id icon label progress timeout` | a one-off notice, after the next break |
+| `flashLow …` | the same at low interruption |
+| `progress id value` | updates the level (0–1, -1 none) |
+| `label id text` | updates the text |
+| `remove id` | ends it |
+| `list` | `id<TAB>label` per line |
+
+- `icon` is a Nerd Font glyph, "" for 󰫑; `progress` -1 for none;
+  `timeout` ms, 0 for the default. Each returns "" or what was wrong.
+- **Every activity ends** (the research brief): a pushed one when the
+  script removes it, at its `timeout`, or, given none, 10 minutes
+  (`Config.liveActivityIdleTimeout`) after its last push or update, so
+  a forgotten one goes away. A flash: after its timeout (2.5 s).
+- **Capped at medium:** profile `ipc` (medium, 30, above media) or
+  `ipcLow` (low, 15, below it). Nothing a script sends interrupts like a
+  critical notification.
+- **Deferral:** flashes wait for a break, up to 45 s, like normal
+  notifications. Pushed activities show at once: they report on
+  something the user started. (Mine; the research's "same as normal
+  notification" is read as for the notices.)
+- **Dismissing:** a right click ends one for the user; the script's
+  later pushes and updates are ignored (and answered "") until it
+  removes the id and pushes it again.
+- Compact shows the level too (a 40px bar), so a download reads at a
+  glance.
+
+`island-activity` (next to this file) fills in the defaults:
+
+```sh
+island-activity push download "report.pdf" --icon 󰇚 --progress 0.3
+island-activity progress download 0.75
+island-activity flash build "Build finished" --icon 󰄬
+island-activity remove download
+island-activity push tea "Tea – 3:00" --icon 󱎫 --low --timeout 180000
+```
+
+It exits 1 with the island's message when something is wrong. Not on
+PATH; link it from `~/.local/bin` to use it from anywhere.
 
 ## Look
 
@@ -638,7 +693,8 @@ it arrives (enter) and when the island falls back after it (exit).
 | hyprland | low | 45 | 220 | 150 | no | – |
 | battery | low | 40 | 220 | 150 | no | – |
 | lowBattery | low | 40 | 220 | 150 | no | 45 s |
-| ipc (step 7) | medium | 30 | 250 | 180 | no | 45 s |
+| ipc | medium | 30 | 250 | 180 | no | 45 s (flashes) |
+| ipcLow | low | 15 | 220 | 150 | no | 45 s (flashes) |
 | media | low | 20 | 250 | 150 | no | – |
 
 - **Which time.** Something arriving (a transient, an announcement, or
@@ -677,11 +733,17 @@ doesn't replace:
 - `qs -c island ipc call notifications hold <bool>|toggleHold|release|status`,
   `act <id> <action>` (what a click, "default", or a button does), and
   `icon <name>` (what a theme name resolves to).
-- Stopping: `qs kill -c island`. Twice in step 6 it crashed on the way
-  out (Qt, `QWindow::unsetCursor` while tearing down) and Quickshell's
-  crash handler started it again, with the old environment; then end
-  it with `kill -9 <pid>` (from `qs list --all`), which the handler
-  can't catch. Only ever the island's own pid.
+- Stopping: `qs kill -c island`. In step 6 it crashed on the way out
+  three times in five (Qt aborting in `QWindow::unsetCursor`, and a
+  Wayland request sent after the connection closed), and Quickshell's
+  crash handler started it again. The crashes began with step 6's
+  `GlobalShortcut` (the hold toggle), a Wayland object; with it removed,
+  five starts and stops in a row were clean. Likely the cause, not
+  proven: don't add a `GlobalShortcut`; bind keys to IPC instead. If it
+  ever comes back after stopping, `kill -9 <pid>` (from `qs list --all`)
+  ends it; only ever the island's own pid.
+- `./island-activity …` exercises the live-activities API (see Live
+  activities).
 - `qs -c island ipc call queue release`: what a break does to waiting
   activities; `queue list` shows them as "deferred Ns".
 - `qs -c island ipc call view expand|collapse|current|dismiss`
@@ -772,6 +834,14 @@ SUPER+ALT+SPACE hides the dynamic-island meanwhile.
   right click as the gesture; media staying dismissed through new
   tracks; the exact numbers within its ranges. Deferral and DND vs hold
   mode left _TBD_ for step 6.
+- 2026-10-13: step 7, live activities, at the user's go-ahead. Mine:
+  `push`/`flash` (and `Low` forms), `progress`, `label`, `remove`,
+  `list`; 10 minutes without an update ends a pushed one; pushed ones
+  not deferred, flashes deferred; a dismissal holds until the script
+  removes and pushes again; progress shown compact; the
+  `island-activity` wrapper. Also: the hold toggle's `GlobalShortcut`
+  removed after it was found the likely cause of the crashes on
+  quitting.
 - 2026-10-13: step 6, notifications, at the user's go-ahead (they had
   been told the island takes over from dunst while it runs). Mine:
   stopping dunst's unit to take the name; critical (and never-expiring)
