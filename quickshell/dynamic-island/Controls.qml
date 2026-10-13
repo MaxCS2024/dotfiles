@@ -86,6 +86,10 @@ Singleton {
         // "recording" or "transcribing" puts up the dictation face
         // without recording anything; "" follows voxtype again.
         function dictation(state: string): void { Dictation.testState = state }
+        // A disk reading of `gb` free on `mount` (of a 1 TB disk): 2.1
+        // sends "Disk almost full", 50 takes it back. Real notifications,
+        // no disk touched.
+        function disk(mount: string, gb: real): void { Alerts.diskReading(mount, 1e12, gb * 1e9) }
     }
 
     Process {
@@ -519,10 +523,13 @@ Singleton {
 
     // ── Battery notices ──
     // `batteryNotice(kind)` fires "charging" when the charger is plugged
-    // in, and "low" when the battery, on battery power, drops below 20%
-    // and again below 10%. Keyed off UPower's onBattery rather than the
-    // charging state, which flips back and forth around the charge
-    // thresholds. Quiet for the first 2 seconds, like `changed`.
+    // in, "low" when the battery, on battery power, drops below 20% and
+    // again below 10%, and "critical" below 5% (also when it is already
+    // under 5% on battery once the 2 quiet seconds are over); Alerts.qml
+    // sends the notification that goes with it. Keyed off UPower's
+    // onBattery rather than the charging state, which flips back and
+    // forth around the charge thresholds. Quiet for the first 2 seconds,
+    // like `changed`.
     // ── Network and Bluetooth notices ──
     // `notice(icon, before, name, after)` for the island's pill (AGENTS.md,
     // Notices): a network coming up, failing or dropping, a Bluetooth
@@ -651,7 +658,11 @@ Singleton {
     signal batteryNotice(string kind)
     readonly property bool onBattery: UPower.onBattery
     readonly property var lowThresholds: [20, 10]
+    readonly property int criticalBelow: 5
     property real lastPercent: -1
+
+    onArmedChanged: if (armed && onBattery && batteryPercent >= 0 && batteryPercent < criticalBelow)
+        batteryNotice("critical")
 
     onOnBatteryChanged: if (armed && !onBattery && batteryPercent >= 0) batteryNotice("charging")
 
@@ -660,7 +671,9 @@ Singleton {
         lastPercent = batteryPercent
         if (!armed || !onBattery || before < 0)
             return
-        if (lowThresholds.some(t => before >= t && batteryPercent < t))
+        if (before >= criticalBelow && batteryPercent < criticalBelow)
+            batteryNotice("critical")
+        else if (lowThresholds.some(t => before >= t && batteryPercent < t))
             batteryNotice("low")
     }
 }

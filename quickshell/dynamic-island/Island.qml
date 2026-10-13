@@ -306,7 +306,7 @@ PanelWindow {
     }
 
     // The battery notice: "Charging" when the charger goes in, "Low
-    // battery" below 20% and 10%. Nobody asked for it, so it stays twice
+    // battery" below 20% and 10%, "Battery critical" below 5%. Nobody asked for it, so it stays twice
     // as long as the other flashes, 3 seconds, to be noticed.
     property bool showBattery: false
     property string batteryKind: "charging"
@@ -718,7 +718,8 @@ PanelWindow {
                 shown: pill.shown === batteryFace
                 maxWidth: pill.noticeMaxWidth
                 icon: Controls.batteryIcon
-                before: (root.batteryKind === "low" ? "Low battery" : "Charging")
+                before: (root.batteryKind === "critical" ? "Battery critical"
+                        : root.batteryKind === "low" ? "Low battery" : "Charging")
                     + " – " + Math.round(Controls.batteryPercent) + "%"
             }
 

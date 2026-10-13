@@ -51,8 +51,11 @@ pill() {
     local rune=$'\U000f00af'
 
     echo "Pill › Battery"
-    show 3.5 "  Charging – N%"              battery charging
     show 3.5 "  Low battery – N%"           battery low
+    # Critical also sends its dunst notification (Alerts.qml); the
+    # charging notice after it takes that back.
+    show 3.5 "  Battery critical – N% (and its notification)" battery critical
+    show 3.5 "  Charging – N% (closes it)"  battery charging
 
     echo "Pill › Display"
     show 3.5 "  Display connected – XV280K" display "XV280K"
@@ -110,9 +113,18 @@ close_critical() {
     done
     critical_ids=()
 }
+# The island's own critical ones, taken back the way it does itself
+# (on Ctrl+C too, while they are up).
+alerts_up=
+take_back() {
+    qs -c dynamic-island ipc call island-notices battery charging >/dev/null 2>&1 || true
+    qs -c dynamic-island ipc call island-notices disk / 50 >/dev/null 2>&1 || true
+}
+
 # The dictation face too, if the script stops while it is up.
 cleanup() {
     close_critical
+    [[ -z $alerts_up ]] || take_back
     qs -c dynamic-island ipc call island-notices dictation "" >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
@@ -166,12 +178,21 @@ notifications() {
     fi
     sleep 3
 
-    echo "Notifications › System problems (critical, until dismissed; not built yet)"
-    send "  Battery critical"        -a Battery -u critical -i battery-caution "Battery critical – 5%" "Plug in now"
-    send "  Disk almost full"        -a Disk -u critical -i drive-harddisk "Disk almost full" "2.1 GB left on /"
+    # Sent by the island itself (Alerts.qml), from made-up readings; the
+    # pill flashes the battery one too.
+    echo "Notifications › System problems (critical, until dismissed)"
+    echo "  Battery critical"
+    alerts_up=1
+    qs -c dynamic-island ipc call island-notices battery critical
+    sleep 1.5
+    echo "  Disk almost full"
+    qs -c dynamic-island ipc call island-notices disk / 2.1
+    sleep 1.5
 
-    echo "  (closing the critical ones in 6 s)"
+    echo "  (taking them back in 6 s, as plugging in and freeing space do)"
     sleep 6
+    take_back
+    alerts_up=
     close_critical
 }
 

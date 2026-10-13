@@ -132,7 +132,7 @@ The island shows one thing at a time.
 | wallpaper | SUPER+ALT+W                | wallpaper gallery        | three images × its row (757 × 178) |
 | workspace | switching to any workspace | "Workspace N"            | fits the text |
 | osd       | volume or brightness changes | icon, percentage, filling ring | one width for 0–100% |
-| battery   | charger plugged in; battery below 20% or 10% | battery icon + "Charging – 46%" or "Low battery – 18%" | fits the text, at most 400px |
+| battery   | charger plugged in; battery below 20%, 10% or 5% | battery icon + "Charging – 46%", "Low battery – 18%" or "Battery critical – 4%" | fits the text, at most 400px |
 | layout    | keyboard layout switched   | keyboard icon + "Layout – English (US)" | fits the text, at most 400px |
 | display   | external screen plugged in | monitor icon + "Display connected – XV280K" | fits the text, at most 400px |
 | notice    | network up, failed or lost; Bluetooth device in or out | icon + "Connected – Telia-3D6C57" and the like | fits the text, at most 400px |
@@ -191,14 +191,16 @@ or brightness.
 
 Plugging in the charger shows "Charging – 46%"; the battery dropping
 below 20%, and again below 10%, while on battery power shows "Low
-battery – 18%". Both start with `Controls.batteryIcon` at 16px, 8px
+battery – 18%", and below 5% "Battery critical – 4%", which also sends
+a critical notification (see System alerts). Both start with `Controls.batteryIcon` at 16px, 8px
 before the bold 13px text, and stay for 3 seconds, twice as long as the
 other flashes, since nothing the user did caused them. Unplugging shows
 nothing. Like the OSD it obeys "the newest flash wins", isn't shown while
 a panel is open or mid-drag, and pressing the pill drops it.
 
-`Controls.batteryNotice(kind)` drives it ("charging" or "low"), quiet for
-the first 2 seconds. "Charging" follows UPower's `onBattery` going false,
+`Controls.batteryNotice(kind)` drives it ("charging", "low" or
+"critical"), quiet for the first 2 seconds; "critical" also fires then
+if the battery is already under 5% on battery power. "Charging" follows UPower's `onBattery` going false,
 not the charging state, which can flip back and forth around the
 battery's charge thresholds.
 
@@ -236,7 +238,8 @@ Regular notifications:
 - System problems that need the user, never status readouts: "Disk
   almost full – 2.1 GB left on /", and "Battery critical – 5%", the one
   event shown in both places, since a 3-second flash is easy to miss
-  with the laptop about to die. Neither is built yet.
+  with the laptop about to die. Both are the island's (`Alerts.qml`,
+  see System alerts).
 
 Never a regular notification: anything the pill shows (network,
 Bluetooth, charging, display, layout, volume, brightness), and progress
@@ -249,6 +252,32 @@ Bluetooth, charging, display, layout, volume, brightness), and progress
 | critical | failures, critical battery, disk full       | until dismissed  |
 
 How they look stays dunst's default until the rest is settled.
+
+## System alerts
+
+`Alerts.qml` sends the two system problems as regular notifications
+(`notify-send -u critical`, so dunst keeps them until dismissed) and
+takes each back by id once the problem is gone. A newer reading
+replaces the open one (`-r`) instead of adding a second.
+- Battery critical: Controls' "critical" battery notice (on battery,
+  dropping below 5%, or already under it when the island starts) flashes
+  "Battery critical – 4%" in the pill and sends "Battery critical – 4%"
+  / "Plug in now" (app Battery, icon battery-caution). Plugging in
+  closes it.
+- Disk almost full: `df` a minute after the island starts, then every
+  10 minutes, each device once (the btrfs subvolumes share one), at its
+  shortest mount point. A filesystem with under 5 GB and under 10% free
+  sends "Disk almost full" / "2.1 GB left on /" (app Disk, icon
+  drive-harddisk), once: it warns again only after the space has come
+  back to 6 GB or 12% free, which also closes it. Both limits, so the
+  1 GB /boot only warns near its end and a big disk not at 10%.
+No pill flash for the disk: it is a notification only.
+
+Testing: `test-notices.sh notifications` sends both from made-up
+readings and takes them back after 6 seconds;
+`island-notices battery critical` (closed by `battery charging`) and
+`island-notices disk / 2.1` (closed by `disk / 50`) by hand. No disk is
+filled and nothing is unplugged.
 
 ## Network and Bluetooth notices
 
@@ -1245,3 +1274,9 @@ Dated record of what the user chose or rejected, and why.
   comes back (dunst's pause now, not main's), and the frozen panel gets
   the row. The user named Stay awake and Do not disturb; Night light and
   the microphone are my picks for "those kind of quick settings".
+- 2026-10-13: the critical battery and disk-full warnings are built
+  (see System alerts), as the Notifications rule laid them out: dunst,
+  critical, until dismissed, taken back once the problem is gone.
+  Battery critical below 5%, also flashed in the pill; disk almost full
+  under 5 GB and 10% free, checked every 10 minutes. The user's request;
+  the thresholds are mine.

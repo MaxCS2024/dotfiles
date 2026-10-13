@@ -16,6 +16,8 @@ Scope {
     readonly property var power: PowerSettings
     // Puts the saved night light back.
     readonly property var quick: QuickSettings
+    // Critical battery and disk-full notifications.
+    readonly property var alerts: Alerts
 
     Variants {
         model: Quickshell.screens
