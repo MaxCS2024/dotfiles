@@ -79,9 +79,10 @@ quietly never runs. The one thing it names rather than probes is the font:
 `ttf-jetbrains-mono-nerd`, which must be the patched Nerd Font build, because
 the bar draws glyphs that exist nowhere else.
 
-Then log into Hyprland. `hypr/modules/autostart.lua` starts the dynamic
-island (`qs -c dynamic-island`, the shell at login since 2026-10-10), the
-launcher and clipboard configs, and the wallpaper, clipboard, idle and
+Then log into Hyprland. `hypr/modules/autostart.lua` starts the island
+(`qs -c island`, the shell at login since 2026-10-13, and the
+notification daemon in dunst's place; the older `dynamic-island` is no
+longer started), the launcher and clipboard configs, and the wallpaper, clipboard, idle and
 night-light daemons. `quickshell/main` is no longer started at login; run
 `qs -c main` by hand for its bar, Conf menu and notifications.
 
