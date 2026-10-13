@@ -18,6 +18,8 @@ Scope {
     readonly property var quick: QuickSettings
     // Critical battery and disk-full notifications.
     readonly property var alerts: Alerts
+    // Who is using the microphone, camera and screen (the dots).
+    readonly property var privacy: Privacy
 
     Variants {
         model: Quickshell.screens

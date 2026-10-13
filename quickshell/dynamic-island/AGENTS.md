@@ -46,6 +46,7 @@ does may need main.
 - The time, the "Workspace N" flash, the volume/brightness OSD and the
   battery notices.
 - The dictation face, while voxtype records or transcribes.
+- The privacy dots and their notices (see Privacy indicators).
 - The song view and the media player.
 - The today view: the date and the battery.
 - The settings panel: the fused pill, the two sliders and, under its
@@ -76,9 +77,8 @@ does may need main.
 off, …), colour themes (main's palettes and matugen theming), a
 workspace overview, Conf's sections (Install, Features, Update, Defaults, Style:
 Conf is to be split out of main into its own config, like the launcher),
-weather, system stats (CPU, RAM, temperature), a screen recording
-indicator, a song-changed flash, a mic/camera/screen-share
-indicator, Bluetooth devices' low-battery flashes, the app
+weather, system stats (CPU, RAM, temperature), a song-changed flash,
+Bluetooth devices' low-battery flashes, the app
 launcher and clipboard (their own configs), and a calendar.
 
 **Undecided, _TBD_:**
@@ -407,6 +407,49 @@ real path:
 `hyprctl dispatch 'hl.dsp.global("quickshell:island-capslock")'` reads
 the state and, unchanged, shows nothing. wtype can't test it: its keys
 don't trigger Hyprland's binds.
+
+## Privacy indicators
+
+Brought over from `../island` (2026-10-13, the user's request, after
+trying that island): who is using the microphone, the camera or the
+screen, in `Privacy.qml`.
+
+- **Dots:** one per device in use, microphone (orange `#ff9f0a`),
+  camera (green `#30d158`), screen (red `#ff453a`), in that order,
+  never merged: 8px, 8px apart (16px hit areas), just right of the
+  pill, centred on its collapsed line, so they ride along as it grows
+  and shrinks. They pop in (160ms, OutBack) and go at once. Nothing
+  hides them: a panel, a flash, or hiding the island (SUPER+ALT+SPACE),
+  when the window stays up for them alone, reserving nothing, the dots
+  at the pill's centre. These colours override `STYLE.md` and Look's
+  white on black: the brief that brought them fixes them.
+- **Notices:** a device starting to be used is announced as a notice
+  (see Network and Bluetooth notices): the device's glyph and
+  "Firefox is using the microphone", "OBS is sharing the screen",
+  "Something is recording the screen" (a screencopy recorder, which
+  names no app), or "Microphone – Firefox, Discord" for several; the
+  apps are the cut-with-"…" name. Several devices at once take turns,
+  3 s each. A device off for less than 2 s isn't announced again. Like
+  every notice, not shown while a panel is open or mid-drag; the dots
+  are. Not while dictating, for the microphone: the dictation face
+  already shows it listening; the dot does.
+- **A click on a dot** names the apps on that device, as a notice.
+- **Detection:** active PipeWire links from a capture device to an
+  app's stream (an `Audio/Source…` is the microphone; a `Video/Source`
+  with a `device.api` a camera, without one a screencast), and
+  Hyprland's `screencast` event for recorders that skip PipeWire,
+  trusted after 1.5 s so a screenshot doesn't light it. Quickshell's
+  own level meters (the dictation waveform, the settings window's input
+  level) and `stream.monitor` streams don't count.
+- Not covered: apps opening `/dev/video0` directly, not through
+  PipeWire; over fullscreen windows the island (Top layer) and its dots
+  are under the window.
+
+Testing: `qs -c dynamic-island ipc call privacy add|drop <kind> <app>`
+(made-up users), `clear`, `list <kind>` (a dot's click), `users`; and
+`../island/fake-capture.sh mic|camera|screen [app]` for real PipeWire
+streams from fake devices. Never test with `pw-record --target`: when
+the target is missing it records from the real microphone.
 
 ## Testing the notices
 
@@ -1328,3 +1371,11 @@ Dated record of what the user chose or rejected, and why.
 - 2026-10-13: no mic, camera or screen-share indicator and no low-battery
   flash for Bluetooth devices: the user doesn't need them. That closes
   the list of ideas from 2026-10-13.
+- 2026-10-13: the user tried the brief-built `../island` and found it
+  worse; the dynamic-island is the shell at login again. Its privacy
+  dots and notices are brought over at the user's request ("I like the
+  dots that indicate if something is recording"), reversing the same
+  day's "no mic, camera or screen-share indicator". Mine: the
+  announcement as a regular notice (3 s, not while a panel is open),
+  the dots kept while the island is hidden, no mic notice while
+  dictating.

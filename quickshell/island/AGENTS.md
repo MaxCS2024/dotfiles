@@ -4,12 +4,13 @@ A standalone Quickshell config (`qs -c island`, in
 `~/.dotfiles/quickshell/island`, linked to `~/.config/quickshell/island`
 by the rack manifest): a dynamic island built to the project brief
 below, from scratch, next to `../dynamic-island`, which it doesn't touch
-or share code with. Since 2026-10-13 it is the shell at login, in the
-dynamic-island's place (`hypr/modules/autostart.lua`:
-`env QT_QPA_PLATFORMTHEME=gtk3 qs -n -c island`; the GTK theme plugin
-gives it the icon theme, the session's qt5ct isn't installed for Qt 6).
-By hand, add `-d`. While it runs it is the notification daemon in
-dunst's place (see Notifications).
+or share code with. Not started at login: the user tried it as the
+shell at login on 2026-10-13, found it worse than the dynamic-island,
+and went back (taking its privacy dots along). Run it by hand with
+`env QT_QPA_PLATFORMTHEME=gtk3 qs -n -c island -d` (the GTK theme
+plugin gives it the icon theme; the session's qt5ct isn't installed for
+Qt 6). While it runs it is the notification daemon in dunst's place
+(see Notifications).
 
 This file is the design brief. Read it before creating or changing
 anything here. The project brief (the user's, 2026-10-13) is kept as
@@ -880,6 +881,10 @@ Running it next to the dynamic-island puts two pills at the top centre;
 SUPER+ALT+SPACE hides the dynamic-island meanwhile.
 
 # Decisions
+
+- 2026-10-13: back to the dynamic-island at login: the user found this
+  island worse. Its privacy dots and notices went into the
+  dynamic-island. This config stays in the repo, run by hand.
 
 - 2026-10-13: the dynamic-island's dictation face, at the user's
   request. Mine: a sticky transient (new to the queue) so it stays over

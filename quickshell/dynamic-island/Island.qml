@@ -37,14 +37,17 @@ PanelWindow {
     // While main's bar is on screen it reserves the strip and the island
     // sits over its centre; reserving here too would stack the island
     // below the bar.
-    exclusionMode: Controls.mainBarUp ? ExclusionMode.Ignore : ExclusionMode.Normal
+    // Hidden, it reserves nothing, even while the privacy dots keep the
+    // window up.
+    exclusionMode: Controls.mainBarUp || gone ? ExclusionMode.Ignore : ExclusionMode.Normal
     exclusiveZone: 24
     color: "transparent"
 
     // Big enough for the pill to grow into; only the pill takes clicks.
     // A fixed size, so the window isn't resized every frame of the opening:
     // the largest panel, the wallpaper gallery, decides it.
-    implicitWidth: Math.max(400, galleryWidth)
+    // Room for the privacy dots beside the widest pill too.
+    implicitWidth: Math.max(400 + 2 * 60, galleryWidth)
     implicitHeight: Math.max(288, galleryHeight)
     // The wallpaper gallery: exactly three whole images wide (the middle
     // one and one to each side, none cut off), and only as tall as its
@@ -53,7 +56,11 @@ PanelWindow {
     readonly property real galleryWidth: 3 * gallery.tileW + 2 * gallery.gap + 32
     readonly property real galleryTileHeight: Math.round(modelData.height * 0.12)
     readonly property real galleryHeight: galleryTileHeight + gallery.lift + 32
-    mask: Region { item: pill }
+    // The pill and the privacy dots take clicks; the rest passes through.
+    mask: Region {
+        Region { item: pill }
+        Region { item: privacyDots }
+    }
     // Keyboard focus while the settings panel (or one of its pages) is
     // open, for the Wi-Fi page's password field. Set as the panel opens,
     // before the focus grab: changing it while the grab is on clears the
@@ -64,7 +71,11 @@ PanelWindow {
         ? WlrKeyboardFocus.None
         : panel === "wallpaper" ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.OnDemand
     // Unmapped once the hide animation has run, so it takes no clicks.
-    visible: !gone
+    // Hidden, the window goes, unless a privacy dot is lit: nothing hides
+    // those. The pill has shrunk to a point by then, so only the dots
+    // show, at its centre.
+    readonly property bool privacyOn: Privacy.kinds.some(k => Privacy.users[k].length > 0)
+    visible: !gone || privacyOn
 
     // Which expanded panel opens: "player", "settings" or "power", or the
     // settings panel's "wifi", "bluetooth" and "battery" pages. Set while collapsed,
@@ -1467,4 +1478,56 @@ PanelWindow {
         slideIn.start()
     }
 
+
+    // ── Privacy dots ──
+    // Brought over from ../island (Privacy.qml): one dot per device in use,
+    // microphone (orange), camera (green), screen (red), in that order,
+    // never merged; 8px, 8px apart, just right of the pill and centred on
+    // its collapsed line, so they ride along as it grows and shrinks.
+    // Nothing hides them: not a panel, not hiding the island. A click
+    // names the apps on that device.
+    Row {
+        id: privacyDots
+        x: pill.x + pill.width + 4
+        y: pill.y + (Math.min(pill.height, 32) - height) / 2
+
+        Repeater {
+            model: Privacy.kinds
+
+            Item {
+                id: dot
+                required property string modelData
+                readonly property bool active: Privacy.users[modelData].length > 0
+
+                visible: active
+                width: 16
+                height: 16
+
+                Rectangle {
+                    id: mark
+                    anchors.centerIn: parent
+                    width: 8
+                    height: 8
+                    radius: 4
+                    color: Privacy.color(dot.modelData)
+                }
+
+                onActiveChanged: if (active) appear.restart()
+                NumberAnimation {
+                    id: appear
+                    target: mark
+                    property: "scale"
+                    from: 0
+                    to: 1
+                    duration: 160
+                    easing.type: Easing.OutBack
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: Privacy.list(dot.modelData)
+                }
+            }
+        }
+    }
 }

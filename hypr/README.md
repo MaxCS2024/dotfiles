@@ -182,14 +182,13 @@ Hyprland's own wallpapers and logo; awww draws the wallpaper.
 
 Runs once, on `hyprland.start`.
 
-- **`env QT_QPA_PLATFORMTHEME=gtk3 qs -n -c island`**: the island at
-  login since 2026-10-13 (brief in `quickshell/island/AGENTS.md`), and
-  with it the notification daemon: it stops dunst's unit while it runs.
-  The GTK theme plugin gives it the icon theme (the session's qt5ct has
-  no Qt 6 plugin). `-n` refuses a second copy. The dynamic-island
-  (`qs -n -c dynamic-island`) is no longer started; with it went the
-  wallpaper gallery (SUPER+ALT+W) (see `quickshell/island/AGENTS.md`,
-  Decisions).
+- **`qs -n -c dynamic-island`**: the shell at login (brief in
+  `quickshell/dynamic-island/AGENTS.md`). `-n` refuses a second copy.
+  From 2026-10-13 the brief-built `quickshell/island` replaced it for a
+  few hours; the user found it worse and the dynamic-island came back,
+  with that island's privacy dots. The island still runs by hand:
+  `env QT_QPA_PLATFORMTHEME=gtk3 qs -n -c island -d` (it then takes
+  notifications over from dunst while it runs).
 - **`qs -c settings`**: the settings window on its own, like the
   clipboard (SUPER+COMMA; brief in `quickshell/settings/AGENTS.md`). It
   also runs the dynamic-island's login jobs: reverting an unconfirmed
