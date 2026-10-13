@@ -1,1 +1,0 @@
-../../main/services/AppIcons.qml

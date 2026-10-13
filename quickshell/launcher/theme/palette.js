@@ -1,1 +1,0 @@
-../../main/theme/palette.js
