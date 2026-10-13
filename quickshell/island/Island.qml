@@ -30,7 +30,7 @@ PanelWindow {
     exclusiveZone: Config.topMargin + Config.compactHeight
     color: "transparent"
 
-    // Room for the largest state, the dots beside it and the spring's
+    // Room for the largest state, the dots beside it and a morph's
     // overshoot. Only the pill and the dots take input; the rest of the
     // window lets clicks through. Hidden over fullscreen, the pill leaves
     // the mask and only the dots remain.
