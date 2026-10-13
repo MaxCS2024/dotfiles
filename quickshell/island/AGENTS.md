@@ -1,0 +1,310 @@
+# Island
+
+A standalone Quickshell config (`qs -c island`, in
+`~/.dotfiles/quickshell/island`, linked to `~/.config/quickshell/island`
+by the rack manifest): a dynamic island built to the project brief
+below, from scratch, next to `../dynamic-island`, which it doesn't touch
+or share code with. It isn't started at login; run it by hand with
+`qs -n -c island -d`.
+
+This file is the design brief. Read it before creating or changing
+anything here. The project brief (the user's, 2026-10-13) is kept as
+given; Implementation and Decisions below record how it was built and
+every choice made on the way. `../STYLE.md` applies too, unless a
+section below overrides it.
+
+## Status
+
+The brief's build order, one step at a time; the user looks at each
+step before the next starts.
+
+1. Priority queue + size states + input mask: **built 2026-10-13**,
+   awaiting the user's look.
+2. OSD
+3. Media
+4. Battery events and Hyprland state changes
+5. Privacy indicators
+6. Notifications
+7. IPC live-activities API
+8. Split state
+
+---
+
+# Project brief: Dynamic island for Hyprland (Quickshell)
+
+## Vision
+Build a macOS/iOS-style "dynamic island" for Hyprland using Quickshell (QML).
+It is a glanceable, transient status surface at the top-center of the screen:
+it shows what is happening right now, offers one or two quick actions, then
+gets out of the way. It is NOT a status bar, control center, or launcher.
+
+## The inclusion test (apply to every feature request)
+A feature belongs in the island only if it is ALL of:
+1. Time-sensitive or event-driven (not persistent information)
+2. Readable at a glance
+3. Usable with at most one or two clicks, no typing
+If it needs browsing, searching, typing, or settings, a standalone tool does
+it better and it is out of scope. When in doubt, leave it out and point users
+to the IPC interface (below) so they can build it themselves.
+
+## v1 features
+
+**Media (MPRIS)** — flagship. Compact: album art + animated playing indicator.
+Expanded: title, artist, progress bar, previous/play-pause/next. Use
+Quickshell's Mpris service; works with any MPRIS player.
+
+**Notifications** — the island IS the notification daemon (Quickshell
+Notifications server), replacing mako/dunst/swaync. Show incoming notifications
+briefly with app icon, summary, and action buttons; support dismiss and
+default action. Include a do-not-disturb toggle. No history center, grouping,
+or DND scheduling.
+
+**OSD** — brief level indicator when volume, brightness, or mic mute changes.
+Volume/mute via Quickshell's Pipewire service; brightness via brightnessctl
+or ddcutil. Replaces swayosd.
+
+**Battery events** — charger plugged/unplugged, low and critical battery,
+charging complete (UPower). Events only, never a constant percentage.
+
+**Privacy indicators** — mic, camera, and screen sharing/recording in use,
+detected through Pipewire nodes. See special rules below.
+
+**Hyprland state changes** — brief indicator on submap enter/exit and keyboard
+layout change, via Quickshell's Hyprland IPC events. No persistent workspaces.
+
+**IPC "live activities" API** — the key scope-control feature. Expose an
+IpcHandler so any script can push an activity (icon, label, optional progress,
+optional timeout) and remove it, e.g. `qs ipc call island show ...`. Timers,
+build progress, downloads, etc. are user scripts, not built-in features.
+
+## Explicitly out of scope
+App launcher (fuzzel/rofi), Wi-Fi/Bluetooth management (nmtui, impala,
+bluetui), notification history center, calendar/weather/system stats (bar,
+btop), clipboard history (cliphist), workspace overview (bar, hyprexpo),
+system tray (bar), power menu (wlogout), built-in timer/stopwatch (use IPC),
+per-app volume mixer, app permission management, GUI settings panel (use a
+config file).
+
+## Visual design
+One island, not multiple bars. A single dark pill at top-center that morphs
+between states with smooth size/shape animations:
+
+- **Idle** — small pill with a clock, or a tiny notch (configurable)
+- **Compact** — one persistent activity (e.g. art + waveform for media)
+- **Split** — main pill plus one small detached circle when two activities
+  must show at once. Maximum two shapes; a third activity waits in the queue
+- **Expanded** — on hover or click; full controls for the current activity
+- **Transient** — OSD, notifications, events temporarily take over, then revert
+
+## Privacy indicator rules (special case)
+Privacy indicators do NOT participate in the priority queue. They live on a
+separate overlay layer that nothing can suppress: not DND, not the expanded
+state, not fullscreen apps.
+1. On first activation, the island expands for ~2s naming the app
+   ("Firefox is using the microphone")
+2. While active, a small colored dot sits at the island's right edge, pinned
+   to the same position in every state
+3. When inactive, the dot disappears entirely (no idle indicator)
+Colors: orange = microphone, green = camera, red = screen sharing. Show one
+dot per active type side by side; never merge. Clicking a dot lists which
+apps are using the device.
+
+## Architecture
+
+**Activity priority queue (build this first).** Every feature submits
+activities into one queue. Each activity has a priority and a lifetime
+(persistent or timed). Transient activities temporarily override persistent
+ones; when they expire, the island falls back to the highest-priority
+persistent activity. Features must never manipulate the island directly.
+
+**Window and input.** Use a layer-shell PanelWindow. The window is larger than
+the visible pill to leave room for animation, so set Quickshell's `mask` with
+a Region matching the visible shape. Clicks outside the pill must pass through
+to windows underneath. This is the most common bug in island projects.
+
+**Privacy dots** are drawn inside the same window as the island so they
+animate with it.
+
+**Fullscreen.** When the focused Hyprland window is fullscreen, hide the
+island and shrink the input mask to only the privacy dots (which stay visible).
+
+**Multi-monitor.** Show the island on the focused monitor only (default).
+
+**Standalone.** The island is its own component and must coexist with any bar
+the user already runs. It does not replace a bar.
+
+**Configuration.** A single config file (JSON or a QML properties file) for
+colors, sizes, timeouts, idle-state choice, and per-feature enable/disable.
+
+## Build order
+1. Priority queue + size states (idle/compact/expanded) + input mask
+2. OSD (simplest feature; good for testing the queue and animations)
+3. Media
+4. Battery events and Hyprland state changes
+5. Privacy indicators (overlay layer + fullscreen behavior)
+6. Notifications (most edge cases; needs a stable framework)
+7. IPC live-activities API
+8. Split state
+
+## v2 candidates (only after v1 is stable)
+Wi-Fi/Bluetooth connection events (no management), screenshot confirmation
+with thumbnail, per-app notification rules. Each must still pass the
+inclusion test.
+
+## Notes for the implementer
+Verify Quickshell API names (services, IpcHandler, mask/Region, layer-shell
+properties) against current Quickshell documentation before relying on them,
+since the API evolves.
+
+---
+
+# Implementation
+
+## Files
+
+- `shell.qml`: the entry point; one `Island`.
+- `Config.qml`: the config file (a QML singleton of read-only
+  properties). Every colour, size, timeout and the idle choice; each
+  feature's on/off switch is added with the feature.
+- `ActivityQueue.qml`: the queue. Features call `submit()` and
+  `remove()`; nothing else.
+- `Island.qml`: the window, the pill, its states, the mask, the pointer.
+- `ActivityFace.qml`: the generic face (icon, label, progress) in the
+  compact, transient and expanded layouts.
+- `test-queue.sh`: walks every state and queue rule (see Testing).
+
+## Quickshell API (checked against the installed 0.3.2)
+
+From the qmltypes in `/usr/lib/qt6/qml/Quickshell`:
+- `Region` has `item`, `x/y/width/height`, `radius` (and per-corner
+  radii), `shape`, `intersection` and `regions`, so the mask can follow
+  the pill's rounded shape and, in step 5, add the dots as more regions.
+- `IpcHandler` (`Quickshell.Io`): `target`, `enabled`; functions with
+  typed arguments. A function can't be called `show`: `qs ipc` reserves
+  it (found in dynamic-island). So step 7 can't use the brief's
+  `qs ipc call island show ...` literally; it needs another verb.
+- `Hyprland` (`Quickshell.Hyprland`): `focusedMonitor`, `focusedWorkspace`,
+  `activeToplevel`, `monitors`, `workspaces`, `toplevels`, `rawEvent`,
+  `dispatch`. `HyprlandWorkspace.hasFullscreen` serves step 5;
+  `rawEvent` serves submap and layout events in step 4.
+
+## Activity queue
+
+An activity is a plain object: `key`, `transient`, `priority`, `timeout`
+(ms), `icon`, `label`, `progress` (0–1, or -1 for none) and `face` ("" for
+the generic one). The queue keeps them sorted, best first.
+
+- **Same key, same activity.** Submitting a key already in the queue
+  updates it; fields left out keep their value. The volume changing
+  again updates the volume OSD instead of queueing a second one.
+- **Order.** Higher priority first. Ties: transients first come, first
+  shown (notifications keep their order); persistents newest first.
+- **Transient.** Takes the island over from any persistent activity.
+  Its timeout runs only while it is on screen, and restarts when it is
+  submitted again. One waiting behind a higher transient gets its full
+  time when its turn comes. No timeout given means
+  `Config.transientTimeout` (2.5 s).
+- **Persistent.** Shown in the compact state when no transient is up.
+  A timeout is its lifetime, counted from the last submit; 0 means until
+  removed.
+- **Expanded holds transients.** While the island is open, transients
+  wait with their timers stopped, so the controls under the pointer
+  don't swap out. Privacy indicators (step 5) are outside the queue and
+  not held.
+
+### Priorities
+
+Proposed, set as each feature is built:
+
+| Priority | Activity                                      |
+|----------|-----------------------------------------------|
+| 60       | notifications                                 |
+| 50       | OSD                                           |
+| 45       | Hyprland submap and layout                    |
+| 40       | battery events                                |
+| 30       | IPC live activities (the default for scripts) |
+| 20       | media                                         |
+
+## Window
+
+- One `PanelWindow` on the focused monitor (`Hyprland.focusedMonitor`
+  matched to `Quickshell.screens` by name); it moves with focus.
+- Anchored top, layer `Top`, namespace `quickshell:island`. Step 5 moves
+  it to `Overlay` for the privacy dots, and then hides the pill itself
+  over fullscreen windows.
+- The window is the expanded size plus room for the spring's overshoot
+  (448 × 183). The mask is a `Region` on the pill with the pill's radius,
+  so only the visible pill takes clicks.
+- With `Config.reserveSpace` it reserves the top margin plus the compact
+  pill's height (39px), so tiled windows start below a compact pill.
+  Idle is smaller; expanded and transient overlap the windows.
+
+## States
+
+| State     | When                                   | Size                         |
+|-----------|----------------------------------------|------------------------------|
+| idle      | the queue is empty (or only transients held) | clock: time + 16px each side × 24; notch: 120 × 8 |
+| compact   | a persistent activity, no transient up | content + 16px each side, 160–400 × 32 |
+| transient | a transient is up                      | content + 16px each side, 160–400 × 40 |
+| expanded  | clicked (or hovered, `Config.expandOn`) on a compact pill | 400 × 152 |
+
+- Expanded opens only from compact (idle and transients have nothing to
+  expand) and closes when the pointer has been off the pill for 400ms,
+  on a second click, or when the last persistent activity goes.
+- The generic face: compact is icon + label; transient adds a 64px level
+  bar when there is a progress; expanded is a 32px icon, the label (two
+  lines) and a full-width bar.
+
+## Look
+
+The dynamic-island's look, since it is the user's: a black pill, white
+text in JetBrainsMono Nerd Font Bold 13px, fully rounded (radius height
+/ 2) up to 32px once expanded. Colours are `Config`'s own, not
+`Appearance` tokens (overrides `STYLE.md` §2), and the pill is fully
+round (overrides §5's 2px corners).
+
+## Motion
+
+- The pill's width and height follow the state on a spring (`spring 4`,
+  `damping 0.36`), with a slight overshoot; it grows down and outward
+  from the top centre.
+- The content fades out (80ms), swaps, and fades in (140ms, OutCubic)
+  while the pill is still moving. An update to the activity on screen
+  (a new progress) changes in place, without the fade.
+- Level bars ease to a new value (120ms, OutCubic).
+
+## Testing
+
+`./test-queue.sh` walks idle, compact, transient over compact, an update
+in place, two transients in priority order, a higher persistent and the
+fall back, expanded holding a transient, a persistent's lifetime, and
+idle again. It uses two test-only IPC targets, which step 7's API
+doesn't replace:
+
+- `qs -c island ipc call queue persist|flash key icon label progress priority ms`,
+  `drop key`, `clear`, `list`.
+- `qs -c island ipc call view expand|collapse|current`.
+
+Running it next to the dynamic-island puts two pills at the top centre;
+SUPER+ALT+SPACE hides the dynamic-island meanwhile.
+
+# Decisions
+
+- 2026-10-13: a new config built from this brief, next to the
+  dynamic-island, not a rework of it. The user's pick over adopting the
+  brief's good parts into the dynamic-island, replacing its brief, or a
+  comparison only. The two disagree on notifications, privacy dots,
+  Wi-Fi/Bluetooth pages, the settings window, the power menu and
+  replacing the bar; this config follows the brief.
+- 2026-10-13: named `island` (after the brief's `qs ipc call island`);
+  not started at login. Mine.
+- 2026-10-13: the config file is a QML singleton (`Config.qml`), which
+  the brief allows: it reloads on save and can carry comments. Mine.
+- 2026-10-13: the queue rules above (same key updates, tie order,
+  transient time counted only on screen, expanded holds transients,
+  priorities). Mine; the brief leaves them open.
+- 2026-10-13: expanded opens on click by default, closes 400ms after the
+  pointer leaves. Mine.
+- 2026-10-13: the focused-monitor rule is built in step 1 with the
+  window, not later. Mine.
+- 2026-10-13: the dynamic-island's look (black, white, bold, round). Mine.
