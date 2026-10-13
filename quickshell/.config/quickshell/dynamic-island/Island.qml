@@ -14,8 +14,7 @@ import QtQuick
 // transcribes, the dictation face covers all of that. A left click
 // opens the full media player, a right click a small settings panel
 // (whose network, Bluetooth and battery segments turn it into a page of
-// their own), a middle click a power menu; a click on any of them, or anywhere
-// else, closes it. SUPER+ALT+SPACE hides and shows it, with the main bar
+// their own); a click on either, or anywhere else, closes it. SUPER+ALT+SPACE hides and shows it, with the main bar
 // when that runs: the sides close in to an orb that fades out, and the
 // reverse.
 PanelWindow {
@@ -66,7 +65,7 @@ PanelWindow {
     // grab, which closes the island.
     // The wallpaper gallery takes it outright, so the arrows work without a
     // click first.
-    WlrLayershell.keyboardFocus: phase === "collapsed" || panel === "player" || panel === "power"
+    WlrLayershell.keyboardFocus: phase === "collapsed" || panel === "player"
         ? WlrKeyboardFocus.None
         : panel === "wallpaper" ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.OnDemand
     // Unmapped once the hide animation has run, so it takes no clicks.
@@ -76,16 +75,14 @@ PanelWindow {
     readonly property bool privacyOn: Privacy.kinds.some(k => Privacy.users[k].length > 0)
     visible: !gone || privacyOn
 
-    // Which expanded panel opens: "player", "settings" or "power", or the
+    // Which expanded panel opens: "player" or "settings", or the
     // settings panel's "wifi", "bluetooth" and "battery" pages. Set while collapsed,
     // or by switchTo() while open, which eases the size from one to the
     // other.
     property string panel: "player"
-    readonly property real expandedWidth: panel === "power" ? 304
-        : panel === "wallpaper" ? galleryWidth : 360
+    readonly property real expandedWidth: panel === "wallpaper" ? galleryWidth : 360
     property real expandedHeight: panel === "wallpaper" ? galleryHeight
         : panel === "settings" ? 156 + quickRowHeight * quickReveal
-        : panel === "power" ? 88
         : panel === "wifi" || panel === "bluetooth" ? 288
         : panel === "battery" ? 200 : 128
     Behavior on expandedHeight {
@@ -478,7 +475,7 @@ PanelWindow {
         property bool onDisplayNotice: false
 
         anchors.fill: parent
-        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
         onPressed: mouse => {
             pressX = mouse.x
             moved = false
@@ -533,9 +530,6 @@ PanelWindow {
             } else if (mouse.button === Qt.RightButton) {
                 if (root.phase === "collapsed")
                     root.open("settings")
-            } else if (mouse.button === Qt.MiddleButton) {
-                if (root.phase === "collapsed")
-                    root.open("power")
             } else if (root.dragging) {
                 root.release(moved ? dx : 0)
                 if (!moved && onDisplayNotice)
@@ -1217,59 +1211,6 @@ PanelWindow {
                 root.close()
             }
             onCancelled: root.close()
-        }
-
-        // The power menu: four round icon orbs in a row. The main bar's power menu's commands and icons,
-        // and like it, no confirmation: a click runs the action.
-        Row {
-            id: powerView
-            x: 16
-            y: 16
-            spacing: 16
-            opacity: root.panel === "power" ? root.panelOpacity : 0
-            visible: opacity > 0
-
-            Repeater {
-                model: [
-                    { icon: "\uf023", label: "Lock", cmd: "pidof hyprlock || hyprlock" },
-                    { icon: "\uf021", label: "Reboot", cmd: "systemctl reboot" },
-                    { icon: "\uf2f5", label: "Log out",
-                        cmd: "command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'" },
-                    { icon: "\uf011", label: "Power off", cmd: "systemctl poweroff" }
-                ]
-
-                // An orb: white at 12%, solid white with a black icon while
-                // hovered.
-                delegate: Rectangle {
-                    id: orbItem
-                    required property var modelData
-                    width: 56
-                    height: 56
-                    radius: width / 2
-                    color: orbArea.containsMouse ? "white" : Qt.rgba(1, 1, 1, 0.12)
-                    Behavior on color { ColorAnimation { duration: 120 } }
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: orbItem.modelData.icon
-                        color: orbArea.containsMouse ? "black" : "white"
-                        font.family: "JetBrainsMono Nerd Font"
-                        font.pixelSize: 20
-                    }
-
-                    MouseArea {
-                        id: orbArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: {
-                            root.close()
-                            // Detached, so a running hyprlock outlives any
-                            // reload of the island.
-                            Quickshell.execDetached(["sh", "-c", orbItem.modelData.cmd])
-                        }
-                    }
-                }
-            }
         }
     }
 

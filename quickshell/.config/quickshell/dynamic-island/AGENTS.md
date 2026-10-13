@@ -14,8 +14,7 @@ for as long as dictation (voxtype, SUPER+V) listens. A
 left click expands it into a media player, a right click into a small
 settings panel (network, Bluetooth, volume, battery, and the volume and
 brightness sliders, with a Wi-Fi page and a Bluetooth page for
-connecting and a battery page for the power mode), a middle click into
-a power menu. SUPER+COMMA opens the settings window, a normal Hyprland
+connecting and a battery page for the power mode). SUPER+COMMA opens the settings window, a normal Hyprland
 window for the deeper settings (displays, sound, network, Bluetooth,
 power, input).
 
@@ -54,7 +53,6 @@ does may need main.
   here first.
 - The Wi-Fi and Bluetooth pages, for connecting only, and the battery
   page, for the power profile only.
-- The power menu (with main gone, it is the only one).
 - The wallpaper gallery (SUPER+ALT+W; see Wallpaper gallery).
 - The settings window: Displays, Sound, Network, Bluetooth, Power and
   Input, and nothing else (see Settings window).
@@ -128,7 +126,6 @@ The island shows one thing at a time.
 | wifi      | settings panel's network segment | Wi-Fi page: header, networks | 360 × 288 |
 | bluetooth | settings panel's Bluetooth segment | Bluetooth page: header, devices | 360 × 288 |
 | battery page | settings panel's battery segment | battery page: header with the charge, power profiles | 360 × 200 |
-| power     | middle click               | lock, reboot, log out, power off orbs | 304 × 88 |
 | wallpaper | SUPER+ALT+W                | wallpaper gallery        | three images × its row (757 × 178) |
 | workspace | switching to any workspace | "Workspace N"            | fits the text |
 | osd       | volume or brightness changes | icon, percentage, filling ring | one width for 0–100% |
@@ -364,9 +361,8 @@ bars dim to 60% and become a wave travelling left to right, at most 8px.
 Main's red stop button is white here (Look: white on black).
 
 The face's buttons are the only thing on it to click: a press elsewhere
-on it neither drags nor opens the player. A right or middle click still
-opens the settings panel or the power menu over it, and closing them
-brings it back. The island doesn't take keyboard focus for it, so
+on it neither drags nor opens the player. A right click still opens
+the settings panel over it, and closing it brings it back. The island doesn't take keyboard focus for it, so
 clicking stop leaves the text going to the window that had it. Hidden
 with SUPER+ALT+SPACE, the island shows nothing, dictation or not.
 
@@ -629,20 +625,6 @@ Testing: open the pages with a temporary IpcHandler (`root.open`, then
 `root.switchTo`) and look. Don't click a row, the switches or the arrow,
 and never submit a password, to check them. A new page file isn't
 picked up by the reload; restart the island.
-
-## Power menu
-
-A middle click on the pill opens it, with the same open/close sequence as
-the player. 16px padding; four 56px round icon-only orbs, 16px apart:
-Lock, Reboot, Log out, Power off. An
-orb is white at 12% with a white icon, and solid white with a black icon
-while hovered. The commands and icons are the main bar's power menu's
-(`powermenu/PowerMenuPopout.qml`, logout from `Theme.logoutCmd`), and like
-it there is no confirmation: a click closes the island and runs the
-action, through `Quickshell.execDetached` so a running hyprlock outlives
-an island reload.
-
-Testing: never click an orb, or run any of these commands, to check it.
 
 ## Wallpaper gallery
 
@@ -1400,3 +1382,6 @@ Dated record of what the user chose or rejected, and why.
   still has its notices. Song and time now loop while something plays
   (the same either-way drag the user chose for two views); with nothing
   playing only the time is left, and a drag rubber-bands.
+- 2026-10-13: the power menu (middle click: lock, reboot, log out,
+  power off) is gone, at the user's request, slimming the island down;
+  the middle click does nothing now. Logging out stays on SUPER+M.
