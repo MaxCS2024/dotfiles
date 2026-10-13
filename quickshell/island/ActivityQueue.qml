@@ -1,6 +1,7 @@
 pragma Singleton
 
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 import QtQuick
 
@@ -25,6 +26,8 @@ Singleton {
     //              while the island is held open (a level is stale by then)
     //   revive     brings back a key the user dismissed; without it, a
     //              dismissed persistent activity stays away (see dismiss)
+    //   defer      for a transient: ms it may wait for a break before it
+    //              shows; the profile's unless given (see Deferral)
     // Objects are replaced, never changed in place, so bindings see updates.
     property var activities: []
 
@@ -37,7 +40,7 @@ Singleton {
             activities = activities.filter(a => !a.transient || a.waits)
     }
 
-    readonly property var transients: activities.filter(a => a.transient)
+    readonly property var transients: activities.filter(a => a.transient && !a.deferredUntil)
     readonly property var persistents: activities.filter(a => !a.transient)
     readonly property var shownTransient: holdTransients ? null : (transients[0] ?? null)
     readonly property var topPersistent: persistents[0] ?? null
@@ -72,6 +75,15 @@ Singleton {
         // battery notice replacing a low one), else as before.
         a.priority = spec.priority
             ?? (spec.profile !== undefined || !old ? Config.profile(a.profile).priority : old.priority)
+        a.defer = spec.defer
+            ?? (spec.profile !== undefined || !old ? Config.profile(a.profile).defer ?? 0 : old.defer)
+        // A new deferrable transient waits. An update to one of the same
+        // profile keeps its state (still waiting, or already up); another
+        // kind under the same key (low battery after "Charger connected")
+        // is new.
+        const update = old && old.profile === a.profile
+        const waiting = update ? old.deferredUntil : (a.transient && a.defer > 0 ? Date.now() + a.defer : 0)
+        a.deferredUntil = a.transient && a.defer > 0 ? waiting : 0
         delete a.revive
         if (a.transient && !a.waits && holdTransients) {
             remove(a.key)
@@ -85,6 +97,7 @@ Singleton {
         a.expiresAt = !a.transient && a.timeout > 0 ? Date.now() + a.timeout : 0
         activities = activities.filter(x => x.key !== a.key).concat([a]).sort(compare)
         scheduleExpiry()
+        scheduleRelease()
     }
 
     // A feature taking its activity away also forgets a dismissal: the
@@ -148,6 +161,57 @@ Singleton {
         onTriggered: root.remove(root.timedKey)
     }
 
+    // ── Deferral ──
+    // From the research brief: a deferrable transient (low battery; later
+    // normal notifications and IPC activities) waits for a break, a moment
+    // the user is between things: switching workspace, moving focus, or
+    // closing a window. It shows then, or when its `defer` runs out,
+    // whichever comes first, in its order of arrival.
+    // activewindowv2 also comes again, same address, whenever the focused
+    // window's title changes (a terminal's spinner does it several times
+    // a second), so only a new address counts as moving focus.
+    property string focusedAddress: ""
+
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (event.name === "activewindowv2") {
+                if (event.data === root.focusedAddress)
+                    return
+                root.focusedAddress = event.data
+                root.release()
+            } else if (event.name === "workspace" || event.name === "closewindow")
+                root.release()
+        }
+    }
+
+    function release() {
+        if (!activities.some(a => a.deferredUntil))
+            return
+        activities = activities.map(a => a.deferredUntil ? Object.assign({}, a, { deferredUntil: 0 }) : a)
+        scheduleRelease()
+    }
+
+    function scheduleRelease() {
+        const ends = activities.filter(a => a.deferredUntil).map(a => a.deferredUntil)
+        if (!ends.length) {
+            releaseTimer.stop()
+            return
+        }
+        releaseTimer.interval = Math.max(0, Math.min(...ends) - Date.now())
+        releaseTimer.restart()
+    }
+
+    Timer {
+        id: releaseTimer
+        onTriggered: {
+            const now = Date.now()
+            root.activities = root.activities.map(a =>
+                a.deferredUntil && a.deferredUntil <= now ? Object.assign({}, a, { deferredUntil: 0 }) : a)
+            root.scheduleRelease()
+        }
+    }
+
     // ── Persistent lifetimes ──
     // One timer, set for whichever persistent activity runs out first.
     function scheduleExpiry() {
@@ -186,6 +250,10 @@ Singleton {
         function drop(key: string): void {
             root.remove(key)
         }
+        // What a break (workspace switch, focus change, window closing) does.
+        function release(): void {
+            root.release()
+        }
         // What a right click on the pill does to that activity.
         function dismiss(key: string): void {
             root.dismiss(key)
@@ -196,7 +264,8 @@ Singleton {
         }
         function list(): string {
             return root.activities.map(a =>
-                `${a.transient ? "transient " : "persistent"} ${a.priority} ${a.key} – ${a.label}`).join("\n")
+                `${a.deferredUntil ? `deferred ${Math.round((a.deferredUntil - Date.now()) / 1000)}s ` : ""}`
+            + `${a.transient ? "transient " : "persistent"} ${a.priority} ${a.key} – ${a.label}`).join("\n")
                 + Object.keys(root.dismissed).map(k => `\ndismissed ${k}`).join("")
         }
     }

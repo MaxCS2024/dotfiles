@@ -224,19 +224,18 @@ Most of these studies are lab-based, older, or done on phones rather than deskto
 - [Apple Live Activities design guidelines, summarized by 9to5Mac](https://9to5mac.com/2022/09/26/iphone-14-pro-live-activities-guidelines/)
 - [Animation duration guidance citing NN/g and Material Design](https://lists.w3.org/Archives/Public/public-css-archive/2025Apr/0702.html)
 
-## Open against the project brief, _TBD_
+## Where it meets the project brief
 
-To settle with the user before step 6 (and 7):
-- **DND or a hold mode.** The project brief asks for a do-not-disturb
-  toggle; this one, for a hold mode that shows a count and releases on
-  demand instead. Step 6 builds one of them.
-- **Deferring battery and Hyprland events.** The table defers them up
-  to 45 s. A layout or submap notice, or "Charger connected", answers
-  the user's own action and would only confuse late; my proposal is to
-  defer only events the user didn't cause (low battery) and show the
-  rest at once. Not built either way yet: they show at once.
-- **IPC activities** must end (a timeout or an explicit removal) and are
-  capped at medium interruption: for step 7.
+Settled by the user, 2026-10-13:
+- **A hold mode, not DND.** Step 6 builds the research's hold mode (it
+  shows a count and releases on demand) in place of the project brief's
+  do-not-disturb toggle.
+- **Only low battery is deferred** of the battery and Hyprland events.
+  Charger, charged, layout and submap notices answer the user's own
+  action and show at once; critical battery never waits.
+
+For step 7: IPC activities must end (a timeout or an explicit removal)
+and are capped at medium interruption.
 
 ---
 
@@ -292,6 +291,9 @@ From the qmltypes in `/usr/lib/qt6/qml/Quickshell`:
   `properties` (`media.class`, `device.api`, `application.name`).
   `.values` is a list type, not a JS array: `Array.from` it.
 - Qt's JavaScript has no `Array.prototype.flatMap`.
+- Hyprland sends `activewindowv2` again, with the same address,
+  whenever the focused window's title changes (a terminal's spinner:
+  several a second). A focus change is a new address.
 - `UPower` (`Quickshell.Services.UPower`): `displayDevice`, `devices`,
   `onBattery`. `UPowerDevice` has `percentage` (0–1), `state`
   (`UPowerDeviceState`: Unknown, Charging, Discharging, Empty,
@@ -338,6 +340,14 @@ none), `face` ("osd", "media", or "" for the generic one), `waits` and
   instead, both when it arrives and when the island opens over it: a
   level is stale by the time the island closes.
 
+- **Deferral.** A transient whose profile has a `defer` (low battery;
+  normal notifications and IPC activities to come) waits, unseen, for
+  a break: a workspace switch (`workspace`), focus moving to another
+  window (`activewindowv2` with a new address), or a window closing
+  (`closewindow`). It shows then, or when `defer` (45 s) runs out, in
+  its order of arrival. An update of the same profile keeps it waiting;
+  another kind under the same key ("Charger connected" for a waiting
+  "Low battery") replaces it and shows at once.
 - **Dismissing.** A right click on the pill dismisses what it shows
   (`ActivityQueue.dismiss`): a transient is gone; a persistent one
   leaves and stays away, its feature's updates ignored, until the
@@ -457,7 +467,7 @@ priority 40, 3 s, the generic face.
 | charger out | `onBattery` turns true | 󰚦 "On battery – 46%" |
 | charged | Charging → FullyCharged | 󰁹 "Fully charged" |
 | charged | Charging → PendingCharge (the charge limit, 80% here) | 󰁹 "Charged to 80%" |
-| low | on battery, crossing below `batteryLowPercent` (20) | 󰁺 "Low battery – 19%" |
+| low | on battery, crossing below `batteryLowPercent` (20); waits up to 45 s for a break (profile `lowBattery`) | 󰁺 "Low battery – 19%" |
 | critical | on battery, crossing below `batteryCriticalPercent` (5), or already below it at start | 󰂃 "Battery critical – 4%", priority 55, 6 s |
 
 The first reading, and any in the first 2 seconds, only sets the
@@ -541,17 +551,18 @@ From the research brief. Every activity type has an interruption
 profile in `Config.profiles`: its priority, and the pill's morph when
 it arrives (enter) and when the island falls back after it (exit).
 
-| Profile | Interruption | Priority | Enter | Exit | Overshoot |
-|---------|--------------|----------|-------|------|-----------|
-| privacy | high | (not queued) | 250 | 150 | yes |
-| urgent (step 6) | high | 70 | 280 | 180 | yes |
-| notification (step 6) | medium | 60 | 280 | 180 | no |
-| criticalBattery | high | 55 | 250 | 150 | yes |
-| osd | low | 50 | 100 | 150 | no |
-| hyprland | low | 45 | 220 | 150 | no |
-| battery | low | 40 | 220 | 150 | no |
-| ipc (step 7) | medium | 30 | 250 | 180 | no |
-| media | low | 20 | 250 | 150 | no |
+| Profile | Interruption | Priority | Enter | Exit | Overshoot | Defer |
+|---------|--------------|----------|-------|------|-----------|-------|
+| privacy | high | (not queued) | 250 | 150 | yes | – |
+| urgent (step 6) | high | 70 | 280 | 180 | yes | – |
+| notification (step 6) | medium | 60 | 280 | 180 | no | 45 s |
+| criticalBattery | high | 55 | 250 | 150 | yes | – |
+| osd | low | 50 | 100 | 150 | no | – |
+| hyprland | low | 45 | 220 | 150 | no | – |
+| battery | low | 40 | 220 | 150 | no | – |
+| lowBattery | low | 40 | 220 | 150 | no | 45 s |
+| ipc (step 7) | medium | 30 | 250 | 180 | no | 45 s |
+| media | low | 20 | 250 | 150 | no | – |
 
 - **Which time.** Something arriving (a transient, an announcement, or
   an activity outranking the one up) moves at its enter time. Falling
@@ -583,6 +594,8 @@ doesn't replace:
 
 - `qs -c island ipc call queue persist|flash key icon label progress priority ms`,
   `drop key`, `clear`, `list`.
+- `qs -c island ipc call queue release`: what a break does to waiting
+  activities; `queue list` shows them as "deferred Ns".
 - `qs -c island ipc call view expand|collapse|current|dismiss`
   (dismiss: what a right click does); `queue dismiss <key>`. `queue
   list` also lists dismissed keys.
@@ -671,6 +684,12 @@ SUPER+ALT+SPACE hides the dynamic-island meanwhile.
   right click as the gesture; media staying dismissed through new
   tracks; the exact numbers within its ranges. Deferral and DND vs hold
   mode left _TBD_ for step 6.
+- 2026-10-13: the user chose the research's hold mode over the project
+  brief's DND toggle (step 6), and to defer only low battery among the
+  battery and Hyprland events. Deferral built in the queue for any
+  profile with a `defer`: released by a workspace switch, a focus
+  change (a new window address, not a title change) or a window
+  closing, else after 45 s.
 - 2026-10-13: no global shortcuts from the volume and brightness keys
   (the dynamic-island's way of answering a press at 0% or 100%). It
   would mean new shortcut names and edits to `hypr/modules/binds`;

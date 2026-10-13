@@ -27,20 +27,26 @@ Singleton {
     // and when it leaves. The research brief's starting points, to tune.
     //   enter, exit  ms the pill takes to morph in and out; exits shorter
     //   overshoot    one slight overshoot on arrival; high interruption only
+    //   defer        ms a transient may wait for a break (a workspace
+    //                switch, a focus change, a window closing) before it
+    //                shows; 0 shows it at once
     // Privacy isn't in the queue, so it has no priority.
     readonly property var profiles: ({
         privacy:         { interruption: "high",   enter: 250, exit: 150, overshoot: true },
         urgent:          { interruption: "high",   priority: 70, enter: 280, exit: 180, overshoot: true },
-        notification:    { interruption: "medium", priority: 60, enter: 280, exit: 180, overshoot: false },
+        notification:    { interruption: "medium", priority: 60, enter: 280, exit: 180, overshoot: false, defer: 45000 },
         criticalBattery: { interruption: "high",   priority: 55, enter: 250, exit: 150, overshoot: true },
         osd:             { interruption: "low",    priority: 50, enter: 100, exit: 150, overshoot: false },
         hyprland:        { interruption: "low",    priority: 45, enter: 220, exit: 150, overshoot: false },
         battery:         { interruption: "low",    priority: 40, enter: 220, exit: 150, overshoot: false },
-        ipc:             { interruption: "medium", priority: 30, enter: 250, exit: 180, overshoot: false },
+        // Low battery is the one battery event the user didn't cause:
+        // it waits for a break. Charger notices answer the user at once.
+        lowBattery:      { interruption: "low",    priority: 40, enter: 220, exit: 150, overshoot: false, defer: 45000 },
+        ipc:             { interruption: "medium", priority: 30, enter: 250, exit: 180, overshoot: false, defer: 45000 },
         media:           { interruption: "low",    priority: 20, enter: 250, exit: 150, overshoot: false },
     })
     // For an activity that names no profile (the test queue's).
-    readonly property var defaultProfile: ({ interruption: "medium", priority: 0, enter: 250, exit: 150, overshoot: false })
+    readonly property var defaultProfile: ({ interruption: "medium", priority: 0, enter: 250, exit: 150, overshoot: false, defer: 0 })
 
     function profile(name) {
         return profiles[name] ?? defaultProfile

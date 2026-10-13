@@ -89,8 +89,9 @@ Singleton {
         submit({ icon: "\u{f0079}", label: full ? "Fully charged" : `Charged to ${pct(p)}` })
     }
 
+    // Waits for a break (up to 45 s): the user didn't cause it.
     function showLow(p) {
-        submit({ icon: "\u{f007a}", label: `Low battery – ${pct(p)}` })
+        submit({ icon: "\u{f007a}", label: `Low battery – ${pct(p)}`, profile: "lowBattery" })
     }
 
     // Above everything but notifications, and longer: the laptop is
