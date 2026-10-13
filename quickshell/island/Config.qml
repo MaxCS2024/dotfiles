@@ -21,6 +21,12 @@ Singleton {
     // How long a transient activity shows when it names no timeout.
     readonly property int transientTimeout: 2500
 
+    // ── Features ──
+    // Volume, microphone mute and brightness levels.
+    readonly property bool osd: true
+    // How long the OSD stays after the last change.
+    readonly property int osdTimeout: 1500
+
     // ── Window ──
     // Distance from the top of the screen to the pill.
     readonly property int topMargin: 7

@@ -18,13 +18,20 @@ Singleton {
     //              is on screen; a persistent one lives this long (0: until
     //              removed)
     //   icon, label, progress (0–1, or -1 for none)
-    //   face       the face that draws it; "" for the generic one
+    //   face       the face that draws it ("osd", or "" for the generic one)
+    //   waits      for a transient: false drops it, instead of queueing it,
+    //              while the island is held open (a level is stale by then)
     // Objects are replaced, never changed in place, so bindings see updates.
     property var activities: []
 
     // Set by the island while it is expanded: transients wait, their
     // timers stopped, until it closes.
     property bool holdTransients: false
+
+    onHoldTransientsChanged: {
+        if (holdTransients)
+            activities = activities.filter(a => !a.transient || a.waits)
+    }
 
     readonly property var transients: activities.filter(a => a.transient)
     readonly property var persistents: activities.filter(a => !a.transient)
@@ -45,7 +52,12 @@ Singleton {
             label: "",
             progress: -1,
             face: "",
+            waits: true,
         }, old ?? {}, spec)
+        if (a.transient && !a.waits && holdTransients) {
+            remove(a.key)
+            return
+        }
         if (a.transient && a.timeout <= 0)
             a.timeout = Config.transientTimeout
         a.since = old ? old.since : nextSince++

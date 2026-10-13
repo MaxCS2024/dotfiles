@@ -18,9 +18,10 @@ section below overrides it.
 The brief's build order, one step at a time; the user looks at each
 step before the next starts.
 
-1. Priority queue + size states + input mask: **built 2026-10-13**,
-   awaiting the user's look.
-2. OSD
+1. Priority queue + size states + input mask: **built 2026-10-13**;
+   the user went on to step 2. Clicking through the mask is unconfirmed.
+2. OSD: **built 2026-10-13**, awaiting the user's try with the real
+   keys (only faked readings were tested).
 3. Media
 4. Battery events and Hyprland state changes
 5. Privacy indicators
@@ -169,8 +170,10 @@ since the API evolves.
 - `ActivityQueue.qml`: the queue. Features call `submit()` and
   `remove()`; nothing else.
 - `Island.qml`: the window, the pill, its states, the mask, the pointer.
+- `Face.qml`: draws an activity with the face it names (`face`).
 - `ActivityFace.qml`: the generic face (icon, label, progress) in the
   compact, transient and expanded layouts.
+- `Osd.qml`: the OSD feature (see OSD); `OsdFace.qml` its face.
 - `test-queue.sh`: walks every state and queue rule (see Testing).
 
 ## Quickshell API (checked against the installed 0.3.2)
@@ -183,6 +186,11 @@ From the qmltypes in `/usr/lib/qt6/qml/Quickshell`:
   typed arguments. A function can't be called `show`: `qs ipc` reserves
   it (found in dynamic-island). So step 7 can't use the brief's
   `qs ipc call island show ...` literally; it needs another verb.
+- `Pipewire` (`Quickshell.Services.Pipewire`): `defaultAudioSink`,
+  `defaultAudioSource`, `ready`; a `PwNode` has `id`, `ready` and
+  `audio.volume` / `audio.muted`, bound through `PwObjectTracker`.
+- `TextMetrics` has `advanceWidth` and `width`, no `implicitWidth`
+  (binding that is silently undefined).
 - `Hyprland` (`Quickshell.Hyprland`): `focusedMonitor`, `focusedWorkspace`,
   `activeToplevel`, `monitors`, `workspaces`, `toplevels`, `rawEvent`,
   `dispatch`. `HyprlandWorkspace.hasFullscreen` serves step 5;
@@ -191,8 +199,9 @@ From the qmltypes in `/usr/lib/qt6/qml/Quickshell`:
 ## Activity queue
 
 An activity is a plain object: `key`, `transient`, `priority`, `timeout`
-(ms), `icon`, `label`, `progress` (0–1, or -1 for none) and `face` ("" for
-the generic one). The queue keeps them sorted, best first.
+(ms), `icon`, `label`, `progress` (0–1, or -1 for none), `face` ("osd",
+or "" for the generic one) and `waits`. The queue keeps them sorted,
+best first.
 
 - **Same key, same activity.** Submitting a key already in the queue
   updates it; fields left out keep their value. The volume changing
@@ -210,7 +219,9 @@ the generic one). The queue keeps them sorted, best first.
 - **Expanded holds transients.** While the island is open, transients
   wait with their timers stopped, so the controls under the pointer
   don't swap out. Privacy indicators (step 5) are outside the queue and
-  not held.
+  not held. A transient with `waits: false` (the OSD) is dropped
+  instead, both when it arrives and when the island opens over it: a
+  level is stale by the time the island closes.
 
 ### Priorities
 
@@ -255,6 +266,33 @@ Proposed, set as each feature is built:
   bar when there is a progress; expanded is a 32px icon, the label (two
   lines) and a full-width bar.
 
+## OSD
+
+`Osd.qml` watches three things and submits a transient whenever one
+changes, from anywhere (keys, a mixer, a script); it never changes them.
+
+- **Volume** of the default PipeWire sink, mute included. Muted reads 0%
+  with the muted speaker; otherwise the speaker shows low (< 34%),
+  medium (< 67%) or high.
+- **Microphone mute** of the default source: "Microphone muted" or
+  "Microphone on", on the generic face.
+- **Brightness** of the first `/sys/class/backlight` device, read every
+  200ms (sysfs sends no change events for it).
+
+All three share the key `osd`, priority 50, `waits: false`, for
+`Config.osdTimeout` (1.5 s) after the last change: the newest replaces
+the one on screen. Each device's first reading only sets the baseline,
+so startup and switching the output device stay quiet. `Config.osd`
+turns it off.
+
+The face (`OsdFace.qml`): the icon in 16px, 12px, a 120 × 4 bar (white
+on white at 20%, easing 120ms), 12px, the percentage right-aligned in
+the width of "100%". One width (224px) for every reading, and for
+volume and brightness alike, so the pill holds still.
+
+Not covered: external screens (no ddcutil; there is none to test with);
+a key press at 0% or 100%, which changes nothing and so shows nothing.
+
 ## Look
 
 The dynamic-island's look, since it is the user's: a black pill, white
@@ -284,6 +322,15 @@ doesn't replace:
 - `qs -c island ipc call queue persist|flash key icon label progress priority ms`,
   `drop key`, `clear`, `list`.
 - `qs -c island ipc call view expand|collapse|current`.
+- `qs -c island ipc call osd volume <0–1> <muted>`, `brightness <0–1>`,
+  `mic <muted>`: the OSD for made-up readings. Never change the real
+  volume, microphone or brightness to test.
+
+The file watcher often misses saves made with the Edit tool: check the
+log for "Reloading configuration", else restart (`qs kill -c island`,
+then `qs -n -c island -d`). Calls made mid-reload answer "Function not
+found". In zsh, a loop's `$args` doesn't split into words; use
+`${=args}`.
 
 Running it next to the dynamic-island puts two pills at the top centre;
 SUPER+ALT+SPACE hides the dynamic-island meanwhile.
@@ -308,3 +355,11 @@ SUPER+ALT+SPACE hides the dynamic-island meanwhile.
 - 2026-10-13: the focused-monitor rule is built in step 1 with the
   window, not later. Mine.
 - 2026-10-13: the dynamic-island's look (black, white, bold, round). Mine.
+- 2026-10-13: step 2, the OSD, at the user's go-ahead. Mine: one key for
+  volume, brightness and the mic (newest wins); a fixed-width level face
+  with no label; muted reads 0%; the mic as a text notice; `waits:
+  false`; brightness polled every 200ms.
+- 2026-10-13: no global shortcuts from the volume and brightness keys
+  (the dynamic-island's way of answering a press at 0% or 100%). It
+  would mean new shortcut names and edits to `hypr/modules/binds`;
+  open, for the user.

@@ -63,8 +63,9 @@ PanelWindow {
     // The size follows the state at once; the content fades out, swaps,
     // and fades back in while the pill is still moving. `shownKey` names
     // what is drawn, so an update to the same activity (a new progress)
-    // changes the content in place without a fade.
-    readonly property string targetKey: islandState + ":" + (activity?.key ?? "")
+    // changes the content in place without a fade. A change of face (the
+    // OSD's level handing over to the mic notice) fades like a new one.
+    readonly property string targetKey: islandState + ":" + (activity?.key ?? "") + ":" + (activity?.face ?? "")
     property string shownKey: ""
     property string shownState: "idle"
     property var shownActivity: null
@@ -98,7 +99,7 @@ PanelWindow {
     }
 
     // Measures the content the pill is heading for, before it is drawn.
-    ActivityFace {
+    Face {
         id: measure
         visible: false
         activity: root.activity
@@ -162,7 +163,7 @@ PanelWindow {
                 font.pixelSize: Config.fontSize
             }
 
-            ActivityFace {
+            Face {
                 visible: root.shownState !== "idle"
                 anchors.fill: parent
                 activity: root.shownActivity
