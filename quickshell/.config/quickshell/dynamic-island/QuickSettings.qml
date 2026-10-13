@@ -6,7 +6,7 @@ import QtQuick
 
 // The settings panel's quick settings, under its notch (AGENTS.md,
 // Quick settings): Stay awake, Do not disturb, Night light and the
-// microphone. None of them needs main.
+// microphone.
 Singleton {
     id: root
 
@@ -57,8 +57,7 @@ Singleton {
 
     // ── Night light ──
     // hyprsunset (started by hypr/modules/autostart.lua) over hyprctl:
-    // `temperature 4500` warms the screen, `identity` clears it; main's
-    // warmth. Saved in settings.json (`quick.nightLight`) and put back
+    // `temperature 4500` warms the screen, `identity` clears it. Saved in settings.json (`quick.nightLight`) and put back
     // when the island starts.
     readonly property int warmth: 4500
     readonly property bool nightLight: (LocalConfig.settings.quick || {}).nightLight === true

@@ -4,6 +4,11 @@ Read this before creating or changing anything visual under `quickshell/`.
 These rules are binding. If a design you're about to write breaks one, change
 the design, not the rule. If you think a rule is wrong, ask the user first.
 
+**Note (2026-10-13):** the old bar (`quickshell/main`) these rules were
+written for is removed. Its token and file names below (`Appearance.*`,
+`Theme.*`, `BarButton`, `palette.js`, ...) no longer exist; the rules
+themselves still apply to the configs that remain.
+
 Colour tokens live only in `main/theme/Appearance.qml`; `main/config/Theme.qml`
 holds sizes, fonts, radii and motion and has no colours at all. The ladder is
 derived in `main/theme/palette.js` (tested by `main/tests/run palette`). The

@@ -28,8 +28,7 @@ Singleton {
 
     // ── Night light ──
     // hyprsunset (started by hypr/modules/autostart.lua) over hyprctl:
-    // `temperature 4500` warms the screen, `identity` clears it; main's
-    // warmth. Saved in settings.json (`quick.nightLight`) and put back
+    // `temperature 4500` warms the screen, `identity` clears it. Saved in settings.json (`quick.nightLight`) and put back
     // when this config starts.
     readonly property int warmth: 4500
     readonly property bool nightLight: (LocalConfig.settings.quick || {}).nightLight === true

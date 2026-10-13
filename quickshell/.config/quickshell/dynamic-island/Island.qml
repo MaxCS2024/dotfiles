@@ -14,9 +14,9 @@ import QtQuick
 // transcribes, the dictation face covers all of that. A left click
 // opens the full media player, a right click a small settings panel
 // (whose network, Bluetooth and battery segments turn it into a page of
-// their own); a click on either, or anywhere else, closes it. SUPER+ALT+SPACE hides and shows it, with the main bar
-// when that runs: the sides close in to an orb that fades out, and the
-// reverse.
+// their own); a click on either, or anywhere else, closes it.
+// SUPER+ALT+SPACE hides and shows it: the sides close in to an orb that
+// fades out, and the reverse.
 PanelWindow {
     id: root
 
@@ -32,12 +32,9 @@ PanelWindow {
     // the margin to it and gaps_out (15) below that, so a window's border
     // starts 24 + 15 - 32 = 7px under the pill, whatever the margin is.
     // 32 here left too much room. An open panel still overlaps windows.
-    // While main's bar is on screen it reserves the strip and the island
-    // sits over its centre; reserving here too would stack the island
-    // below the bar.
     // Hidden, it reserves nothing, even while the privacy dots keep the
     // window up.
-    exclusionMode: Controls.mainBarUp || gone ? ExclusionMode.Ignore : ExclusionMode.Normal
+    exclusionMode: gone ? ExclusionMode.Ignore : ExclusionMode.Normal
     exclusiveZone: 24
     color: "transparent"
 
@@ -120,7 +117,7 @@ PanelWindow {
     property real sizeProgress: 0
     property real panelOpacity: 0
 
-    // Hiding (SUPER+ALT+SPACE, with the main bar). `orbing` turns the
+    // Hiding (SUPER+ALT+SPACE). `orbing` turns the
     // width Behavior off for the whole hide/show, so it can't fight
     // shrinkProgress; it is set before either animation starts and
     // cleared only once the pill is whole. shrinkProgress 0 is the pill, 1 nothing: the sides close in
@@ -589,7 +586,7 @@ PanelWindow {
 
         // Off while dragging, so the width tracks the cursor without lag,
         // while the player opens or closes, which drives it itself, and
-        // while hiding or showing with the main bar.
+        // while hiding or showing.
         Behavior on width {
             enabled: !root.widthTracksDrag && root.phase === "collapsed" && !root.orbing
             NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
@@ -966,7 +963,7 @@ PanelWindow {
                 spacing: 8
 
                 // Network, Bluetooth, volume and battery fused into one
-                // pill, as the main bar groups them on one island. Network,
+                // pill. Network,
                 // Bluetooth and battery turn the panel into their page; the
                 // speaker mutes in place.
                 TileGroup {

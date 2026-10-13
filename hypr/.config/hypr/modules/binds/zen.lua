@@ -29,15 +29,10 @@ local function apply(state)
 	})
 end
 
-local function osd(state)
-	hl.exec_cmd("qs -c main ipc call osd-zen " .. state)
-end
-
 local function toggle()
 	if saved then
 		apply(saved)
 		saved = nil
-		osd("off")
 		return
 	end
 
@@ -49,7 +44,6 @@ local function toggle()
 		active_border = TRANSPARENT,
 		inactive_border = TRANSPARENT,
 	})
-	osd("on")
 end
 
 hl.bind(mainMod .. " + SHIFT + F", toggle)

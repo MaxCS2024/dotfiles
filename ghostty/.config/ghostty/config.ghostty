@@ -1,12 +1,6 @@
-# Colours come from the shell's active palette, wallpaper or preset,
-# written by quickshell/main/theme/AppColors.qml — the same palette foot
-# and kitty get.
-#
-# The leading ? makes the include optional: the file is missing until the
-# shell has run once. Running ghostties pick a change up without a
-# restart — the shell sends SIGUSR2 after writing, which makes ghostty
-# reload its configuration.
-config-file = ?~/.cache/quickshell/ghostty-colors
+# Colours: `colors` beside this file, the same palette as foot and kitty
+# (frozen from the old bar's last palette on 2026-10-13).
+config-file = ~/.config/ghostty/colors
 
 # Everything below copies foot.ini, the terminal the others follow, so
 # the three look the same. Padding is in whole points, which ghostty

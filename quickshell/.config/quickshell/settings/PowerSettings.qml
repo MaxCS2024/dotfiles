@@ -24,24 +24,11 @@ Singleton {
     readonly property bool writable: hasLimit && batteries.every(b => b.writable)
     readonly property int chargeLimit: hasLimit ? batteries[0].limit : 100
 
-    // Stay awake pauses every timer; the page says so. The island's own
-    // (QuickSettings), or main's (an idle inhibitor on its bar), read
-    // from main's `awake` IPC target, so false when main isn't running.
-    property bool mainStayAwake: false
-    readonly property bool stayAwake: mainStayAwake || QuickSettings.stayAwake
-
-    Process {
-        id: awake
-        command: ["qs", "-c", "main", "ipc", "call", "awake", "state"]
-        stdout: StdioCollector {
-            onStreamFinished: root.mainStayAwake = text.trim() === "on"
-        }
-    }
+    // Stay awake pauses every timer; the page says so.
+    readonly property bool stayAwake: QuickSettings.stayAwake
 
     function turnOffStayAwake() {
         QuickSettings.stayAwake = false
-        if (mainStayAwake)
-            Quickshell.execDetached(["qs", "-c", "main", "ipc", "call", "awake", "disable"])
         rereadSoon.restart()
     }
 
@@ -88,7 +75,6 @@ Singleton {
 
     function refresh() {
         query.running = true
-        awake.running = true
     }
 
     // Once, after the first reading: the saved limit, if a battery lost it.

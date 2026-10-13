@@ -1,7 +1,6 @@
 import QtQuick
 
-// Several icon buttons fused into one rounded pill, as the main bar puts
-// volume, network and battery on one island. The pill is white at 12%;
+// Several icon buttons fused into one rounded pill. The pill is white at 12%;
 // a hovered segment lifts to about 20%, and an `active` one is solid
 // white with a black icon. The end segments follow the pill's rounding.
 //

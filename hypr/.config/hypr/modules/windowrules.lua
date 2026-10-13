@@ -19,28 +19,12 @@ hl.window_rule({
 	no_focus = true,
 })
 
-hl.layer_rule({
-	name = "blur-bar",
-	match = { namespace = "^quickshell:bar$" },
-	blur = true,
-	ignore_alpha = 0.2,
-})
-
 hl.window_rule({
 	name = "move-hyprland-run",
 	match = { class = "hyprland-run" },
 
 	move = "20 monitor_h-120",
 	float = true,
-})
-
-hl.window_rule({
-	name = "float-task-window",
-	match = { class = "^quickshell\\.float$" },
-
-	float = true,
-	center = true,
-	size = "monitor_w*0.6 monitor_h*0.65",
 })
 
 hl.window_rule({

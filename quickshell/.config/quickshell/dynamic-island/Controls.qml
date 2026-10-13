@@ -14,7 +14,7 @@ import QtQuick
 // the island's settings panel and notices, the Wi-Fi networks and
 // Bluetooth devices for its two list pages, and the power profile for
 // its battery page. Volume and
-// brightness are 0–1. Same sources as the main bar: the default PipeWire
+// brightness are 0–1. Sources: the default PipeWire
 // sink, the first /sys/class/backlight device (written through
 // brightnessctl) and Quickshell.Networking.
 Singleton {
@@ -50,13 +50,9 @@ Singleton {
         onPressed: root.changed("brightness", root.brightness)
     }
 
-    // ── Bar visibility ──
+    // ── Visibility ──
     // SUPER+ALT+SPACE hides and shows the island through this shortcut
-    // (hypr/modules/binds/apps.lua). When main is
-    // running, its services/Panels.qml also calls `qs -c dynamic-island
-    // ipc call island setBarVisible <bool>` whenever its barVisible
-    // changes, and that call has the last word; at startup the island
-    // asks main once.
+    // (hypr/modules/binds/apps.lua).
     property bool barVisible: true
 
     GlobalShortcut {
@@ -64,11 +60,6 @@ Singleton {
         name: "island-toggle"
         description: "Hide or show the dynamic island"
         onPressed: root.barVisible = !root.barVisible
-    }
-
-    IpcHandler {
-        target: "island"
-        function setBarVisible(visible: bool): void { root.barVisible = visible }
     }
 
     // ── Notice tests ──
@@ -90,43 +81,6 @@ Singleton {
         // sends "Disk almost full", 50 takes it back. Real notifications,
         // no disk touched.
         function disk(mount: string, gb: real): void { Alerts.diskReading(mount, 1e12, gb * 1e9) }
-    }
-
-    Process {
-        running: true
-        command: ["qs", "-c", "main", "ipc", "call", "bar", "state"]
-        stdout: StdioCollector {
-            onStreamFinished: if (text.trim() === "off") root.barVisible = false
-        }
-    }
-
-    // ── Main bar on screen ──
-    // Whether main's bar surface ("quickshell:bar", one per monitor) is
-    // mapped. While it is, the bar reserves the top strip and the island
-    // sits over its centre; otherwise the island reserves its own (see
-    // Island.qml). Counted from Hyprland's openlayer/closelayer events,
-    // after one `hyprctl layers` at startup, so nothing is polled.
-    property int mainBarLayers: 0
-    readonly property bool mainBarUp: mainBarLayers > 0
-
-    Process {
-        running: true
-        command: ["sh", "-c", "hyprctl layers -j | grep -c '\"namespace\": \"quickshell:bar\"'"]
-        stdout: StdioCollector {
-            onStreamFinished: root.mainBarLayers = parseInt(text.trim()) || 0
-        }
-    }
-
-    Connections {
-        target: Hyprland
-        function onRawEvent(event) {
-            if (event.data !== "quickshell:bar")
-                return
-            if (event.name === "openlayer")
-                root.mainBarLayers++
-            else if (event.name === "closelayer")
-                root.mainBarLayers = Math.max(0, root.mainBarLayers - 1)
-        }
     }
 
     // ── Volume ──
@@ -245,7 +199,7 @@ Singleton {
     function device(kind) {
         return Networking.devices.values.find(d => d.type === kind) ?? null
     }
-    // Wired wins over Wi-Fi when both are up, as in the main bar.
+    // Wired wins over Wi-Fi when both are up.
     readonly property var activeDevice: {
         const wired = device(DeviceType.Wired)
         const wifi = device(DeviceType.Wifi)
@@ -258,7 +212,7 @@ Singleton {
         const net = wifi ? wifi.networks.values.find(n => n.connected) : null
         return net ? net.name : ""
     }
-    // The main bar's glyphs (services/Network.qml): ethernet, Wi-Fi, off.
+    // Glyphs: ethernet, Wi-Fi, off.
     readonly property string networkIcon: networkType === "ethernet" ? "\u{f0200}"
         : networkType === "wifi" ? "\uf1eb" : "\u{f05a9}"
 
@@ -356,7 +310,7 @@ Singleton {
     readonly property bool bluetoothOn: adapter ? adapter.enabled : false
     readonly property bool bluetoothConnected: bluetoothOn
         && Bluetooth.devices.values.some(d => d.connected)
-    // The main bar's glyphs (bar/BluetoothButton.qml): off, on, connected.
+    // Glyphs: off, on, connected.
     readonly property string bluetoothIcon: !bluetoothOn ? "\u{f00b2}"
         : bluetoothConnected ? "\u{f00b1}" : "\u{f00af}"
 
@@ -367,8 +321,8 @@ Singleton {
 
     // ── Bluetooth page ──
     // Paired devices (the connected ones first), then the others the
-    // adapter has heard. `bonded` counts as paired, as in the
-    // main bar: a device carried over from another install can report
+    // adapter has heard. `bonded` counts as paired: a device carried
+    // over from another install can report
     // bonded without paired. Nameless BLE advertisers are left out; a MAC
     // address is nothing to pick from.
     readonly property var bluetoothDevices: adapter
@@ -410,7 +364,7 @@ Singleton {
     }
 
     // A click on a device: a paired one connects or disconnects, a new one
-    // pairs. Pairing is the main bar's (services/Bt.qml): trusted first so
+    // pairs. Pairing: trusted first so
     // it can reconnect on its own, discovery off since BlueZ pairs more
     // reliably without it, and connected once the bond lands, because
     // Pair() alone leaves headphones paired but silent. The island runs no
@@ -480,7 +434,7 @@ Singleton {
     readonly property real batteryPercent: battery && battery.isPresent ? battery.percentage * 100 : -1
     readonly property bool charging: battery ? battery.state === UPowerDeviceState.Charging : false
 
-    // The main bar's battery glyphs (services/Battery.qml): a bolt while
+    // Battery glyphs: a bolt while
     // charging, otherwise one step per 10%.
     readonly property string batteryIcon: {
         if (charging)
@@ -494,7 +448,7 @@ Singleton {
     // power-profiles-daemon through UPower's PowerProfiles, least power to
     // most; Performance only where the hardware has it. PowerProfiles has
     // no "not running" state (it reads a default and setting goes nowhere),
-    // so `powerprofilesctl get` is asked once, as the main bar does.
+    // so `powerprofilesctl get` is asked once.
     readonly property var profiles: PowerProfiles.hasPerformanceProfile
         ? [PowerProfile.PowerSaver, PowerProfile.Balanced, PowerProfile.Performance]
         : [PowerProfile.PowerSaver, PowerProfile.Balanced]
@@ -511,7 +465,7 @@ Singleton {
             : p === PowerProfile.Performance ? "Performance" : "Balanced"
     }
 
-    // The main bar's marks: a leaf, a balance, a speedometer.
+    // Marks: a leaf, a balance, a speedometer.
     function profileIcon(p) {
         return p === PowerProfile.PowerSaver ? "\u{f032a}"
             : p === PowerProfile.Performance ? "\u{f04c5}" : "\u{f05d1}"
