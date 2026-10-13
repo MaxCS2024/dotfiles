@@ -486,15 +486,15 @@ it is left out on a machine with no battery.
 
 ## Media player
 
-A left click on the pill opens it, player or not. 16px padding;
+A left click on the pill opens it, when there is a player (one playing,
+paused, or with a track loaded); with none, the click does nothing, and
+an open player closes when its player goes away. 16px padding;
 album art (96px, 12px corners) on the left; beside it the title (bold),
 the artist (white at 60%), a 4px progress bar, elapsed and total time, and
 previous / play-pause / next. A click on the player outside its buttons,
-or anywhere outside the island, closes it. With no player it stays open
-and shows the empty state: a dim music note in the art square, "Nothing
-playing" over "No media player open", an empty bar at 0:00 / 0:00, and
-the controls at 30% and inert. A cover that fails to load shows the same
-note.
+or anywhere outside the island, closes it. A cover that fails to load
+shows a dim music note in the art square. (Until 2026-10-13 it also
+opened with no player, on an empty state; see Decisions.)
 Closing returns to whichever view (song, time or today) it was opened from.
 
 Opening: the compact text fades out, the box grows to 360 × 128, then the
@@ -1382,3 +1382,7 @@ Dated record of what the user chose or rejected, and why.
 - 2026-10-13: slimming the shell down, at the user's request: the app
   launcher is fuzzel now ("I don't need Quickshell to do everything; I
   can have another application for that"), not a Quickshell config.
+- 2026-10-13: the media player no longer opens with nothing to play
+  (the user's request); a left click with no player does nothing, and
+  an open player closes when its player quits. A paused track still
+  opens it. The song view still reads "Nothing playing".

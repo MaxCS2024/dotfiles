@@ -186,8 +186,9 @@ PanelWindow {
             p.playbackState !== MprisPlaybackState.Stopped || p.trackTitle !== "")
         return players.find(p => p.isPlaying) ?? players[0] ?? null
     }
-    // With no player, the song view and the player say "Nothing playing"
-    // rather than being blocked.
+    // With no player, the song view says "Nothing playing"; the media
+    // player doesn't open, and closes if its player goes away.
+    onPlayerChanged: if (!player && panel === "player") close()
     readonly property int shownView: view
 
     function labelFor(v) {
@@ -525,7 +526,8 @@ PanelWindow {
                 root.release(moved ? dx : 0)
                 if (!moved && onDisplayNotice)
                     SettingsWindow.open("displays")
-                else if (!moved)
+                // Only with something to play: no empty player.
+                else if (!moved && root.player)
                     root.open("player")
             }
         }
