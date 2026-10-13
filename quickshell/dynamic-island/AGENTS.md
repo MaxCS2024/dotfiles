@@ -77,7 +77,8 @@ off, …), colour themes (main's palettes and matugen theming), a
 workspace overview, Conf's sections (Install, Features, Update, Defaults, Style:
 Conf is to be split out of main into its own config, like the launcher),
 weather, system stats (CPU, RAM, temperature), a screen recording
-indicator, the app
+indicator, a song-changed flash, a mic/camera/screen-share
+indicator, Bluetooth devices' low-battery flashes, the app
 launcher and clipboard (their own configs), and a calendar.
 
 **Undecided, _TBD_:**
@@ -1322,3 +1323,8 @@ Dated record of what the user chose or rejected, and why.
 - 2026-10-13: scrolling on the pill for the volume (5% a notch, on
   every view) was built and reverted the same day: the user didn't like
   it. The pill does nothing on scroll.
+- 2026-10-13: no song-changed flash ("Title – Artist" for 2 seconds on
+  a new track): the user doesn't need one.
+- 2026-10-13: no mic, camera or screen-share indicator and no low-battery
+  flash for Bluetooth devices: the user doesn't need them. That closes
+  the list of ideas from 2026-10-13.
