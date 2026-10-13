@@ -21,6 +21,37 @@ Singleton {
     // How long a transient activity shows when it names no timeout.
     readonly property int transientTimeout: 2500
 
+    // ── Profiles ──
+    // Each activity type's interruption profile (AGENTS.md, Interruption
+    // and motion): its priority, and how the pill moves when it arrives
+    // and when it leaves. The research brief's starting points, to tune.
+    //   enter, exit  ms the pill takes to morph in and out; exits shorter
+    //   overshoot    one slight overshoot on arrival; high interruption only
+    // Privacy isn't in the queue, so it has no priority.
+    readonly property var profiles: ({
+        privacy:         { interruption: "high",   enter: 250, exit: 150, overshoot: true },
+        urgent:          { interruption: "high",   priority: 70, enter: 280, exit: 180, overshoot: true },
+        notification:    { interruption: "medium", priority: 60, enter: 280, exit: 180, overshoot: false },
+        criticalBattery: { interruption: "high",   priority: 55, enter: 250, exit: 150, overshoot: true },
+        osd:             { interruption: "low",    priority: 50, enter: 100, exit: 150, overshoot: false },
+        hyprland:        { interruption: "low",    priority: 45, enter: 220, exit: 150, overshoot: false },
+        battery:         { interruption: "low",    priority: 40, enter: 220, exit: 150, overshoot: false },
+        ipc:             { interruption: "medium", priority: 30, enter: 250, exit: 180, overshoot: false },
+        media:           { interruption: "low",    priority: 20, enter: 250, exit: 150, overshoot: false },
+    })
+    // For an activity that names no profile (the test queue's).
+    readonly property var defaultProfile: ({ interruption: "medium", priority: 0, enter: 250, exit: 150, overshoot: false })
+
+    function profile(name) {
+        return profiles[name] ?? defaultProfile
+    }
+
+    // Opening and closing the expanded state, and the pill fitting new
+    // content without anything arriving or leaving (a longer title).
+    readonly property int expandTime: 280
+    readonly property int collapseTime: 180
+    readonly property int resizeTime: 150
+
     // ── Features ──
     // Volume, microphone mute and brightness levels.
     readonly property bool osd: true
@@ -29,6 +60,10 @@ Singleton {
 
     // The current MPRIS player: art and playing bars, controls when expanded.
     readonly property bool media: true
+    // The playing bars: "still" (standing bars while it plays, flat when
+    // paused), "subtle" (slow and small) or "dancing". Still by default:
+    // constant motion at the edge of sight distracts.
+    readonly property string mediaBars: "still"
     // How long a paused player stays in the island before it leaves.
     readonly property int mediaPausedTimeout: 60000
 

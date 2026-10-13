@@ -13,7 +13,9 @@ Singleton {
     // Every live activity, best first. Each is a plain object:
     //   key        unique; submitting the same key again updates it
     //   transient  true: takes the island over, then gives it back
-    //   priority   higher wins (AGENTS.md, Priorities)
+    //   profile    its interruption profile (Config.profiles), which sets
+    //              its priority and how the pill moves for it
+    //   priority   higher wins; the profile's unless given
     //   timeout    ms. A transient shows this long, counted only while it
     //              is on screen; a persistent one lives this long (0: until
     //              removed)
@@ -21,6 +23,8 @@ Singleton {
     //   face       the face that draws it ("osd", or "" for the generic one)
     //   waits      for a transient: false drops it, instead of queueing it,
     //              while the island is held open (a level is stale by then)
+    //   revive     brings back a key the user dismissed; without it, a
+    //              dismissed persistent activity stays away (see dismiss)
     // Objects are replaced, never changed in place, so bindings see updates.
     property var activities: []
 
@@ -40,13 +44,23 @@ Singleton {
 
     property int nextSince: 0
 
+    // Keys of persistent activities the user dismissed. Their feature's
+    // updates are ignored until one comes with `revive` (media: the
+    // player starting or pausing again, not a new track).
+    property var dismissed: ({})
+
     // Adds the activity, or updates the one with the same key. Fields
     // left out keep their old value (or the default, for a new one).
     function submit(spec) {
+        if (dismissed[spec.key]) {
+            if (!spec.revive)
+                return
+            delete dismissed[spec.key]
+        }
         const old = find(spec.key)
         const a = Object.assign({
             transient: false,
-            priority: 0,
+            profile: "",
             timeout: 0,
             icon: "",
             label: "",
@@ -54,6 +68,11 @@ Singleton {
             face: "",
             waits: true,
         }, old ?? {}, spec)
+        // Given, else the profile's when the submit names one (a critical
+        // battery notice replacing a low one), else as before.
+        a.priority = spec.priority
+            ?? (spec.profile !== undefined || !old ? Config.profile(a.profile).priority : old.priority)
+        delete a.revive
         if (a.transient && !a.waits && holdTransients) {
             remove(a.key)
             return
@@ -68,11 +87,26 @@ Singleton {
         scheduleExpiry()
     }
 
+    // A feature taking its activity away also forgets a dismissal: the
+    // next one is new.
     function remove(key) {
+        delete dismissed[key]
         if (!find(key))
             return
         activities = activities.filter(a => a.key !== key)
         scheduleExpiry()
+    }
+
+    // The user's dismissal (right click): the activity leaves now. A
+    // transient is simply gone; a persistent one stays away until its
+    // feature revives it or removes it.
+    function dismiss(key) {
+        const a = find(key)
+        if (!a)
+            return
+        remove(key)
+        if (!a.transient)
+            dismissed[key] = true
     }
 
     function find(key) {
@@ -152,6 +186,10 @@ Singleton {
         function drop(key: string): void {
             root.remove(key)
         }
+        // What a right click on the pill does to that activity.
+        function dismiss(key: string): void {
+            root.dismiss(key)
+        }
         function clear(): void {
             root.activities = []
             root.scheduleExpiry()
@@ -159,6 +197,7 @@ Singleton {
         function list(): string {
             return root.activities.map(a =>
                 `${a.transient ? "transient " : "persistent"} ${a.priority} ${a.key} – ${a.label}`).join("\n")
+                + Object.keys(root.dismissed).map(k => `\ndismissed ${k}`).join("")
         }
     }
 }

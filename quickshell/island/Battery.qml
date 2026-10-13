@@ -68,7 +68,7 @@ Singleton {
         ActivityQueue.submit(Object.assign({
             key: "battery",
             transient: true,
-            priority: 40,
+            profile: "battery",
             timeout: Config.batteryTimeout,
             face: "",
             progress: -1,
@@ -99,7 +99,7 @@ Singleton {
         submit({
             icon: "\u{f0083}",
             label: `Battery critical – ${pct(p)}`,
-            priority: 55,
+            profile: "criticalBattery",
             timeout: Config.batteryCriticalTimeout,
         })
     }

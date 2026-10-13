@@ -56,7 +56,10 @@ Singleton {
         ActivityQueue.submit({
             key: "media",
             face: "media",
-            priority: 20,
+            profile: "media",
+            // A user's dismissal holds until the player starts or stops
+            // again (or another takes over), not through a new track.
+            revive: fresh,
             player: p,
             icon: "\u{f075a}",
             label: p.trackArtist ? `${p.trackTitle} – ${p.trackArtist}` : p.trackTitle,

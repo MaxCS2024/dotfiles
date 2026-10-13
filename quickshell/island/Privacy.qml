@@ -155,6 +155,12 @@ Singleton {
         onTriggered: root.next()
     }
 
+    // A right click on the announcement: on to the next. The dot stays.
+    function dismiss() {
+        announceTimer.stop()
+        next()
+    }
+
     // Clicking a dot: every app on that device, for a little longer.
     function list(kind) {
         if (users[kind].length) {

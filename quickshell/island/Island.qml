@@ -62,6 +62,7 @@ PanelWindow {
     // pill already marks it.
     readonly property var privacyActivity: Privacy.announcement ? {
         key: "privacy:" + Privacy.announcement.serial,
+        profile: "privacy",
         face: "",
         icon: Privacy.glyph(Privacy.announcement.kind),
         label: Privacy.announcement.text,
@@ -90,11 +91,11 @@ PanelWindow {
     onPersistentActivityChanged: if (!persistentActivity) expanded = false
 
     // ── Content swap ──
-    // The size follows the state at once; the content fades out, swaps,
-    // and fades back in while the pill is still moving. `shownKey` names
-    // what is drawn, so an update to the same activity (a new progress)
-    // changes the content in place without a fade. A change of face (the
-    // OSD's level handing over to the mic notice) fades like a new one.
+    // The content fades out, swaps, and fades back in while the pill
+    // morphs, in the same time. `shownKey` names what is drawn, so an
+    // update to the same activity (a new progress) changes the content in
+    // place without a fade. A change of face (the OSD's level handing
+    // over to the mic notice) fades like a new one.
     readonly property string targetKey: islandState + ":" + (activity?.key ?? "") + ":" + (activity?.face ?? "")
     property string shownKey: ""
     property string shownState: "idle"
@@ -104,14 +105,28 @@ PanelWindow {
         shownKey = targetKey
         shownState = islandState
         shownActivity = activity
+        lastState = islandState
+        lastActivity = activity
+        pillWidth = targetWidth
+        pillHeight = targetHeight
+        sized = true
     }
 
-    onTargetKeyChanged: swap.restart()
+    onTargetKeyChanged: {
+        const t = timing()
+        lastState = islandState
+        lastActivity = activity
+        morphTime = t.time
+        morphOvershoot = t.overshoot
+        keyed = true
+        swap.restart()
+        Qt.callLater(syncSize)
+    }
     onActivityChanged: if (targetKey === shownKey) shownActivity = activity
 
     SequentialAnimation {
         id: swap
-        NumberAnimation { target: content; property: "opacity"; to: 0; duration: 80 }
+        NumberAnimation { target: content; property: "opacity"; to: 0; duration: Math.round(root.morphTime * 0.3) }
         ScriptAction {
             script: {
                 root.shownKey = root.targetKey
@@ -119,7 +134,69 @@ PanelWindow {
                 root.shownActivity = root.activity
             }
         }
-        NumberAnimation { target: content; property: "opacity"; to: 1; duration: 140; easing.type: Easing.OutCubic }
+        NumberAnimation {
+            target: content
+            property: "opacity"
+            to: 1
+            duration: root.morphTime - Math.round(root.morphTime * 0.3)
+            easing.type: Easing.OutCubic
+        }
+    }
+
+    // ── Motion ──
+    // How long the pill takes, from the interruption profile of whatever
+    // arrives or leaves (AGENTS.md, Interruption and motion): an arrival
+    // moves at its enter time, with one slight overshoot if it is a high
+    // interruption; falling back after one leaves moves at its (shorter)
+    // exit time. Opening and closing the expanded state have their own,
+    // and so does the pill fitting new content in place.
+    property string lastState: "idle"
+    property var lastActivity: null
+    property int morphTime: Config.resizeTime
+    property bool morphOvershoot: false
+    // The pill's size, set once per event-loop turn (syncSize), after
+    // morphTime: a Behavior reads its duration when it starts.
+    property real pillWidth: 0
+    property real pillHeight: 0
+    property bool sized: false
+    property bool keyed: false
+
+    onTargetWidthChanged: Qt.callLater(syncSize)
+    onTargetHeightChanged: Qt.callLater(syncSize)
+
+    function syncSize() {
+        if (!keyed) {
+            morphTime = Config.resizeTime
+            morphOvershoot = false
+        }
+        keyed = false
+        pillWidth = targetWidth
+        pillHeight = targetHeight
+    }
+
+    // Still in the queue (or still the announcement): outranked, not gone.
+    function present(a) {
+        return a.profile === "privacy" ? privacyActivity?.key === a.key : ActivityQueue.find(a.key) !== null
+    }
+
+    function timing() {
+        const from = lastState
+        const to = islandState
+        const enter = a => ({ time: Config.profile(a.profile).enter, overshoot: Config.profile(a.profile).overshoot })
+        const exit = a => ({ time: Config.profile(a.profile).exit, overshoot: false })
+        if (from === "privacy" && lastActivity)
+            return to === "privacy" ? enter(activity) : exit(lastActivity)
+        if (to === "expanded" && from !== "expanded")
+            return { time: Config.expandTime, overshoot: false }
+        if (from === "expanded" && to !== "privacy")
+            return { time: Config.collapseTime, overshoot: false }
+        // Arriving: a transient or announcement, or one that outranks
+        // what was there.
+        if (activity && (to === "transient" || to === "privacy" || !lastActivity || present(lastActivity)))
+            return enter(activity)
+        if (lastActivity)
+            return exit(lastActivity)
+        return { time: Config.resizeTime, overshoot: false }
     }
 
     // ── Size per state ──
@@ -171,8 +248,8 @@ PanelWindow {
         id: pill
         anchors.horizontalCenter: parent.horizontalCenter
         y: Config.topMargin
-        width: root.targetWidth
-        height: root.targetHeight
+        width: root.pillWidth
+        height: root.pillHeight
         radius: Math.min(height / 2, Config.expandedRadius)
         color: Config.background
         clip: true
@@ -183,17 +260,37 @@ PanelWindow {
         Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
         Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
 
-        Behavior on width { SpringAnimation { spring: 4; damping: 0.36; epsilon: 0.25 } }
-        Behavior on height { SpringAnimation { spring: 4; damping: 0.36; epsilon: 0.25 } }
+        Behavior on width {
+            enabled: root.sized
+            NumberAnimation {
+                duration: root.morphTime
+                easing.type: root.morphOvershoot ? Easing.OutBack : Easing.OutCubic
+                easing.overshoot: 0.8
+            }
+        }
+        Behavior on height {
+            enabled: root.sized
+            NumberAnimation {
+                duration: root.morphTime
+                easing.type: root.morphOvershoot ? Easing.OutBack : Easing.OutCubic
+                easing.overshoot: 0.8
+            }
+        }
 
         // ── Pointer ──
         // Under the content, so a face's own buttons (the media controls)
-        // take their clicks first; a click anywhere else opens or closes.
-        // Hover comes from a HoverHandler, which buttons don't hide.
+        // take their clicks first; a left click anywhere else opens or
+        // closes. A right click dismisses what is showing: an announcement
+        // makes way for the next (its dot stays), any other activity
+        // leaves the island. Hover comes from a HoverHandler, which buttons
+        // don't hide.
         MouseArea {
             anchors.fill: parent
-            onClicked: {
-                if (Config.expandOn === "click" && root.persistentActivity && root.islandState !== "privacy")
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            onClicked: mouse => {
+                if (mouse.button === Qt.RightButton)
+                    root.dismissShown()
+                else if (Config.expandOn === "click" && root.persistentActivity && root.islandState !== "privacy")
                     root.expanded = !root.expanded
             }
         }
@@ -286,6 +383,15 @@ PanelWindow {
         }
     }
 
+    function dismissShown() {
+        if (islandState === "privacy")
+            Privacy.dismiss()
+        else if (activity) {
+            expanded = false
+            ActivityQueue.dismiss(activity.key)
+        }
+    }
+
     Timer {
         id: hoverTimer
         interval: Config.hoverDelay
@@ -309,6 +415,10 @@ PanelWindow {
         }
         function collapse(): void {
             root.expanded = false
+        }
+        // What a right click on the pill does.
+        function dismiss(): void {
+            root.dismissShown()
         }
         function current(): string {
             return root.islandState + (root.pillHidden ? " (hidden)" : "")

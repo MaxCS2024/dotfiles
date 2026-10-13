@@ -26,7 +26,7 @@ Singleton {
     function submit(spec) {
         ActivityQueue.submit(Object.assign({
             transient: true,
-            priority: 45,
+            profile: "hyprland",
             timeout: Config.hyprlandTimeout,
             face: "",
             progress: -1,

@@ -124,7 +124,7 @@ Singleton {
             key: "osd",
             transient: true,
             waits: false,
-            priority: 50,
+            profile: "osd",
             timeout: Config.osdTimeout,
         }, spec))
     }

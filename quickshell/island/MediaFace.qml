@@ -209,36 +209,50 @@ Item {
         }
     }
 
-    // Four bars that dance while the player plays and lie flat when it
+    // Four bars: standing while the player plays, flat (3px) when it
     // doesn't. Made up, not the audio: the brief asks for a playing
-    // indicator. Stops while not on screen.
+    // indicator. `Config.mediaBars` picks how they move while playing:
+    // "still" (fixed heights; no constant motion at the edge of sight),
+    // "subtle" (slow, small swells) or "dancing". Moving ones stop while
+    // not on screen.
     component PlayingBars: Row {
         id: barsRow
         property bool playing: false
         spacing: 2
 
-        readonly property bool dancing: playing && barsRow.visible
+        readonly property string style: Config.mediaBars
+        readonly property bool moving: playing && barsRow.visible && style !== "still"
+        readonly property var standing: [6, 11, 8, 13]
 
         Repeater {
             model: 4
 
             Rectangle {
                 id: bar
+                required property int index
                 anchors.verticalCenter: parent.verticalCenter
                 width: 3
                 radius: 1.5
                 color: Config.foreground
-                height: 3
+                height: barsRow.playing ? barsRow.standing[index] : 3
 
-                Behavior on height { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                Behavior on height {
+                    NumberAnimation {
+                        duration: barsRow.style === "subtle" ? 700 : 180
+                        easing.type: barsRow.style === "subtle" ? Easing.InOutSine : Easing.OutCubic
+                    }
+                }
 
                 Timer {
-                    running: barsRow.dancing
-                    interval: 180 + index * 20
+                    running: barsRow.moving
+                    interval: barsRow.style === "subtle" ? 700 + bar.index * 90 : 180 + bar.index * 20
                     repeat: true
                     triggeredOnStart: true
-                    onTriggered: bar.height = 4 + Math.round(Math.random() * 10)
-                    onRunningChanged: if (!running) bar.height = 3
+                    onTriggered: bar.height = barsRow.style === "subtle"
+                        ? barsRow.standing[bar.index] - 2 + Math.round(Math.random() * 4)
+                        : 4 + Math.round(Math.random() * 10)
+                    // Back to the binding's standing or flat height.
+                    onRunningChanged: if (!running) bar.height = Qt.binding(() => barsRow.playing ? barsRow.standing[bar.index] : 3)
                 }
             }
         }

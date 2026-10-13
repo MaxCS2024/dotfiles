@@ -18,6 +18,11 @@ section below overrides it.
 The brief's build order, one step at a time; the user looks at each
 step before the next starts.
 
+Before step 6, the research brief's fixes (2026-10-13): interruption
+profiles with their timings, shorter exits, still playing bars, and
+dismissing with a right click. Built and measured; awaiting the
+user's look and right click.
+
 1. Priority queue + size states + input mask: **built 2026-10-13**;
    the user went on to step 2. Clicking through the mask is unconfirmed.
 2. OSD: **built 2026-10-13**, awaiting the user's try with the real
@@ -165,6 +170,76 @@ since the API evolves.
 
 ---
 
+# Research brief: interruption, motion and privacy
+
+Added 2026-10-13 at the user's request, kept as given. It is binding
+next to the project brief; where they disagree, the choice is recorded
+under Decisions (or marked _TBD_ until the user makes it). Its numbers
+are starting points to tune, not rules.
+
+13 okt. 2026 · @Brandon
+
+## Bottom line
+
+Interrupt less, at better moments, with less motion, and make privacy signals impossible to miss. Research on interruptions, notifications, peripheral motion and privacy indicators points the same way. This brief turns it into design rules for our Quickshell dynamic island on Hyprland.
+
+## Findings and what we do
+
+|Area|Finding|What we do|
+|---|---|---|
+|Interruption timing|Interruptions cost less at low-workload moments; busy states lasted about 21 s on average before easing (Iqbal and Bailey; Horvitz et al.)|Hold low-priority notifications briefly; release on workspace switch, focus change or window close|
+|Notification volume|Batching 3 times a day improved attention and mood; hourly batching did little; no notifications raised anxiety (Fitz et al.)|Replace binary DND with a hold mode that shows a count and releases on demand|
+|Peripheral motion|Simple motion beats color and shape for detection in the periphery, but some motion irritates (Bartram et al.)|Morph once on arrival; no constant motion; make the media waveform subtle or optional|
+|Animation timing|About 100 ms feels immediate; 200–300 ms suits larger changes; exits can be shorter (NN/g, Material)|Use the timing defaults below|
+|Privacy indicators|45% noticed webcam LEDs during computer tasks; on-screen glyphs raised it to 93% (Portnoff et al.)|Keep on-screen dots unsuppressible; expand briefly on first use|
+|Live Activities|Activities should have a defined start and end and be user-controlled; two activities show as attached plus detached (Apple HIG)|Require every IPC activity to end (explicit or timeout); let users dismiss any activity; keep the split state|
+|Priority model|Notification systems trade off interruption, reaction and comprehension (McCrickard)|Give each activity type an IRC profile that sets its priority and animation intensity|
+
+## Starting defaults
+
+These are starting points to tune in testing, not research-validated values.
+
+|Activity|Interruption|Deferral|Enter animation|Exit animation|
+|---|---|---|---|---|
+|Privacy event|High, once|None|250 ms expand, ~2 s label|150 ms to dot|
+|Urgent notification|High|None|250–300 ms|150–200 ms|
+|Normal notification|Medium|Up to 45 s, released at next break|250–300 ms|150–200 ms|
+|OSD (volume, brightness, mic)|Low|None|~100 ms|~150 ms|
+|Battery and Hyprland events|Low|Up to 45 s, except critical battery|200–250 ms|150 ms|
+|IPC activity|Set by caller, capped at Medium|Same as normal notification|250 ms|150–200 ms|
+
+## Caveats
+
+Most of these studies are lab-based, older, or done on phones rather than desktops. The batching study ran for about two weeks with smartphone users in India. Treat the findings as direction and validate the defaults with our own use.
+
+## Sources
+
+- [Iqbal and Bailey, Leveraging Characteristics of Task Structure to Predict the Cost of Interruption (CHI 2006)](https://interruptions.net/literature/Iqbal-CHI06-p741-iqbal.pdf)
+- [Cutrell, Czerwinski and Horvitz, Effects of Instant Messaging Interruptions on Computing Tasks (CHI 2000)](https://www.interruptions.net/literature/Cutrell-CHI00.pdf)
+- [Horvitz, Apacible and Subramani, Balancing Awareness and Interruption: Notification Deferral Policies (2005)](https://www.erichorvitz.com/bdef_studies.pdf)
+- [Fitz et al., Batching Smartphone Notifications Can Improve Well-Being (2019)](https://scholars.duke.edu/publication/1402953)
+- [Bartram, Ware and Calvert, Moticons: Detection, Distraction and Task (2003)](https://scholars.unh.edu/ccom/979)
+- [Portnoff et al., Somebody's Watching Me? Assessing the Effectiveness of Webcam Indicator Lights (CHI 2015)](https://blues.cs.berkeley.edu/?p=159)
+- [McCrickard et al., A Model for Notification Systems Evaluation (TOCHI 2003)](https://www.interruptions.net/literature/McCrickard-TOCHI03.pdf)
+- [Apple Live Activities design guidelines, summarized by 9to5Mac](https://9to5mac.com/2022/09/26/iphone-14-pro-live-activities-guidelines/)
+- [Animation duration guidance citing NN/g and Material Design](https://lists.w3.org/Archives/Public/public-css-archive/2025Apr/0702.html)
+
+## Open against the project brief, _TBD_
+
+To settle with the user before step 6 (and 7):
+- **DND or a hold mode.** The project brief asks for a do-not-disturb
+  toggle; this one, for a hold mode that shows a count and releases on
+  demand instead. Step 6 builds one of them.
+- **Deferring battery and Hyprland events.** The table defers them up
+  to 45 s. A layout or submap notice, or "Charger connected", answers
+  the user's own action and would only confuse late; my proposal is to
+  defer only events the user didn't cause (low battery) and show the
+  rest at once. Not built either way yet: they show at once.
+- **IPC activities** must end (a timeout or an explicit removal) and are
+  capped at medium interruption: for step 7.
+
+---
+
 # Implementation
 
 ## Files
@@ -235,11 +310,14 @@ From the qmltypes in `/usr/lib/qt6/qml/Quickshell`:
 
 ## Activity queue
 
-An activity is a plain object: `key`, `transient`, `priority`, `timeout`
-(ms), `icon`, `label`, `progress` (0–1, or -1 for none), `face` ("osd",
-or "" for the generic one) and `waits`. The queue keeps them sorted,
-best first.
+An activity is a plain object: `key`, `transient`, `profile`,
+`priority`, `timeout` (ms), `icon`, `label`, `progress` (0–1, or -1 for
+none), `face` ("osd", "media", or "" for the generic one), `waits` and
+`revive`. The queue keeps them sorted, best first.
 
+- **Profile.** Each activity names its interruption profile (see
+  Interruption and motion), which sets its priority unless it gives
+  one, and how the pill moves for it.
 - **Same key, same activity.** Submitting a key already in the queue
   updates it; fields left out keep their value. The volume changing
   again updates the volume OSD instead of queueing a second one.
@@ -260,18 +338,13 @@ best first.
   instead, both when it arrives and when the island opens over it: a
   level is stale by the time the island closes.
 
-### Priorities
-
-Proposed, set as each feature is built:
-
-| Priority | Activity                                      |
-|----------|-----------------------------------------------|
-| 60       | notifications                                 |
-| 50       | OSD                                           |
-| 45       | Hyprland submap and layout                    |
-| 40       | battery events                                |
-| 30       | IPC live activities (the default for scripts) |
-| 20       | media                                         |
+- **Dismissing.** A right click on the pill dismisses what it shows
+  (`ActivityQueue.dismiss`): a transient is gone; a persistent one
+  leaves and stays away, its feature's updates ignored, until the
+  feature submits it with `revive` or removes it. Media revives when
+  the player starts or pauses again, or another player takes over; a
+  new track doesn't bring it back. A privacy announcement makes way for
+  the next; its dot stays.
 
 ## Window
 
@@ -280,7 +353,7 @@ Proposed, set as each feature is built:
 - Anchored top, layer `Overlay` (so the privacy dots stay over
   fullscreen windows), namespace `quickshell:island`.
 - The window is the expanded size plus room for the dots on either side
-  and the spring's overshoot (544 × 183). The mask is a `Region` of two:
+  and an overshoot (544 × 183). The mask is a `Region` of two:
   the pill (with its radius) and the dots. Only those take clicks.
 - **Fullscreen:** when the focused workspace has a fullscreen window
   (`Hyprland.focusedWorkspace.hasFullscreen`), the pill fades and
@@ -303,6 +376,8 @@ Proposed, set as each feature is built:
 - Expanded opens only from compact (idle and transients have nothing to
   expand) and closes when the pointer has been off the pill for 400ms,
   on a second click, or when the last persistent activity goes.
+- A right click on the pill dismisses what it shows (see Activity
+  queue, Dismissing).
 - The generic face: compact is icon + label; transient adds a 64px level
   bar when there is a progress; expanded is a 32px icon, the label (two
   lines) and a full-width bar.
@@ -351,9 +426,11 @@ player itself, so the face reads its position and sends its controls.
 The face (`MediaFace.qml`):
 - **Compact** (200 × 32, fixed): the art at the left end (20px, 6px
   corners, 8px in), four playing bars at the right (3px wide, 2px apart,
-  12px in). The bars dance (random heights 4–14px, 180ms) while playing
-  and lie flat at 3px when paused, and stop while not on screen. They're
-  made up, not the audio.
+  12px in). Made up, not the audio. `Config.mediaBars`: "still" (the
+  default, from the research: no constant motion) stands them at 6, 11,
+  8 and 13px while playing; "subtle" swells them ±2px around that every
+  0.7s; "dancing" is random 4–14px every 180ms. Flat at 3px when paused;
+  moving ones stop while not on screen.
 - **Expanded** (400 × 152): the art (56px, 12px corners) at 20, 20; the
   title, and the artist in `foregroundSoft`, beside it, cut with "…";
   the bars at the top right; a progress row (elapsed, 4px bar,
@@ -458,15 +535,43 @@ text in JetBrainsMono Nerd Font Bold 13px, fully rounded (radius height
 `Appearance` tokens (overrides `STYLE.md` §2), and the pill is fully
 round (overrides §5's 2px corners).
 
-## Motion
+## Interruption and motion
 
-- The pill's width and height follow the state on a spring (`spring 4`,
-  `damping 0.36`), with a slight overshoot; it grows down and outward
-  from the top centre.
-- The content fades out (80ms), swaps, and fades in (140ms, OutCubic)
-  while the pill is still moving. An update to the activity on screen
-  (a new progress) changes in place, without the fade.
+From the research brief. Every activity type has an interruption
+profile in `Config.profiles`: its priority, and the pill's morph when
+it arrives (enter) and when the island falls back after it (exit).
+
+| Profile | Interruption | Priority | Enter | Exit | Overshoot |
+|---------|--------------|----------|-------|------|-----------|
+| privacy | high | (not queued) | 250 | 150 | yes |
+| urgent (step 6) | high | 70 | 280 | 180 | yes |
+| notification (step 6) | medium | 60 | 280 | 180 | no |
+| criticalBattery | high | 55 | 250 | 150 | yes |
+| osd | low | 50 | 100 | 150 | no |
+| hyprland | low | 45 | 220 | 150 | no |
+| battery | low | 40 | 220 | 150 | no |
+| ipc (step 7) | medium | 30 | 250 | 180 | no |
+| media | low | 20 | 250 | 150 | no |
+
+- **Which time.** Something arriving (a transient, an announcement, or
+  an activity outranking the one up) moves at its enter time. Falling
+  back after one leaves moves at the leaver's exit time. Opening the
+  expanded state takes 280ms, closing it 180ms; the pill fitting new
+  content with nothing arriving or leaving (a longer title) 150ms.
+- **How.** OutCubic, decelerating. A high-interruption arrival gets one
+  slight overshoot (OutBack, 0.8); nothing else bounces, and nothing
+  moves twice: the morph happens once.
+- **Content** fades out in the first 30% of that time, swaps, and fades
+  in over the rest, while the pill is still moving. An update to the
+  activity on screen (a new progress) changes in place, without a fade.
+- Measured (to within 1px): OSD in ~90ms, out ~135ms; battery event
+  in ~185, out ~120; expand ~235, collapse ~150; privacy and critical
+  battery in ~235 with one overshoot.
 - Level bars ease to a new value (120ms, OutCubic).
+- The pill's size goes through `pillWidth`/`pillHeight`, set once per
+  event-loop turn (`Qt.callLater`) after the time is chosen: a Behavior
+  reads its duration when it starts, so the time has to be in place
+  before the size moves.
 
 ## Testing
 
@@ -478,7 +583,9 @@ doesn't replace:
 
 - `qs -c island ipc call queue persist|flash key icon label progress priority ms`,
   `drop key`, `clear`, `list`.
-- `qs -c island ipc call view expand|collapse|current`.
+- `qs -c island ipc call view expand|collapse|current|dismiss`
+  (dismiss: what a right click does); `queue dismiss <key>`. `queue
+  list` also lists dismissed keys.
 - `qs -c island ipc call battery simulate <onBattery> <percent> <state>`
   (state: charging, discharging, full, pending) feeds made-up readings
   through the same comparison, the first against the real reading;
@@ -555,6 +662,15 @@ SUPER+ALT+SPACE hides the dynamic-island meanwhile.
   Hyprland's screencast event as a second source for screen recording,
   after 1.5 s; the 2-second grace against re-announcing; the window on
   the Overlay layer from now on.
+- 2026-10-13: the research brief added, at the user's request, and its
+  fixes made before step 6: interruption profiles (priority and motion
+  per activity type) at its starting timings; exits shorter than
+  entries; the spring replaced by eased morphs, one overshoot only for
+  high interruption; the playing bars still by default ("subtle" and
+  "dancing" as options); a right click dismisses any activity. Mine:
+  right click as the gesture; media staying dismissed through new
+  tracks; the exact numbers within its ranges. Deferral and DND vs hold
+  mode left _TBD_ for step 6.
 - 2026-10-13: no global shortcuts from the volume and brightness keys
   (the dynamic-island's way of answering a press at 0% or 100%). It
   would mean new shortcut names and edits to `hypr/modules/binds`;
