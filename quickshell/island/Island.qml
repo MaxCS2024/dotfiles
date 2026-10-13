@@ -233,7 +233,8 @@ PanelWindow {
         case "privacy":
             return fit(measure.implicitWidth)
         default:
-            return Config.expandedWidth
+            // Each face's expanded width (the media player: 360).
+            return Math.min(Config.expandedWidth, measure.implicitWidth + Config.padX * 2)
         }
     }
     readonly property int targetHeight: {

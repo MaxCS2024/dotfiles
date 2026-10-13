@@ -3,8 +3,8 @@ import Quickshell.Widgets
 import QtQuick
 
 // The media face. Compact: the album art at the left end, the playing
-// bars at the right. Expanded: art, title and artist, the progress, and
-// previous / play-pause / next. It reads the player the activity carries.
+// bars at the right. Expanded: the dynamic-island's media player. It
+// reads the player the activity carries.
 Item {
     id: face
 
@@ -15,11 +15,14 @@ Item {
     readonly property bool playing: player?.isPlaying ?? false
 
     // Compact is a fixed width: the art and the bars sit at the ends.
-    // Minimal (the split's circle): the art alone, round.
-    implicitWidth: mode === "expanded" ? Config.expandedWidth - Config.padX * 2
+    // Minimal (the split's circle): the art alone, round. Expanded: the
+    // player's 360 × 128 (the island adds its padX on either side).
+    readonly property int playerWidth: 360
+    readonly property int playerHeight: 128
+    implicitWidth: mode === "expanded" ? playerWidth - Config.padX * 2
         : mode === "minimal" ? Config.compactHeight
         : 168
-    implicitHeight: mode === "expanded" ? Config.expandedHeight : Config.compactHeight
+    implicitHeight: mode === "expanded" ? playerHeight : Config.compactHeight
 
     // ── Minimal ──
     Art {
@@ -52,37 +55,64 @@ Item {
         }
     }
 
-    // ── Expanded ──
-    // Laid out at the full expanded size from the top, so nothing reflows
-    // while the pill is still growing; the pill clips what doesn't fit yet.
+    // ── Expanded: the dynamic-island's media player ──
+    // Ported from ../dynamic-island at the user's request: 360 × 128, 16px
+    // in; the art (96px, 12px corners) on the left; beside it the title
+    // (bold), the artist (white at 60%), a 4px progress bar, elapsed and
+    // total time, and previous / play-pause / next as plain glyphs. Laid
+    // out at its full size from the top, so nothing reflows while the
+    // pill is still growing; the pill clips what doesn't fit yet.
     Item {
+        id: playerView
         visible: face.mode === "expanded"
         anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
-        width: Config.expandedWidth
-        height: Config.expandedHeight
+        width: face.playerWidth
+        height: face.playerHeight
+
+        // MPRIS sends no ticks; asking for the position again each second
+        // is how Quickshell's position moves.
+        Timer {
+            running: playerView.visible && face.playing && (face.player?.lengthSupported ?? false)
+            interval: 1000
+            repeat: true
+            onTriggered: face.player.positionChanged()
+        }
+
+        readonly property real length: face.player?.length ?? 0
+        readonly property real position: Math.min(face.player?.position ?? 0, length)
+        readonly property real progress: length > 0 ? Math.max(0, Math.min(1, position / length)) : 0
+
+        function formatTime(seconds) {
+            const s = Math.max(0, Math.floor(seconds))
+            return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0")
+        }
 
         Art {
             id: bigArt
-            x: 20
-            y: 20
+            x: 16
+            y: 16
             player: face.player
-            size: 56
+            size: playerView.height - 32
             radius: 12
+            // The player's dim note on a fainter square.
+            glyphOpacity: 0.4
+            glyphSize: 40
+            fill: Config.button
         }
 
         Column {
             anchors.left: bigArt.right
-            anchors.leftMargin: 12
-            anchors.right: bars.left
-            anchors.rightMargin: 12
+            anchors.leftMargin: 16
+            anchors.right: parent.right
+            anchors.rightMargin: 16
             anchors.verticalCenter: bigArt.verticalCenter
             spacing: 4
 
             Text {
                 width: parent.width
-                text: face.player?.trackTitle ?? ""
                 elide: Text.ElideRight
+                text: face.player?.trackTitle || "Unknown"
                 color: Config.foreground
                 font.family: Config.font
                 font.weight: Font.Bold
@@ -91,100 +121,88 @@ Item {
 
             Text {
                 width: parent.width
-                text: face.player?.trackArtist ?? ""
-                visible: text !== ""
                 elide: Text.ElideRight
-                color: Config.foregroundSoft
+                text: face.player?.trackArtist ?? ""
+                color: Config.foreground
+                opacity: 0.6
                 font.family: Config.font
                 font.weight: Font.Bold
                 font.pixelSize: Config.fontSize
             }
-        }
 
-        PlayingBars {
-            id: bars
-            playing: face.playing
-            anchors.right: parent.right
-            anchors.rightMargin: 24
-            anchors.verticalCenter: bigArt.verticalCenter
-        }
-
-        // ── Progress ──
-        Item {
-            id: progress
-            visible: (face.player?.lengthSupported ?? false) && face.player.length > 0
-            x: 20
-            y: 88
-            width: parent.width - 40
-            height: 16
-
-            // MPRIS sends no ticks; asking for the position again each
-            // second is how Quickshell's position moves.
-            Timer {
-                running: progress.visible && face.playing && face.visible
-                interval: 1000
-                repeat: true
-                onTriggered: face.player.positionChanged()
-            }
-
-            readonly property real length: face.player?.length ?? 0
-            readonly property real position: Math.min(face.player?.position ?? 0, length)
-
-            Time {
-                id: elapsed
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                seconds: progress.position
-            }
+            Item { width: 1; height: 4 }
 
             Rectangle {
-                anchors.left: elapsed.right
-                anchors.leftMargin: 12
-                anchors.right: remaining.left
-                anchors.rightMargin: 12
-                anchors.verticalCenter: parent.verticalCenter
+                width: parent.width
                 height: 4
-                radius: height / 2
+                radius: 2
                 color: Config.track
 
                 Rectangle {
-                    width: progress.length > 0 ? parent.width * progress.position / progress.length : 0
+                    width: parent.width * playerView.progress
                     height: parent.height
-                    radius: parent.radius
+                    radius: 2
                     color: Config.foreground
                 }
             }
 
-            Time {
-                id: remaining
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                seconds: progress.length - progress.position
-                prefix: "-"
-            }
-        }
+            Item {
+                width: parent.width
+                height: 16
 
-        // ── Controls ──
-        Row {
-            anchors.horizontalCenter: parent.horizontalCenter
-            y: 108
-            spacing: 24
+                Text {
+                    anchors.left: parent.left
+                    text: playerView.formatTime(playerView.position)
+                    color: Config.foreground
+                    opacity: 0.6
+                    font.family: Config.font
+                    font.weight: Font.Bold
+                    font.pixelSize: Config.fontSizeSmall
+                }
 
-            Control {
-                glyph: "\u{f04ae}"
-                enabled: face.player?.canGoPrevious ?? false
-                onActivated: face.player.previous()
+                Text {
+                    anchors.right: parent.right
+                    text: playerView.formatTime(playerView.length)
+                    color: Config.foreground
+                    opacity: 0.6
+                    font.family: Config.font
+                    font.weight: Font.Bold
+                    font.pixelSize: Config.fontSizeSmall
+                }
             }
-            Control {
-                glyph: face.playing ? "\u{f03e4}" : "\u{f040a}"
-                glyphSize: 24
-                enabled: face.player?.canTogglePlaying ?? false
-                onActivated: face.player.togglePlaying()
-            }
-            Control {
-                glyph: "\u{f04ad}"
-                enabled: face.player?.canGoNext ?? false
-                onActivated: face.player.next()
+
+            Row {
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 16
+
+                Repeater {
+                    model: [
+                        { glyph: "\u{f04ae}", action: () => face.player.previous() },
+                        { glyph: "", action: () => face.player.togglePlaying() },
+                        { glyph: "\u{f04ad}", action: () => face.player.next() }
+                    ]
+
+                    delegate: Text {
+                        required property var modelData
+                        required property int index
+                        width: 24
+                        height: 24
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        // The middle button shows pause while playing.
+                        text: index !== 1 ? modelData.glyph : face.playing ? "\u{f03e4}" : "\u{f040a}"
+                        color: Config.foreground
+                        font.family: Config.font
+                        font.weight: Font.Bold
+                        font.pixelSize: 18
+
+                        MouseArea {
+                            anchors.fill: parent
+                            enabled: face.player !== null
+                            onClicked: parent.modelData.action()
+                        }
+                    }
+                }
             }
         }
     }
@@ -195,18 +213,23 @@ Item {
         id: art
         property var player: null
         property int size: 20
+        property real glyphOpacity: 1
+        property int glyphSize: Math.round(size / 2)
+        property color fill: Config.track
 
         width: size
         height: size
-        color: Config.track
+        color: fill
 
         Text {
             anchors.centerIn: parent
             visible: cover.status !== Image.Ready
             text: "\u{f075a}"
             color: Config.foreground
+            opacity: art.glyphOpacity
             font.family: Config.font
-            font.pixelSize: Math.round(art.size / 2)
+            font.weight: Font.Bold
+            font.pixelSize: art.glyphSize
         }
 
         Image {
@@ -267,50 +290,6 @@ Item {
                     onRunningChanged: if (!running) bar.height = Qt.binding(() => barsRow.playing ? barsRow.standing[bar.index] : 3)
                 }
             }
-        }
-    }
-
-    component Time: Text {
-        property real seconds: 0
-        property string prefix: ""
-
-        readonly property int whole: Math.max(0, Math.floor(seconds))
-        text: prefix + Math.floor(whole / 60) + ":" + String(whole % 60).padStart(2, "0")
-        color: Config.foregroundSoft
-        font.family: Config.font
-        font.weight: Font.Bold
-        font.pixelSize: Config.fontSizeSmall
-    }
-
-    // A round button: a glyph, a faint fill on hover, dim when unavailable.
-    component Control: Rectangle {
-        id: control
-        property string glyph: ""
-        property int glyphSize: 20
-        signal activated()
-
-        width: 36
-        height: 36
-        radius: height / 2
-        color: hover.hovered && enabled ? Config.track : Qt.rgba(1, 1, 1, 0)
-        opacity: enabled ? 1 : 0.4
-
-        Behavior on color { ColorAnimation { duration: 120 } }
-
-        Text {
-            anchors.centerIn: parent
-            text: control.glyph
-            color: Config.foreground
-            font.family: Config.font
-            font.pixelSize: control.glyphSize
-        }
-
-        HoverHandler { id: hover }
-
-        MouseArea {
-            anchors.fill: parent
-            enabled: control.enabled
-            onClicked: control.activated()
         }
     }
 }

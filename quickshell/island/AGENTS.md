@@ -418,7 +418,7 @@ none), `face` ("osd", "media", or "" for the generic one), `waits` and
 | idle      | the queue is empty (or only transients held) | clock: time + 16px each side × 24; notch: 120 × 8 |
 | compact   | a persistent activity, no transient up | content + 16px each side, 160–400 × 32 |
 | transient | a transient is up                      | content + 16px each side, 160–400 × 40 |
-| expanded  | clicked (or hovered, `Config.expandOn`) on a compact pill, or the split's circle | 400 × the face's height (152 for media and the generic face) |
+| expanded  | clicked (or hovered, `Config.expandOn`) on a compact pill, or the split's circle | the face's size, at most 400 wide: media 360 × 128; generic 400 × 152; notifications and the hold count 400 wide |
 | split     | compact, with a second persistent activity | the pill, plus a 32px circle 8px to its right |
 
 - Expanded opens only from compact (idle and transients have nothing to
@@ -500,13 +500,17 @@ The face (`MediaFace.qml`):
   8 and 13px while playing; "subtle" swells them ±2px around that every
   0.7s; "dancing" is random 4–14px every 180ms. Flat at 3px when paused;
   moving ones stop while not on screen.
-- **Expanded** (400 × 152): the art (56px, 12px corners) at 20, 20; the
-  title, and the artist in `foregroundSoft`, beside it, cut with "…";
-  the bars at the top right; a progress row (elapsed, 4px bar,
-  "-remaining" in 11px) at y 88 when the player knows the length; and
-  previous / play-pause / next as 36px round buttons, 24px apart, at
-  y 108, a faint fill on hover, dim when the player can't. Laid out at
-  full size from the top, so nothing reflows while the pill grows.
+- **Expanded**: the dynamic-island's media player, ported at the
+  user's request (2026-10-13; its brief, Media player): 360 × 128, 16px
+  in; the art (96px, 12px corners; a dim 40px note on a faint square
+  without one) on the left; beside it, centred on the art, the title
+  (bold), the artist (white at 60%), a 4px progress bar, elapsed and
+  total time (11px, 60%), and previous / play-pause / next as plain
+  18px glyphs in 24px squares, 16px apart, centred under them. Laid out
+  at full size from the top, so nothing reflows while the pill grows.
+  Unlike the dynamic-island, it opens only with a player, and closes the
+  island's way (a click on it outside the buttons, or the pointer
+  leaving), not on a click elsewhere on screen.
 - No art: a music note on a dark square.
 
 The pill's own MouseArea sits under the content, so the buttons take
@@ -823,6 +827,11 @@ Running it next to the dynamic-island puts two pills at the top centre;
 SUPER+ALT+SPACE hides the dynamic-island meanwhile.
 
 # Decisions
+
+- 2026-10-13: the expanded media view is the dynamic-island's media
+  player, at the user's request, in place of the one built in step 3
+  (art 56px, bars, round 36px buttons, remaining time). The window now
+  takes each face's expanded width.
 
 - 2026-10-13: dismissed music could only come back by pausing and
   playing again, with no hint of it (the user's report). Now a left
