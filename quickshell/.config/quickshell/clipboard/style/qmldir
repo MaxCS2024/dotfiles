@@ -1,5 +1,0 @@
-# The clipboard window's skin: Main.qml (the bar's theme) or Island.qml
-# (the dynamic island's black and white). Quickshell doesn't reload on a
-# change here; restart with `qs kill -c clipboard` and
-# `hyprctl dispatch 'hl.dsp.exec_cmd("qs -c clipboard")'`.
-singleton Style 1.0 Island.qml

@@ -27,7 +27,7 @@ here before building it.
 ## Scope
 
 The island is the user's alternative to the main bar: with a launcher
-(fuzzel), the clipboard and its own settings window it runs as a complete shell
+(fuzzel), a clipboard history (cliphist in fuzzel) and its own settings window it runs as a complete shell
 with main never started. The pill must stay small. Check every request
 against this section first. Something that falls outside it is raised
 with the user, not built.
@@ -79,7 +79,7 @@ workspace overview, Conf's sections (Install, Features, Update, Defaults, Style:
 Conf is to be split out of main into its own config, like the launcher),
 weather, system stats (CPU, RAM, temperature), a song-changed flash,
 Bluetooth devices' low-battery flashes, the app
-launcher (fuzzel) and clipboard (its own config), and a calendar.
+launcher and the clipboard history (fuzzel, with cliphist), and a calendar.
 
 **Undecided, _TBD_:**
 - Notifications. Showing them would mean the island running the
@@ -1390,3 +1390,5 @@ Dated record of what the user chose or rejected, and why.
 - 2026-10-13: the song view is skipped too while nothing is playing
   (the user's request): a drag towards it springs back, and it gives
   way to the time when the player quits.
+- 2026-10-13: the clipboard window (its own Quickshell config) is gone
+  too, at the user's request; SUPER+C is cliphist's history in fuzzel.

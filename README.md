@@ -1,16 +1,16 @@
 # dotfiles
 
 A Hyprland desktop whose shell is [Quickshell](https://quickshell.org): the
-dynamic island at the top centre, with a clipboard window and a settings
-window beside it. The app launcher is fuzzel. Configs are linked into place
+dynamic island at the top centre, with a settings window beside it. The
+app launcher and the clipboard history are fuzzel (with cliphist). Configs are linked into place
 with [GNU stow](https://www.gnu.org/software/stow/).
 
 ```
 hypr/         the compositor — .config/hypr/hyprland.lua sources modules/
 quickshell/   the shell configs, in .config/quickshell/:
-                dynamic-island (the shell at login), clipboard, settings,
-                island (a brief-built island, run by hand), main (the old
-                bar, run by hand), shared (files clipboard links to)
+                dynamic-island (the shell at login), settings, island (a
+                brief-built island, run by hand), main (the old bar, run
+                by hand)
 matugen/      turns a wallpaper into the palette the shell writes out
 gtk-3.0/ gtk-4.0/  GTK theming, and the icon theme Qt reads through gtk3
 foot/ kitty/ ghostty/  terminals
@@ -72,8 +72,8 @@ The font must be `ttf-jetbrains-mono-nerd`, the patched Nerd Font build: the
 island draws glyphs that exist nowhere else.
 
 Then log into Hyprland. `hypr/.config/hypr/modules/autostart.lua` starts the
-dynamic island, the clipboard and settings configs, and the wallpaper,
-clipboard, idle and night-light daemons.
+dynamic island and the settings config, and the wallpaper, clipboard
+history (cliphist), idle and night-light daemons.
 
 ## Hardware fixes
 

@@ -68,7 +68,7 @@ at login, so those keys do nothing until it is run by hand (see
 | SUPER+ESCAPE | Power menu (main) | `binds/apps.lua` | Without main, middle-click the island |
 | SUPER+SHIFT+N | Notifications rail (main) | `binds/apps.lua` | |
 | SUPER+CTRL+W | Network rail (main) | `binds/apps.lua` | W for wifi; CTRL because SUPER+W closes |
-| SUPER+C | Clipboard history | `binds/apps.lua` | `quickshell/clipboard`; C for copy |
+| SUPER+C | Clipboard history | `binds/apps.lua` | cliphist in fuzzel; C for copy |
 | SUPER+COMMA | Settings window | `binds/apps.lua` | Where GNOME and macOS keep settings |
 | SUPER+ALT+W | Island wallpaper gallery | `binds/apps.lua` | W for wallpaper; ALT because SUPER+W closes |
 | SUPER+SHIFT+T | Themes (main) | `binds/apps.lua` | SUPER+T is the float toggle |
@@ -213,7 +213,6 @@ Runs once, on `hyprland.start`.
   it too, gave way to fuzzel on 2026-10-13.) It does not affect the `image://icon` provider, which
   works under either value, so it never explains an icon drawn as a broken
   placeholder; that is a malformed source URL.
-- **`qs -c clipboard`**: shows no app icons, so no override.
 - **`hypridle`**: config in `hypridle.conf`.
 - **`hyprpolkitagent`**: the password dialog for apps that ask for rights
   over D-Bus (Impression writing a USB stick, a disk tool formatting a
@@ -444,8 +443,7 @@ have neither `arg` nor `debug`, which also means "not a script".
   Hyprland's global-shortcuts protocol, instead of spawning
   `qs ipc call` per press. The string is `appid:name` and must match the
   registration exactly; a name nobody registered does nothing, silently.
-  Registered in: `clipboard/shell.qml`,
-  `settings/SettingsWindow.qml` (`settings-toggle`), `dynamic-island/`
+  Registered in: `settings/SettingsWindow.qml` (`settings-toggle`), `dynamic-island/`
   (`Controls.qml`, `Wallpapers.qml`), and `main/services/Panels.qml` /
   `main/powermenu/PowerMenuPopout.qml` for the main keys.
 - **`run(role)`** asks `defaults.lua` on every press, not at config load,
@@ -639,6 +637,9 @@ Kept from the old comments; the commits have the details.
   the field and arrow moved 22px left. hyprlock 0.9 dropped
   `disable_loading_bar`, `grace` and `no_fade_in`; grace is now the
   `--grace` flag, which nothing passes.
+- 2026-10-13: the Quickshell clipboard window went too, at the user's
+  request: SUPER+C shows cliphist's history in fuzzel
+  (`cliphist list | fuzzel --dmenu | cliphist decode | wl-copy`).
 - 2026-10-13: fuzzel replaced the Quickshell launcher on SUPER+P, at the
   user's request ("I don't need Quickshell to do everything"); the
   launcher config was removed.

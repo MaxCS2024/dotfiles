@@ -3,7 +3,8 @@
 The settings window on its own (`qs -c settings`, in
 `~/.dotfiles/quickshell/settings`, linked to `~/.config/quickshell/settings`
 by stow (`stow quickshell`), started at login by `hypr/modules/autostart.lua`),
-like the clipboard and the launcher: it opens whatever shell runs.
+as the clipboard and the launcher were before fuzzel replaced them: it
+opens whatever shell runs.
 SUPER+COMMA (`quickshell:settings-toggle`), `settings.desktop` and
 `qs -c settings ipc call settings open|focus|close|toggle` reach it.
 
