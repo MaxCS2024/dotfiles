@@ -658,10 +658,14 @@ Singleton {
 
     // ── Caps Lock ──
     // `capsNotice(on)` when Caps Lock turns on or off. Hyprland has no
-    // event for it, so releasing Caps Lock presses the island-capslock
-    // shortcut (a non-consuming bind in hypr/modules/binds/media.lua) and
-    // the main keyboard, the one just pressed, is read then. Only a real
-    // change flashes: with Caps Lock set to switch layouts it stays off.
+    // event for it, so pressing Caps Lock presses the island-capslock
+    // shortcut (non-consuming binds in hypr/modules/binds/media.lua, one
+    // without and one with the CAPS modifier, since Caps Lock being on
+    // counts as held) and 150ms later, once XKB has toggled, the state is
+    // read: on if any keyboard has it on ("main" is only the keyboard
+    // used last, often the volume keys' thinkpad-extra-buttons). Only a
+    // real change flashes: with Caps Lock set to switch layouts it stays
+    // off.
     signal capsNotice(bool on)
     property bool capsLock: false
 
@@ -669,13 +673,19 @@ Singleton {
         appid: "quickshell"
         name: "island-capslock"
         description: "Show the dynamic island's Caps Lock notice"
-        onPressed: capsRead.running = true
+        onPressed: capsDelay.restart()
+    }
+
+    Timer {
+        id: capsDelay
+        interval: 150
+        onTriggered: capsRead.running = true
     }
 
     Process {
         id: capsRead
         running: true
-        command: ["sh", "-c", "hyprctl devices -j | jq -r '.keyboards[] | select(.main) | .capsLock'"]
+        command: ["sh", "-c", "hyprctl devices -j | jq -r '[.keyboards[].capsLock] | any'"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const on = text.trim() === "true"

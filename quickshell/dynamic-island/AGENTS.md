@@ -386,21 +386,25 @@ seconds: the layout notice's face and rules (`Island.flashShort`, which
 both use; the newest flash wins, not while a panel is open or
 mid-drag, a press drops it).
 
-Hyprland has no Caps Lock event. A `non_consuming` release bind on
-Caps_Lock (`hypr/modules/binds/media.lua`) presses the global shortcut
-`quickshell:island-capslock` without taking the key from XKB; the island
-then reads the main keyboard's `capsLock` from `hyprctl devices -j` (the
-keyboard just pressed is the main one) and flashes only when it differs
-from the last reading (`Controls.capsLock`, first read at start, quiet
-for the first 2 seconds). So with Caps Lock set to switch layouts
+Hyprland has no Caps Lock event. Two `non_consuming` press binds
+(`hypr/modules/binds/media.lua`), `Caps_Lock` and `CAPS + Caps_Lock`,
+press the global shortcut `quickshell:island-capslock` without taking
+the key from XKB: Caps Lock being on counts as the CAPS modifier held,
+so a bind without it never fired while turning it off, nor a release
+bind while turning it on (the first version, which never flashed). 150ms
+later, once XKB has toggled, the island reads `capsLock` from `hyprctl
+devices -j`, on if any keyboard has it on ("main" is only the keyboard
+used last, often the volume keys' `thinkpad-extra-buttons`), and
+flashes only when it differs from the last reading (`Controls.capsLock`,
+first read at start, quiet for the first 2 seconds). So with Caps Lock set to switch layouts
 (Settings › Input) it stays off and nothing flashes but the layout.
 
 Testing: `test-notices.sh pill`, or
 `qs -c dynamic-island ipc call island-notices caps true|false`. The
 real path:
 `hyprctl dispatch 'hl.dsp.global("quickshell:island-capslock")'` reads
-the state and, unchanged, shows nothing. Don't type Caps Lock with
-wtype: its virtual keyboard becomes the main one.
+the state and, unchanged, shows nothing. wtype can't test it: its keys
+don't trigger Hyprland's binds.
 
 ## Testing the notices
 
@@ -1308,3 +1312,7 @@ Dated record of what the user chose or rejected, and why.
 - 2026-10-13: a Caps Lock notice, "Caps Lock – on/off" for 1.5 seconds
   like the layout's, from a non-consuming Caps_Lock bind. The user's
   request, from the list of what the island lacks.
+- 2026-10-13: the Caps Lock notice never showed (the user's report): the
+  release bind without modifiers didn't match with Caps Lock on. Now a
+  press bind with and one without CAPS, read 150ms later from any
+  keyboard. Confirmed by the user.

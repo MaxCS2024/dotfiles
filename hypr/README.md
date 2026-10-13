@@ -540,11 +540,12 @@ colours change with the wallpaper. `saved` is nil while chrome shows.
 - **Media keys**: playerctl, so they work under any shell. playerctld
   (started on demand over D-Bus) puts the most recently used player first,
   which is the one these control.
-- **Caps Lock**: `non_consuming`, so the key still reaches XKB and
-  toggles as usual; on release (when the toggle has happened) it triggers
-  `quickshell:island-capslock`, and the island reads the new state from
-  `hyprctl devices` and flashes "Caps Lock – on/off". Hyprland has no
-  event for it.
+- **Caps Lock**: two `non_consuming` binds, so the key still reaches XKB
+  and toggles as usual: `Caps_Lock` and `CAPS + Caps_Lock`, since Caps
+  Lock being on counts as the CAPS modifier held and a bind without it
+  doesn't match then. Either triggers `quickshell:island-capslock`; the
+  island reads the new state from `hyprctl devices` a moment later and
+  flashes "Caps Lock – on/off". Hyprland has no event for it.
 
 ## hypridle.conf
 
