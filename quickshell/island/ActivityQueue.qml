@@ -28,12 +28,25 @@ Singleton {
     //              dismissed persistent activity stays away (see dismiss)
     //   defer      for a transient: ms it may wait for a break before it
     //              shows; the profile's unless given (see Deferral)
+    //   onEnd      optional function(reason), called when the queue ends
+    //              it: "expired" (its time ran out) or "dismissed" (the
+    //              user). Not when its feature removes or replaces it.
     // Objects are replaced, never changed in place, so bindings see updates.
     property var activities: []
 
     // Set by the island while it is expanded: transients wait, their
     // timers stopped, until it closes.
     property bool holdTransients: false
+
+    // Set by the island while the pointer is on a transient: its time
+    // stops, and starts over when the pointer leaves.
+    property bool paused: false
+    onPausedChanged: {
+        if (paused)
+            transientTimer.stop()
+        else if (shownTransient)
+            transientTimer.restart()
+    }
 
     onHoldTransientsChanged: {
         if (holdTransients)
@@ -120,6 +133,16 @@ Singleton {
         remove(key)
         if (!a.transient)
             dismissed[key] = true
+        a.onEnd?.("dismissed")
+    }
+
+    // The queue ending one itself: its time ran out.
+    function expire(key) {
+        const a = find(key)
+        if (!a)
+            return
+        remove(key)
+        a.onEnd?.("expired")
     }
 
     function find(key) {
@@ -153,12 +176,13 @@ Singleton {
         timedKey = t.key
         timedRevision = t.revision
         transientTimer.interval = t.timeout
-        transientTimer.restart()
+        if (!paused)
+            transientTimer.restart()
     }
 
     Timer {
         id: transientTimer
-        onTriggered: root.remove(root.timedKey)
+        onTriggered: root.expire(root.timedKey)
     }
 
     // ── Deferral ──
@@ -228,7 +252,8 @@ Singleton {
         id: expiryTimer
         onTriggered: {
             const now = Date.now()
-            root.activities = root.activities.filter(a => !a.expiresAt || a.expiresAt > now)
+            for (const a of root.activities.filter(a => a.expiresAt && a.expiresAt <= now))
+                root.expire(a.key)
             root.scheduleExpiry()
         }
     }

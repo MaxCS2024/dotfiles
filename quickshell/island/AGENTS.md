@@ -5,7 +5,10 @@ A standalone Quickshell config (`qs -c island`, in
 by the rack manifest): a dynamic island built to the project brief
 below, from scratch, next to `../dynamic-island`, which it doesn't touch
 or share code with. It isn't started at login; run it by hand with
-`qs -n -c island -d`.
+`env QT_QPA_PLATFORMTHEME=gtk3 qs -n -c island -d` (the GTK theme
+plugin gives it the icon theme; the session's qt5ct isn't installed for
+Qt 6). While it runs it is the notification daemon in dunst's place
+(see Notifications).
 
 This file is the design brief. Read it before creating or changing
 anything here. The project brief (the user's, 2026-10-13) is kept as
@@ -36,7 +39,8 @@ user's look and right click.
 5. Privacy indicators: **built 2026-10-13**, tested with
    `fake-capture.sh` (fake PipeWire devices), wf-recorder and a faked
    fullscreen; clicking a dot awaits the user's pointer.
-6. Notifications
+6. Notifications: **built 2026-10-13**, tested with `notify-send`
+   and test calls; clicks, hover and the middle click await the user.
 7. IPC live-activities API
 8. Split state
 
@@ -255,6 +259,9 @@ and are capped at medium interruption.
   compact, transient and expanded layouts.
 - `Osd.qml`: the OSD feature (see OSD); `OsdFace.qml` its face.
 - `Media.qml`: the media feature (see Media); `MediaFace.qml` its face.
+- `Notifications.qml`: the notification daemon and the hold mode (see
+  Notifications); `NotificationFace.qml` a notification's card,
+  `HoldFace.qml` the hold count, `PillButton.qml` their buttons.
 - `Privacy.qml`: who is using the microphone, camera and screen, and
   the announcements (see Privacy indicators). Not in the queue.
 - `Battery.qml`: battery events (see Battery events).
@@ -291,6 +298,23 @@ From the qmltypes in `/usr/lib/qt6/qml/Quickshell`:
   `properties` (`media.class`, `device.api`, `application.name`).
   `.values` is a list type, not a JS array: `Array.from` it.
 - Qt's JavaScript has no `Array.prototype.flatMap`.
+- `NotificationServer` (`Quickshell.Services.Notifications`) emits
+  `notification(n)`; set `n.tracked = true` to keep it. `Notification`
+  has `id`, `appName`, `appIcon`, `summary`, `body`, `image`,
+  `urgency` (`NotificationUrgency` Low / Normal / Critical),
+  `expireTimeout` in **milliseconds** (-1 default, 0 never), `actions`
+  (a list type; `NotificationAction` has `identifier`, `text`,
+  `invoke()`), `resident`, `transient`, `desktopEntry`, `dismiss()`,
+  `expire()` and the `closed` signal. A replacement (`replaces_id`)
+  changes the same object; `notification` isn't emitted again. A theme
+  icon name arrives as `image` "image://icon/<name>", which draws a
+  checkerboard when the name isn't in the theme.
+- `Quickshell.iconPath(name, true)` returns "" for every name without
+  an icon theme; the island needs `QT_QPA_PLATFORMTHEME=gtk3`.
+- The island measures the content it is heading for with an invisible
+  copy of the face: in it, `visible` reads false for every child, but
+  positioners (Row, Column) still lay out by each item's own
+  `visible`. Compute sizes from data, never from a child's `visible`.
 - Hyprland sends `activewindowv2` again, with the same address,
   whenever the focused window's title changes (a terminal's spinner:
   several a second). A focus change is a new address.
@@ -537,6 +561,59 @@ Not covered: the dynamic-island's own level meters (its Sound page,
 its dictation waveform) read the microphone and may light the dot as
 "quickshell"; untested.
 
+## Notifications
+
+`Notifications.qml` is the notification daemon: a `NotificationServer`
+(actions, body with markup, images, persistence; no inline reply, no
+links, no action icons).
+
+**Taking over from dunst.** One program can own
+`org.freedesktop.Notifications`. dunst is a D-Bus-started user unit, so
+the island runs `systemctl --user stop dunst.service` and then
+registers; a second later it checks the owner and warns in the log if
+it isn't the island. When the island quits, the name is free and the
+next notification starts dunst again (checked both ways). While the
+island runs, the dynamic-island's Do not disturb (dunstctl) does
+nothing, and its critical-battery and disk alerts come to the island.
+`Config.notifications` false leaves dunst alone.
+
+**Showing.** Each notification is a transient, key `notification:<id>`,
+face `notification`:
+- **Critical**: profile `urgent` (70, high: 280ms in with an overshoot),
+  never waits, shows 8 s (`notificationUrgentTimeout`), then stays as a
+  compact activity (icon + summary) until dismissed. One that asks never
+  to expire (timeout 0) stays the same way after its usual time.
+- **Normal and low**: profile `notification` (60, medium), waits up to
+  45 s for a break; shows its own timeout if it gives one, else 5 s
+  (low: 3 s).
+- The card: the picture (the notification's image, else the app's icon
+  from the theme, else its desktop entry's, else a bell) 32px with 8px
+  corners; the summary (one line) and the body (two lines, four
+  expanded; basic markup) in `foregroundSoft`; up to three action
+  buttons (every action but "default") at the bottom right. Laid out at
+  full width from the top. Its height sets the pill's.
+- A click on the card runs the default action, or just dismisses it
+  when there is none; a button runs its action. Either way it leaves,
+  unless it is resident. A right click dismisses it (the app hears
+  "dismissed"); running out of time expires it (the app hears
+  "expired"). The pointer resting on a transient stops its time, which
+  starts over when it leaves.
+- An app updating its notification ("Copying… 90%") updates the one up,
+  its time started over. An app closing it takes it away.
+
+**Hold mode** (the research brief's, in place of DND). While holding,
+every notification but a critical one is kept back unseen, and a
+compact activity shows the count: a bell and "3 held" (priority 25,
+above media), or "Holding" while none are (10, below media). Expanded:
+"3 notifications held", "Show" (shows them now, in order, without
+waiting for a break) and "Stop holding" (turns it off and shows them).
+A right click on the count stops holding too. On and off: a middle
+click on the pill, the global shortcut `quickshell:island-hold` (not
+bound to a key yet), or IPC.
+
+Not built: notification history, grouping, schedules (the brief rules
+them out); inline replies (typing).
+
 ## Look
 
 The dynamic-island's look, since it is the user's: a black pill, white
@@ -594,6 +671,17 @@ doesn't replace:
 
 - `qs -c island ipc call queue persist|flash key icon label progress priority ms`,
   `drop key`, `clear`, `list`.
+- `notify-send` sends real ones; `-u critical`, `-t <ms>`, `-A id=label`
+  (it waits and prints the chosen action), `-p` (prints the id) and
+  `-r <id>` (replaces). Normal ones wait for a break: `queue release`.
+- `qs -c island ipc call notifications hold <bool>|toggleHold|release|status`,
+  `act <id> <action>` (what a click, "default", or a button does), and
+  `icon <name>` (what a theme name resolves to).
+- Stopping: `qs kill -c island`. Twice in step 6 it crashed on the way
+  out (Qt, `QWindow::unsetCursor` while tearing down) and Quickshell's
+  crash handler started it again, with the old environment; then end
+  it with `kill -9 <pid>` (from `qs list --all`), which the handler
+  can't catch. Only ever the island's own pid.
 - `qs -c island ipc call queue release`: what a break does to waiting
   activities; `queue list` shows them as "deferred Ns".
 - `qs -c island ipc call view expand|collapse|current|dismiss`
@@ -684,6 +772,14 @@ SUPER+ALT+SPACE hides the dynamic-island meanwhile.
   right click as the gesture; media staying dismissed through new
   tracks; the exact numbers within its ranges. Deferral and DND vs hold
   mode left _TBD_ for step 6.
+- 2026-10-13: step 6, notifications, at the user's go-ahead (they had
+  been told the island takes over from dunst while it runs). Mine:
+  stopping dunst's unit to take the name; critical (and never-expiring)
+  ones kept small until dismissed, as dunst kept critical ones; 5 s / 3 s
+  / 8 s; a click with no default action dismisses; hover pauses; the
+  hold count above media only when something is held; a middle click
+  and an unbound shortcut for hold; a right click on the count stops
+  holding.
 - 2026-10-13: the user chose the research's hold mode over the project
   brief's DND toggle (step 6), and to defer only low battery among the
   battery and Hyprland events. Deferral built in the queue for any

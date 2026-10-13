@@ -10,6 +10,7 @@ Scope {
     readonly property var battery: Battery
     readonly property var hyprlandEvents: HyprlandEvents
     readonly property var privacy: Privacy
+    readonly property var notifications: Notifications
 
     Island {}
 }

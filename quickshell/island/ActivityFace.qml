@@ -13,7 +13,7 @@ Item {
     readonly property bool hasProgress: (activity?.progress ?? -1) >= 0
 
     implicitWidth: mode === "expanded" ? expandedLayout.implicitWidth : row.implicitWidth
-    implicitHeight: mode === "expanded" ? expandedLayout.implicitHeight : row.implicitHeight
+    implicitHeight: mode === "expanded" ? Config.expandedHeight : row.implicitHeight
 
     // ── Compact and transient: one row ──
     Row {

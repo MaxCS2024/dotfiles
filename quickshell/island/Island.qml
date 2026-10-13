@@ -237,9 +237,12 @@ PanelWindow {
             return Config.compactHeight
         case "transient":
         case "privacy":
-            return Config.transientHeight
+            // Taller for a face that needs it (a notification's card).
+            return Math.max(Config.transientHeight, measure.implicitHeight)
         default:
-            return Config.expandedHeight
+            // Each face's expanded height (media and the generic one:
+            // Config.expandedHeight).
+            return measure.implicitHeight
         }
     }
 
@@ -282,20 +285,25 @@ PanelWindow {
         // take their clicks first; a left click anywhere else opens or
         // closes. A right click dismisses what is showing: an announcement
         // makes way for the next (its dot stays), any other activity
-        // leaves the island. Hover comes from a HoverHandler, which buttons
-        // don't hide.
+        // leaves the island. A middle click turns the notification hold
+        // on or off. Hover comes from a HoverHandler, which buttons don't
+        // hide; it also stops a transient's time while the pointer rests
+        // on it.
         MouseArea {
             anchors.fill: parent
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
             onClicked: mouse => {
                 if (mouse.button === Qt.RightButton)
                     root.dismissShown()
+                else if (mouse.button === Qt.MiddleButton)
+                    Notifications.setHolding(!Notifications.holding)
                 else if (Config.expandOn === "click" && root.persistentActivity && root.islandState !== "privacy")
                     root.expanded = !root.expanded
             }
         }
 
         HoverHandler {
+            id: pillHover
             onHoveredChanged: {
                 if (hovered) {
                     collapseTimer.stop()
@@ -381,6 +389,12 @@ PanelWindow {
                 }
             }
         }
+    }
+
+    Binding {
+        target: ActivityQueue
+        property: "paused"
+        value: pillHover.hovered && root.islandState === "transient"
     }
 
     function dismissShown() {

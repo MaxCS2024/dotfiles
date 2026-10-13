@@ -43,6 +43,8 @@ Singleton {
         // it waits for a break. Charger notices answer the user at once.
         lowBattery:      { interruption: "low",    priority: 40, enter: 220, exit: 150, overshoot: false, defer: 45000 },
         ipc:             { interruption: "medium", priority: 30, enter: 250, exit: 180, overshoot: false, defer: 45000 },
+        // The hold mode's count; at 10 while nothing is held.
+        hold:            { interruption: "low",    priority: 25, enter: 250, exit: 150, overshoot: false },
         media:           { interruption: "low",    priority: 20, enter: 250, exit: 150, overshoot: false },
     })
     // For an activity that names no profile (the test queue's).
@@ -91,6 +93,15 @@ Singleton {
     readonly property int privacyAnnounceTimeout: 2000
     readonly property int privacyListTimeout: 3000
 
+    // The notification daemon. On, the island stops dunst while it runs;
+    // dunst starts again on the next notification after the island quits.
+    readonly property bool notifications: true
+    // How long one shows when it names no time of its own; a critical one
+    // shows this long, then stays small until dismissed.
+    readonly property int notificationTimeout: 5000
+    readonly property int notificationLowTimeout: 3000
+    readonly property int notificationUrgentTimeout: 8000
+
     // ── Window ──
     // Distance from the top of the screen to the pill.
     readonly property int topMargin: 7
@@ -103,6 +114,8 @@ Singleton {
     readonly property color foreground: "white"
     readonly property color foregroundSoft: Qt.rgba(1, 1, 1, 0.6)
     readonly property color track: Qt.rgba(1, 1, 1, 0.2)
+    readonly property color button: Qt.rgba(1, 1, 1, 0.12)
+    readonly property color buttonHover: Qt.rgba(1, 1, 1, 0.24)
     // The privacy dots, which the brief fixes: orange, green, red.
     readonly property color privacyMic: "#ff9f0a"
     readonly property color privacyCamera: "#30d158"
