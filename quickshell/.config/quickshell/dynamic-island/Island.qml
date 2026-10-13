@@ -516,7 +516,11 @@ PanelWindow {
                 return
             if (Math.abs(mouse.x - pressX) > 4)
                 moved = true
-            dx = mouse.x - startX
+            const raw = mouse.x - startX
+            // Towards an end of the row (or the song view while nothing
+            // plays) the text gives a little and resists, like a list's
+            // edge, rather than following the cursor into nothing.
+            dx = root.viewTowards(raw > 0 ? 1 : -1) === null ? root.rubberBand(raw) : raw
             pill.shown.shift = dx
             if (root.peek)
                 root.peek.shift = root.besideShift(pill.shown, root.peek, dx > 0 ? 1 : -1)
@@ -1464,6 +1468,13 @@ PanelWindow {
 
     // A drag past 48px towards the other view slides the text across;
     // anything shorter slides it back to the middle.
+    // How far the text goes when pulled `d` px towards nothing: it starts
+    // at the cursor's pace and slows, never past `rubberMax`.
+    readonly property real rubberMax: 16
+    function rubberBand(d) {
+        return Math.sign(d) * rubberMax * (1 - Math.exp(-Math.abs(d) / (rubberMax * 1.5)))
+    }
+
     function release(dx) {
         slideOut.stop()
         slideIn.stop()
