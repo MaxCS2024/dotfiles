@@ -94,6 +94,7 @@ at login, so those keys do nothing until it is run by hand (see
 | Brightness keys | brightnessctl, ramped | `binds/media.lua` | |
 | Play, pause, next, previous | playerctl | `binds/media.lua` | |
 | XF86RFKill | Wifi on/off (nmcli) | `binds/media.lua` | |
+| Caps Lock | Tells the island it toggled (key still works) | `binds/media.lua` | |
 
 SUPER+Q is free.
 
@@ -539,6 +540,11 @@ colours change with the wallpaper. `saved` is nil while chrome shows.
 - **Media keys**: playerctl, so they work under any shell. playerctld
   (started on demand over D-Bus) puts the most recently used player first,
   which is the one these control.
+- **Caps Lock**: `non_consuming`, so the key still reaches XKB and
+  toggles as usual; on release (when the toggle has happened) it triggers
+  `quickshell:island-capslock`, and the island reads the new state from
+  `hyprctl devices` and flashes "Caps Lock – on/off". Hyprland has no
+  event for it.
 
 ## hypridle.conf
 

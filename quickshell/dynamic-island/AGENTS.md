@@ -134,6 +134,7 @@ The island shows one thing at a time.
 | osd       | volume or brightness changes | icon, percentage, filling ring | one width for 0–100% |
 | battery   | charger plugged in; battery below 20%, 10% or 5% | battery icon + "Charging – 46%", "Low battery – 18%" or "Battery critical – 4%" | fits the text, at most 400px |
 | layout    | keyboard layout switched   | keyboard icon + "Layout – English (US)" | fits the text, at most 400px |
+| caps      | Caps Lock toggled          | Caps Lock arrow + "Caps Lock – on" or "– off" | fits the text |
 | display   | external screen plugged in | monitor icon + "Display connected – XV280K" | fits the text, at most 400px |
 | notice    | network up, failed or lost; Bluetooth device in or out | icon + "Connected – Telia-3D6C57" and the like | fits the text, at most 400px |
 | dictation | voxtype recording or transcribing (SUPER+V) | cancel button, live waveform, stop button | 144, fixed |
@@ -377,12 +378,36 @@ the face without recording anything; the bars follow the real
 microphone. Never click its buttons, or press SUPER+V, to check it:
 they drive the real voxtype.
 
+## Caps Lock notice
+
+Toggling Caps Lock shows the Caps Lock arrow (U+F0632) at 16px, 8px
+before "Caps Lock – on" or "Caps Lock – off" in bold 13px, for 1.5
+seconds: the layout notice's face and rules (`Island.flashShort`, which
+both use; the newest flash wins, not while a panel is open or
+mid-drag, a press drops it).
+
+Hyprland has no Caps Lock event. A `non_consuming` release bind on
+Caps_Lock (`hypr/modules/binds/media.lua`) presses the global shortcut
+`quickshell:island-capslock` without taking the key from XKB; the island
+then reads the main keyboard's `capsLock` from `hyprctl devices -j` (the
+keyboard just pressed is the main one) and flashes only when it differs
+from the last reading (`Controls.capsLock`, first read at start, quiet
+for the first 2 seconds). So with Caps Lock set to switch layouts
+(Settings › Input) it stays off and nothing flashes but the layout.
+
+Testing: `test-notices.sh pill`, or
+`qs -c dynamic-island ipc call island-notices caps true|false`. The
+real path:
+`hyprctl dispatch 'hl.dsp.global("quickshell:island-capslock")'` reads
+the state and, unchanged, shows nothing. Don't type Caps Lock with
+wtype: its virtual keyboard becomes the main one.
+
 ## Testing the notices
 
 `./test-notices.sh [pill|notifications]` (both when no part is named)
 shows everything that can pop up, one after another, and prints which
 one is up. `pill` flashes every notice the pill has: the battery,
-display, layout, network and Bluetooth notices (one per device glyph),
+display, layout, Caps Lock, network and Bluetooth notices (one per device glyph),
 then a few with long names, then the dictation face. `notifications` sends the regular ones
 through dunst the way their senders do (see Notifications): three app
 messages with `notify-send`, rack's "Dotfiles synced" and "Update
@@ -1280,3 +1305,6 @@ Dated record of what the user chose or rejected, and why.
   Battery critical below 5%, also flashed in the pill; disk almost full
   under 5 GB and 10% free, checked every 10 minutes. The user's request;
   the thresholds are mine.
+- 2026-10-13: a Caps Lock notice, "Caps Lock – on/off" for 1.5 seconds
+  like the layout's, from a non-consuming Caps_Lock bind. The user's
+  request, from the list of what the island lacks.

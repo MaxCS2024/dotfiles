@@ -361,25 +361,38 @@ PanelWindow {
         onTriggered: root.showDisplay = false
     }
 
-    // The layout notice: "Layout – English (US)" when the layout
-    // changes. 1.5 seconds, like the workspace name: the user did it.
+    // The layout and Caps Lock notices: "Layout – English (US)" when
+    // the layout changes, "Caps Lock – on" or "– off" when it toggles.
+    // 1.5 seconds, like the workspace name: the user did it. They share
+    // one face (layoutFace).
     property bool showLayout: false
+    property string layoutIcon: ""
+    property string layoutBefore: ""
     property string layoutName: ""
 
     Connections {
         target: Controls
         function onLayoutNotice(name) {
-            if (root.phase !== "collapsed" || root.dragging)
-                return
-            root.layoutName = name
-            root.showWorkspace = false
-            root.showOsd = false
-            root.showBattery = false
-            root.showDisplay = false
-            root.showNotice = false
-            root.showLayout = true
-            layoutTimer.restart()
+            root.flashShort("\u{f030c}", "Layout – ", name)
         }
+        function onCapsNotice(on) {
+            root.flashShort("\u{f0632}", "Caps Lock – ", on ? "on" : "off")
+        }
+    }
+
+    function flashShort(icon, before, name) {
+        if (phase !== "collapsed" || dragging)
+            return
+        layoutIcon = icon
+        layoutBefore = before
+        layoutName = name
+        showWorkspace = false
+        showOsd = false
+        showBattery = false
+        showDisplay = false
+        showNotice = false
+        showLayout = true
+        layoutTimer.restart()
     }
 
     Timer {
@@ -736,8 +749,8 @@ PanelWindow {
                 id: layoutFace
                 shown: pill.shown === layoutFace
                 maxWidth: pill.noticeMaxWidth
-                icon: "\u{f030c}"
-                before: "Layout – "
+                icon: root.layoutIcon
+                before: root.layoutBefore
                 name: root.layoutName
             }
 

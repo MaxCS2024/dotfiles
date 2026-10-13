@@ -80,6 +80,7 @@ Singleton {
         function battery(kind: string): void { root.batteryNotice(kind) }
         function display(label: string): void { Displays.connected(label) }
         function layout(name: string): void { root.layoutNotice(name) }
+        function caps(on: bool): void { root.capsNotice(on) }
         function notice(icon: string, before: string, name: string, after: string): void {
             root.notice(icon, before, name, after)
         }
@@ -653,6 +654,38 @@ Singleton {
         keyboardLayouts = known
         if (before !== undefined && armed)
             layoutNotice(layout)
+    }
+
+    // ── Caps Lock ──
+    // `capsNotice(on)` when Caps Lock turns on or off. Hyprland has no
+    // event for it, so releasing Caps Lock presses the island-capslock
+    // shortcut (a non-consuming bind in hypr/modules/binds/media.lua) and
+    // the main keyboard, the one just pressed, is read then. Only a real
+    // change flashes: with Caps Lock set to switch layouts it stays off.
+    signal capsNotice(bool on)
+    property bool capsLock: false
+
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "island-capslock"
+        description: "Show the dynamic island's Caps Lock notice"
+        onPressed: capsRead.running = true
+    }
+
+    Process {
+        id: capsRead
+        running: true
+        command: ["sh", "-c", "hyprctl devices -j | jq -r '.keyboards[] | select(.main) | .capsLock'"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const on = text.trim() === "true"
+                if (on === root.capsLock)
+                    return
+                root.capsLock = on
+                if (root.armed)
+                    root.capsNotice(on)
+            }
+        }
     }
 
     signal batteryNotice(string kind)

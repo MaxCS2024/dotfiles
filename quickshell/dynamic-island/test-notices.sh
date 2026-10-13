@@ -63,6 +63,8 @@ pill() {
     echo "Pill › Layout"
     show 2   "  Layout – English (US)"      layout "English (US)"
     show 2   "  Layout – Swedish"           layout "Swedish"
+    show 2   "  Caps Lock – on"             caps true
+    show 2   "  Caps Lock – off"            caps false
 
     echo "Pill › Network"
     show 3.5 "  Connected – Telia-3D6C57"   notice "$wifi" "Connected – " "Telia-3D6C57" ""
