@@ -27,7 +27,7 @@ Item {
     }
     // Art 8px in + 20 + 10, then 10 + bars 18 + 12px in.
     readonly property int compactChrome: 8 + 20 + 10 + 10 + 18 + 12
-    readonly property int titleWidth: Math.min(titleText.implicitWidth, Config.maxWidth - compactChrome)
+    readonly property int titleWidth: Math.min(titleText.implicitWidth, Config.mediaMaxWidth - compactChrome)
     implicitWidth: mode === "expanded" ? playerWidth - Config.padX * 2
         : mode === "minimal" ? Config.compactHeight
         : titleWidth + compactChrome - Config.padX * 2

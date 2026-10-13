@@ -75,6 +75,8 @@ Singleton {
     // paused), "subtle" (slow and small) or "dancing". Still by default:
     // constant motion at the edge of sight distracts.
     readonly property string mediaBars: "still"
+    // The widest the compact music pill gets; a longer title scrolls.
+    readonly property int mediaMaxWidth: 280
     // How long a paused player stays in the island before it leaves.
     readonly property int mediaPausedTimeout: 60000
 

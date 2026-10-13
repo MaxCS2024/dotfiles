@@ -493,7 +493,8 @@ player itself, so the face reads its position and sends its controls.
 - No flash on a track change: the face updates in place.
 
 The face (`MediaFace.qml`):
-- **Compact** (32 high, as wide as the title needs, up to 400): the art
+- **Compact** (32 high, as wide as the title needs, up to 280,
+  `Config.mediaMaxWidth`): the art
   at the left end (20px, 6px corners, 8px in), "Title – Artist" (bold
   13px) 10px past it, four playing bars at the right (3px wide, 2px
   apart, 12px in) 10px past the title. A title wider than its room
