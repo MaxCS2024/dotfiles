@@ -415,7 +415,7 @@ none), `face` ("osd", "media", or "" for the generic one), `waits` and
 
 | State     | When                                   | Size                         |
 |-----------|----------------------------------------|------------------------------|
-| idle      | the queue is empty (or only transients held) | clock: time + 16px each side × 24; notch: 120 × 8 |
+| idle      | the queue is empty (or only transients held) | clock: time + 32px each side × 24 (the dynamic-island's resting pill, `idlePadX`); notch: 120 × 8 |
 | compact   | a persistent activity, no transient up | content + 16px each side, 160–400 × 32 |
 | transient | a transient is up                      | content + 16px each side, 160–400 × 40 |
 | expanded  | clicked (or hovered, `Config.expandOn`) on a compact pill, or the split's circle | the face's size, at most 400 wide: media 360 × 128; generic 400 × 152; notifications and the hold count 400 wide |
@@ -827,6 +827,11 @@ Running it next to the dynamic-island puts two pills at the top centre;
 SUPER+ALT+SPACE hides the dynamic-island meanwhile.
 
 # Decisions
+
+- 2026-10-13: the idle clock takes the dynamic-island's resting size,
+  at the user's request: 32px either side of the time (`idlePadX`), 24
+  high, 7px from the top (about 102px wide). The other pills keep
+  `padX` 16.
 
 - 2026-10-13: the expanded media view is the dynamic-island's media
   player, at the user's request, in place of the one built in step 3

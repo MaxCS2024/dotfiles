@@ -149,6 +149,9 @@ Singleton {
     readonly property int splitGap: 8
     readonly property int dotSize: 8
     readonly property int idleHeight: 24
+    // Either side of the idle clock: the dynamic-island's resting pill
+    // (32), wider than the other pills' padX.
+    readonly property int idlePadX: 32
     readonly property int notchWidth: 120
     readonly property int notchHeight: 8
     readonly property int compactHeight: 32

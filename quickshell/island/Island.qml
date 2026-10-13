@@ -227,7 +227,7 @@ PanelWindow {
     readonly property int targetWidth: {
         switch (islandState) {
         case "idle":
-            return Config.idle === "notch" ? Config.notchWidth : clockText.implicitWidth + Config.padX * 2
+            return Config.idle === "notch" ? Config.notchWidth : clockText.implicitWidth + Config.idlePadX * 2
         case "compact":
         case "transient":
         case "privacy":
