@@ -483,7 +483,10 @@ paused, or with a track loaded); with none, the click does nothing, and
 an open player closes when its player goes away. 16px padding;
 album art (96px, 12px corners) on the left; beside it the title (bold),
 the artist (white at 60%), a 4px progress bar, elapsed and total time, and
-previous / play-pause / next. A click on the player outside its buttons,
+previous / play-pause / next. Each control is an 18px glyph in a 24px
+button, 16px apart; pointing at one fades in a round 32px fill behind
+it (white at 12%, 20% while pressed, 120ms), like the pages' back
+button, and the whole circle takes the click. A click on the player outside its buttons,
 or anywhere outside the island, closes it. A cover that fails to load
 shows a dim music note in the art square. (Until 2026-10-13 it also
 opened with no player, on an empty state; see Decisions.)
@@ -1423,3 +1426,7 @@ Dated record of what the user chose or rejected, and why.
   time), it stays through flashes instead of stepping back for them (a
   workspace switch would make it bob in and out), and a click opens the
   player with no right-click dismiss.
+- 2026-10-14: hover on the media player's previous, play-pause and next
+  buttons, at the user's request: a round 32px fill at 12% (20%
+  pressed), the back button's look, picked over a hover on the song's
+  circle.

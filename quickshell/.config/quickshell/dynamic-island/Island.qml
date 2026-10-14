@@ -1036,8 +1036,29 @@ PanelWindow {
                             font.weight: Font.Bold
                             font.pixelSize: 18
 
+                            // A round 32px fill behind the glyph: white at
+                            // 12% while hovered, 20% while pressed, like
+                            // the pages' back button. Drawn past the 24px
+                            // button, so the row's layout doesn't change;
+                            // the 16px spacing leaves 8px between fills.
+                            Rectangle {
+                                z: -1
+                                anchors.centerIn: parent
+                                width: 32
+                                height: 32
+                                radius: 16
+                                color: Qt.rgba(1, 1, 1, controlArea.pressed ? 0.2
+                                    : controlArea.containsMouse ? 0.12 : 0)
+                                Behavior on color { ColorAnimation { duration: 120 } }
+                            }
+
                             MouseArea {
-                                anchors.fill: parent
+                                id: controlArea
+                                // The whole fill takes the pointer, not just the glyph.
+                                anchors.centerIn: parent
+                                width: 32
+                                height: 32
+                                hoverEnabled: true
                                 enabled: root.player !== null
                                 onClicked: parent.modelData.action()
                             }
