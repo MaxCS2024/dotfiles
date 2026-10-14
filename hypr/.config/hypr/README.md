@@ -38,8 +38,8 @@ the stock config with real usage in `/usr/share/hypr/hyprland.lua`.
 ## Machine-local files
 
 `local.lua` and `hypridle.local.conf` are written by the settings window
-(SUPER+COMMA, `quickshell/settings`) from `~/.local/state/dynamic-island/settings.json`,
-by `quickshell/settings/LocalConfig.qml` (with `Displays.qml` and
+(SUPER+COMMA, in the dynamic island) from `~/.local/state/dynamic-island/settings.json`,
+by `quickshell/dynamic-island/LocalConfig.qml` (with `Displays.qml` and
 `InputSettings.qml`). Edits by hand are lost on its next save. Both are
 ignored by git, since each laptop has its own screens, touchpad and timers.
 The comments inside them come from that generator, not from this repo.
@@ -169,12 +169,11 @@ Runs once, on `hyprland.start`.
   few hours; the user found it worse and the dynamic-island came back,
   with that island's privacy dots. The island still runs by hand:
   `env QT_QPA_PLATFORMTHEME=gtk3 qs -n -c island -d` (it then takes
-  notifications over from dunst while it runs).
-- **`qs -c settings`**: the settings window on its own, like the
-  clipboard (SUPER+COMMA; brief in `quickshell/settings/AGENTS.md`). It
-  also runs the dynamic-island's login jobs: reverting an unconfirmed
-  display trial, writing back a forgotten charge limit, restoring the
-  night light.
+  notifications over from dunst while it runs). The dynamic-island also
+  holds the settings window (SUPER+COMMA) and runs the login jobs:
+  reverting an unconfirmed display trial, writing back a forgotten charge
+  limit, restoring the night light. (On 2026-10-13 the window was split
+  out as `quickshell/settings` for a day, then removed as a duplicate.)
 - Notifications need no shell (dunst, started by D-Bus), and neither do
   Print or the media keys ([media.lua](#bindsmedialua)). Other configs
   under `quickshell/` are run by hand with `qs -c <name>` until they earn
@@ -222,7 +221,7 @@ By rule `name`:
 - **`fix-xwayland-drags`**: fixes dragging with XWayland (stock rule).
 - **`move-hyprland-run`**: floats the `hyprland-run` prompt near the bottom left.
 - **`float-island-settings`**: the settings window
-  (`quickshell/settings/SettingsWindow.qml`) opens floating and
+  (`quickshell/dynamic-island/SettingsWindow.qml`) opens floating and
   centred at the 880x600 it asks for. Every Quickshell window has the class
   `org.quickshell`, so the title (`Settings`) tells it apart.
 - **`center-floating-dialogs`**: centres XWayland dialogs. Wayland clients
@@ -394,8 +393,8 @@ have neither `arg` nor `debug`, which also means "not a script".
   Hyprland's global-shortcuts protocol, instead of spawning
   `qs ipc call` per press. The string is `appid:name` and must match the
   registration exactly; a name nobody registered does nothing, silently.
-  Registered in: `settings/SettingsWindow.qml` (`settings-toggle`) and
-  `dynamic-island/` (`Controls.qml`, `Wallpapers.qml`).
+  Registered in `dynamic-island/`: `SettingsWindow.qml`
+  (`island-settings`), `Controls.qml` and `Wallpapers.qml`.
 - **`run(role)`** asks `defaults.lua` on every press, not at config load,
   so a default uninstalled from the app manager hands over to the next
   installed candidate at once. It costs a few file opens, no process.
@@ -403,7 +402,7 @@ have neither `arg` nor `debug`, which also means "not a script".
   does) and falls back to Hyprland's own exit when it isn't installed. Not
   `uwsm stop`: that only ends a session uwsm started, and ly starts this
   one. Same line as Hyprland's default config.
-- **SUPER+COMMA**: opens the settings window (`quickshell/settings`),
+- **SUPER+COMMA**: opens the dynamic island's settings window,
   focuses it, or closes it if it already has focus.
 - **SUPER+ALT+W**: images in `~/Pictures/Wallpapers`; ← and → to move, Enter
   sets one on every screen.

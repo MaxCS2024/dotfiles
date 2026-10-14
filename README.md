@@ -1,14 +1,14 @@
 # dotfiles
 
 A Hyprland desktop whose shell is [Quickshell](https://quickshell.org): the
-dynamic island at the top centre, with a settings window beside it. The
+dynamic island at the top centre, which also holds the settings window. The
 app launcher and the clipboard history are fuzzel (with cliphist). Configs are linked into place
 with [GNU stow](https://www.gnu.org/software/stow/).
 
 ```
 hypr/         the compositor — .config/hypr/hyprland.lua sources modules/
 quickshell/   the shell configs, in .config/quickshell/:
-                dynamic-island (the shell at login), settings, island (a
+                dynamic-island (the shell at login), island (a
                 brief-built island, run by hand)
 gtk-3.0/ gtk-4.0/  GTK theming and colours, and the icon theme Qt reads through gtk3
 foot/ kitty/ ghostty/  terminals, each with its colours file
@@ -70,7 +70,7 @@ The font must be `ttf-jetbrains-mono-nerd`, the patched Nerd Font build: the
 island draws glyphs that exist nowhere else.
 
 Then log into Hyprland. `hypr/.config/hypr/modules/autostart.lua` starts the
-dynamic island and the settings config, and the wallpaper, clipboard
+dynamic island, and the wallpaper, clipboard
 history (cliphist), idle and night-light daemons.
 
 ## Hardware fixes

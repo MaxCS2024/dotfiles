@@ -928,8 +928,8 @@ SUPER+ALT+SPACE hides the dynamic-island meanwhile.
 - 2026-10-13: the user stopped the dynamic-island and made this island
   the shell at login in its place. Lost with the dynamic-island, and
   not in this island (by the brief, or not yet): the settings window
-  (SUPER+COMMA; since split out as `quickshell/settings`, which also
-  runs the login jobs below), the wallpaper gallery (SUPER+ALT+W), its power menu,
+  (SUPER+COMMA; split out as `quickshell/settings` for a day, which also
+  ran the login jobs below), the wallpaper gallery (SUPER+ALT+W), its power menu,
   Wi-Fi/Bluetooth pages and quick settings, the dictation waveform, the
   Caps Lock notice, the disk-full warning; and its login jobs: writing
   the saved battery charge limit back if a battery forgot it, and

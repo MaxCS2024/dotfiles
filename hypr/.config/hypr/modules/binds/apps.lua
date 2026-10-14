@@ -19,7 +19,7 @@ hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("pkill -x fuzzel || fuzzel"))
 
 -- cliphist's history in fuzzel; the pick goes back on the clipboard.
 hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("cliphist list | fuzzel --dmenu | cliphist decode | wl-copy"))
-hl.bind(mainMod .. " + COMMA", hl.dsp.global("quickshell:settings-toggle"))
+hl.bind(mainMod .. " + COMMA", hl.dsp.global("quickshell:island-settings"))
 hl.bind(mainMod .. " + ALT + W", hl.dsp.global("quickshell:island-wallpapers"))
 
 if features.on("dictation") then
