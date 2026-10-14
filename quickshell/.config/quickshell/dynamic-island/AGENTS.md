@@ -46,7 +46,8 @@ does may need main.
   battery notices.
 - The dictation face, while voxtype records or transcribes.
 - The privacy dots and their notices (see Privacy indicators).
-- The song view and the media player.
+- The song view and the media player, and the song's circle beside
+  the pill (see Song circle).
 - The settings panel: the fused pill, the two sliders and, under its
   notch, the quick settings row (Stay awake, Do not disturb, Night
   light, microphone). It is frozen; a new button or row needs a decision
@@ -115,7 +116,8 @@ launcher and the clipboard history (fuzzel, with cliphist), and a calendar.
 
 ## States
 
-The island shows one thing at a time.
+The pill shows one thing at a time. The one exception is the song's
+circle beside it (see Song circle).
 
 | State     | Trigger                    | Content                  | Width       |
 |-----------|----------------------------|--------------------------|-------------|
@@ -415,7 +417,8 @@ screen, in `Privacy.qml`.
 - **Dots:** one per device in use, microphone (orange `#ff9f0a`),
   camera (green `#30d158`), screen (red `#ff453a`), in that order,
   never merged: 8px, 8px apart (16px hit areas), just right of the
-  pill, centred on its collapsed line, so they ride along as it grows
+  pill (or of the song's circle when it is out), centred on its
+  collapsed line, so they ride along as it grows
   and shrinks. They pop in (160ms, OutBack) and go at once. Nothing
   hides them: a panel, a flash, or hiding the island (SUPER+ALT+SPACE),
   when the window stays up for them alone, reserving nothing, the dots
@@ -490,6 +493,33 @@ Opening: the compact text fades out, the box grows to 360 × 128, then the
 player fades in. Closing is the exact reverse: the player text fades out
 first, the time fades in at the middle of the still-large box, then the
 box shrinks back to the pill.
+
+## Song circle
+
+Two things at once, brought over from `../island`'s split state
+(2026-10-14, the user's request): while music plays and the pill shows
+something else (the time, a flash, a notice, dictation), the album art
+sits in a small black circle beside the pill. It is the island's only
+second thing; nothing else takes the circle.
+
+- **When:** a player is playing, or paused less than 60 seconds ago
+  (`songRecent`); with no player it goes at once. Not while the song
+  view is up (the pill already shows the song), a panel is open, or the
+  island is hidden or hiding.
+- **Look:** 32px, the pill's height, 8px right of it and centred on its
+  collapsed line; the cover inside, round, 20px (a music note at 13px
+  on white at 10% while there is none). The privacy dots move out past
+  it.
+- **Motion:** it grows out from under the pill's right end (scale
+  0.5 → 1 while sliding out, 250ms, OutCubic) and tucks back under it
+  (150ms) the same way; `songReach` carries it and the dots ride on it.
+  It follows the pill's width as that changes.
+- **Pointer:** a click opens the media player, as a click on the pill
+  does. Nothing else.
+
+Testing: `../island/fake-player.py` (a silent MPRIS player; `playerctl
+-p islandtest pause|play`, Ctrl+C or a kill to quit it) and look.
+Switch views with a temporary IpcHandler setting `root.view`.
 
 ## Settings panel
 
@@ -1385,3 +1415,11 @@ Dated record of what the user chose or rejected, and why.
 - 2026-10-13: the power menu (middle click: lock, reboot, log out,
   power off) is gone, at the user's request, slimming the island down;
   the middle click does nothing now. Logging out stays on SUPER+M.
+- 2026-10-14: the song's circle, from `../island`'s split state ("add
+  the two things at once part"): the album art in a circle beside the
+  pill while music plays and the pill shows something else. Mine: music
+  is the only thing that takes it (the island has no timers or other
+  live activities), it stays 60 seconds after a pause (`../island`'s
+  time), it stays through flashes instead of stepping back for them (a
+  workspace switch would make it bob in and out), and a click opens the
+  player with no right-click dismiss.

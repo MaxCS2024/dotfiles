@@ -11,7 +11,9 @@ import QtQuick
 // volume or brightness change shows its percentage and a filling circle
 // for as long. Plugging in the charger, or the battery running low,
 // shows a battery notice for 3 seconds. While voxtype records or
-// transcribes, the dictation face covers all of that. A left click
+// transcribes, the dictation face covers all of that. While music plays
+// and the pill shows anything but the song, the album art sits in a
+// small circle beside it. A left click
 // opens the full media player, a right click a small settings panel
 // (whose network, Bluetooth and battery segments turn it into a page of
 // their own); a click on either, or anywhere else, closes it.
@@ -41,8 +43,9 @@ PanelWindow {
     // Big enough for the pill to grow into; only the pill takes clicks.
     // A fixed size, so the window isn't resized every frame of the opening:
     // the largest panel, the wallpaper gallery, decides it.
-    // Room for the privacy dots beside the widest pill too.
-    implicitWidth: Math.max(400 + 2 * 60, galleryWidth)
+    // Room beside the widest pill for the song's circle (8 + 32) and the
+    // privacy dots after it (4 + 3 × 16) too.
+    implicitWidth: Math.max(400 + 2 * 92, galleryWidth)
     implicitHeight: Math.max(288, galleryHeight)
     // The wallpaper gallery: exactly three whole images wide (the middle
     // one and one to each side, none cut off), and only as tall as its
@@ -51,9 +54,11 @@ PanelWindow {
     readonly property real galleryWidth: 3 * gallery.tileW + 2 * gallery.gap + 32
     readonly property real galleryTileHeight: Math.round(modelData.height * 0.12)
     readonly property real galleryHeight: galleryTileHeight + gallery.lift + 32
-    // The pill and the privacy dots take clicks; the rest passes through.
+    // The pill, the song's circle and the privacy dots take clicks; the
+    // rest passes through.
     mask: Region {
         Region { item: pill }
+        Region { item: root.songReach > 0 ? songCircle : null; radius: songCircle.radius }
         Region { item: privacyDots }
     }
     // Keyboard focus while the settings panel (or one of its pages) is
@@ -537,6 +542,103 @@ PanelWindow {
             }
         }
         onCanceled: if (root.dragging) root.release(0)
+    }
+
+    // ── The song's circle ──
+    // Two things at once: while music plays and the pill shows something
+    // else (the time, a flash, dictation), the album art sits in a small
+    // circle 8px right of the pill. It grows out from under the pill's
+    // right end (250ms) and tucks back under it (150ms) when the song view
+    // comes up, a panel opens, the island hides, or the music stops: at
+    // once with no player, 60 seconds after a pause. A click opens the
+    // player. Declared before the pill, which covers it while tucked in.
+    readonly property bool songPlaying: player !== null && player.isPlaying
+    // Playing, or paused less than a minute ago. Set at start, not bound:
+    // a binding would drop it the moment the music pauses.
+    property bool songRecent: false
+    Component.onCompleted: songRecent = songPlaying
+    onSongPlayingChanged: {
+        if (songPlaying) {
+            songPausedTimer.stop()
+            songRecent = true
+        } else {
+            songPausedTimer.restart()
+        }
+    }
+
+    Timer {
+        id: songPausedTimer
+        interval: 60000
+        onTriggered: root.songRecent = false
+    }
+
+    readonly property bool songSplit: player !== null && songRecent
+        && (view !== -1 || Dictation.busy)
+        && phase === "collapsed" && !gone && !orbing
+    // How far the circle (with the gap before it) reaches out of the pill:
+    // 0 tucked under it, songFull out. The privacy dots ride on it.
+    readonly property real songFull: 8 + 32
+    property real songReach: 0
+
+    onSongSplitChanged: {
+        songAnim.stop()
+        songAnim.to = songSplit ? songFull : 0
+        songAnim.duration = songSplit ? 250 : 150
+        songAnim.start()
+    }
+
+    NumberAnimation {
+        id: songAnim
+        target: root
+        property: "songReach"
+        easing.type: Easing.OutCubic
+    }
+
+    Rectangle {
+        id: songCircle
+        x: pill.x + pill.width + root.songReach - width
+        y: pill.y + (Math.min(pill.height, 32) - height) / 2
+        width: 32
+        height: 32
+        radius: 16
+        color: "black"
+        visible: root.songReach > 0
+        scale: 0.5 + 0.5 * root.songReach / root.songFull
+
+        // The cover, round, or a music note while there is none.
+        ClippingRectangle {
+            anchors.centerIn: parent
+            width: 20
+            height: 20
+            radius: 10
+            color: Qt.rgba(1, 1, 1, 0.1)
+
+            Text {
+                anchors.centerIn: parent
+                visible: songCover.status !== Image.Ready
+                text: "\u{f075a}"
+                color: "white"
+                font.family: "JetBrainsMono Nerd Font"
+                font.weight: Font.Bold
+                font.pixelSize: 13
+            }
+
+            Image {
+                id: songCover
+                anchors.fill: parent
+                source: root.player && root.player.trackArtUrl ? root.player.trackArtUrl : ""
+                sourceSize.width: 40
+                sourceSize.height: 40
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+                visible: status === Image.Ready
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: root.open("player")
+        }
     }
 
     Rectangle {
@@ -1424,7 +1526,7 @@ PanelWindow {
     // names the apps on that device.
     Row {
         id: privacyDots
-        x: pill.x + pill.width + 4
+        x: pill.x + pill.width + root.songReach + 4
         y: pill.y + (Math.min(pill.height, 32) - height) / 2
 
         Repeater {
