@@ -660,7 +660,34 @@ Singleton {
     onArmedChanged: if (armed && onBattery && batteryPercent >= 0 && batteryPercent < criticalBelow)
         batteryNotice("critical")
 
-    onOnBatteryChanged: if (armed && !onBattery && batteryPercent >= 0) batteryNotice("charging")
+    onOnBatteryChanged: {
+        if (onBattery)
+            chargedShown = false
+        else if (armed && batteryPercent >= 0)
+            batteryNotice("charging")
+    }
+
+    // "charged" or "full" once charging stops on the charger: at the
+    // charge limit (UPower's PendingCharge) or at 100% (FullyCharged).
+    // Once per plug-in: around the limit the state can flip between
+    // charging and pending, and that mustn't flash again each time.
+    readonly property int batteryState: battery ? battery.state : UPowerDeviceState.Unknown
+    property int lastBatteryState: -1
+    property bool chargedShown: false
+    // The state at start, in case it is already known then (no change
+    // signal follows); otherwise the first change sets it.
+    Component.onCompleted: lastBatteryState = batteryState
+
+    onBatteryStateChanged: {
+        const before = lastBatteryState
+        lastBatteryState = batteryState
+        if (!armed || onBattery || chargedShown || before !== UPowerDeviceState.Charging)
+            return
+        if (batteryState === UPowerDeviceState.FullyCharged || batteryState === UPowerDeviceState.PendingCharge) {
+            chargedShown = true
+            batteryNotice(batteryState === UPowerDeviceState.FullyCharged ? "full" : "charged")
+        }
+    }
 
     onBatteryPercentChanged: {
         const before = lastPercent

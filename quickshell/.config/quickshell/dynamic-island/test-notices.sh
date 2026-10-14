@@ -56,6 +56,8 @@ pill() {
     # charging notice after it takes that back.
     show 3.5 "  Battery critical – N% (and its notification)" battery critical
     show 3.5 "  Charging – N% (closes it)"  battery charging
+    show 3.5 "  Charged to N%"              battery charged
+    show 3.5 "  Fully charged"              battery full
 
     echo "Pill › Display"
     show 3.5 "  Display connected – XV280K" display "XV280K"

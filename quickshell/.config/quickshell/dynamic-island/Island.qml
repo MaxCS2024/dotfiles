@@ -718,29 +718,92 @@ PanelWindow {
                 Behavior on opacity { NumberAnimation { duration: 160 } }
             }
 
-            Text {
+            // The song view: a music note, then "Title – Artist". The pill
+            // stays within 400px like the notices; a longer line scrolls
+            // behind the note like Spotify's: it rests at the start for
+            // 1.8 s, glides to its end at 30px a second, rests, and glides
+            // back. A new track starts it over. It runs only while the song
+            // view is on screen.
+            Item {
                 id: mediaLabel
                 property real shift: 0
                 anchors.centerIn: parent
                 transform: Translate { x: mediaLabel.shift }
-                // Long titles are cut with "…" so the pill stays inside the window.
-                width: Math.min(implicitWidth, root.implicitWidth - pill.padX * 2)
-                elide: Text.ElideRight
-                text: {
-                    if (!root.player)
-                        return "\u{f075a} Nothing playing"
-                    const title = root.player.trackTitle || "Unknown"
-                    const artist = root.player.trackArtist
-                    // A music note in front.
-                    // "Title – Artist", an en dash between.
-                    return "\u{f075a} " + (artist ? title + " – " + artist : title)
-                }
-                color: "white"
-                font.family: "JetBrainsMono Nerd Font"
-                font.weight: Font.Bold
-                font.pixelSize: 13
+                width: Math.min(mediaNote.implicitWidth + mediaTitle.implicitWidth, pill.noticeMaxWidth)
+                height: mediaTitle.implicitHeight
                 opacity: pill.shown === mediaLabel || root.peek === mediaLabel ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: 160 } }
+
+                Text {
+                    id: mediaNote
+                    // The space is part of the note, as it was in one line.
+                    text: "\u{f075a} "
+                    color: "white"
+                    font.family: "JetBrainsMono Nerd Font"
+                    font.weight: Font.Bold
+                    font.pixelSize: 13
+                }
+
+                Item {
+                    id: titleBox
+                    x: mediaNote.implicitWidth
+                    width: parent.width - x
+                    height: parent.height
+                    clip: true
+
+                    readonly property real overflow: Math.max(0, mediaTitle.implicitWidth - width)
+                    property real scroll: 0
+                    readonly property bool scrolls: overflow > 0 && pill.shown === mediaLabel
+                        && root.phase === "collapsed" && !root.gone
+                    onScrollsChanged: restartScroll()
+                    onOverflowChanged: restartScroll()
+
+                    function restartScroll() {
+                        titleScroll.stop()
+                        scroll = 0
+                        if (scrolls)
+                            titleScroll.start()
+                    }
+
+                    Text {
+                        id: mediaTitle
+                        x: -titleBox.scroll
+                        text: {
+                            if (!root.player)
+                                return "Nothing playing"
+                            const title = root.player.trackTitle || "Unknown"
+                            const artist = root.player.trackArtist
+                            // "Title – Artist", an en dash between.
+                            return artist ? title + " – " + artist : title
+                        }
+                        onTextChanged: titleBox.restartScroll()
+                        color: "white"
+                        font.family: "JetBrainsMono Nerd Font"
+                        font.weight: Font.Bold
+                        font.pixelSize: 13
+                    }
+
+                    SequentialAnimation {
+                        id: titleScroll
+                        loops: Animation.Infinite
+                        PauseAnimation { duration: 1800 }
+                        NumberAnimation {
+                            target: titleBox
+                            property: "scroll"
+                            from: 0
+                            to: titleBox.overflow
+                            duration: titleBox.overflow / 30 * 1000
+                        }
+                        PauseAnimation { duration: 1800 }
+                        NumberAnimation {
+                            target: titleBox
+                            property: "scroll"
+                            from: titleBox.overflow
+                            to: 0
+                            duration: titleBox.overflow / 30 * 1000
+                        }
+                    }
+                }
             }
 
             // The OSD face: the speaker or sun icon and the percentage,
@@ -826,7 +889,9 @@ PanelWindow {
                 shown: pill.shown === batteryFace
                 maxWidth: pill.noticeMaxWidth
                 icon: Controls.batteryIcon
-                before: (root.batteryKind === "critical" ? "Battery critical"
+                before: root.batteryKind === "full" ? "Fully charged"
+                    : root.batteryKind === "charged" ? "Charged to " + Math.round(Controls.batteryPercent) + "%"
+                    : (root.batteryKind === "critical" ? "Battery critical"
                         : root.batteryKind === "low" ? "Low battery" : "Charging")
                     + " – " + Math.round(Controls.batteryPercent) + "%"
             }

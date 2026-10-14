@@ -122,7 +122,7 @@ circle beside it (see Song circle).
 | State     | Trigger                    | Content                  | Width       |
 |-----------|----------------------------|--------------------------|-------------|
 | resting   | default; dragging the pill left | time, `18:32`       | fits the text |
-| media     | dragging the pill right    | music note + "Title – Artist" | fits the text, at most the 400px window |
+| media     | dragging the pill right    | music note + "Title – Artist", scrolling when too long | fits the text, at most 400px |
 | player    | left click (press without moving 4px) | media player | 360 × 128 |
 | settings  | right click                | network, Bluetooth, volume and battery fused in one pill, volume and brightness sliders; the quick settings row under the notch | 360 × 156, 360 × 208 with the row |
 | wifi      | settings panel's network segment | Wi-Fi page: header, networks | 360 × 288 |
@@ -131,7 +131,7 @@ circle beside it (see Song circle).
 | wallpaper | SUPER+ALT+W                | wallpaper gallery        | three images × its row (757 × 178) |
 | workspace | switching to any workspace | "Workspace N"            | fits the text |
 | osd       | volume or brightness changes | icon, percentage, filling ring | one width for 0–100% |
-| battery   | charger plugged in; battery below 20%, 10% or 5% | battery icon + "Charging – 46%", "Low battery – 18%" or "Battery critical – 4%" | fits the text, at most 400px |
+| battery   | charger plugged in; charging done; battery below 20%, 10% or 5% | battery icon + "Charging – 46%", "Charged to 80%", "Fully charged", "Low battery – 18%" or "Battery critical – 4%" | fits the text, at most 400px |
 | layout    | keyboard layout switched   | keyboard icon + "Layout – English (US)" | fits the text, at most 400px |
 | caps      | Caps Lock toggled          | Caps Lock arrow + "Caps Lock – on" or "– off" | fits the text |
 | display   | external screen plugged in | monitor icon + "Display connected – XV280K" | fits the text, at most 400px |
@@ -147,7 +147,15 @@ resists, like a list's edge, at most 16px (`rubberBand`), and springs
 back on release; the song view gives way to the time when the player
 goes away. (The today view, date and battery, was removed on
 2026-10-13; see Decisions.) The player is whichever one is playing,
-else the first with a title. A title too long for the pill is cut with "…".
+else the first with a title. The song view's pill stays within 400px
+like the notices; a longer "Title – Artist" scrolls behind the fixed
+music note, like Spotify's: it rests at the start for 1.8 s, glides to
+its end at 30px a second (linear), rests, and glides back, cut off
+where the pill's padding starts (no fade: STYLE.md rules out
+gradients). A new track starts it over at the start. It runs only while
+the song view is on screen and the island is collapsed and shown; a
+flash over it, a panel or hiding stops it and puts it back at the
+start.
 
 After a workspace switch, the island shows "Workspace N", then returns
 to the time (or the song) on its own after 1.5 seconds. The switch slides
@@ -193,7 +201,11 @@ or brightness.
 
 ## Battery notice
 
-Plugging in the charger shows "Charging – 46%"; the battery dropping
+Plugging in the charger shows "Charging – 46%"; charging stopping on
+the charger shows "Charged to 80%" at the charge limit (UPower's
+PendingCharge) or "Fully charged" at 100% (FullyCharged), once per
+plug-in, since the state can flip between charging and pending around
+the limit; the battery dropping
 below 20%, and again below 10%, while on battery power shows "Low
 battery – 18%", and below 5% "Battery critical – 4%", which also sends
 a critical notification (see System alerts). Both start with `Controls.batteryIcon` at 16px, 8px
@@ -202,8 +214,9 @@ other flashes, since nothing the user did caused them. Unplugging shows
 nothing. Like the OSD it obeys "the newest flash wins", isn't shown while
 a panel is open or mid-drag, and pressing the pill drops it.
 
-`Controls.batteryNotice(kind)` drives it ("charging", "low" or
-"critical"), quiet for the first 2 seconds; "critical" also fires then
+`Controls.batteryNotice(kind)` drives it ("charging", "charged",
+"full", "low" or "critical"; "charged" and "full" only after UPower's
+state was Charging), quiet for the first 2 seconds; "critical" also fires then
 if the battery is already under 5% on battery power. "Charging" follows UPower's `onBattery` going false,
 not the charging state, which can flip back and forth around the
 battery's charge thresholds.
@@ -1430,3 +1443,9 @@ Dated record of what the user chose or rejected, and why.
   buttons, at the user's request: a round 32px fill at 12% (20%
   pressed), the back button's look, picked over a hover on the song's
   circle.
+- 2026-10-14: two more from `../island`, picked by the user from a
+  list: long song titles scroll like Spotify's instead of being cut
+  with "…" (that island's 1.8 s rests and 30px/s; the song pill now
+  stays within 400px like the notices), and a "Charged to 80%" /
+  "Fully charged" notice when charging stops on the charger. Mine: once
+  per plug-in, and the battery notice's 3 seconds.
