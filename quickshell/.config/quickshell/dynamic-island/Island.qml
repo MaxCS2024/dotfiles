@@ -399,6 +399,9 @@ PanelWindow {
         function onCapsNotice(on) {
             root.flashShort("\u{f0632}", "Caps Lock – ", on ? "on" : "off")
         }
+        function onMicNotice(muted) {
+            root.flashShort(muted ? "\u{f036d}" : "\u{f036c}", "Microphone – ", muted ? "muted" : "on")
+        }
     }
 
     function flashShort(icon, before, name) {

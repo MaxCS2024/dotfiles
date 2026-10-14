@@ -134,6 +134,7 @@ circle beside it (see Song circle).
 | battery   | charger plugged in; charging done; battery below 20%, 10% or 5% | battery icon + "Charging – 46%", "Charged to 80%", "Fully charged", "Low battery – 18%" or "Battery critical – 4%" | fits the text, at most 400px |
 | layout    | keyboard layout switched   | keyboard icon + "Layout – English (US)" | fits the text, at most 400px |
 | caps      | Caps Lock toggled          | Caps Lock arrow + "Caps Lock – on" or "– off" | fits the text |
+| mic       | default microphone muted or unmuted | microphone glyph + "Microphone – muted" or "– on" | fits the text |
 | display   | external screen plugged in | monitor icon + "Display connected – XV280K" | fits the text, at most 400px |
 | notice    | network up, failed or lost; Bluetooth device in or out | icon + "Connected – Telia-3D6C57" and the like | fits the text, at most 400px |
 | dictation | voxtype recording or transcribing (SUPER+V) | cancel button, live waveform, stop button | 144, fixed |
@@ -420,6 +421,24 @@ real path:
 `hyprctl dispatch 'hl.dsp.global("quickshell:island-capslock")'` reads
 the state and, unchanged, shows nothing. wtype can't test it: its keys
 don't trigger Hyprland's binds.
+
+## Microphone notice
+
+Muting or unmuting the default microphone, from anywhere (the mic-mute
+key, which runs `wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle`, the
+quick settings row, an app), shows the struck-through or plain
+microphone glyph and "Microphone – muted" or "Microphone – on" for 1.5
+seconds: the Caps Lock notice's face and rules (`Island.flashShort`).
+Brought over from `../island`'s OSD (2026-10-14).
+
+`Controls.micNotice(muted)` drives it, from the default source's
+`audio.muted`. Only the same source changing flashes: a new default
+microphone, or the first reading, sets the baseline (source id and
+mute) quietly. Quiet for the first 2 seconds.
+
+Testing: `test-notices.sh pill`, or
+`qs -c dynamic-island ipc call island-notices mic true|false`. Never
+press the mic-mute key or mute the microphone to check it.
 
 ## Privacy indicators
 
@@ -1449,3 +1468,7 @@ Dated record of what the user chose or rejected, and why.
   stays within 400px like the notices), and a "Charged to 80%" /
   "Fully charged" notice when charging stops on the charger. Mine: once
   per plug-in, and the battery notice's 3 seconds.
+- 2026-10-14: a microphone notice, "Microphone – muted" / "– on", from
+  `../island`, at the user's request. Mine: the Caps Lock notice's face
+  and 1.5 seconds (the user, or an app on their behalf, did it), and
+  "on" rather than "unmuted" to match "Caps Lock – on".

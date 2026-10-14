@@ -67,6 +67,8 @@ pill() {
     show 2   "  Layout – Swedish"           layout "Swedish"
     show 2   "  Caps Lock – on"             caps true
     show 2   "  Caps Lock – off"            caps false
+    show 2   "  Microphone – muted"         mic true
+    show 2   "  Microphone – on"            mic false
 
     echo "Pill › Network"
     show 3.5 "  Connected – Telia-3D6C57"   notice "$wifi" "Connected – " "Telia-3D6C57" ""

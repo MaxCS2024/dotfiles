@@ -71,6 +71,7 @@ Singleton {
         function display(label: string): void { Displays.connected(label) }
         function layout(name: string): void { root.layoutNotice(name) }
         function caps(on: bool): void { root.capsNotice(on) }
+        function mic(muted: bool): void { root.micNotice(muted) }
         function notice(icon: string, before: string, name: string, after: string): void {
             root.notice(icon, before, name, after)
         }
@@ -650,6 +651,39 @@ Singleton {
             }
         }
     }
+
+    // ── Microphone notice ──
+    // `micNotice(muted)` when the default microphone is muted or unmuted,
+    // from anywhere: the mic-mute key (wpctl), the quick settings, an app.
+    // Only the same source changing counts: switching to another
+    // microphone, or one turning up, sets the baseline without a flash.
+    signal micNotice(bool muted)
+    readonly property var micSource: Pipewire.defaultAudioSource
+    PwObjectTracker { objects: root.micSource ? [root.micSource] : [] }
+    property int micSourceId: -1
+    property bool lastMicMuted: false
+
+    function readMic() {
+        if (!micSource || !micSource.ready || !micSource.audio)
+            return
+        const muted = micSource.audio.muted
+        const known = micSource.id === micSourceId
+        const changed = muted !== lastMicMuted
+        micSourceId = micSource.id
+        lastMicMuted = muted
+        if (known && changed && armed)
+            micNotice(muted)
+    }
+
+    Connections {
+        target: root.micSource && root.micSource.audio ? root.micSource.audio : null
+        function onMutedChanged() { root.readMic() }
+    }
+    Connections {
+        target: root.micSource
+        function onReadyChanged() { root.readMic() }
+    }
+    onMicSourceChanged: readMic()
 
     signal batteryNotice(string kind)
     readonly property bool onBattery: UPower.onBattery
