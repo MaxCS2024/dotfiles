@@ -3986,38 +3986,6 @@
           "value": "self-updating (hermes update)"
         }
       ]
-    },
-    {
-      "type": "data",
-      "bom-ref": "vendored:nerdfont-glyphs",
-      "name": "nerd-fonts glyphnames",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "vcs",
-          "url": "https://github.com/ryanoasis/nerd-fonts"
-        }
-      ],
-      "properties": [
-        {
-          "name": "dotfiles:group",
-          "value": "vendored"
-        },
-        {
-          "name": "dotfiles:path",
-          "value": "bin/lib/nerdfont-glyphs.tsv"
-        },
-        {
-          "name": "dotfiles:note",
-          "value": "one-time trim of upstream glyphnames.json; source revision not recorded"
-        }
-      ]
     }
   ],
   "services": [
@@ -4158,7 +4126,6 @@
         "installer:codex",
         "installer:opencode",
         "installer:hermes-agent",
-        "vendored:nerdfont-glyphs",
         "svc:open-meteo"
       ]
     }

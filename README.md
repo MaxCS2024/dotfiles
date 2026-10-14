@@ -16,7 +16,7 @@ btop/ starship/ wireplumber/ zsh/ autostart/
 nvim/         LazyVim's options, keymaps and plugins; nvim/install.sh
 fingerprint/ secureboot/ gpg/  guided setups, each an install.sh
 udev/         hardware fixes, one rule per device (see below)
-bin/ docs/
+docs/
 ```
 
 Each folder above the line `nvim/` is a stow package: inside it, the files sit
