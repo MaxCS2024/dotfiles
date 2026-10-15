@@ -3,6 +3,7 @@ local defaults = require("modules.defaults")
 
 hl.on("hyprland.start", function ()
 	hl.exec_cmd("qs -n -c dynamic-island")
+	hl.exec_cmd("qs -n -c snap")
 
 	hl.exec_cmd("awww-daemon")
 	hl.exec_cmd("wl-paste --watch cliphist store")

@@ -26,6 +26,7 @@ the stock config with real usage in `/usr/share/hypr/hyprland.lua`.
 | `modules/misc.lua` | Hyprland's default wallpaper and logo, both off |
 | `modules/autostart.lua` | What starts at login |
 | `modules/windowrules.lua` | Window and layer rules |
+| `modules/snap.lua` | Spots window drags for the `snap` Quickshell config and places the window it drops |
 | `modules/features.lua` | Reads which optional features are on (all, since rack left) |
 | `modules/defaults.lua` | Default apps per role |
 | `modules/vars.lua` | `mainMod` and the app roles the binds share |

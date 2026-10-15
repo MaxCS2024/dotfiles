@@ -8,8 +8,9 @@ with [GNU stow](https://www.gnu.org/software/stow/).
 ```
 hypr/         the compositor — .config/hypr/hyprland.lua sources modules/
 quickshell/   the shell configs, in .config/quickshell/:
-                dynamic-island (the shell at login), island (a
-                brief-built island, run by hand)
+                dynamic-island (the shell at login), snap (Windows 11
+                snap layouts, at login), island (a brief-built island,
+                run by hand)
 gtk-3.0/ gtk-4.0/  GTK theming and colours, and the icon theme Qt reads through gtk3
 foot/ kitty/ ghostty/  terminals, each with its colours file
 btop/ starship/ wireplumber/ zsh/ autostart/
@@ -119,5 +120,6 @@ The `find` deletes only links that point into `.dotfiles` and lead nowhere.
 ## Reading further
 
 - `quickshell/.config/quickshell/dynamic-island/AGENTS.md` — the island's design
+- `quickshell/.config/quickshell/snap/AGENTS.md` — snap layouts
 - `quickshell/.config/quickshell/STYLE.md` — the shell's style guide
 - `hypr/.config/hypr/README.md` — the Hyprland config, bind by bind
