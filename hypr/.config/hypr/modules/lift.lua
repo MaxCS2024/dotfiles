@@ -8,7 +8,7 @@
 -- resizing the window there makes the drag carry the smaller box. On
 -- release Hyprland tiles it again by itself.
 
-local LIFT_SCALE = 0.6
+local LIFT_SCALE = 0.5
 
 local floating = {} -- address → floating, as last seen
 local lifted = nil -- the window shrunk for the drag in progress

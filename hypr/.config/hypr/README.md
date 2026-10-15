@@ -26,7 +26,7 @@ the stock config with real usage in `/usr/share/hypr/hyprland.lua`.
 | `modules/misc.lua` | Hyprland's default wallpaper and logo, both off |
 | `modules/autostart.lua` | What starts at login |
 | `modules/windowrules.lua` | Window and layer rules |
-| `modules/lift.lua` | A tiled window picked up by any drag (SUPER or its title bar) shrinks to 60%, centred on the cursor, and tiles again on release |
+| `modules/lift.lua` | A tiled window picked up by any drag (SUPER or its title bar) shrinks to 50%, centred on the cursor, and tiles again on release |
 | `modules/snap.lua` | Spots window drags for the `snap` Quickshell config and places the window it drops |
 | `modules/features.lua` | Reads which optional features are on (all, since rack left) |
 | `modules/defaults.lua` | Default apps per role |
@@ -81,7 +81,7 @@ touchpad-wide sensitivity.
 | SUPER+TAB, SUPER+scroll | Next/previous existing workspace | `binds/workspaces.lua` | |
 | SUPER+S / SUPER+SHIFT+S | Scratchpad (`special:magic`) / move window to it | `binds/workspaces.lua` | |
 | SUPER+SHIFT+R | `hyprctl reload` | `binds/workspaces.lua` | |
-| SUPER+left drag / right drag | Move / resize window | `binds/mouse.lua` | A tiled window shrinks to 60% while carried (`modules/lift.lua`) |
+| SUPER+left drag / right drag | Move / resize window | `binds/mouse.lua` | A tiled window shrinks to 50% while carried (`modules/lift.lua`) |
 | Print / SHIFT+Print | Screenshot a region / the focused screen | `binds/media.lua` | |
 | Volume, mute, mic mute | wpctl | `binds/media.lua` | |
 | Brightness keys | brightnessctl, ramped | `binds/media.lua` | |
