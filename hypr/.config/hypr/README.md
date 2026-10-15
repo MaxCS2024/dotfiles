@@ -80,7 +80,7 @@ touchpad-wide sensitivity.
 | SUPER+TAB, SUPER+scroll | Next/previous existing workspace | `binds/workspaces.lua` | |
 | SUPER+S / SUPER+SHIFT+S | Scratchpad (`special:magic`) / move window to it | `binds/workspaces.lua` | |
 | SUPER+SHIFT+R | `hyprctl reload` | `binds/workspaces.lua` | |
-| SUPER+left drag / right drag | Move / resize window | `binds/mouse.lua` | |
+| SUPER+left drag / right drag | Move / resize window | `binds/mouse.lua` | A tiled window shrinks to 60% while carried and tiles again on release |
 | Print / SHIFT+Print | Screenshot a region / the focused screen | `binds/media.lua` | |
 | Volume, mute, mic mute | wpctl | `binds/media.lua` | |
 | Brightness keys | brightnessctl, ramped | `binds/media.lua` | |
