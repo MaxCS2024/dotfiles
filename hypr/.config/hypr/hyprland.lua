@@ -8,6 +8,7 @@ require("modules.misc")
 require("modules.input")
 require("modules.windowrules")
 require("modules.snap")
+require("modules.lift")
 
 if package.searchpath("local", package.path) then
 	require("local")
