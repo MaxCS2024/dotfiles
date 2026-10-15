@@ -2,8 +2,8 @@ import Quickshell
 import Quickshell.Wayland
 import QtQuick
 
-// The layouts bar on one screen. It drops down under the island when a
-// dragged window's cursor touches the top edge, stays while the cursor is
+// The layouts bar on one screen. It slides up from the bottom when a
+// dragged window's cursor touches the bottom edge, stays while the cursor is
 // within reach of it, and goes when the drag ends or moves away. The zone
 // under the cursor turns white; letting go there places the window.
 // The pointer belongs to the drag the whole time, so the bar never takes
@@ -28,11 +28,11 @@ PanelWindow {
     readonly property int tileH: 56
     readonly property int tileGap: 12
     readonly property int zoneGap: 4
-    // How far the plate slides down as it opens.
+    // How far the plate slides up as it opens.
     readonly property int drop: 8
-    // The cursor counts as at the top edge this close to it.
+    // The cursor counts as at the bottom edge this close to it.
     readonly property int edge: 4
-    // How far below the bar the cursor can go before it closes.
+    // How far above the bar the cursor can go before it closes.
     readonly property int reach: 32
 
     // Each layout's zones, as [x, y, width, height] fractions of the screen,
@@ -50,9 +50,9 @@ PanelWindow {
     property int hoverTile: -1
     property int hoverZone: -1
 
-    // Under the island's pill (7px margin + 24px), which reserves this strip.
-    anchors.top: true
-    margins.top: 31
+    // At rest the plate sits margins.bottom + drop (16px) above the edge.
+    anchors.bottom: true
+    margins.bottom: 8
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.namespace: "quickshell:snap"
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
@@ -75,12 +75,14 @@ PanelWindow {
             close()
             return
         }
-        if (ly <= edge)
+        // The window's top edge, in screen coordinates; the plate rests there.
+        const top = modelData.height - margins.bottom - implicitHeight
+        if (ly >= modelData.height - 1 - edge)
             open = true
-        else if (ly > margins.top + implicitHeight + reach)
+        else if (ly < top - reach)
             open = false
         if (open)
-            hit(lx - (modelData.width - implicitWidth) / 2, ly - margins.top - drop)
+            hit(lx - (modelData.width - implicitWidth) / 2, ly - top)
         else
             hoverTile = hoverZone = -1
     }
@@ -131,7 +133,7 @@ PanelWindow {
     Rectangle {
         id: plate
 
-        y: root.drop * root.shown
+        y: root.drop * (1 - root.shown)
         opacity: root.shown
         width: root.pad * 2 + root.layouts.length * root.tileW + (root.layouts.length - 1) * root.tileGap
         height: root.pad * 2 + root.tileH

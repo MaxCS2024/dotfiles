@@ -1,7 +1,7 @@
 # Snap layouts
 
-Windows 11's snap layouts for Hyprland. Drag a window to the top edge of a
-screen and a bar of six layouts drops down under the island. Let go over a
+Windows 11's snap layouts for Hyprland. Drag a window to the bottom edge of
+a screen and a bar of six layouts slides up from it. Let go over a
 zone and the window floats into that part of the screen.
 
 Read `../STYLE.md` before any visual change. Record every new user decision
@@ -11,7 +11,7 @@ under Decisions.
 
 - Independent of the dynamic island: its own config (`qs -c snap`, started
   at login by `hypr/modules/autostart.lua`), and it works with the island
-  stopped. It only sits under the island's pill.
+  stopped.
 - It places the one window being dragged. No snap assist (filling the other
   zones with other windows) and no edge or corner snapping yet.
 
@@ -28,7 +28,7 @@ under Decisions.
   coordinates) on socket2 whenever the cursor moves, and on release
   `custom>>snap drop ADDRESS`. `WindowDrag.qml` reads them.
 - `SnapBar.qml` (one per screen) opens when the cursor is within 4px of the
-  top edge, stays while it is no more than 32px below the bar, and closes
+  bottom edge, stays while it is no more than 32px above the bar, and closes
   when the cursor leaves that or the screen. The bar never takes input; the
   hovered zone comes from the cursor position.
 - On a drop over a zone, the bar runs `hyprctl eval 'snap_place(...)'`.
@@ -42,9 +42,9 @@ under Decisions.
 
 - The island's look: a black plate, zones white at 24%, the hovered zone
   solid white (120ms colour ease). No text, no borders.
-- Plate: 12px padding, radius 16 (the zones' 4 plus the padding), under the
-  island's pill (top margin 31) and slid down 8px as it opens (140ms,
-  OutCubic, with a fade).
+- Plate: 12px padding, radius 16 (the zones' 4 plus the padding), centred
+  at the bottom, resting 16px above the edge (8px margin + the 8px slide).
+  It slides up 8px as it opens (140ms, OutCubic, with a fade).
 - Tiles: 96 × 56, 12px apart, zones 4px apart. The gaps between tiles count
   towards the nearer tile, so the bar has no dead spots.
 - Layouts, in Windows 11's order: halves; 2/3 + 1/3; thirds; half + two
@@ -56,13 +56,23 @@ under Decisions.
 placement can be driven by hand with the same events:
 
 ```sh
-hyprctl dispatch 'hl.dsp.event("snap drag 960 2")'     # opens the bar
-hyprctl dispatch 'hl.dsp.event("snap drag 1144 61")'   # hovers a zone
-hyprctl dispatch 'hl.dsp.event("snap drop 0x…")'       # places that window
+hyprctl dispatch 'hl.dsp.event("snap drag 960 1079")'   # opens the bar (1080p)
+hyprctl dispatch 'hl.dsp.event("snap drag 1144 1006")'  # hovers a zone
+hyprctl dispatch 'hl.dsp.event("snap drop 0x…")'        # places that window
 ```
+
+A hot reload loses the link to the drag events: the bar stops opening,
+with nothing in the log. After an edit, restart it with `qs kill -c snap`,
+then `hyprctl dispatch 'hl.dsp.exec_cmd("qs -n -c snap")'`.
+
+Test on a throwaway window sent to an empty workspace with
+`hyprctl eval 'hl.exec_cmd("ghostty --title=snaptest -e sleep 120", { workspace = "9 silent" })'`.
+Ghostty asks before closing a window with a running command, so end it
+with `pkill -x -f "sleep 120"`, not the close dispatcher.
 
 ## Decisions
 
 - 2026-10-15: built as its own config, independent of the island (the
-  user's request). Dropping places the window by floating it; the bar sits
-  under the island's pill rather than over it.
+  user's request). Dropping places the window by floating it.
+- 2026-10-15: the bar pops up from the bottom edge, not down from the top
+  (the user's request). Dragging to the bottom edge opens it.

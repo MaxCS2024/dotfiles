@@ -1,5 +1,5 @@
--- Snap layouts, as on Windows 11: drag a window to the top edge of a screen
--- and a bar of layouts drops down (the `snap` Quickshell config); let go
+-- Snap layouts, as on Windows 11: drag a window to the bottom edge of a
+-- screen and a bar of layouts slides up (the `snap` Quickshell config); let go
 -- over a zone and the window floats into that part of the screen.
 --
 -- Hyprland has no drag event, so a timer looks for one: a mouse button held
