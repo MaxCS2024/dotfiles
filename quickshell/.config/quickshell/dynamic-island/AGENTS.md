@@ -11,7 +11,7 @@ briefly swaps to the workspace name whenever the workspace changes, to
 the volume or brightness when they change, and to a battery notice when
 the charger goes in or the battery runs low, and to a live waveform
 for as long as dictation (voxtype, SUPER+V) listens. A
-left click expands it into a media player, a right click into a small
+left click expands it into a media player, a middle click into a small
 settings panel (network, Bluetooth, volume, battery, and the volume and
 brightness sliders, with a Wi-Fi page and a Bluetooth page for
 connecting and a battery page for the power mode). SUPER+COMMA opens the settings window, a normal Hyprland
@@ -124,7 +124,7 @@ circle beside it (see Song circle).
 | resting   | default; dragging the pill left | time, `18:32`       | fits the text |
 | media     | dragging the pill right    | music note + "Title – Artist", scrolling when too long | fits the text, at most 400px |
 | player    | left click (press without moving 4px) | media player | 360 × 128 |
-| settings  | right click                | network, Bluetooth, volume and battery fused in one pill, volume and brightness sliders; the quick settings row under the notch | 360 × 156, 360 × 208 with the row |
+| settings  | middle click               | network, Bluetooth, volume and battery fused in one pill, volume and brightness sliders; the quick settings row under the notch | 360 × 156, 360 × 208 with the row |
 | wifi      | settings panel's network segment | Wi-Fi page: header, networks | 360 × 288 |
 | bluetooth | settings panel's Bluetooth segment | Bluetooth page: header, devices | 360 × 288 |
 | battery page | settings panel's battery segment | battery page: header with the charge, power profiles | 360 × 200 |
@@ -377,7 +377,7 @@ bars dim to 60% and become a wave travelling left to right, at most 8px.
 Main's red stop button is white here (Look: white on black).
 
 The face's buttons are the only thing on it to click: a press elsewhere
-on it neither drags nor opens the player. A right click still opens
+on it neither drags nor opens the player. A middle click still opens
 the settings panel over it, and closing it brings it back. The island doesn't take keyboard focus for it, so
 clicking stop leaves the text going to the window that had it. Hidden
 with SUPER+ALT+SPACE, the island shows nothing, dictation or not.
@@ -558,7 +558,7 @@ Switch views with a temporary IpcHandler setting `root.view`.
 
 ## Settings panel
 
-A right click on the pill opens it; it opens and closes with the same
+A middle click on the pill opens it; it opens and closes with the same
 sequence as the media player. 16px padding; the buttons (below) first,
 then two 32px slider rows, 8px apart:
 speaker icon, slider, volume %; sun icon, slider, brightness %. The
@@ -586,7 +586,7 @@ follow the pill's rounding, the inner sides are square.
 - Volume: the speaker icon (`Controls.volumeIcon`, the same as the
   slider's). A click mutes and unmutes in place.
 
-A left or right click on the panel outside a control, or
+A left, middle or right click on the panel outside a control, or
 any click outside the island, closes it.
 
 **Quick settings.** In the panel's 16px bottom padding, centred, is the
@@ -1472,3 +1472,6 @@ Dated record of what the user chose or rejected, and why.
   `../island`, at the user's request. Mine: the Caps Lock notice's face
   and 1.5 seconds (the user, or an app on their behalf, did it), and
   "on" rather than "unmuted" to match "Caps Lock – on".
+- 2026-10-15: the settings panel moved from the right click to the middle
+  click, at the user's request. A right click on the collapsed pill does
+  nothing now; on an open panel it still closes it, like any click.

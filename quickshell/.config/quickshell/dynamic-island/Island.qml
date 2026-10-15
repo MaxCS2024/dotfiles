@@ -14,7 +14,7 @@ import QtQuick
 // transcribes, the dictation face covers all of that. While music plays
 // and the pill shows anything but the song, the album art sits in a
 // small circle beside it. A left click
-// opens the full media player, a right click a small settings panel
+// opens the full media player, a middle click a small settings panel
 // (whose network, Bluetooth and battery segments turn it into a page of
 // their own); a click on either, or anywhere else, closes it.
 // SUPER+ALT+SPACE hides and shows it: the sides close in to an orb that
@@ -480,7 +480,8 @@ PanelWindow {
         property bool onDisplayNotice: false
 
         anchors.fill: parent
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        // Right only closes an open panel; it opens nothing.
+        acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
         onPressed: mouse => {
             pressX = mouse.x
             moved = false
@@ -532,9 +533,11 @@ PanelWindow {
         onReleased: mouse => {
             if (root.phase === "open") {
                 root.close()
-            } else if (mouse.button === Qt.RightButton) {
+            } else if (mouse.button === Qt.MiddleButton) {
                 if (root.phase === "collapsed")
                     root.open("settings")
+            } else if (mouse.button === Qt.RightButton) {
+                return
             } else if (root.dragging) {
                 root.release(moved ? dx : 0)
                 if (!moved && onDisplayNotice)
