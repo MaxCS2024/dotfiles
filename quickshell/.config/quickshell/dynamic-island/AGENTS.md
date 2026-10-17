@@ -380,7 +380,8 @@ The face's buttons are the only thing on it to click: a press elsewhere
 on it neither drags nor opens the player. A middle click still opens
 the settings panel over it, and closing it brings it back. The island doesn't take keyboard focus for it, so
 clicking stop leaves the text going to the window that had it. Hidden
-with SUPER+ALT+SPACE, the island shows nothing, dictation or not.
+with SUPER+ALT+SPACE, the island pops up for dictation and hides again
+when it ends; its buttons still work, the middle click opens nothing.
 
 `Dictation.qml` (a singleton) follows `voxtype status --follow` (idle,
 recording, transcribing, stopped; one process, outliving the daemon;
@@ -753,7 +754,8 @@ is skipped while hidden: volume and brightness, battery, display,
 layout/Caps Lock/mic, network and Bluetooth (`Island.qml`'s `popped`).
 A pop reserves no strip, so windows don't jump, and takes no clicks;
 the song's circle stays tucked in. Hiding during a flash waits for it
-to end. Dictation still shows nothing while hidden.
+to end. Dictation pops it up too, for as long as it records or
+transcribes, with its buttons clickable (see Dictation).
 
 Testing: `hyprctl dispatch 'hl.dsp.global("quickshell:island-toggle")'`
 toggles it like the key, without main.
@@ -1490,3 +1492,7 @@ Dated record of what the user chose or rejected, and why.
   request ("still shows up for important functions, but it doesn't
   stay visible"). Mine: the workspace name left out, and a pop
   reserves no space and takes no clicks.
+- 2026-10-17: dictation pops the hidden island up too (settling the
+  open question), at the user's request. Mine: its cancel and stop
+  buttons take clicks while popped; the middle click doesn't open the
+  settings panel then.

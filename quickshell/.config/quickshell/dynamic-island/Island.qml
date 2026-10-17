@@ -19,7 +19,7 @@ import QtQuick
 // their own); a click on either, or anywhere else, closes it.
 // SUPER+ALT+SPACE hides and shows it: the sides close in to an orb that
 // fades out, and the reverse. Hidden, it still pops up for a flash
-// (anything but the workspace name) and goes again after it.
+// (anything but the workspace name) or dictation, and goes again after.
 PanelWindow {
     id: root
 
@@ -57,9 +57,10 @@ PanelWindow {
     readonly property real galleryHeight: galleryTileHeight + gallery.lift + 32
     // The pill, the song's circle and the privacy dots take clicks; the
     // rest passes through.
-    // Popped up while hidden, the pill takes no clicks either.
+    // Popped up while hidden, the pill takes no clicks either, except on
+    // the dictation face's buttons.
     mask: Region {
-        Region { item: root.wanted ? pill : null }
+        Region { item: root.wanted || Dictation.busy ? pill : null }
         Region { item: root.songReach > 0 ? songCircle : null; radius: songCircle.radius }
         Region { item: privacyDots }
     }
@@ -135,12 +136,12 @@ PanelWindow {
     property real shrinkProgress: 0
     property real orbTextOpacity: 1
 
-    // Hidden, a flash pops the pill up for as long as it lasts, then it
-    // goes again: minimised rather than gone. Not the workspace name,
-    // which comes with every switch.
+    // Hidden, a flash or dictation pops the pill up for as long as it
+    // lasts, then it goes again: minimised rather than gone. Not the
+    // workspace name, which comes with every switch.
     readonly property bool flashing: showOsd || showBattery || showDisplay
         || showLayout || showNotice
-    readonly property bool popped: !wanted && flashing
+    readonly property bool popped: !wanted && (flashing || Dictation.busy)
     readonly property bool up: wanted || popped
     // Windows make room only when it is shown for good, not for a pop,
     // and keep it until the hide has run.
@@ -560,7 +561,9 @@ PanelWindow {
             if (root.phase === "open") {
                 root.close()
             } else if (mouse.button === Qt.MiddleButton) {
-                if (root.phase === "collapsed")
+                // Not while popped up for dictation: the panel would
+                // close under the user when it ends.
+                if (root.phase === "collapsed" && root.wanted)
                     root.open("settings")
             } else if (mouse.button === Qt.RightButton) {
                 return
