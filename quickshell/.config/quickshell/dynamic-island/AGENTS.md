@@ -746,6 +746,15 @@ fading back in from 140ms. Hyprland's own layer fade-in softens the
 first frames of showing. An open panel closes first, then the island
 hides. `orbing` keeps the width Behavior off for the whole hide/show.
 
+Hidden is minimised, not gone: a flash still pops the pill up (the
+same grow from a point), for as long as it lasts, then it hides again.
+Every flash but the workspace name, which comes with every switch and
+is skipped while hidden: volume and brightness, battery, display,
+layout/Caps Lock/mic, network and Bluetooth (`Island.qml`'s `popped`).
+A pop reserves no strip, so windows don't jump, and takes no clicks;
+the song's circle stays tucked in. Hiding during a flash waits for it
+to end. Dictation still shows nothing while hidden.
+
 Testing: `hyprctl dispatch 'hl.dsp.global("quickshell:island-toggle")'`
 toggles it like the key, without main.
 `qs -c dynamic-island ipc call island setBarVisible false|true`
@@ -1475,3 +1484,9 @@ Dated record of what the user chose or rejected, and why.
 - 2026-10-15: the settings panel moved from the right click to the middle
   click, at the user's request. A right click on the collapsed pill does
   nothing now; on an open panel it still closes it, like any click.
+- 2026-10-17: hiding with SUPER+ALT+SPACE minimises the island instead
+  of removing it: volume, brightness and the other flashes (not the
+  workspace name) pop it up and it hides again after, at the user's
+  request ("still shows up for important functions, but it doesn't
+  stay visible"). Mine: the workspace name left out, and a pop
+  reserves no space and takes no clicks.

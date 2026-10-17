@@ -18,7 +18,8 @@ import QtQuick
 // (whose network, Bluetooth and battery segments turn it into a page of
 // their own); a click on either, or anywhere else, closes it.
 // SUPER+ALT+SPACE hides and shows it: the sides close in to an orb that
-// fades out, and the reverse.
+// fades out, and the reverse. Hidden, it still pops up for a flash
+// (anything but the workspace name) and goes again after it.
 PanelWindow {
     id: root
 
@@ -35,8 +36,8 @@ PanelWindow {
     // starts 24 + 15 - 32 = 7px under the pill, whatever the margin is.
     // 32 here left too much room. An open panel still overlaps windows.
     // Hidden, it reserves nothing, even while the privacy dots keep the
-    // window up.
-    exclusionMode: gone ? ExclusionMode.Ignore : ExclusionMode.Normal
+    // window up or a flash pops it up.
+    exclusionMode: reserves ? ExclusionMode.Normal : ExclusionMode.Ignore
     exclusiveZone: 24
     color: "transparent"
 
@@ -56,8 +57,9 @@ PanelWindow {
     readonly property real galleryHeight: galleryTileHeight + gallery.lift + 32
     // The pill, the song's circle and the privacy dots take clicks; the
     // rest passes through.
+    // Popped up while hidden, the pill takes no clicks either.
     mask: Region {
-        Region { item: pill }
+        Region { item: root.wanted ? pill : null }
         Region { item: root.songReach > 0 ? songCircle : null; radius: songCircle.radius }
         Region { item: privacyDots }
     }
@@ -133,7 +135,19 @@ PanelWindow {
     property real shrinkProgress: 0
     property real orbTextOpacity: 1
 
-    onWantedChanged: wanted ? appear() : disappear()
+    // Hidden, a flash pops the pill up for as long as it lasts, then it
+    // goes again: minimised rather than gone. Not the workspace name,
+    // which comes with every switch.
+    readonly property bool flashing: showOsd || showBattery || showDisplay
+        || showLayout || showNotice
+    readonly property bool popped: !wanted && flashing
+    readonly property bool up: wanted || popped
+    // Windows make room only when it is shown for good, not for a pop,
+    // and keep it until the hide has run.
+    property bool reserves: true
+
+    onUpChanged: up ? appear() : disappear()
+    onWantedChanged: if (wanted) reserves = true
 
     function disappear() {
         appearAnim.stop()
@@ -158,7 +172,10 @@ PanelWindow {
         id: disappearAnim
         NumberAnimation { target: root; property: "orbTextOpacity"; to: 0; duration: 80 }
         NumberAnimation { target: root; property: "shrinkProgress"; to: 1; duration: 220; easing.type: Easing.InCubic }
-        onFinished: root.gone = true
+        onFinished: {
+            root.gone = true
+            root.reserves = false
+        }
     }
 
     // The reverse: it grows from a point to a circle and opens out to the
@@ -239,6 +256,15 @@ PanelWindow {
         if (workspaceId < 1)
             return
         const name = "Workspace " + workspaceId
+        // Hidden, the name doesn't flash, nor cut short a flash that
+        // popped the pill up.
+        if (!wanted) {
+            showWorkspace = false
+            workspaceLabel.text = name
+            workspaceLabel.shift = 0
+            lastWorkspace = workspaceId
+            return
+        }
         const out = pill.shown
         const slides = phase === "collapsed" && !dragging
             && !slideOut.running && !slideIn.running
@@ -580,7 +606,7 @@ PanelWindow {
 
     readonly property bool songSplit: player !== null && songRecent
         && (view !== -1 || Dictation.busy)
-        && phase === "collapsed" && !gone && !orbing
+        && phase === "collapsed" && wanted && !gone && !orbing
     // How far the circle (with the gap before it) reaches out of the pill:
     // 0 tucked under it, songFull out. The privacy dots ride on it.
     readonly property real songFull: 8 + 32
@@ -1425,7 +1451,7 @@ PanelWindow {
         onFinished: {
             root.phase = "collapsed"
             // A hide that waited for the panel to close.
-            if (!root.wanted)
+            if (!root.up)
                 root.disappear()
         }
     }
